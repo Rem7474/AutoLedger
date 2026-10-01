@@ -19,7 +19,6 @@ import {
   Plus,
   Ellipsis,
   X,
-  LayoutGrid,
 } from 'lucide-vue-next'
 import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
@@ -33,7 +32,6 @@ const quickAdd = useQuickAddStore()
 
 const allNavItems = [
   { name: 'dashboard', labelKey: 'shell.nav.dashboard', mobileLabelKey: 'shell.nav.home', path: '/', icon: LayoutDashboard },
-  { name: 'fleet', labelKey: 'shell.nav.fleet', path: '/fleet', icon: LayoutGrid },
   { name: 'drives', labelKey: 'shell.nav.drives', path: '/drives', icon: NavIcon },
   { name: 'carpools', labelKey: 'shell.nav.carpools', path: '/carpools', icon: Users },
   { name: 'tires', labelKey: 'shell.nav.tires', path: '/tires', icon: Disc },

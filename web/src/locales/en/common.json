@@ -19,6 +19,5 @@
   "or": "or",
   "atKm": "at {km} {unit}",
   "atKmCapitalized": "At {km} {unit}",
-  "example": "e.g. {value}",
-  "done": "Done"
+  "example": "e.g. {value}"
 }
