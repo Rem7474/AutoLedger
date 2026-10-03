@@ -7,7 +7,6 @@ import (
 	"github.com/teslacost/teslacost/internal/money"
 )
 
-
 func TestSummariseBatteryHealthPicksBestSource(t *testing.T) {
 	// A recorded percentage wins over everything else.
 	s := summariseBatteryHealth([]models.BatterySnapshot{
