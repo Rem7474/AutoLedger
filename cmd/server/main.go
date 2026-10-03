@@ -349,7 +349,7 @@ func main() {
 		importHandler := handlers.NewImportHandler(repo, csvImportService)
 		importProfileHandler := handlers.NewImportProfileHandler(repo)
 
-		tariffService := services.NewTariffService()
+		tariffService := services.NewTariffServiceIn(cfg.ReportingTimezone)
 		fleetService := services.NewFleetService(repo)
 
 		tokenHandler := handlers.NewTokenHandler(repo)
