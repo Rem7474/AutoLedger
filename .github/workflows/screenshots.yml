@@ -16,7 +16,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: autoledger
-          POSTGRES_PASSWORD: autoledger
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: autoledger
         ports: ['5432:5432']
         options: >-
@@ -36,13 +36,13 @@ jobs:
           go-version-file: 'go.mod'
       - name: Build the frontend
         working-directory: web
-        run: npm ci && npm run build
+        run: npm ci --ignore-scripts && npm run build
       - name: Build the server
         run: go build -o autoledger ./cmd/server
       - name: Start the server
         env:
           AUTOLEDGER_PORT: '8080'
-          AUTOLEDGER_DATABASE_URL: postgres://autoledger:autoledger@localhost:5432/autoledger?sslmode=disable
+          AUTOLEDGER_DATABASE_URL: postgres://autoledger@localhost:5432/autoledger?sslmode=disable
           AUTOLEDGER_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           AUTOLEDGER_JWT_SECRET: screenshots-only-jwt-secret-0123456789abcdef0123456789
           ENVIRONMENT: development
@@ -58,8 +58,8 @@ jobs:
           BASE_URL: http://localhost:8080
           OUT_DIR: ../../docs/screenshots
         run: |
-          npm install --no-audit --no-fund
-          npx playwright install --with-deps chromium
+          npm ci --ignore-scripts --no-audit --no-fund
+          ./node_modules/.bin/playwright install --with-deps chromium
           node capture.mjs
       - name: Open the pull request
         env:
