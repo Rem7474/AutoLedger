@@ -152,6 +152,7 @@ export function maintenanceTotal(items: MaintenanceLike[], baseCurrency: string)
     if (!m.currency || m.currency === baseCurrency) return sum + amount
     return sum + amount * (Number(m.fx_rate) || 0)
   }, 0)
+}
 
 /** How a new expense of a category weighs on the cost per km: only a lasting purchase is spread over the distance. */
 export function defaultAmortizationMode(category: string): string {

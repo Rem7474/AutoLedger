@@ -124,6 +124,8 @@ describe('maintenance list helpers', () => {
     expect(maintenanceTotal(items, 'EUR')).toBeCloseTo(168.5)
     expect(maintenanceTotal([{ category: 'OTHER', date: '2026-01-01', amount: 10, currency: 'USD', fx_rate: null }], 'EUR')).toBe(0)
     expect(maintenanceTotal([], 'EUR')).toBe(0)
+  })
+})
 
 describe('maintenance form defaults', () => {
   it('spreads only accessories over the distance by default', () => {
