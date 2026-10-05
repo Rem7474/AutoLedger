@@ -266,6 +266,8 @@ describe('fixed costs', () => {
   it('splits the expenses between servicing and fixed costs', () => {
     expect(expensesOfKind(items, 'service').map((m) => m.id)).toEqual([1, 3, 7, 8])
     expect(expensesOfKind(items, 'fixed').map((m) => m.id)).toEqual([2, 4, 5, 6])
+  })
+})
 
 describe('reminderDueTile', () => {
   it('prefers the due date, then the due mileage', () => {
