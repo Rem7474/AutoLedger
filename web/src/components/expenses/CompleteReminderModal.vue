@@ -4,14 +4,15 @@ import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch } from 'vue'
 import { api, type MaintenanceReminder } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { useMaintenanceChoices } from '@/composables/useMaintenanceChoices'
 import { useVehicleStore } from '@/stores/vehicle'
 import { X, CheckCircle2 } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { todayIso } from '@/utils/dates'
-import { categoryLabel, formatDate, isFixedCost, maintenanceStartPoint, sortMaintenanceByDate } from '@/utils/expenses'
+import { maintenanceStartPoint } from '@/utils/expenses'
 import { currencySymbol } from '@/currency'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
-import { distanceUnit, formatDistanceValue } from '@/units'
+import { distanceUnit } from '@/units'
 
 // Marks a reminder as done, optionally logging a new maintenance expense or linking an existing one. saved carries whether an expense was logged.
 const props = defineProps<{ vehicleId: string; reminder: MaintenanceReminder | null; currentOdometer: number }>()
@@ -25,25 +26,11 @@ const completingReminder = computed(() => props.reminder)
 
 type ExpenseMode = 'none' | 'create' | 'existing'
 
-const maintenanceChoices = ref<any[]>([])
-const maintenanceOptions = computed(() => sortMaintenanceByDate(maintenanceChoices.value.filter((m) => !isFixedCost(m.category))))
-
-async function loadMaintenanceChoices() {
-  try {
-    maintenanceChoices.value = props.vehicleId ? await api.getMaintenance(props.vehicleId) : []
-  } catch {
-    maintenanceChoices.value = []
-  }
-}
-
-function maintenanceOptionLabel(m: any): string {
-  const km = m.odometer != null ? ` · ${t('common.atKm', { unit: distanceUnit(), km: formatDistanceValue(m.odometer) })}` : ''
-  return `${formatDate(m.date)} · ${m.description || categoryLabel(m.category)}${km}`
-}
+const { options: maintenanceOptions, load: loadMaintenanceChoices, label: maintenanceOptionLabel, find: findMaintenance } = useMaintenanceChoices(() => props.vehicleId)
 
 // Linking an existing maintenance takes its day and odometer as the date of the work.
 function onMaintenanceChosen() {
-  const m = maintenanceChoices.value.find((x) => x.id === completeForm.value.maintenance_id)
+  const m = findMaintenance(completeForm.value.maintenance_id)
   if (!m) return
   const start = maintenanceStartPoint(m)
   completeForm.value.service_date = start.date
