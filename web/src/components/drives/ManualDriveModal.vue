@@ -126,7 +126,7 @@ async function handleSubmit() {
           <Plus class="w-5 h-5 text-rose-400" />
           {{ drive ? $t('drives.manualModal.titleEdit') : $t('drives.manualModal.titleNew') }}
         </h3>
-        <button @click="close" class="tap p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+        <button @click="close" class="tap p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" :aria-label="$t('common.close')">
           <X class="w-5 h-5" />
         </button>
       </div>
@@ -221,7 +221,7 @@ async function handleSubmit() {
             <DistanceInput
               id="manual-drive-start-odo"
               v-model="startOdometer"
-              step="1"
+              step="any"
               min="0"
               class="field"
             />
@@ -233,7 +233,7 @@ async function handleSubmit() {
             <DistanceInput
               id="manual-drive-end-odo"
               v-model="endOdometer"
-              step="1"
+              step="any"
               min="0"
               class="field"
             />

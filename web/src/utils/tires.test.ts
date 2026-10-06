@@ -10,6 +10,7 @@ import {
   sessionFormFromCopy,
   sessionFormFromSession,
   validateTireForm,
+  wearTone,
 } from './tires'
 
 const entry = (id: string, brand: string, model: string, sessions: any[] = []) => ({
@@ -145,6 +146,23 @@ describe('session forms', () => {
     expect(sessionFormFromCopy(copied, { current_position: 'STORAGE' }).position).toBe('RL')
     expect(sessionFormFromCopy(copied, { current_position: 'DISPOSED' }).position).toBe('RL')
     expect(sessionFormFromCopy({ ...copied, position: '' }, null).position).toBe('FL')
+  })
+})
+
+describe('wearTone', () => {
+  it('follows the tread condition', () => {
+    expect(wearTone(10, 'GOOD')).toBe('ok')
+    expect(wearTone(10, 'WARNING')).toBe('warning')
+    expect(wearTone(10, 'CRITICAL')).toBe('danger')
+  })
+
+  it('is danger past 80 % of the lifespan whatever the tread says', () => {
+    expect(wearTone(81, 'GOOD')).toBe('danger')
+    expect(wearTone(80, 'GOOD')).toBe('ok')
+  })
+
+  it('falls back on the lifespan alone without a condition', () => {
+    expect(wearTone(50)).toBe('ok')
   })
 })
 
