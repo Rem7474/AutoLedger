@@ -9,6 +9,7 @@ import {
   isMountedPosition,
   sessionFormFromCopy,
   sessionFormFromSession,
+  validateTreadDepth,
 } from './tires'
 
 const entry = (id: string, brand: string, model: string, sessions: any[] = []) => ({
@@ -144,5 +145,17 @@ describe('session forms', () => {
     expect(sessionFormFromCopy(copied, { current_position: 'STORAGE' }).position).toBe('RL')
     expect(sessionFormFromCopy(copied, { current_position: 'DISPOSED' }).position).toBe('RL')
     expect(sessionFormFromCopy({ ...copied, position: '' }, null).position).toBe('FL')
+  })
+})
+
+describe('validateTreadDepth', () => {
+  it('accepts worn and deep treads', () => {
+    expect(validateTreadDepth(0.8)).toBeNull()
+    expect(validateTreadDepth(12)).toBeNull()
+    expect(validateTreadDepth(20)).toBeNull()
+  })
+
+  it('refuses empty, zero, negative and above 20 mm', () => {
+    for (const v of ['', null, 0, -1, 20.1]) expect(validateTreadDepth(v)).not.toBeNull()
   })
 })
