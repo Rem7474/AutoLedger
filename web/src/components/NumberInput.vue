@@ -9,6 +9,8 @@ import { formatDecimalInput, parseDecimal } from '@/utils/numbers'
 const model = defineModel<number | string | null | undefined>()
 const props = withDefaults(
   defineProps<{
+    // The id its <label for> points at
+    id?: string
     // The form keeps the field as text (v-model without .number): the value is emitted as a string
     text?: boolean
     min?: number | string
@@ -58,5 +60,5 @@ defineExpose({ focus: () => input.value?.focus(), select: () => input.value?.sel
 </script>
 
 <template>
-  <input ref="input" type="text" inputmode="decimal" autocomplete="off" :value="draft" @input="onInput" />
+  <input :id="id" ref="input" type="text" inputmode="decimal" autocomplete="off" :value="draft" @input="onInput" />
 </template>
