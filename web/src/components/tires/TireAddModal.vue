@@ -11,6 +11,7 @@ import { currencySymbol } from '@/currency'
 import { todayIso } from '@/utils/dates'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import { distanceUnit } from '@/units'
+import { useSubmit } from '@/composables/useSubmit'
 
 const props = defineProps<{ vehicleId: string; currentOdometer: number }>()
 const emit = defineEmits<{ saved: [] }>()
@@ -45,7 +46,9 @@ watch(open, (isOpen) => {
   if (props.currentOdometer) addTireForm.value.mounted_odometer = Math.round(props.currentOdometer)
 })
 
-async function handleCreateTires() {
+const { pending: submitting, run: runOnce } = useSubmit()
+
+async function handleCreateTiresAction() {
   if (!props.vehicleId) return
   if (!addTireForm.value.brand || !addTireForm.value.model || !addTireForm.value.dimension) {
     showAlert(t('tires.tireAddModal.requiredFields'), t('tires.tireAddModal.requiredFieldsTitle'), 'warning')
@@ -94,6 +97,7 @@ async function handleCreateTires() {
     showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
+const handleCreateTires = () => runOnce(handleCreateTiresAction)
 </script>
 
 <template>
@@ -108,7 +112,7 @@ async function handleCreateTires() {
           <Plus class="w-5 h-5 text-rose-500" />
           {{ $t('tires.tireAddModal.addTires') }}
         </h3>
-        <button @click="open = false" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+        <button @click="open = false" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors" :aria-label="$t('common.close')">
           <X class="w-5 h-5" />
         </button>
       </div>
@@ -122,6 +126,7 @@ async function handleCreateTires() {
           <button
             type="button"
             @click="addType = 'SET_4'"
+            :aria-pressed="addType === 'SET_4'"
             class="p-2.5 rounded-xl border text-left transition-all"
             :class="addType === 'SET_4' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
           >
@@ -130,6 +135,7 @@ async function handleCreateTires() {
           <button
             type="button"
             @click="addType = 'SET_4_STORAGE'"
+            :aria-pressed="addType === 'SET_4_STORAGE'"
             class="p-2.5 rounded-xl border text-left transition-all"
             :class="addType === 'SET_4_STORAGE' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
           >
@@ -138,6 +144,7 @@ async function handleCreateTires() {
           <button
             type="button"
             @click="addType = 'SET_2_FRONT'"
+            :aria-pressed="addType === 'SET_2_FRONT'"
             class="p-2.5 rounded-xl border text-left transition-all"
             :class="addType === 'SET_2_FRONT' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
           >
@@ -146,6 +153,7 @@ async function handleCreateTires() {
           <button
             type="button"
             @click="addType = 'SET_2_REAR'"
+            :aria-pressed="addType === 'SET_2_REAR'"
             class="p-2.5 rounded-xl border text-left transition-all"
             :class="addType === 'SET_2_REAR' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
           >
@@ -154,6 +162,7 @@ async function handleCreateTires() {
           <button
             type="button"
             @click="addType = 'SET_2_STORAGE'"
+            :aria-pressed="addType === 'SET_2_STORAGE'"
             class="p-2.5 rounded-xl border text-left transition-all"
             :class="addType === 'SET_2_STORAGE' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
           >
@@ -162,6 +171,7 @@ async function handleCreateTires() {
           <button
             type="button"
             @click="addType = 'SINGLE'"
+            :aria-pressed="addType === 'SINGLE'"
             class="p-2.5 rounded-xl border text-left transition-all"
             :class="addType === 'SINGLE' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
           >
@@ -318,7 +328,7 @@ async function handleCreateTires() {
         >
           {{ $t('common.cancel') }}
         </button>
-        <button
+        <button :disabled="submitting"
           type="button"
           @click="handleCreateTires"
           class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-5 py-2 rounded-xl shadow-lg shadow-rose-600/20 transition-colors"

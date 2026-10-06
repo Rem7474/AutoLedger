@@ -8,6 +8,7 @@ import { needsTollQualification } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistance, perDistance } from '@/units'
+import { formatCostPerDistance } from '@/utils/costPerDistance'
 
 // One drive of the list: click opens its cost breakdown.
 defineProps<{ d: any; selected: boolean }>()
@@ -27,6 +28,7 @@ const formatDate = formatDayTime
 
 <template>
   <div
+    v-clickable
     @click="emit('open', d)"
     class="bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-4 rounded-2xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-pointer group"
     :class="{ 'border-rose-500/40 bg-slate-800/40 shadow-lg shadow-rose-950/20': selected }"
@@ -124,7 +126,7 @@ const formatDate = formatDayTime
           <div class="text-xs font-extrabold text-white flex items-center gap-1.5">
             <span>{{ d.costs?.has_estimates ? '~' : '' }}{{ formatAmount(d.costs?.total_cost || 0, vehicleStore.currency) }}</span>
             <span class="text-xs font-normal text-success-400 font-mono">
-              {{ formatAmount(perDistance(d.costs?.cost_per_km || 0), vehicleStore.currency, 3) }}/{{ distanceUnit() }}
+              {{ formatCostPerDistance(d.costs?.cost_per_km, vehicleStore.currency, 3, true) }}
             </span>
           </div>
         </div>
