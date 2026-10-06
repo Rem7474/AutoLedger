@@ -156,8 +156,8 @@ const sourceLabel = computed(() => (health.value?.source ? t(`dashboard.residual
             <label class="text-slate-400">{{ $t('dashboard.residualPanel.kmShare') }}
               <input v-model="kmShare" type="number" min="0" max="100" step="5" class="block w-24 field" @change="loadResidual" />
             </label>
-            <label v-if="showBattery" class="text-slate-400">{{ $t('dashboard.residualPanel.healthWeight') }}
-              <NumberInput text v-model="healthWeight" min="0" max="2" class="block w-24 field" @change="loadResidual" />
+            <label v-if="showBattery" for="residual-health-weight" class="text-slate-400">{{ $t('dashboard.residualPanel.healthWeight') }}
+              <NumberInput id="residual-health-weight" text v-model="healthWeight" min="0" max="2" class="block w-24 field" @change="loadResidual" />
             </label>
           </div>
         </details>
