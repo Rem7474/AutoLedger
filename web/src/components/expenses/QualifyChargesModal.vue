@@ -7,6 +7,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { formatDate } from '@/utils/expenses'
 import { t } from '@/i18n'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import LoadError from '@/components/LoadError.vue'
 
 const vehicleStore = useVehicleStore()
 
@@ -18,6 +19,7 @@ const open = defineModel<boolean>('open', { required: true })
 useEscapeToClose(open, () => (open.value = false))
 
 const pendingCharges = ref<PendingCharge[]>([])
+const loadError = ref<string | null>(null)
 const loading = ref(false)
 const assigningId = ref<string | null>(null)
 const dismissingId = ref<string | null>(null)
@@ -27,6 +29,7 @@ const selectedVehicleIds = ref<Record<string, string>>({})
 
 async function loadPendingCharges() {
   loading.value = true
+  loadError.value = null
   try {
     const res = await api.getPendingCharges()
     pendingCharges.value = res.pending_charges || []
@@ -39,6 +42,7 @@ async function loadPendingCharges() {
     }
   } catch (err) {
     console.error('Failed to load pending charges', err)
+    loadError.value = (err as Error)?.message ?? ''
   } finally {
     loading.value = false
   }
@@ -118,6 +122,8 @@ onMounted(() => {
           {{ t('pendingCharges.loading') }}
         </div>
 
+        <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadPendingCharges" />
+
         <div v-else-if="pendingCharges.length === 0" class="text-center py-8 text-xs text-slate-400">
           {{ t('pendingCharges.empty') }}
         </div>
@@ -180,7 +186,7 @@ onMounted(() => {
                 :disabled="dismissingId === charge.id"
                 @click="handleDismiss(charge)"
                 class="tap p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                :title="t('pendingCharges.dismiss')"
+                :title="t('pendingCharges.dismiss')" :aria-label="t('pendingCharges.dismiss')"
               >
                 <Trash2 class="w-4 h-4" />
               </button>

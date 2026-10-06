@@ -234,6 +234,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
             <button
               type="button"
               @click="associationMode = 'NONE'"
+              :aria-pressed="associationMode === 'NONE'"
               class="py-1.5 px-2 text-xs font-medium rounded-lg transition-colors text-center border"
               :class="associationMode === 'NONE' ? 'bg-warning-500/20 text-warning-300 border-warning-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
             >
@@ -242,6 +243,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
             <button
               type="button"
               @click="associationMode = 'SINGLE'"
+              :aria-pressed="associationMode === 'SINGLE'"
               class="py-1.5 px-2 text-xs font-medium rounded-lg transition-colors text-center border"
               :class="associationMode === 'SINGLE' ? 'bg-warning-500/20 text-warning-300 border-warning-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
             >
@@ -250,6 +252,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
             <button
               type="button"
               @click="associationMode = 'MULTI'"
+              :aria-pressed="associationMode === 'MULTI'"
               class="py-1.5 px-2 text-xs font-medium rounded-lg transition-colors text-center border"
               :class="associationMode === 'MULTI' ? 'bg-warning-500/20 text-warning-300 border-warning-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
             >
@@ -333,7 +336,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
                 type="button"
                 @click="emit('view-document', tollForm.document_id, tollForm.document_filename, false)"
                 class="tap p-1 text-slate-400 hover:text-indigo-400 rounded-lg hover:bg-slate-800"
-                :title="$t('expenses.tollModal.viewTheDocument')"
+                :title="$t('expenses.tollModal.viewTheDocument')" :aria-label="$t('expenses.tollModal.viewTheDocument')"
               >
                 <Eye class="w-3.5 h-3.5" />
               </button>
@@ -341,7 +344,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
                 type="button"
                 @click="tollForm.document_id = null; tollForm.document_filename = null"
                 class="tap p-1 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800"
-                :title="$t('expenses.tollModal.detachTheReceipt')"
+                :title="$t('expenses.tollModal.detachTheReceipt')" :aria-label="$t('expenses.tollModal.detachTheReceipt')"
               >
                 <X class="w-3.5 h-3.5" />
               </button>
