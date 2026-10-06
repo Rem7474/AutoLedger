@@ -77,7 +77,7 @@ export function getLastDismountInfo(tires: any[], tireId: string) {
 /** Day of the most recent removal among a tire's sessions (YYYY-MM-DD), or null when it was never fitted and removed. */
 export function lastUsedDay(sessions: { dismounted_date?: string | null }[] | null | undefined): string | null {
   const days = (sessions ?? []).filter((s) => s.dismounted_date).map((s) => toIsoDay(s.dismounted_date as string))
-  return days.length > 0 ? days.reduce((a, b) => (a > b ? a : b)) : null
+  return days.reduce<string | null>((latest, day) => (latest === null || day > latest ? day : latest), null)
 }
 
 /** The tires a copy or duplication targets by default: same brand and model when there are some, otherwise every other tire. */
