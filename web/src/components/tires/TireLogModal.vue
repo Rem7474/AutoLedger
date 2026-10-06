@@ -10,6 +10,7 @@ import { type TireLogForm, validateTreadDepth } from '@/utils/tires'
 import { todayIso } from '@/utils/dates'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import { distanceUnit } from '@/units'
+import { useSubmit } from '@/composables/useSubmit'
 
 // Adds or edits (editingLogId set) a tread depth measurement of selectedTire; initialForm seeds the fields when the modal opens
 const props = defineProps<{ vehicleId: string; selectedTire: any | null; editingLogId: string | null; initialForm: TireLogForm }>()
@@ -31,10 +32,12 @@ watch(open, (isOpen) => {
   newLogForm.value = { ...props.initialForm }
 })
 
+const { pending: submitting, run: runOnce } = useSubmit()
+
 const submitted = ref(false)
 const depthError = computed(() => (submitted.value ? validateTreadDepth(newLogForm.value.depth_mm) : null))
 
-async function handleAddLog() {
+async function handleAddLogAction() {
   if (!props.vehicleId || !props.selectedTire) return
   submitted.value = true
   if (validateTreadDepth(newLogForm.value.depth_mm)) {
@@ -59,6 +62,7 @@ async function handleAddLog() {
     showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
+const handleAddLog = () => runOnce(handleAddLogAction)
 </script>
 
 <template>
@@ -73,7 +77,7 @@ async function handleAddLog() {
           <Ruler class="w-4 h-4 text-success-400" />
           {{ editingLogId ? $t('tires.tireLogModal.edit') : $t('tires.tireLogModal.new') }}
         </h3>
-        <button @click="open = false" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+        <button @click="open = false" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors" :aria-label="$t('common.close')">
           <X class="w-4 h-4" />
         </button>
       </div>
@@ -123,7 +127,7 @@ async function handleAddLog() {
         >
           {{ $t('common.cancel') }}
         </button>
-        <button
+        <button :disabled="submitting"
           type="button"
           @click="handleAddLog"
           class="bg-success-600 hover:bg-success-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
