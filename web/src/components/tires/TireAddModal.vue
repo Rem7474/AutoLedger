@@ -48,7 +48,13 @@ watch(open, (isOpen) => {
 })
 
 const submitted = ref(false)
-const priceModel = computed(() => (isTotalPrice.value ? addTireForm.value.total_price : addTireForm.value.unit_price))
+const priceModel = computed<number | ''>({
+  get: () => (isTotalPrice.value ? addTireForm.value.total_price : addTireForm.value.unit_price),
+  set: (v) => {
+    if (isTotalPrice.value) addTireForm.value.total_price = v
+    else addTireForm.value.unit_price = v
+  },
+})
 const errors = computed(() => (submitted.value ? validateTireForm({ ...addTireForm.value, price: priceModel.value }) : {}))
 
 async function handleCreateTires() {
@@ -251,7 +257,7 @@ async function handleCreateTires() {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label :for="isTotalPrice ? 'tire-add-tire-total-price' : 'tire-add-tire-unit-price'" class="text-xs font-semibold text-slate-400">
+            <label for="tire-add-tire-price" class="text-xs font-semibold text-slate-400">
               {{ isTotalPrice ? $t('tires.tireAddModal.totalPrice', { cur: currencySymbol(vehicleStore.currency) }) : $t('tires.tireAddModal.pricePerTire', { cur: currencySymbol(vehicleStore.currency) }) }}
             </label>
             <button
@@ -262,23 +268,11 @@ async function handleCreateTires() {
               {{ $t('tires.tireAddModal.switchTo', { mode: isTotalPrice ? $t('tires.tireAddModal.unitPrice') : $t('tires.tireAddModal.totalPriceMode') }) }}
             </button>
           </div>
-          <input id="tire-add-tire-total-price"
-            v-if="isTotalPrice"
-            v-model.number="addTireForm.total_price"
+          <input id="tire-add-tire-price"
+            v-model.number="priceModel"
             type="number"
             min="0"
-            step="10"
-            placeholder="0"
-            :aria-invalid="errors.price ? 'true' : undefined"
-            aria-describedby="tire-add-error-price"
-            class="field text-success-400 font-bold"
-          />
-          <input id="tire-add-tire-unit-price"
-            v-else
-            v-model.number="addTireForm.unit_price"
-            type="number"
-            min="0"
-            step="5"
+            :step="isTotalPrice ? 10 : 5"
             placeholder="0"
             :aria-invalid="errors.price ? 'true' : undefined"
             aria-describedby="tire-add-error-price"
