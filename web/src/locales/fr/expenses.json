@@ -59,7 +59,9 @@
     "teslamateChargeOfKwhThe": "Recharge TeslaMate du {date} (+{kwh_added} kWh). Le coût saisi ici ne sera pas écrasé par les synchronisations.",
     "newCharge": "Nouvelle recharge",
     "editCharge": "Modifier la recharge",
-    "chargeCost": "Coût de la recharge"
+    "chargeCost": "Coût de la recharge",
+    "start": "Début de la charge",
+    "endOptional": "Fin de la charge (optionnel)"
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} recharge(s) affichée(s) sur {chargesTotal}",
