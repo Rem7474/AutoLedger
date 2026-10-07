@@ -281,6 +281,12 @@ func TestHybridComparisonInflationAndFuelSensitivity(t *testing.T) {
 		if row.Label.Code == "comparison.sensitivity.fuel_down" && row.DeltaShift != eur(-210) {
 			t.Errorf("fuel-down shift = %v, want -210", row.DeltaShift)
 		}
+		if row.Label.Code == "comparison.sensitivity.electricity_up" && row.DeltaShift != eur(-88) {
+			t.Errorf("electricity-up shift = %v, want -88", row.DeltaShift)
+		}
+		if row.Label.Code == "comparison.sensitivity.electricity_down" && row.DeltaShift != eur(88) {
+			t.Errorf("electricity-down shift = %v, want 88", row.DeltaShift)
+		}
 	}
 }
 
