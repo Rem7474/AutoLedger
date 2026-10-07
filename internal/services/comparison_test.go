@@ -2,7 +2,9 @@ package services
 
 import (
 	"testing"
+	"time"
 
+	"github.com/teslacost/teslacost/internal/apierror"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
@@ -64,7 +66,7 @@ func TestComputeComparisonTotals(t *testing.T) {
 	if len(res.ICE.Years) != 5 || len(res.Cumulative) != 6 {
 		t.Errorf("years = %d, cumulative points = %d", len(res.ICE.Years), len(res.Cumulative))
 	}
-	if len(res.Sensitivity) != 4 || len(res.Assumptions) == 0 {
+	if len(res.Sensitivity) != 6 || len(res.Assumptions) == 0 {
 		t.Errorf("sensitivity = %d, assumptions = %d", len(res.Sensitivity), len(res.Assumptions))
 	}
 }
@@ -170,6 +172,10 @@ func TestComputeComparisonSensitivity(t *testing.T) {
 	if byLabel["comparison.sensitivity.fuel_up"].DeltaShift <= 0 || byLabel["comparison.sensitivity.fuel_down"].DeltaShift >= 0 {
 		t.Errorf("unexpected fuel sensitivity: %+v", res.Sensitivity)
 	}
+	// A dearer electricity bill hurts the EV; a cheaper one helps it.
+	if byLabel["comparison.sensitivity.electricity_up"].DeltaShift >= 0 || byLabel["comparison.sensitivity.electricity_down"].DeltaShift <= 0 {
+		t.Errorf("unexpected electricity sensitivity: %+v", res.Sensitivity)
+	}
 	// Driving more favours the EV here (lower per-km energy).
 	if byLabel["comparison.sensitivity.km_up"].DeltaShift <= 0 {
 		t.Errorf("unexpected mileage sensitivity: %+v", res.Sensitivity)
@@ -190,8 +196,8 @@ func TestEVBaselineFromTCO(t *testing.T) {
 		AcquisitionCost:    eur(30000),
 		DepreciationCost:   eur(5000),
 	}
-	ev, notes := evBaselineFromTCO(sum, 10000, 4)
-	if ev.EnergyPerKm != 0.05 || ev.InsurancePerKm != 0.1 || ev.MaintenancePerKm != 0.035 {
+	ev, notes := evBaselineFromTCO(sum, 10000, 4, time.Now())
+	if ev.EnergyPerKm != 0.05 || ev.InsuranceYearly != 0 || ev.MaintenancePerKm != 0.035 {
 		t.Errorf("unexpected rates: %+v", ev)
 	}
 	// depreciation 0.5 EUR/km * 10000 km * 4 years = 20000 -> resale 10000
@@ -203,14 +209,14 @@ func TestEVBaselineFromTCO(t *testing.T) {
 	}
 
 	// Unknown purchase price (lease) and no tracked distance are flagged.
-	ev2, notes2 := evBaselineFromTCO(&TCOSummary{}, 10000, 4)
+	ev2, notes2 := evBaselineFromTCO(&TCOSummary{}, 10000, 4, time.Now())
 	if ev2.PurchaseNet != 0 || ev2.ResaleValue != 0 || len(notes2) != 3 {
 		t.Errorf("unexpected fallback: %+v %v", ev2, notes2)
 	}
 
 	// Depreciation exceeding the purchase price floors the resale at zero.
 	sum.DepreciationCost = eur(20000)
-	if ev3, _ := evBaselineFromTCO(sum, 10000, 4); ev3.ResaleValue != 0 {
+	if ev3, _ := evBaselineFromTCO(sum, 10000, 4, time.Now()); ev3.ResaleValue != 0 {
 		t.Errorf("resale = %v, want 0", ev3.ResaleValue)
 	}
 }
@@ -225,15 +231,34 @@ func TestEVBaselineFromInputsAndAnnualKm(t *testing.T) {
 		t.Errorf("unexpected baseline: %+v", ev)
 	}
 
-	months := make([]MonthlyCost, 6)
-	if km, ok := annualKmFromTCO(&TCOSummary{DistanceBasisKm: 6000, MonthlyCosts: months}); !ok || km != 12000 {
+	now := time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC)
+	since := func(month string) []MonthlyCost { return []MonthlyCost{{Month: month}, {Month: "2026-06"}} }
+	// Two months carry data but they span six calendar months: the gap counts in the pace.
+	if km, ok := annualKmFromTCO(&TCOSummary{DistanceBasisKm: 6000, MonthlyCosts: since("2026-01")}, now); !ok || km != 12000 {
 		t.Errorf("annual km = %v (%v), want 12000 from data", km, ok)
 	}
-	if km, ok := annualKmFromTCO(&TCOSummary{DistanceBasisKm: 6000, MonthlyCosts: months[:2]}); ok || km != DefaultAnnualKm {
+	if km, ok := annualKmFromTCO(&TCOSummary{DistanceBasisKm: 6000, MonthlyCosts: since("2026-05")}, now); ok || km != DefaultAnnualKm {
 		t.Errorf("short history should fall back, got %v (%v)", km, ok)
 	}
-	if km, ok := annualKmFromTCO(&TCOSummary{MonthlyCosts: months}); ok || km != DefaultAnnualKm {
+	if km, ok := annualKmFromTCO(&TCOSummary{MonthlyCosts: since("2026-01")}, now); ok || km != DefaultAnnualKm {
 		t.Errorf("no distance should fall back, got %v (%v)", km, ok)
+	}
+}
+
+func TestAnnualTaxKeepsShortHistoryAndAveragesLongOne(t *testing.T) {
+	for _, c := range []struct {
+		total  money.Cents
+		months int
+		want   money.Cents
+	}{
+		{eur(0), 24, 0},
+		{eur(120), 1, eur(120)},
+		{eur(120), 12, eur(120)},
+		{eur(300), 24, eur(150)},
+	} {
+		if got := annualTax(c.total, c.months); got != c.want {
+			t.Errorf("annualTax(%v, %d) = %v, want %v", c.total, c.months, got, c.want)
+		}
 	}
 }
 
@@ -259,11 +284,40 @@ func TestHybridComparisonInflationAndFuelSensitivity(t *testing.T) {
 	}
 }
 
+func TestEVBaselineFromTCOIncludesRecordedTaxAndFlagsExcludedCosts(t *testing.T) {
+	now := time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC)
+	sum := &TCOSummary{
+		DistanceBasisKm: 1000,
+		TaxCost:         eur(240),
+		TollsCost:       eur(30),
+		MonthlyCosts:    []MonthlyCost{{Month: "2024-07"}, {Month: "2026-06"}},
+	}
+	ev, notes := evBaselineFromTCO(sum, 10000, 3, now)
+	if ev.TaxYearly != 120 {
+		t.Errorf("tax yearly = %v, want 120 (240 over 24 months)", ev.TaxYearly)
+	}
+	var excluded bool
+	for _, n := range notes {
+		if n.Code == "comparison.assumption.costs_excluded" {
+			excluded = true
+		}
+	}
+	if !excluded {
+		t.Error("tolls recorded but no costs_excluded assumption")
+	}
+	_, notes = evBaselineFromTCO(&TCOSummary{DistanceBasisKm: 1000, AcquisitionCost: eur(30000)}, 10000, 3, now)
+	for _, n := range notes {
+		if n.Code == "comparison.assumption.costs_excluded" {
+			t.Error("costs_excluded flagged without any excluded cost")
+		}
+	}
+}
+
 func TestHybridBaselineUsesRecordedCosts(t *testing.T) {
 	for _, powertrain := range []string{models.PowertrainPHEV, models.PowertrainREEV} {
 		t.Run(powertrain, func(t *testing.T) {
 			sum := &TCOSummary{Powertrain: powertrain, DistanceBasisKm: 1000, EnergyCost: eur(90), FuelEnergyCost: eur(60)}
-			baseline, _ := evBaselineFromTCO(sum, 10000, 2)
+			baseline, _ := evBaselineFromTCO(sum, 10000, 2, time.Now())
 			if baseline.EnergyPerKm != 0.09 || baseline.FuelPerKm != 0.06 {
 				t.Fatalf("unexpected baseline: %+v", baseline)
 			}
@@ -273,5 +327,41 @@ func TestHybridBaselineUsesRecordedCosts(t *testing.T) {
 				t.Errorf("energy = %v, want 900", result.EV.Energy)
 			}
 		})
+	}
+}
+
+func TestHybridWithOneEnergySourceIsFlagged(t *testing.T) {
+	now := time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC)
+	has := func(notes []*apierror.Message, code string) bool {
+		for _, n := range notes {
+			if n.Code == code {
+				return true
+			}
+		}
+		return false
+	}
+	for name, c := range map[string]struct {
+		powertrain string
+		energy     money.Cents
+		fuel       money.Cents
+		want       bool
+	}{
+		"fuel only":        {models.PowertrainPHEV, eur(60), eur(60), true},
+		"charging only":    {models.PowertrainREEV, eur(30), 0, true},
+		"both recorded":    {models.PowertrainPHEV, eur(90), eur(60), false},
+		"electric ignores": {models.PowertrainEV, eur(30), 0, false},
+	} {
+		sum := &TCOSummary{Powertrain: c.powertrain, DistanceBasisKm: 1000, EnergyCost: c.energy, FuelEnergyCost: c.fuel}
+		_, notes := evBaselineFromTCO(sum, 10000, 2, now)
+		if got := has(notes, "comparison.assumption.hybrid_missing_energy_source"); got != c.want {
+			t.Errorf("%s: missing-source flag = %v, want %v", name, got, c.want)
+		}
+		wording := "comparison.assumption.ev_actual"
+		if models.PowertrainCanRefuel(c.powertrain) {
+			wording = "comparison.assumption.hybrid_actual"
+		}
+		if !has(notes, wording) {
+			t.Errorf("%s: missing %s", name, wording)
+		}
 	}
 }

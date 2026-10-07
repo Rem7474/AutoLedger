@@ -15,6 +15,8 @@
     "sensitivity": {
       "fuel_down": "Carburant −20 %",
       "fuel_up": "Carburant +20 %",
+      "electricity_down": "Électricité −20 %",
+      "electricity_up": "Électricité +20 %",
       "km_down": "Kilométrage −20 %",
       "km_up": "Kilométrage +20 %"
     },
@@ -25,9 +27,14 @@
       "break_even": "Le point d'équilibre compare les décaissements cumulés (achat + coûts d'usage), sans la revente",
       "inflation": "Inflation annuelle : carburant {p0} %, électricité {p1} %, entretien/assurance/taxes {p2} %",
       "constant_prices": "Prix constants (aucune inflation appliquée)",
-      "ev_actual": "Côté référence : coûts enregistrés par {unit}, carburant et électricité compris pour les hybrides (assurance et dépréciation incluses)",
-      "ev_price_unknown": "Prix d'achat de référence inconnu (location ou saisie manquante) : dépréciation non incluse",
-      "ev_no_distance": "Aucun kilométrage suivi : les coûts enregistrés ne permettent pas un comparatif fiable"
+      "ev_actual": "Côté électrique : énergie, entretien et dépréciation à partir des coûts enregistrés par {unit} ; assurance et taxes à partir de montants annuels",
+      "costs_excluded": "Péages, stationnement, abonnements et autres coûts ne sont pas comparés : le thermique n'a pas de saisie correspondante",
+      "insurance_estimated": "Paiements d'assurance sans période de couverture : les paiements des 12 derniers mois servent d'estimation annuelle",
+      "insurance_expired": "Les paiements d'assurance historiques ne couvrent plus la période actuelle : assurance non projetée ; saisissez la prime actuelle",
+      "ev_price_unknown": "Prix d'achat du véhicule suivi inconnu (location ou saisie manquante) : dépréciation non incluse",
+      "ev_no_distance": "Aucun kilométrage suivi : les coûts enregistrés ne permettent pas un comparatif fiable",
+      "hybrid_actual": "Côté hybride : carburant, électricité, entretien et dépréciation à partir des coûts enregistrés par {unit} ; assurance et taxes à partir de montants annuels",
+      "hybrid_missing_energy_source": "Cet hybride n'a que des pleins ou que des recharges enregistrés : son coût d'énergie est incomplet, le comparatif est sous-estimé"
     },
     "defaults_source": "Valeurs indicatives pour la France, à ajuster"
   },

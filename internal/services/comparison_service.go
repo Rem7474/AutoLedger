@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"time"
 
 	"github.com/teslacost/teslacost/internal/apierror"
 	"github.com/teslacost/teslacost/internal/models"
@@ -17,10 +18,10 @@ const DefaultAnnualKm = 12000
 const minMonthsForAnnualKm = 3
 
 // ErrComparisonNeedsVehicle is returned when a RETROSPECTIVE comparison has no reference vehicle.
-var ErrComparisonNeedsVehicle = errors.New("comparison: retrospective mode requires a vehicle")
+var ErrComparisonNeedsVehicle = apierror.New("comparison.vehicle_required", "A vehicle is required in retrospective mode")
 
 // ErrComparisonNeedsEV is returned when the tracked vehicle cannot record charging sessions.
-var ErrComparisonNeedsEV = errors.New("comparison: retrospective mode requires an electric or plug-in hybrid vehicle")
+var ErrComparisonNeedsEV = apierror.New("comparison.needs_ev", "The tracked comparison requires an electric or plug-in hybrid vehicle; use projection mode for a combustion vehicle")
 
 // ICEDefault is an indicative starting point for the equivalent combustion vehicle of a given fuel.
 type ICEDefault struct {
@@ -72,28 +73,50 @@ func ratePerKm(amount money.Cents, km float64) float64 {
 }
 
 // evBaselineFromTCO derives the EV side from the tracked vehicle's real costs.
-// Insurance and depreciation are approximated per km, and financing is not included.
-func evBaselineFromTCO(sum *TCOSummary, annualKm float64, years int) (EVBaseline, []*apierror.Message) {
+// Insurance is supplied separately from policy periods; financing, tolls, parking, subscriptions and
+// other costs are not included, since the combustion side has no matching input.
+func evBaselineFromTCO(sum *TCOSummary, annualKm float64, years int, now time.Time) (EVBaseline, []*apierror.Message) {
 	basis := sum.DistanceBasisKm
 	ev := EVBaseline{
 		EnergyPerKm:      ratePerKm(sum.EnergyCost, basis),
 		FuelPerKm:        ratePerKm(sum.FuelEnergyCost, basis),
 		MaintenancePerKm: ratePerKm(sum.TiresAmortizedCost+sum.MaintenanceCost+sum.RepairCost, basis),
-		InsurancePerKm:   ratePerKm(sum.InsuranceCost, basis),
+		TaxYearly:        annualTax(sum.TaxCost, observedMonths(sum.MonthlyCosts, now)).Float(),
 		PurchaseNet:      sum.AcquisitionCost.Float(),
 	}
-	notes := []*apierror.Message{apierror.NewMessage("comparison.assumption.ev_actual", "Reference side: recorded costs per km, including fuel and electricity for hybrids (insurance and depreciation included)")}
+	hybrid := models.PowertrainCanCharge(sum.Powertrain) && models.PowertrainCanRefuel(sum.Powertrain)
+	var notes []*apierror.Message
+	if hybrid {
+		notes = append(notes, apierror.NewMessage("comparison.assumption.hybrid_actual", "Hybrid side: fuel, electricity, maintenance and depreciation from recorded costs per km; insurance and taxes from annual amounts"))
+		if basis > 0 && (sum.FuelEnergyCost <= 0 || sum.EnergyCost <= sum.FuelEnergyCost) {
+			notes = append(notes, apierror.NewMessage("comparison.assumption.hybrid_missing_energy_source", "This hybrid has only fuel or only charging records: its recorded energy cost is incomplete, so the comparison is understated"))
+		}
+	} else {
+		notes = append(notes, apierror.NewMessage("comparison.assumption.ev_actual", "Electric side: energy, maintenance and depreciation from recorded costs per km; insurance and taxes from annual amounts"))
+	}
+	if sum.TollsCost+sum.SubscriptionCost+sum.OtherCost > 0 {
+		notes = append(notes, apierror.NewMessage("comparison.assumption.costs_excluded", "Tolls, parking, subscriptions and other costs are not compared: they have no combustion-side input"))
+	}
 
 	if ev.PurchaseNet > 0 {
 		dep := ratePerKm(sum.DepreciationCost, basis) * annualKm * float64(years)
 		ev.ResaleValue = math.Max(ev.PurchaseNet-dep, 0)
 	} else {
-		notes = append(notes, apierror.NewMessage("comparison.assumption.ev_price_unknown", "Reference purchase price unknown (lease or missing entry): depreciation not included"))
+		notes = append(notes, apierror.NewMessage("comparison.assumption.ev_price_unknown", "Tracked vehicle purchase price unknown (lease or missing entry): depreciation not included"))
 	}
 	if basis <= 0 {
 		notes = append(notes, apierror.NewMessage("comparison.assumption.ev_no_distance", "No tracked mileage: recorded costs cannot provide a reliable comparison"))
 	}
 	return ev, notes
+}
+
+// annualTax turns the recorded taxes into a yearly amount. Under twelve months of history the recorded
+// total is kept as is, so a one-off tax is never multiplied up.
+func annualTax(total money.Cents, months int) money.Cents {
+	if total <= 0 {
+		return 0
+	}
+	return money.Cents(math.Round(float64(total) * 12 / float64(max(months, 12))))
 }
 
 // evBaselineFromInputs builds the EV side of a PROJECTION scenario.
@@ -124,7 +147,19 @@ func (s *ComparisonService) Compare(ctx context.Context, sc *models.ComparisonSc
 		if !models.PowertrainCanCharge(sum.Powertrain) {
 			return nil, ErrComparisonNeedsEV
 		}
-		ev, notes = evBaselineFromTCO(sum, sc.AnnualKm, sc.Years)
+		now := time.Now()
+		ev, notes = evBaselineFromTCO(sum, sc.AnnualKm, sc.Years, now)
+		annualInsurance, estimated, err := s.annualInsurance(ctx, *sc.VehicleID, now)
+		if err != nil {
+			return nil, err
+		}
+		ev.InsuranceYearly = annualInsurance.Float()
+		if estimated {
+			notes = append(notes, apierror.NewMessage("comparison.assumption.insurance_estimated", "Insurance payments without a coverage period: the last 12 months of payments are used as the annual estimate"))
+		}
+		if annualInsurance == 0 && sum.InsuranceCost > 0 {
+			notes = append(notes, apierror.NewMessage("comparison.assumption.insurance_expired", "Historical insurance payments have no current coverage: reference insurance is not projected; record the current premium"))
+		}
 	} else {
 		if sc.EV == nil {
 			return nil, errors.New("comparison: projection mode requires EV inputs")
@@ -137,9 +172,10 @@ func (s *ComparisonService) Compare(ctx context.Context, sc *models.ComparisonSc
 	return &res, nil
 }
 
-// annualKmFromTCO extrapolates the tracked mileage to a year, or falls back to DefaultAnnualKm.
-func annualKmFromTCO(sum *TCOSummary) (float64, bool) {
-	months := len(sum.MonthlyCosts)
+// annualKmFromTCO extrapolates the tracked mileage to a year over the calendar months since the first
+// recorded month (gaps included), or falls back to DefaultAnnualKm.
+func annualKmFromTCO(sum *TCOSummary, now time.Time) (float64, bool) {
+	months := observedMonths(sum.MonthlyCosts, now)
 	if sum.DistanceBasisKm <= 0 || months < minMonthsForAnnualKm {
 		return DefaultAnnualKm, false
 	}
@@ -163,7 +199,7 @@ func (s *ComparisonService) Defaults(ctx context.Context, vehicleID string) (*Co
 	if err != nil {
 		return nil, err
 	}
-	d.AnnualKm, d.AnnualKmFromData = annualKmFromTCO(sum)
+	d.AnnualKm, d.AnnualKmFromData = annualKmFromTCO(sum, time.Now())
 	d.Powertrain = sum.Powertrain
 	if models.PowertrainIsFuelOnly(sum.Powertrain) {
 		d.ICELPer100Km = sum.ConsumptionL100km

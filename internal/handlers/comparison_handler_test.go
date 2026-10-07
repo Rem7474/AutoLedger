@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/teslacost/teslacost/internal/middleware"
-	"github.com/teslacost/teslacost/internal/services"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
+	"github.com/teslacost/teslacost/internal/services"
 )
 
 func validComparisonRequest() SaveComparisonRequest {
@@ -101,6 +101,16 @@ func TestValidateComparisonRequestNormalizesLinks(t *testing.T) {
 	}
 	if proj.VehicleID != nil {
 		t.Errorf("projection must not keep a vehicle, got %v", *proj.VehicleID)
+	}
+}
+
+func TestComparisonServiceErrorsAreClientErrors(t *testing.T) {
+	for name, err := range map[string]error{"needs EV": services.ErrComparisonNeedsEV, "needs vehicle": services.ErrComparisonNeedsVehicle} {
+		rec := httptest.NewRecorder()
+		writeRepoError(rec, httptest.NewRequest(http.MethodGet, "/", nil), err, "Failed to compute comparison")
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", name, rec.Code)
+		}
 	}
 }
 
