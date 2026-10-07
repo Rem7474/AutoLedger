@@ -26,8 +26,8 @@
       "inflation": "Inflation annuelle : carburant {p0} %, électricité {p1} %, entretien/assurance/taxes {p2} %",
       "constant_prices": "Prix constants (aucune inflation appliquée)",
       "ev_actual": "Côté électrique : énergie, entretien et dépréciation à partir des coûts enregistrés par {unit} ; assurance à partir des primes annuelles",
-      "insurance_estimated": "Paiements d’assurance sans période de couverture : les paiements des 12 derniers mois servent d’estimation annuelle",
-      "insurance_expired": "Les paiements d’assurance historiques ne couvrent plus la période actuelle : assurance non projetée ; saisissez la prime actuelle",
+      "insurance_estimated": "Paiements d'assurance sans période de couverture : les paiements des 12 derniers mois servent d'estimation annuelle",
+      "insurance_expired": "Les paiements d'assurance historiques ne couvrent plus la période actuelle : assurance non projetée ; saisissez la prime actuelle",
       "ev_price_unknown": "Prix d'achat de l'électrique inconnu (location ou saisie manquante) : dépréciation électrique non incluse",
       "ev_no_distance": "Aucun kilométrage suivi : les coûts réels de l'électrique sont nuls"
     },
