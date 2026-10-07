@@ -17,3 +17,7 @@ Les résultats montrent les coûts d'énergie, l'entretien, l'assurance, la dép
 - Les deux côtés utilisent la même distance annuelle. Avec moins de trois mois d'historique, la distance annuelle vaut 12 000 km par défaut ; modifiez-la selon votre usage.
 - Les financements, prêts et locations sont exclus. La dépréciation suit le calcul achat/revente existant ; le seuil de rentabilité compare l'achat et les dépenses courantes sans déduire la revente.
 - La **projection** reste un scénario électrique contre thermique saisi à la main. Un comparatif d'hybride suivi demande des données d'hybride enregistrées.
+
+## Coûts de recharge gratuits et inconnus
+
+Saisissez un coût explicite de **0** pour une recharge gratuite, quelle qu'en soit la raison. Zéro est un coût connu ; un coût absent reste inconnu. Les recharges gratuites enregistrées comptent comme des recharges dans les comparatifs d'hybrides suivis et ne déclenchent pas l'avertissement de source d'énergie manquante. Les recharges dont le coût est inconnu reçoivent un rappel distinct pour saisir leur coût réel, ou zéro si elles étaient gratuites.
