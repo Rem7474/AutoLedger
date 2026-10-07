@@ -61,7 +61,7 @@ flowchart LR
 
 ### Vehicle comparison
 
-Compare a tracked vehicle (electric, plug-in hybrid or range-extender) with a configurable combustion one, or the reverse. The comparison uses recorded costs per kilometre; hybrids include fuel and electricity, and fuel and electricity price changes apply separately. See [Vehicle comparison](docs/vehicle-comparison.md) ([FR](docs/vehicle-comparison.fr.md)) for assumptions and limitations, and [Comparison insurance](docs/comparison-insurance.md) ([FR](docs/comparison-insurance.fr.md)) for how premiums are annualized.
+Compare a tracked vehicle (electric, plug-in hybrid or range-extender) with a configurable combustion one, or the reverse. The comparison uses recorded costs per kilometre; hybrids include fuel and electricity, and fuel and electricity price changes apply separately. See [Vehicle comparison](docs/vehicle-comparison.md) ([FR](docs/vehicle-comparison.fr.md)) for assumptions and limitations, including how insurance premiums are annualized.
 
 ### Electricity tariffs
 

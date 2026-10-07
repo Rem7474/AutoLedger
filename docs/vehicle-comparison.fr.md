@@ -1,6 +1,6 @@
 # Comparatif de véhicules
 
-English : [vehicle-comparison.md](vehicle-comparison.md). Les règles d'assurance sont décrites dans [comparison-insurance.fr.md](comparison-insurance.fr.md).
+English : [vehicle-comparison.md](vehicle-comparison.md).
 
 Choisissez un véhicule électrique, hybride rechargeable (PHEV) ou à prolongateur d'autonomie (REEV), ouvrez **Comparatif** et créez un comparatif **véhicule suivi**. Toutes les marques et tous les modèles utilisent le même calcul.
 
@@ -15,6 +15,7 @@ Les résultats montrent les coûts d'énergie, l'entretien, l'assurance, la dép
 - Enregistrez chaque plein et chaque recharge, y compris les recharges gratuites, et saisissez les relevés kilométriques. Des coûts ou un kilométrage manquants rendent l'estimation peu fiable. Un hybride qui n'a que des pleins ou que des recharges peut être comparé ; le résultat porte alors un avertissement, car le calcul ne peut pas deviner les achats non enregistrés.
 - Les coûts représentent des achats du journal, pas l'énergie mesurée en roulant. Une variation du carburant restant dans le réservoir ou de la charge de la batterie peut fausser un historique court.
 - Les deux côtés utilisent la même distance annuelle. Avec moins de trois mois d'historique, la distance annuelle vaut 12 000 km par défaut ; modifiez-la selon votre usage.
+- Assurance : une prime récurrente en cours est annualisée selon son intervalle de facturation (100 par mois, 300 par trimestre et 1 200 tous les douze mois donnent 1 200 par an) ; une prime ponctuelle avec période de couverture est annualisée sur cette période. Les paiements sans l'un ni l'autre utilisent leur total des douze derniers mois, avec une hypothèse affichée dans le résultat. Les contrats futurs et expirés sont exclus : renseignez une date de fin sur un contrat récurrent remplacé. Les deux côtés appliquent la même inflation de l'assurance, et le kilométrage annuel ne change jamais un total d'assurance.
 - Les financements, prêts et locations sont exclus. La dépréciation suit le calcul achat/revente existant ; le seuil de rentabilité compare l'achat et les dépenses courantes sans déduire la revente.
 - La **projection** reste un scénario électrique contre thermique saisi à la main. Un comparatif d'hybride suivi demande des données d'hybride enregistrées.
 
