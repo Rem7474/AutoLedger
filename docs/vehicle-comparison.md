@@ -1,5 +1,7 @@
 # Vehicle comparison
 
+Français : [vehicle-comparison.fr.md](vehicle-comparison.fr.md). Insurance rules are described in [comparison-insurance.md](comparison-insurance.md).
+
 Choose an electric, plug-in hybrid (PHEV) or range-extender (REEV) vehicle, open **Comparison**, and create a **tracked vehicle** comparison. All makes and models use the same calculation.
 
 Set the conventional reference vehicle's fuel consumption in L/100 km, price per litre, purchase and resale prices, annual maintenance, insurance and taxes. Fuel-type presets are starting points, not a model catalogue; replace them with assumptions appropriate to your vehicle, market and currency.
