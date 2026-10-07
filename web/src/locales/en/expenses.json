@@ -35,8 +35,9 @@
     "efficiency": "Efficiency",
     "estimate": "Estimate",
     "energyTitle": "Energy",
-    "energySubtitle": "Consumption, charging sessions and fallback estimate",
-    "fixedCosts": "Fixed costs"
+    "energySubtitle": "Consumption, charging sessions and fill-ups",
+    "fixedCosts": "Fixed costs",
+    "fillUps": "Fill-ups"
   },
   "chargeModal": {
     "pdfOrImageSuperchargerReceipt": "PDF or image (Supercharger receipt, public charger, etc.).",
