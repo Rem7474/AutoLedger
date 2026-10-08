@@ -1,7 +1,7 @@
 # ==============================================================================
 # Stage 1: Frontend Build (Vue 3 + Vite)
 # ==============================================================================
-FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend-builder
+FROM --platform=$BUILDPLATFORM node:26-alpine AS frontend-builder
 ARG APP_VERSION=dev
 ENV VITE_APP_VERSION=$APP_VERSION
 WORKDIR /app/web
