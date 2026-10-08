@@ -1277,12 +1277,19 @@ func TestIntegrationMaintenanceAmortizationAndOdometer(t *testing.T) {
 		t.Fatalf("computeMonthlyMaintenanceAmortization failed: %v", err)
 	}
 
-	// A fixed cost carrying a smoothing mode is not servicing and must not feed the maintenance smoothing.
+	// Only maintenance and repairs are smoothed: an insurance or accessory row carrying a mode must not feed it.
 	insurance := &models.MaintenanceExpense{
 		VehicleID: v.ID, Category: "INSURANCE", Amount: 600, Currency: "EUR", Date: base,
 		AmortizationMode: "DISTANCE", CoverageKm: &covKm, CoverageMonths: &covMonths,
 	}
 	if err := repo.CreateMaintenanceExpense(ctx, insurance); err != nil {
+		t.Fatal(err)
+	}
+	accessory := &models.MaintenanceExpense{
+		VehicleID: v.ID, Category: "ACCESSORY", Amount: 90, Currency: "EUR", Date: base,
+		AmortizationMode: "NONE",
+	}
+	if err := repo.CreateMaintenanceExpense(ctx, accessory); err != nil {
 		t.Fatal(err)
 	}
 	maintMap, err = tcoSvc.computeMonthlyMaintenanceAmortization(ctx, v.ID, monthlyDistances, now)
