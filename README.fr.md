@@ -357,6 +357,25 @@ Pour revenir à l'état d'avant la mise à niveau, arrêter la pile, vider le vo
 
 ---
 
+### Renommer le rôle et la base (facultatif)
+
+Le rôle et la base d'une pile TeslaCost s'appellent `teslacost`. Ils peuvent être renommés en `autoledger` une fois la pile démarrée sur les données migrées (données, propriétaires et mot de passe sont conservés). PostgreSQL ne peut pas renommer le rôle de la session courante ni une base utilisée : les commandes passent donc par un super-utilisateur temporaire :
+
+```bash
+docker compose stop api backup
+export OLD=teslacost NEW=autoledger PW='<votre mot de passe de base>'
+docker compose exec -T postgres psql -U "$OLD" -d postgres -v ON_ERROR_STOP=1 \
+  -c "CREATE ROLE tmp_admin SUPERUSER LOGIN"
+docker compose exec -T postgres psql -h 127.0.0.1 -U tmp_admin -d postgres -v ON_ERROR_STOP=1 -v pw="$PW" <<SQL
+ALTER DATABASE $OLD RENAME TO $NEW;
+ALTER ROLE $OLD RENAME TO $NEW;
+ALTER ROLE $NEW PASSWORD :'pw';
+SQL
+docker compose exec -T postgres psql -h 127.0.0.1 -U "$NEW" -d postgres -c "DROP ROLE tmp_admin"
+```
+
+Supprimez ensuite `DB_USER` et `DB_NAME` (ou `AUTOLEDGER_DB_USER` et `AUTOLEDGER_DB_NAME`) du `.env`, gardez `DB_PASSWORD` avec le même mot de passe, puis lancez `docker compose up -d`.
+
 ## ⚙️ Référence des variables d'environnement
 
 | Variable (principale) | Ancien nom | Description | Valeur par défaut |
