@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -58,4 +59,17 @@ func withFastRetries(t *testing.T, fn func()) {
 	connectRetryInterval = time.Millisecond
 	t.Cleanup(func() { connectRetryInterval = original })
 	fn()
+}
+
+func TestOutdatedServerWarning(t *testing.T) {
+	if msg := OutdatedServerWarning(180000); msg != "" {
+		t.Fatalf("PostgreSQL 18 is supported, got %q", msg)
+	}
+	if msg := OutdatedServerWarning(190001); msg != "" {
+		t.Fatalf("a newer major is not outdated, got %q", msg)
+	}
+	msg := OutdatedServerWarning(160004)
+	if !strings.Contains(msg, "PostgreSQL 16") || !strings.Contains(msg, "docker-compose.yml") {
+		t.Fatalf("an older major must point to the compose file, got %q", msg)
+	}
 }
