@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea to discuss
+    url: https://github.com/Rem7474/AutoLedger/discussions
+    about: Ask a question or float an idea before opening a feature request.
