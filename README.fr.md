@@ -10,6 +10,20 @@
 [![Docker Image](https://img.shields.io/badge/docker-ghcr.io%2Frem7474%2Fautoledger-blue?logo=docker)](https://github.com/Rem7474/AutoLedger/pkgs/container/autoledger)
 
 <p align="center">
+  <a href="#-ce-que-fait-autoledger">Présentation</a> ·
+  <a href="#-doù-viennent-les-données">Sources de données</a> ·
+  <a href="#captures-décran">Captures d'écran</a> ·
+  <a href="#-points-forts-et-fonctionnalités">Fonctionnalités</a> ·
+  <a href="#-déploiement-et-démarrage-rapide">Installation</a> ·
+  <a href="#-migrer-depuis-teslacost">Migration</a> ·
+  <a href="#-reverse-proxy-et-durcissement-en-production">Reverse proxy</a> ·
+  <a href="#-exploitation--sauvegardes-automatiques-et-restauration">Sauvegardes</a> ·
+  <a href="#-référence-des-variables-denvironnement">Configuration</a> ·
+  <a href="#-développement-et-tests">Développement</a> ·
+  <a href="docs/">Documentation</a>
+</p>
+
+<p align="center">
   <img src="docs/screenshots/dashboard-ev.fr.png" alt="Tableau de bord des coûts d'une voiture électrique" width="62%">
   <img src="docs/screenshots/mobile-quickadd.fr.png" alt="Saisie rapide d'un plein sur téléphone" width="22%">
 </p>
