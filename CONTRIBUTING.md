@@ -6,7 +6,7 @@ Thanks for helping. This page covers how to propose changes; the technical conve
 
 - **Bug**: open a *Bug report* issue with steps to reproduce.
 - **New feature**: open a *Feature request* issue first, so the approach can be agreed before code is written. Small fixes can go straight to a PR.
-- **Question or idea**: use Discussions.
+- **Question or idea**: open an issue with the `question` label.
 
 ### Out of scope
 
