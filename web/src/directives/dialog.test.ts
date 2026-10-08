@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { wrapFocusIndex } from './dialog'
+import { shouldKeepOpen, wrapFocusIndex } from './dialog'
 
 describe('wrapFocusIndex', () => {
   it('lets the browser move the focus inside the panel', () => {
@@ -16,5 +16,20 @@ describe('wrapFocusIndex', () => {
   })
   it('does nothing without a focusable control', () => {
     expect(wrapFocusIndex(0, -1, false)).toBe(-1)
+  })
+})
+
+describe('shouldKeepOpen', () => {
+  const backdrop = new EventTarget()
+  const panelChild = new EventTarget()
+  it('keeps a modal with edits open when the backdrop itself is clicked', () => {
+    expect(shouldKeepOpen(true, backdrop, backdrop)).toBe(true)
+  })
+  it('lets a pristine modal close on a backdrop click', () => {
+    expect(shouldKeepOpen(false, backdrop, backdrop)).toBe(false)
+  })
+  it('ignores clicks that do not land on the backdrop', () => {
+    expect(shouldKeepOpen(true, panelChild, backdrop)).toBe(false)
+    expect(shouldKeepOpen(true, null, null)).toBe(false)
   })
 })
