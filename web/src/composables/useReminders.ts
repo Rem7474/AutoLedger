@@ -70,10 +70,10 @@ export function useReminders(options: UseRemindersOptions) {
     if (!ok) return
     try {
       await api.deleteReminder(vehicleStore.activeVehicle.id, r.id)
-      showAlert(t('expenses.expensesView.reminderDeleted'), t('common.success'), 'success')
+      void showAlert(t('expenses.expensesView.reminderDeleted'), t('common.success'), 'success')
       await loadReminders()
     } catch (err: any) {
-      showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
