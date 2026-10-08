@@ -14,10 +14,7 @@ const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([typ
 
 interface State {
   opener: HTMLElement | null
-  backdrop: HTMLElement | null
-  dirty: boolean
-  onEdit: () => void
-  onBackdropClick: (e: MouseEvent) => void
+  releaseBackdrop: () => void
   removeLayer: (() => void) | null
   onKeydown: (e: KeyboardEvent) => void
 }
@@ -28,6 +25,32 @@ let idCounter = 0
 /** True when a click must be kept from closing the modal: it lands on the backdrop itself while the form holds edits. */
 export function shouldKeepOpen(dirty: boolean, target: EventTarget | null, backdrop: EventTarget | null): boolean {
   return dirty && target !== null && target === backdrop
+}
+
+/**
+ * Once the panel has seen an `input` or `change` event, stops a click that lands on the backdrop itself before it reaches the
+ * modal's own handler, and calls `onBlocked`. The capture listener sits on `root` (the document), an ancestor, so it runs
+ * before any listener of the backdrop whatever the browser's order of capture and bubbling listeners on the target itself.
+ * Returns the function that removes it.
+ */
+export function protectUnsavedInput(panel: EventTarget, backdrop: EventTarget | null, onBlocked: () => void, root: EventTarget = document): () => void {
+  let dirty = false
+  const markDirty = () => {
+    dirty = true
+  }
+  const onClick = (e: Event) => {
+    if (!shouldKeepOpen(dirty, e.target, backdrop)) return
+    e.stopImmediatePropagation()
+    onBlocked()
+  }
+  panel.addEventListener('input', markDirty)
+  panel.addEventListener('change', markDirty)
+  root.addEventListener('click', onClick, { capture: true })
+  return () => {
+    panel.removeEventListener('input', markDirty)
+    panel.removeEventListener('change', markDirty)
+    root.removeEventListener('click', onClick, { capture: true })
+  }
 }
 
 /** Index of the element to focus when Tab leaves the panel's ends; -1 when the browser can move the focus itself. */
@@ -68,16 +91,7 @@ export const vDialog: Directive<HTMLElement, Close> = {
     }
     const state: State = {
       opener: document.activeElement instanceof HTMLElement ? document.activeElement : null,
-      backdrop: el.parentElement,
-      dirty: false,
-      onEdit: () => {
-        state.dirty = true
-      },
-      onBackdropClick: (e) => {
-        if (!shouldKeepOpen(state.dirty, e.target, state.backdrop)) return
-        e.stopImmediatePropagation()
-        useToast().showToast(t('common.unsavedChanges'))
-      },
+      releaseBackdrop: protectUnsavedInput(el, el.parentElement, () => useToast().showToast(t('common.unsavedChanges'))),
       removeLayer: typeof binding.value === 'function' ? pushEscapeLayer(binding.value) : null,
       onKeydown: (e) => {
         if (e.key !== 'Tab' || e.defaultPrevented) return
@@ -90,9 +104,6 @@ export const vDialog: Directive<HTMLElement, Close> = {
       },
     }
     el.addEventListener('keydown', state.onKeydown)
-    el.addEventListener('input', state.onEdit)
-    el.addEventListener('change', state.onEdit)
-    state.backdrop?.addEventListener('click', state.onBackdropClick, true)
     states.set(el, state)
     initialFocus(el)
   },
@@ -100,9 +111,7 @@ export const vDialog: Directive<HTMLElement, Close> = {
     const state = states.get(el)
     if (!state) return
     el.removeEventListener('keydown', state.onKeydown)
-    el.removeEventListener('input', state.onEdit)
-    el.removeEventListener('change', state.onEdit)
-    state.backdrop?.removeEventListener('click', state.onBackdropClick, true)
+    state.releaseBackdrop()
     state.removeLayer?.()
     states.delete(el)
     if (state.opener?.isConnected) state.opener.focus({ preventScroll: true })
