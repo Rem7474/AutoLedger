@@ -55,13 +55,11 @@ flowchart LR
 
 ### Compatibility
 
-| Powertrain | Charges | Fill-ups | Efficiency | TeslaMate sync |
-| :--- | :---: | :---: | :---: | :---: |
-| Electric | ✅ | - | kWh/100 km | ✅ |
-| Plug-in hybrid / range-extender | ✅ | ✅ | kWh/100 km and L/100 km | - |
-| Combustion | - | ✅ | L/100 km | - |
-
-TeslaMate logs Teslas, which are all electric, so the sync is offered for electric vehicles. Every other source (manual entry, CSV, Home Assistant, ingestion API) works for every powertrain.
+| Powertrain | Charges | Fill-ups | Efficiency | TeslaMate sync | Home Assistant |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Electric | ✅ | - | kWh/100 km | ✅ | ✅ |
+| Plug-in hybrid / range-extender | ✅ | ✅ | kWh/100 km and L/100 km | - | ✅ |
+| Combustion | - | ✅ | L/100 km | - | - |
 
 ### Vehicle comparison
 

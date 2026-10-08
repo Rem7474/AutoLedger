@@ -55,13 +55,11 @@ flowchart LR
 
 ### Compatibilité
 
-| Motorisation | Recharges | Pleins | Efficacité | Synchronisation TeslaMate |
-| :--- | :---: | :---: | :---: | :---: |
-| Électrique | ✅ | - | kWh/100 km | ✅ |
-| Hybride rechargeable / prolongateur d'autonomie | ✅ | ✅ | kWh/100 km et L/100 km | - |
-| Thermique | - | ✅ | L/100 km | - |
-
-TeslaMate suit des Tesla, toutes électriques : la synchronisation est donc proposée pour les véhicules électriques. Toutes les autres sources (saisie manuelle, CSV, Home Assistant, API d'ingestion) fonctionnent pour toutes les motorisations.
+| Motorisation | Recharges | Pleins | Efficacité | Synchronisation TeslaMate | Home Assistant |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Électrique | ✅ | - | kWh/100 km | ✅ | ✅ |
+| Hybride rechargeable / prolongateur d'autonomie | ✅ | ✅ | kWh/100 km et L/100 km | - | ✅ |
+| Thermique | - | ✅ | L/100 km | - | - |
 
 ### Comparatif de véhicules
 
