@@ -275,6 +275,8 @@ New installations create `autoledger_*` volumes. An existing installation must n
    docker compose logs db-upgrade db-restore
    ```
 
+Vehicles, charges, expenses, invoices and settings are unchanged.
+
 Never run `docker compose down -v` or `docker volume rm` on these volumes: they hold the data.
 
 ### Moving to the `autoledger_*` volumes (optional)
@@ -290,8 +292,26 @@ for pair in teslacost_postgres_data:autoledger_db_data \
 done
 ```
 
-Then remove the three `*_VOLUME_NAME` lines from `.env` and start the stack. The database role and name (`DB_USER`, `DB_NAME`, `DB_PASSWORD`) and the encryption key value stay those of TeslaCost; the key can be set as `AUTOLEDGER_ENCRYPTION_KEY` instead of `APP_ENCRYPTION_KEY`.
-Vehicles, charges, expenses, invoices and settings are unchanged.
+Then remove the three `*_VOLUME_NAME` lines from `.env` and start the stack. The database role and name keep the TeslaCost values until they are renamed below, and the encryption key value stays the same; the key can be set as `AUTOLEDGER_ENCRYPTION_KEY` instead of `APP_ENCRYPTION_KEY`.
+
+### Renaming the database role and name (optional)
+
+The role and database of a TeslaCost stack are named `teslacost`. They can be renamed to `autoledger` once the stack runs on the migrated data (the stored data, ownership and password are kept). PostgreSQL cannot rename the role of the current session, nor a database in use, so the commands go through a temporary superuser:
+
+```bash
+docker compose stop api backup
+export OLD=teslacost NEW=autoledger PW='<your database password>'
+docker compose exec -T postgres psql -U "$OLD" -d postgres -v ON_ERROR_STOP=1 \
+  -c "CREATE ROLE tmp_admin SUPERUSER LOGIN"
+docker compose exec -T postgres psql -h 127.0.0.1 -U tmp_admin -d postgres -v ON_ERROR_STOP=1 -v pw="$PW" <<SQL
+ALTER DATABASE $OLD RENAME TO $NEW;
+ALTER ROLE $OLD RENAME TO $NEW;
+ALTER ROLE $NEW PASSWORD :'pw';
+SQL
+docker compose exec -T postgres psql -h 127.0.0.1 -U "$NEW" -d postgres -c "DROP ROLE tmp_admin"
+```
+
+Then delete `DB_USER` and `DB_NAME` (or `AUTOLEDGER_DB_USER` and `AUTOLEDGER_DB_NAME`) from `.env`, keep `DB_PASSWORD` set to the same password, and run `docker compose up -d`.
 
 ---
 
@@ -356,25 +376,6 @@ If any step fails, the stack stops with the old data untouched; read the logs wi
 To restore the pre-upgrade state, stop the stack, empty the data volume, and extract `pg16-datadir-<timestamp>.tar.gz` into it from a `postgres:16-alpine` container.
 
 ---
-
-### Renaming the database role and name (optional)
-
-The role and database of a TeslaCost stack are named `teslacost`. They can be renamed to `autoledger` once the stack runs on the migrated data (the stored data, ownership and password are kept). PostgreSQL cannot rename the role of the current session, nor a database in use, so the commands go through a temporary superuser:
-
-```bash
-docker compose stop api backup
-export OLD=teslacost NEW=autoledger PW='<your database password>'
-docker compose exec -T postgres psql -U "$OLD" -d postgres -v ON_ERROR_STOP=1 \
-  -c "CREATE ROLE tmp_admin SUPERUSER LOGIN"
-docker compose exec -T postgres psql -h 127.0.0.1 -U tmp_admin -d postgres -v ON_ERROR_STOP=1 -v pw="$PW" <<SQL
-ALTER DATABASE $OLD RENAME TO $NEW;
-ALTER ROLE $OLD RENAME TO $NEW;
-ALTER ROLE $NEW PASSWORD :'pw';
-SQL
-docker compose exec -T postgres psql -h 127.0.0.1 -U "$NEW" -d postgres -c "DROP ROLE tmp_admin"
-```
-
-Then delete `DB_USER` and `DB_NAME` (or `AUTOLEDGER_DB_USER` and `AUTOLEDGER_DB_NAME`) from `.env`, keep `DB_PASSWORD` set to the same password, and run `docker compose up -d`.
 
 ## ⚙️ Environment Variables Reference
 
