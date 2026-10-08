@@ -28,6 +28,7 @@ func (s *TCOService) computeMonthlyMaintenanceAmortization(ctx context.Context, 
 		       closes_maintenance_id::text
 		FROM maintenance_expenses
 		WHERE vehicle_id = $1 AND amount > 0
+		  AND category NOT IN ('INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING')
 		ORDER BY date ASC, created_at ASC;
 	`, vehicleID, s.timezone)
 	if err != nil {
