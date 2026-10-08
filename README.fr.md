@@ -310,6 +310,17 @@ docker run --rm \
   alpine sh -c "cd /data && tar -xzf /backup/autoledger-documents-<horodatage>.tar.gz --strip-components=1"
 ```
 
+### Passer de PostgreSQL 16 à 18
+Démarrer la pile sur un volume de base écrit par PostgreSQL 16 le met à niveau automatiquement, avec une sauvegarde préalable :
+
+1. `db-upgrade` démarre l'ancien serveur seul et écrit dans le volume des sauvegardes un dump vérifié (`pg16-upgrade-<horodatage>.sql.gz`) et une copie du répertoire de données (`pg16-datadir-<horodatage>.tar.gz`). Ces deux fichiers ne sont jamais purgés.
+2. Une fois les deux vérifiés seulement, il vide le répertoire de données et PostgreSQL 18 initialise un nouveau cluster.
+3. `db-restore` charge le dump en une seule transaction, puis l'application démarre.
+
+Si une étape échoue, la pile s'arrête avec les anciennes données intactes ; consulter les journaux avec `docker compose logs db-upgrade db-restore`. Une fois l'application validée, supprimer les deux fichiers `pg16-*` pour libérer l'espace. Un volume écrit par une autre version majeure que 16 est refusé avec un message explicite.
+
+Pour revenir à l'état d'avant la mise à niveau, arrêter la pile, vider le volume de données et y extraire `pg16-datadir-<horodatage>.tar.gz` depuis un conteneur `postgres:16-alpine`.
+
 ---
 
 ## ⚙️ Référence des variables d'environnement
@@ -368,7 +379,7 @@ Chaque variable principale l'emporte lorsque les deux sont définies ; l'ancien 
 go test -v ./...
 
 # Lancer les tests d'intégration du backend avec PostgreSQL
-docker run -d --name autoledger-test-pg -e POSTGRES_USER=autoledger -e POSTGRES_PASSWORD=test -e POSTGRES_DB=autoledger_test -p 55432:5432 postgres:16-alpine
+docker run -d --name autoledger-test-pg -e POSTGRES_USER=autoledger -e POSTGRES_PASSWORD=test -e POSTGRES_DB=autoledger_test -p 55432:5432 postgres:18-alpine
 TEST_DATABASE_URL="postgres://autoledger:test@localhost:55432/autoledger_test?sslmode=disable" go test -v ./...
 
 # Lancer les tests unitaires du frontend et la vérification des types
