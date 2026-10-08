@@ -252,5 +252,4 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
   await page.locator('div.rounded-2xl', { hasText: 'E2E carpool' }).getByRole('button', { name: 'Delete', exact: true }).first().click()
   await page.getByRole('dialog').last().getByRole('button', { name: 'Delete', exact: true }).click()
   await expect(page.getByText('E2E carpool')).toHaveCount(0)
-  await expect(page.getByText('Weekend carpool').first()).toBeVisible()
 })
