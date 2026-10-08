@@ -234,31 +234,63 @@ docker run -d \
 
 ## 🔄 Upgrading from TeslaCost
 
-An existing TeslaCost deployment upgrades in place: no data migration and no manual volume copy. The image is `ghcr.io/rem7474/autoledger`, and every TeslaCost variable (see the legacy column of the environment reference below) is still read, including `TESLACOST_VERSION`.
+An existing TeslaCost deployment upgrades in place: the data stays in its current volumes. The image is `ghcr.io/rem7474/autoledger`, and every TeslaCost variable (see the legacy column of the environment reference below) is still read, including `TESLACOST_VERSION`.
 
-New installations create `autoledger_*` volumes. Existing ones keep their data by pointing the compose file at the volumes they already have:
+New installations create `autoledger_*` volumes. An existing installation must name the volumes it already has, otherwise the stack starts on an empty database and shows the onboarding page.
 
-| Data | New default volume | TeslaCost volume | Override variable |
-|---|---|---|---|
-| PostgreSQL | `autoledger_db_data` | `postgres_data` | `DB_VOLUME_NAME` |
-| Documents | `autoledger_documents` | `teslacost_documents` | `DOCUMENTS_VOLUME_NAME` |
-| Backups | `autoledger_backups` | `teslacost_backups` | `BACKUPS_VOLUME_NAME` |
-| Generated secrets (database password, session secret, encryption key) | `autoledger_secrets` | - | `SECRETS_VOLUME_NAME` |
+1. **List the existing volumes.** Compose prefixes volume names with the project (directory) name:
+   ```bash
+   docker volume ls | grep -Ei "postgres_data|documents|backups"
+   ```
+   For a stack started from a directory called `teslacost`, with the TeslaCost compose file, the volumes are typically `teslacost_postgres_data`, `teslacost_teslacost_documents` and `teslacost_teslacost_backups`.
 
-```dotenv
-DB_VOLUME_NAME=postgres_data
-DOCUMENTS_VOLUME_NAME=teslacost_documents
-BACKUPS_VOLUME_NAME=teslacost_backups
+2. **Declare them in `.env`**, together with the credentials and the encryption key of the TeslaCost stack:
 
-# The database role and name stored in the existing volume:
-AUTOLEDGER_DB_USER=teslacost
-AUTOLEDGER_DB_NAME=teslacost
-```
+   | Data | New default volume | Override variable |
+   |---|---|---|
+   | PostgreSQL | `autoledger_db_data` | `DB_VOLUME_NAME` |
+   | Documents | `autoledger_documents` | `DOCUMENTS_VOLUME_NAME` |
+   | Backups | `autoledger_backups` | `BACKUPS_VOLUME_NAME` |
+   | Generated secrets (database password, session secret, encryption key) | `autoledger_secrets` | `SECRETS_VOLUME_NAME` |
 
-Then pull and restart:
+   ```dotenv
+   DB_VOLUME_NAME=teslacost_postgres_data
+   DOCUMENTS_VOLUME_NAME=teslacost_teslacost_documents
+   BACKUPS_VOLUME_NAME=teslacost_teslacost_backups
+
+   # The database role, name and password stored in the existing volume:
+   DB_USER=teslacost
+   DB_NAME=teslacost
+   DB_PASSWORD=<your TeslaCost database password>
+
+   # Stored secrets are encrypted with this key: keep the value used by TeslaCost
+   # (the compose default when it was never set is change-this-to-a-secure-32-byte-key-in-prod!).
+   APP_ENCRYPTION_KEY=<your TeslaCost key>
+   JWT_SECRET=<your TeslaCost secret>
+   ```
+
+3. **Pull and restart.** A PostgreSQL 16 volume is then upgraded to 18 automatically, with a verified backup first (see above):
+   ```bash
+   docker compose pull && docker compose up -d
+   docker compose logs db-upgrade db-restore
+   ```
+
+Never run `docker compose down -v` or `docker volume rm` on these volumes: they hold the data.
+
+### Moving to the `autoledger_*` volumes (optional)
+
+Instead of keeping the TeslaCost volume names, the data can be copied into the default `autoledger_*` volumes. The copy reads the old volumes read-only and leaves them untouched, so they remain a fallback. Stop the stack first (without `-v`), then, with the real names from `docker volume ls`:
+
 ```bash
-docker compose pull && docker compose up -d
+docker compose down
+for pair in teslacost_postgres_data:autoledger_db_data \
+            teslacost_teslacost_documents:autoledger_documents \
+            teslacost_teslacost_backups:autoledger_backups; do
+  docker run --rm -v "${pair%%:*}":/from:ro -v "${pair##*:}":/to alpine cp -a /from/. /to/
+done
 ```
+
+Then remove the three `*_VOLUME_NAME` lines from `.env` and start the stack. The database role and name (`DB_USER`, `DB_NAME`, `DB_PASSWORD`) and the encryption key value stay those of TeslaCost; the key can be set as `AUTOLEDGER_ENCRYPTION_KEY` instead of `APP_ENCRYPTION_KEY`.
 Vehicles, charges, expenses, invoices and settings are unchanged.
 
 ---
