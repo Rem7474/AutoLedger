@@ -89,7 +89,7 @@ func TestCSVImportBatchesListAndUndo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{UserID: u.ID, Name: "Car", Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
