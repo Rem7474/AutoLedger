@@ -6,6 +6,9 @@ import (
 	"github.com/teslacost/teslacost/internal/money"
 )
 
+// MaxFuelPricePerLiter matches the storage limit of NUMERIC(12, 3), regardless of currency.
+const MaxFuelPricePerLiter = 999_999_999.999
+
 // FuelLog is a manually entered fuel fill-up of a combustion vehicle.
 // Amount is the minimum; the odometer is optional (it is then estimated from the odometer readings)
 // and Liters (or price per liter) enables consumption figures.

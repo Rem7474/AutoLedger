@@ -135,7 +135,7 @@
   "fuel": {
     "combustion_only": "Fuel fill-ups do not apply to electric vehicles",
     "liters_range": "Invalid quantity (0.01 to 500 L)",
-    "price_range": "Invalid price per litre (0 to 10)",
+    "price_range": "Invalid price per litre (0 to {p0})",
     "type_invalid": "Invalid fuel",
     "amount_required": "The fill-up amount is required (or litres and price per litre)"
   },
