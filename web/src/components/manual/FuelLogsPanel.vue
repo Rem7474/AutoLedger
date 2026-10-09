@@ -11,7 +11,7 @@ import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
-import { distanceUnit, formatDistance, formatPerDistanceValue, perDistance } from '@/units'
+import { distanceUnit, formatDistance, formatFuelConsumptionValue, formatVolumeValue, fuelConsumptionUnit, litresToDisplayVolume, perDistance, perVolume, volumeUnitLabel } from '@/units'
 import LoadError from '@/components/LoadError.vue'
 
 const props = defineProps<{
@@ -62,8 +62,8 @@ const logs = computed<any[]>(() => [...(stats.value?.logs || [])].reverse())
 // Any two of amount / liters / price per liter determine the third (the server derives the missing one)
 const derivedHint = computed(() => {
   const { amount, liters, price_per_liter: price } = form.value
-  if (amount && liters && !price) return t('manual.fuelLogsPanel.derivedPrice', { value: formatAmount(amount / liters, currency.value, 3) })
-  if (amount && price && !liters) return t('manual.fuelLogsPanel.derivedQuantity', { value: (amount / price).toLocaleString(intlLocale(), { maximumFractionDigits: 2 }) })
+  if (amount && liters && !price) return t('manual.fuelLogsPanel.derivedPrice', { unit: volumeUnitLabel(), value: formatAmount(perVolume(amount / liters), currency.value, 3) })
+  if (amount && price && !liters) return t('manual.fuelLogsPanel.derivedQuantity', { unit: volumeUnitLabel(), value: litresToDisplayVolume(amount / price).toLocaleString(intlLocale(), { maximumFractionDigits: 2 }) })
   if (liters && price && !amount) return t('manual.fuelLogsPanel.derivedAmount', { value: formatAmount(liters * price, currency.value) })
   return ''
 })
@@ -202,12 +202,12 @@ onMounted(load)
         <div class="text-lg font-bold text-white">{{ fmtMoney(stats.total_cost, 0) }}</div>
       </div>
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
-        <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averagePricePerLitre') }}</div>
-        <div class="text-lg font-bold text-white">{{ stats.avg_price_per_liter ? `${fmtMoney(stats.avg_price_per_liter, 3)}/L` : '—' }}</div>
+        <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averagePricePerLitre', { unit: volumeUnitLabel() }) }}</div>
+        <div class="text-lg font-bold text-white">{{ stats.avg_price_per_liter ? `${fmtMoney(perVolume(stats.avg_price_per_liter), 3)}/${volumeUnitLabel()}` : '—' }}</div>
       </div>
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averageConsumption') }}</div>
-        <div class="text-lg font-bold text-white">{{ stats.consumption_l_100km ? `${formatPerDistanceValue(stats.consumption_l_100km, 2)} L/100 ${distanceUnit()}` : $t('manual.fuelLogsPanel.notMeasurable') }}</div>
+        <div class="text-lg font-bold text-white">{{ stats.consumption_l_100km ? `${formatFuelConsumptionValue(stats.consumption_l_100km, 2)} ${fuelConsumptionUnit()}` : $t('manual.fuelLogsPanel.notMeasurable') }}</div>
       </div>
     </div>
     <p v-if="stats && stats.unmeasurable_segments > 0" class="text-xs text-warning-400">
@@ -237,9 +237,9 @@ onMounted(load)
           </div>
           <div class="text-xs text-slate-400 mt-0.5">
             {{ fmtMoney(log.amount) }}
-            <template v-if="log.liters"> · {{ fmtNum(log.liters, 2) }} L</template>
-            <template v-if="log.price_per_liter"> · {{ fmtMoney(log.price_per_liter, 3) }}/L</template>
-            <template v-if="log.consumption_l_100km"> · <span class="text-success-300">{{ log.segment_estimated ? '≈ ' : '' }}{{ formatPerDistanceValue(log.consumption_l_100km, 2) }} L/100 {{ distanceUnit() }}</span></template>
+            <template v-if="log.liters"> · {{ formatVolumeValue(log.liters, 2) }} {{ volumeUnitLabel() }}</template>
+            <template v-if="log.price_per_liter"> · {{ fmtMoney(perVolume(log.price_per_liter), 3) }}/{{ volumeUnitLabel() }}</template>
+            <template v-if="log.consumption_l_100km"> · <span class="text-success-300">{{ log.segment_estimated ? '≈ ' : '' }}{{ formatFuelConsumptionValue(log.consumption_l_100km, 2) }} {{ fuelConsumptionUnit() }}</span></template>
             <template v-if="log.cost_per_km"> · {{ fmtMoney(perDistance(log.cost_per_km), 3) }}/{{ distanceUnit() }}</template>
           </div>
         </div>
@@ -281,16 +281,16 @@ onMounted(load)
             <NumberInput id="fuel-amount" v-model="form.amount" min="0.01" class="field" />
           </div>
           <div>
-            <label for="fuel-liters" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.fuelLogsPanel.litres') }}</label>
-            <NumberInput id="fuel-liters" v-model="form.liters" min="0.01" class="field" />
+            <label for="fuel-liters" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.fuelLogsPanel.litres', { unit: volumeUnitLabel() }) }}</label>
+            <DistanceInput kind="volume" :digits="2" id="fuel-liters" v-model="form.liters" min="0.01" class="field" />
           </div>
           <div>
-            <label for="fuel-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.fuelLogsPanel.priceL', { cur: currencySymbol(currency) }) }}</label>
-            <NumberInput id="fuel-price" v-model="form.price_per_liter" min="0.001" class="field" />
+            <label for="fuel-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.fuelLogsPanel.priceL', { cur: currencySymbol(currency), unit: volumeUnitLabel() }) }}</label>
+            <DistanceInput kind="per-volume" :digits="3" id="fuel-price" v-model="form.price_per_liter" min="0.001" class="field" />
           </div>
         </div>
         <p class="text-xs text-slate-400 -mt-1.5">
-          {{ $t('manual.fuelLogsPanel.enterTheAmountOrThe', { derivedHint }) }}
+          {{ $t('manual.fuelLogsPanel.enterTheAmountOrThe', { derivedHint, unit: volumeUnitLabel() }) }}
         </p>
         <p v-if="!hasOdometer(form.odometer)" class="text-xs text-slate-400 -mt-2">
           {{ $t('manual.fuelLogsPanel.withoutAMileageItIs') }}

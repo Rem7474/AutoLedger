@@ -2,17 +2,30 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { t } from '@/i18n'
 import { formatDecimalInput, parseDecimal } from '@/utils/numbers'
-import { displayDistanceToKm, kmToDisplayDistance, perDistance, perDistanceToPerKm } from '@/units'
+import {
+  displayConsumptionToL100km,
+  displayDistanceToKm,
+  displayVolumeToLitres,
+  kmToDisplayDistance,
+  l100kmToDisplayConsumption,
+  litresToDisplayVolume,
+  perDistance,
+  perDistanceToPerKm,
+  perVolume,
+  perVolumeToPerLitre,
+} from '@/units'
 
-// A number input whose model stays in the API's unit (km, or a figure per km) while the user reads and types
-// in the account's distance unit. Other attributes (id, class, min, step, placeholder...) reach the <input>.
+// A number input whose model stays in the API's unit (km, litres, or a figure per km / per litre / per 100 km)
+// while the user reads and types in the account's distance or volume unit. Other attributes (id, class, min, step, placeholder...) reach the <input>.
 const model = defineModel<number | string | null | undefined>()
 const props = withDefaults(
   defineProps<{
     // The id its <label for> points at
     id?: string
-    // 'distance': an odometer or a length; 'per-distance': a figure per km (kWh/100 km, a price per km)
-    kind?: 'distance' | 'per-distance'
+    // 'distance': an odometer or a length; 'per-distance': a figure per km (kWh/100 km, a price per km);
+    // 'volume': a quantity of fuel in litres; 'per-volume': a price per litre;
+    // 'consumption': a fuel consumption in L/100 km (shown as mpg for miles with gallons)
+    kind?: 'distance' | 'per-distance' | 'volume' | 'per-volume' | 'consumption'
     // Decimals shown in the field
     digits?: number
     // The API field is an integer: the converted value is rounded to a whole number
@@ -26,11 +39,19 @@ const props = withDefaults(
   { kind: 'distance', digits: 1, whole: false, text: false },
 )
 
-const toDisplay = (v: number) => (props.kind === 'distance' ? kmToDisplayDistance(v) : perDistance(v))
-const toApi = (v: number) => (props.kind === 'distance' ? displayDistanceToKm(v) : perDistanceToPerKm(v))
+const converters = {
+  distance: { toDisplay: kmToDisplayDistance, toApi: displayDistanceToKm },
+  'per-distance': { toDisplay: perDistance, toApi: perDistanceToPerKm },
+  volume: { toDisplay: litresToDisplayVolume, toApi: displayVolumeToLitres },
+  'per-volume': { toDisplay: perVolume, toApi: perVolumeToPerLitre },
+  consumption: { toDisplay: l100kmToDisplayConsumption, toApi: displayConsumptionToL100km },
+}
+const toDisplay = (v: number) => converters[props.kind].toDisplay(v)
+const toApi = (v: number) => converters[props.kind].toApi(v)
 
+// mpg runs the opposite way to L/100 km, so a bound cannot be carried over: the form validates instead
 const displayMin = computed(() => {
-  if (props.min === undefined || props.min === '') return undefined
+  if (props.kind === 'consumption' || props.min === undefined || props.min === '') return undefined
   const v = toDisplay(Number(props.min))
   if (Number.isNaN(v)) return undefined
   const factor = 10 ** props.digits
@@ -38,7 +59,7 @@ const displayMin = computed(() => {
 })
 
 const displayMax = computed(() => {
-  if (props.max === undefined || props.max === '') return undefined
+  if (props.kind === 'consumption' || props.max === undefined || props.max === '') return undefined
   const v = toDisplay(Number(props.max))
   if (Number.isNaN(v)) return undefined
   const factor = 10 ** props.digits

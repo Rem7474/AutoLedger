@@ -52,6 +52,10 @@
   "distanceUnit": "Distance unit",
   "distanceUnitKm": "Kilometers",
   "distanceUnitMi": "Miles",
+  "volumeUnit": "Volume unit",
+  "volumeUnit_l": "Litres",
+  "volumeUnit_gal_us": "US gallons",
+  "volumeUnit_gal_uk": "UK gallons",
   "currencyPerVehicle": "Currency is set per vehicle when it is created (Vehicles page); it is not an account setting.",
   "tokens": {
     "title": "API Tokens & Automations",

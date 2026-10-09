@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/services/api'
 import { currentLocale } from '@/i18n'
-import { setDistanceUnit } from '@/units'
+import { setDistanceUnit, setVolumeUnit } from '@/units'
 
 // The access/refresh tokens live in HttpOnly cookies set by the API — this store never
 // holds a token value, only whether the current cookie-backed session is valid.
@@ -27,6 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       user.value = await api.getMe()
       setDistanceUnit(user.value?.distance_unit)
+      setVolumeUnit(user.value?.volume_unit)
       status.value = 'authenticated'
       syncAccountLanguage(user.value)
     } catch {
@@ -39,6 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
     const res = await api.login(credentials)
     user.value = res.user
     setDistanceUnit(user.value?.distance_unit)
+    setVolumeUnit(user.value?.volume_unit)
     status.value = 'authenticated'
     syncAccountLanguage(user.value)
   }
@@ -47,6 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
     const res = await api.register(payload)
     user.value = res.user
     setDistanceUnit(user.value?.distance_unit)
+    setVolumeUnit(user.value?.volume_unit)
     status.value = 'authenticated'
     syncAccountLanguage(user.value)
   }
@@ -60,6 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     status.value = 'unauthenticated'
     setDistanceUnit(null)
+    setVolumeUnit(null)
   }
 
   return {

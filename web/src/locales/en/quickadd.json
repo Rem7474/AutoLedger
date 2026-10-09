@@ -39,12 +39,12 @@
   "quickFuelForm": {
     "moreDetails": "More details",
     "fullTank": "Full tank",
-    "quantityL": "Quantity (L)",
+    "quantityL": "Quantity ({unit})",
     "amount": "Amount ({cur})",
     "saveTheFillUp": "Save the fill-up",
     "message": "Fill-up of {amount}",
     "saveFailed": "Could not save the fill-up.",
-    "pricePerLiter": "Price per litre ({cur})"
+    "pricePerLiter": "Price per {unit} ({cur})"
   },
   "quickPendingCosts": {
     "otherSToCompleteFrom": "{total} other(s): to complete from Energy › Charges.",

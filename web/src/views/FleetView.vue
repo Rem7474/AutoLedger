@@ -11,7 +11,7 @@ import { api, type FleetSummaryResponse } from '@/services/api'
 import { formatAmount } from '@/currency'
 import { budgetUsage, parseBudgetInput } from '@/utils/fleetBudget'
 import { useConfirm } from '@/composables/useConfirm'
-import { formatDistance, currentDistanceUnit, perDistance, formatPerDistanceValue } from '@/units'
+import { formatDistance, currentDistanceUnit, perDistance, formatPerDistanceValue, formatFuelConsumptionValue, fuelConsumptionUnit } from '@/units'
 import { t } from '@/i18n'
 
 Chart.register(...registerables)
@@ -103,7 +103,7 @@ function completenessClass(pct: number): string {
 function energyPer100(v: { kwh_per_100km: number | null; liters_per_100km: number | null }): string {
   const parts: string[] = []
   if (v.kwh_per_100km != null) parts.push(t('fleet.compare.kwh100', { value: formatPerDistanceValue(v.kwh_per_100km), unit: distanceUnitLabel.value }))
-  if (v.liters_per_100km != null) parts.push(t('fleet.compare.l100', { value: formatPerDistanceValue(v.liters_per_100km), unit: distanceUnitLabel.value }))
+  if (v.liters_per_100km != null) parts.push(t('fleet.compare.l100', { value: formatFuelConsumptionValue(v.liters_per_100km), unit: fuelConsumptionUnit() }))
   return parts.length ? parts.join(' + ') : '—'
 }
 

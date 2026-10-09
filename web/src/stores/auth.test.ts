@@ -7,7 +7,7 @@ const login = vi.fn()
 
 vi.mock('@/services/api', () => ({ api: { updateLanguage: (l: string) => updateLanguage(l), getMe: () => getMe(), login: (c: unknown) => login(c) } }))
 vi.mock('@/i18n', () => ({ currentLocale: () => 'fr' }))
-vi.mock('@/units', () => ({ setDistanceUnit: vi.fn() }))
+vi.mock('@/units', () => ({ setDistanceUnit: vi.fn(), setVolumeUnit: vi.fn() }))
 
 describe('account language sync', () => {
   beforeEach(() => {

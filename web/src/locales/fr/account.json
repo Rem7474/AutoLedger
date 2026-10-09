@@ -52,6 +52,10 @@
   "distanceUnit": "Unité de distance",
   "distanceUnitKm": "Kilomètres",
   "distanceUnitMi": "Miles",
+  "volumeUnit": "Unité de volume",
+  "volumeUnit_l": "Litres",
+  "volumeUnit_gal_us": "Gallons US",
+  "volumeUnit_gal_uk": "Gallons UK",
   "currencyPerVehicle": "La devise se règle par véhicule, à sa création (page Véhicules) ; ce n'est pas un réglage du compte.",
   "tokens": {
     "title": "Jetons d'API & Automatisations",

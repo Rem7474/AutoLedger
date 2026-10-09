@@ -39,12 +39,12 @@
   "quickFuelForm": {
     "moreDetails": "Plus de détails",
     "fullTank": "Plein complet",
-    "quantityL": "Quantité (L)",
+    "quantityL": "Quantité ({unit})",
     "amount": "Montant ({cur})",
     "saveTheFillUp": "Enregistrer le plein",
     "message": "Plein de {amount}",
     "saveFailed": "Impossible d'enregistrer le plein.",
-    "pricePerLiter": "Prix au litre ({cur})"
+    "pricePerLiter": "Prix par {unit} ({cur})"
   },
   "quickPendingCosts": {
     "otherSToCompleteFrom": "{total} autre(s) : à compléter depuis Énergie › Recharges.",

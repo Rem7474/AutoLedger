@@ -6,7 +6,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import { Scale as PageIcon } from 'lucide-vue-next'
 import { intlLocale, t, te } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
-import { distanceUnit, formatDistanceValue, perDistance } from '@/units'
+import { distanceUnit, formatDistanceValue, fuelConsumptionUnit, perDistance, volumeUnitLabel } from '@/units'
 import { apiMessageText } from '@/services/apiError'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Plus, Trash2, Pencil, ArrowLeft, ArrowRight, Info, TrendingDown, TrendingUp, ChevronDown, Download, Printer, GitCompare } from 'lucide-vue-next'
@@ -432,12 +432,12 @@ onMounted(async () => {
               </select>
             </div>
             <div>
-              <label for="cmp-ice-l100" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('comparison.comparisonView.consumptionL100Km', { unit: distanceUnit() }) }}</label>
-              <DistanceInput kind="per-distance" id="cmp-ice-l100" v-model="form.ice.l_per_100km" min="0.1" step="any" class="field" />
+              <label for="cmp-ice-l100" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('comparison.comparisonView.consumptionL100Km', { unit: fuelConsumptionUnit() }) }}</label>
+              <DistanceInput kind="consumption" :digits="2" id="cmp-ice-l100" v-model="form.ice.l_per_100km" step="any" class="field" />
             </div>
             <div>
-              <label for="cmp-ice-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('comparison.comparisonView.fuelPriceL', { cur: currencySign }) }}</label>
-              <NumberInput id="cmp-ice-price" v-model="form.ice.fuel_price" min="0" class="field" />
+              <label for="cmp-ice-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('comparison.comparisonView.fuelPriceL', { cur: currencySign, unit: volumeUnitLabel() }) }}</label>
+              <DistanceInput kind="per-volume" :digits="3" id="cmp-ice-price" v-model="form.ice.fuel_price" min="0" class="field" />
             </div>
           </div>
           <p class="text-xs text-slate-400 flex items-center gap-1"><Info class="w-3 h-3" /> {{ defaults?.source ? apiMessageText(defaults.source) : $t('comparison.comparisonView.indicative') }}</p>

@@ -4,7 +4,7 @@ import { canCharge, canRefuel, isFuelOnly } from '@/utils/vehicles'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { Coins, Zap, Receipt, TrendingUp } from 'lucide-vue-next'
-import { distanceUnit, formatDistanceValue, formatPerDistanceValue, perDistance } from '@/units'
+import { distanceUnit, formatDistanceValue, formatFuelConsumptionValue, fuelConsumptionUnit, litresToDisplayVolume, perDistance, perVolume, volumeUnitLabel } from '@/units'
 
 defineProps<{ tco: any | null }>()
 const vehicleStore = useVehicleStore()
@@ -76,9 +76,9 @@ const perUnit = (v: number) => money(perDistance(v || 0), 3)
       <div class="mt-2 space-y-0.5">
         <ul v-if="canRefuel(tco?.powertrain)" class="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-400">
           <li>{{ perUnit(tco?.energy_cost_per_km) }}/{{ distanceUnit() }}</li>
-          <li>{{ Math.round(tco?.total_liters || 0).toLocaleString(intlLocale()) }} L</li>
-          <li v-if="tco?.consumption_l_100km">{{ formatPerDistanceValue(tco.consumption_l_100km, 2) }} L/100 {{ distanceUnit() }}</li>
-          <li v-if="tco?.avg_cost_per_liter">{{ money(tco.avg_cost_per_liter, 3) }}/L</li>
+          <li>{{ Math.round(litresToDisplayVolume(tco?.total_liters || 0)).toLocaleString(intlLocale()) }} {{ volumeUnitLabel() }}</li>
+          <li v-if="tco?.consumption_l_100km">{{ formatFuelConsumptionValue(tco.consumption_l_100km, 2) }} {{ fuelConsumptionUnit() }}</li>
+          <li v-if="tco?.avg_cost_per_liter">{{ money(perVolume(tco.avg_cost_per_liter), 3) }}/{{ volumeUnitLabel() }}</li>
         </ul>
         <p v-if="canCharge(tco?.powertrain) && canRefuel(tco?.powertrain) && tco?.total_kwh_added" class="text-xs text-slate-400">
           {{ $t('dashboard.tcoMetricsGrid.kwhOnly', { total_kwh_added: Math.round(tco.total_kwh_added).toLocaleString(intlLocale()) }) }}
