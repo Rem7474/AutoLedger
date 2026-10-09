@@ -26,10 +26,10 @@ async function refreshSession(): Promise<boolean> {
   return refreshPromise
 }
 
-export async function fetchWithSessionRefresh(url: string, options: RequestInit = {}): Promise<Response> {
+export async function fetchWithSessionRefresh(url: string, options: RequestInit = {}, canRetry: () => boolean = () => true): Promise<Response> {
   const init = { ...options, credentials: options.credentials || 'include' } as RequestInit
   const response = await fetch(url, init)
-  if (response.status === 401 && !isPublicAuthRequest(url) && await refreshSession()) {
+  if (response.status === 401 && !isPublicAuthRequest(url) && canRetry() && await refreshSession() && canRetry()) {
     return fetch(url, init)
   }
   return response

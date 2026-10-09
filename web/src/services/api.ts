@@ -48,10 +48,13 @@ export interface ExpenseDocumentHeader {
 
 async function request<T>(endpoint: string, options: RequestInit = {}, offlineLabel?: string): Promise<T> {
   const idempotencyKey = offlineLabel ? newIdempotencyKey() : undefined
+  // Keep the owner from the start of the request, even if login changes before a network failure.
+  const accountId = offlineLabel ? (await import('@/stores/auth')).useAuthStore().user?.id : undefined
   const queueForLater = async () => {
     const { useOfflineStore } = await import('@/stores/offline')
     await useOfflineStore().queue({
       id: idempotencyKey!,
+      accountId,
       method: options.method || 'POST',
       endpoint,
       body: typeof options.body === 'string' ? options.body : undefined,

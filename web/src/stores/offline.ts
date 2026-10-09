@@ -1,13 +1,15 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { t } from '@/i18n'
 import { enqueueMutation, listQueuedMutations, removeQueuedMutation, type QueuedMutation } from '@/services/offlineQueue'
 import { useVehicleStore } from '@/stores/vehicle'
+import { useAuthStore } from '@/stores/auth'
 import { fetchWithSessionRefresh } from '@/services/sessionFetch'
 
 const RETRY_INTERVAL_MS = 30_000
 
 export const useOfflineStore = defineStore('offline', () => {
+  const auth = useAuthStore()
   const isOnline = ref(typeof navigator === 'undefined' ? true : navigator.onLine)
   const pendingCount = ref(0)
   const isFlushing = ref(false)
@@ -17,7 +19,7 @@ export const useOfflineStore = defineStore('offline', () => {
 
   async function refreshCount() {
     try {
-      pendingCount.value = (await listQueuedMutations()).length
+      pendingCount.value = (await listQueuedMutations()).filter((m) => m.accountId === auth.user?.id && !!m.accountId).length
     } catch (err) {
       console.error('Failed to read the offline queue', err)
       pendingCount.value = 0
@@ -25,7 +27,9 @@ export const useOfflineStore = defineStore('offline', () => {
   }
 
   async function queue(mutation: QueuedMutation) {
-    await enqueueMutation(mutation)
+    const accountId = mutation.accountId || auth.user?.id
+    if (!accountId) throw new Error(t('shell.offline.signInRequired'))
+    await enqueueMutation({ ...mutation, accountId })
     lastQueuedLabel.value = mutation.label
     setTimeout(() => {
       if (lastQueuedLabel.value === mutation.label) lastQueuedLabel.value = null
@@ -35,11 +39,18 @@ export const useOfflineStore = defineStore('offline', () => {
 
   // Replays queued mutations in order; stops at the first network or server error to keep ordering
   async function flush() {
-    if (isFlushing.value || !navigator.onLine) return
+    const accountId = auth.user?.id
+    if (isFlushing.value || !navigator.onLine || !accountId) return
     isFlushing.value = true
     let sent = 0
     try {
-      for (const m of await listQueuedMutations()) {
+      const entries = await listQueuedMutations()
+      if (entries.some((m) => !m.accountId) && !failures.value.some((f) => f.label === t('shell.offline.legacyLabel'))) {
+        failures.value.push({ label: t('shell.offline.legacyLabel'), error: t('shell.offline.legacyRetained') })
+      }
+      for (const m of entries) {
+        if (auth.user?.id !== accountId) break
+        if (m.accountId !== accountId) continue
         let res: Response
         try {
           res = await fetchWithSessionRefresh(`/api${m.endpoint}`, {
@@ -50,14 +61,17 @@ export const useOfflineStore = defineStore('offline', () => {
               'Idempotency-Key': m.id,
             },
             body: m.body,
-          })
+          }, () => auth.user?.id === accountId)
         } catch {
           break
         }
-        if (res.status === 401 || res.status >= 500) break
+        if (auth.user?.id !== accountId || res.status === 401 || res.status >= 500) break
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
-          failures.value.push({ label: m.label, error: data.error || t('shell.offline.httpError', { status: res.status }) })
+          const failure = { label: m.label, error: data.error || t('shell.offline.httpError', { status: res.status }) }
+          if (!failures.value.some((f) => f.label === failure.label && f.error === failure.error)) failures.value.push(failure)
+          // An access change is recoverable; never discard the user's record for it.
+          if (res.status === 403 || res.status === 404) break
         } else {
           sent++
         }
@@ -92,6 +106,12 @@ export const useOfflineStore = defineStore('offline', () => {
     }, RETRY_INTERVAL_MS)
     void refreshCount().then(flushInBackground)
   }
+
+  watch(() => auth.user?.id, () => {
+    lastQueuedLabel.value = null
+    failures.value = []
+    void refreshCount()
+  })
 
   function dismissFailures() {
     failures.value = []

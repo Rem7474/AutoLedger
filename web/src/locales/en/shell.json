@@ -91,6 +91,10 @@
     "takesLonger": "The synchronization is taking longer than expected, it keeps running in the background"
   },
   "offline": {
+    "signInRequired": "Sign in before saving an offline entry.",
+    "legacyLabel": "Older offline entries",
+    "legacyRetained": "Entries saved by an older version have no recorded account. They are kept locally and will not be sent automatically; re-enter them under the correct account.",
+
     "httpError": "Error {status}"
   },
   "documents": {

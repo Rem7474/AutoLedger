@@ -29,3 +29,15 @@ it('does not retry when refresh fails or intercept public authentication request
   await fetchWithSessionRefresh('/api/auth/login', { method: 'POST' })
   expect(fetchMock).toHaveBeenCalledTimes(1)
 })
+
+
+it('does not retry a mutation when the owning account changes during refresh', async () => {
+  let sameAccount = true
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(json(401))
+    .mockImplementationOnce(async () => { sameAccount = false; return json(200) })
+  vi.stubGlobal('fetch', fetchMock)
+  const response = await fetchWithSessionRefresh('/api/vehicles/v1/fuel', { method: 'POST' }, () => sameAccount)
+  expect(response.status).toBe(401)
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+})

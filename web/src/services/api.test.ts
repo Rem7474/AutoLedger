@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const queue = vi.fn()
+vi.mock('@/stores/auth', () => ({ useAuthStore: () => ({ user: { id: 'account-A' } }) }))
 vi.mock('@/stores/offline', () => ({ useOfflineStore: () => ({ queue }) }))
 
 import { api } from './api'
@@ -127,7 +128,7 @@ describe('offline mutations', () => {
     expect(result).toEqual({ queued: true })
     expect(fetchMock).not.toHaveBeenCalled()
     const queued = queue.mock.calls[0][0]
-    expect(queued).toMatchObject({ method: 'POST', endpoint: '/vehicles/v1/charges', body: JSON.stringify({ kwh_added: 12 }) })
+    expect(queued).toMatchObject({ accountId: 'account-A', method: 'POST', endpoint: '/vehicles/v1/charges', body: JSON.stringify({ kwh_added: 12 }) })
     expect(queued.id).toBeTruthy()
   })
 
