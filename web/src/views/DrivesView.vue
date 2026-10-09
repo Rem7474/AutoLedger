@@ -6,11 +6,11 @@ import { Navigation as PageIcon } from 'lucide-vue-next'
 import { t } from '@/i18n'
 import { distanceUnit } from '@/units'
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDriveSelection } from '@/composables/useDriveSelection'
+import { useDriveBulkActions } from '@/composables/useDriveBulkActions'
 import { useTripGroups } from '@/composables/useTripGroups'
 import { useDriveCostModal } from '@/composables/useDriveCostModal'
 import { api } from '@/services/api'
@@ -23,6 +23,8 @@ import AddressBackfillNotice from '@/components/drives/AddressBackfillNotice.vue
 import TripGroupsPanel from '@/components/drives/TripGroupsPanel.vue'
 import TripSuggestions from '@/components/drives/TripSuggestions.vue'
 import ToQualifyFilter from '@/components/drives/ToQualifyFilter.vue'
+import DriveFilterGroups from '@/components/drives/DriveFilterGroups.vue'
+import DriveListSkeleton from '@/components/drives/DriveListSkeleton.vue'
 import DriveCostModal from '@/components/drives/DriveCostModal.vue'
 import DriveGroupModal from '@/components/drives/DriveGroupModal.vue'
 import TripEditModal from '@/components/drives/TripEditModal.vue'
@@ -30,14 +32,10 @@ import AddToTripModal from '@/components/drives/AddToTripModal.vue'
 import ManualDriveModal from '@/components/drives/ManualDriveModal.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
 import EmptySourceHints from '@/components/EmptySourceHints.vue'
-import { downloadCsv } from '@/utils/csv'
-import { ChevronDown, Receipt, Layers, List, RotateCcw, Plus, SlidersHorizontal, UploadCloud } from 'lucide-vue-next'
+import { ChevronDown, Layers, List, RotateCcw, Plus, SlidersHorizontal, UploadCloud } from 'lucide-vue-next'
 import {
-  driveCsvHeaders,
-  applyBatchTag,
   filterTrips,
   currentYearMonth,
-  driveCsvRows,
   countActiveDriveFilters,
   monthRange,
   selectionSummary,
@@ -46,7 +44,6 @@ import {
 
 // The page owns the drives list, the filters, the selection and which modal is open; the toolbar, the cards,
 // the pagination and the modals are components that report back to it.
-const router = useRouter()
 const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
 const { showConfirm, showAlert } = useConfirm()
@@ -180,31 +177,6 @@ const {
 // Unified selection summary metrics (same as a Voyage)
 const selectedSummaryMetrics = computed(() => selectionSummary(selectedList.value, vehicleStore.currency))
 
-// Batch tagging
-async function handleBatchTag(tag: 'Pro' | 'Perso' | null) {
-  if (!vehicleStore.activeVehicle || !selectedDriveIds.value.length) return
-  const ids = [...selectedDriveIds.value]
-  try {
-    for (const id of ids) {
-      const d = selectedDrives.value[id] || drives.value.find((x) => x.id === id)
-      const currentTags = applyBatchTag(d?.tags, tag)
-      await api.updateDriveTags(vehicleStore.activeVehicle.id, id, currentTags)
-      if (d) d.tags = currentTags
-      const listed = drives.value.find((x) => x.id === id)
-      if (listed) listed.tags = currentTags
-    }
-    showAlert(t('drives.drivesView.tagsUpdated', { count: ids.length }), t('common.success'), 'success')
-  } catch (err: any) {
-    showAlert(t('drives.drivesView.batchTagError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-
-// Export selected drives to CSV
-function exportSelectedDrives() {
-  if (!selectedList.value.length) return
-  downloadCsv(`${t('drives.drivesView.csvFileName')}_${new Date().toISOString().slice(0, 10)}.csv`, driveCsvHeaders(vehicleStore.currency), driveCsvRows(selectedList.value))
-}
-
 async function loadDrives(silent = false) {
   if (!vehicleStore.activeVehicle) {
     loading.value = false
@@ -277,7 +249,14 @@ const showTripEditModal = ref(false)
 const tripBeingEdited = ref<any | null>(null)
 const showAddToTripModal = ref(false)
 const showGroupModal = ref(false)
-const bulkApplyingToll = ref(false)
+const { bulkApplyingToll, handleBatchTag, exportSelectedDrives, handleCarpoolSelectedDrives, handleBulkApplyToll } = useDriveBulkActions({
+  drives,
+  selectedDrives,
+  selectedDriveIds,
+  selectedList,
+  clearSelection,
+  loadDrives,
+})
 const {
   showCostModal,
   selectedCostDrive,
@@ -407,40 +386,6 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
     showAlert(t('drives.drivesView.tagUpdateError', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
-
-async function handleCarpoolSelectedDrives() {
-  if (!vehicleStore.activeVehicle || !selectedDriveIds.value.length) return
-  // Each selected drive becomes a leg of the carpool, in chronological order
-  const ids = selectedList.value.map((d: any) => d.id)
-  clearSelection()
-  router.push({ path: '/carpools', query: { new_drive_ids: ids.join(',') } })
-}
-
-async function handleBulkApplyToll() {
-  if (!vehicleStore.activeVehicle || !selectedDriveIds.value.length) return
-  const ok = await showConfirm({
-    title: t('drives.drivesView.autoTollTitle'),
-    message: t('drives.drivesView.autoTollMessage', { count: selectedDriveIds.value.length }),
-    confirmText: t('drives.drivesView.apply'),
-    type: 'info',
-  })
-  if (!ok) return
-  bulkApplyingToll.value = true
-  try {
-    const r = await api.applyTollEstimatesBulk(vehicleStore.activeVehicle.id, selectedDriveIds.value)
-    const skipped = r.skipped_manual + r.skipped_trip_group + r.skipped_no_price + r.skipped_no_gps
-    showAlert(
-      t('drives.drivesView.autoTollResult', { created: r.created, updated: r.updated, skipped, manual: r.skipped_manual, trip: r.skipped_trip_group, noPrice: r.skipped_no_price, noGps: r.skipped_no_gps }) + (r.failed ? t('drives.drivesView.autoTollFailed', { failed: r.failed }) : '') + '.',
-      t('drives.drivesView.autoTollShort'),
-      r.failed ? 'warning' : 'info'
-    )
-    await loadDrives()
-  } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  } finally {
-    bulkApplyingToll.value = false
-  }
-}
 </script>
 
 <template>
@@ -521,61 +466,16 @@ async function handleBulkApplyToll() {
         </button>
 
         <!-- Tag Filters -->
-        <div v-if="viewMode === 'DRIVES'" id="drives-filter-groups" class="items-center gap-2 bg-slate-900 border border-slate-800 p-1 rounded-xl flex-wrap" :class="[filterGroupClass, filtersOpen ? 'flex' : '']">
-        <ToQualifyFilter
-          :count="unqualifiedCount"
-          :active="unqualifiedOnly"
-          :title="$t('drives.drivesView.motorwayTypeDrivesWithNo')"
-          @toggle="unqualifiedOnly = !unqualifiedOnly"
+        <DriveFilterGroups
+          v-if="viewMode === 'DRIVES'"
+          v-model:unqualified-only="unqualifiedOnly"
+          v-model:has-toll-only="hasTollOnly"
+          v-model:toll-source="tollSource"
+          v-model:selected-tag="selectedTag"
+          :unqualified-count="unqualifiedCount"
+          :pro-perso-enabled="prefs.proPersoEnabled"
+          :class="[filterGroupClass, filtersOpen ? 'flex' : '']"
         />
-        <button
-          @click="hasTollOnly = !hasTollOnly"
-          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
-          :class="hasTollOnly ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-sky-400/80 hover:text-sky-300 border border-transparent'"
-          :title="$t('drives.drivesView.drivesWithATollExpense')"
-        >
-          <Receipt class="w-3.5 h-3.5" />
-          {{ $t('drives.drivesView.withToll') }}
-        </button>
-        <template v-if="hasTollOnly">
-          <label for="drives-toll-source" class="sr-only">{{ $t('drives.drivesView.tollSource') }}</label>
-          <select
-            id="drives-toll-source"
-            v-model="tollSource"
-            class="field"
-          >
-            <option value="">{{ $t('drives.drivesView.all') }}</option>
-            <option value="AUTO_TOLL">{{ $t('drives.drivesView.auto') }}</option>
-            <option value="MANUAL">{{ $t('drives.drivesView.manual') }}</option>
-          </select>
-        </template>
-        <template v-if="prefs.proPersoEnabled">
-          <button
-            @click="selectedTag = ''"
-            :aria-pressed="selectedTag === ''"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            :class="selectedTag === '' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
-          >
-            {{ $t('drives.drivesView.all') }}
-          </button>
-          <button
-            @click="selectedTag = 'Pro'"
-            :aria-pressed="selectedTag === 'Pro'"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            :class="selectedTag === 'Pro' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
-          >
-            {{ $t('drives.drivesView.work') }}
-          </button>
-          <button
-            @click="selectedTag = 'Perso'"
-            :aria-pressed="selectedTag === 'Perso'"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            :class="selectedTag === 'Perso' ? 'bg-success-500/20 text-success-400 border border-success-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
-          >
-            {{ $t('drives.drivesView.personal') }}
-          </button>
-        </template>
-      </div>
 
       <!-- Same slot for the trips: the queue of detected trips to qualify -->
       <div
@@ -627,27 +527,7 @@ async function handleBulkApplyToll() {
     />
 
     <template v-if="viewMode === 'DRIVES'">
-    <!-- SKELETON LOADING STATE -->
-    <div v-if="loading" class="space-y-3 animate-pulse">
-      <div v-for="i in 5" :key="i" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between gap-4">
-        <div class="flex items-start gap-3 w-2/3">
-          <div class="w-5 h-5 bg-slate-800 rounded mt-1"></div>
-          <div class="space-y-2.5 w-full">
-            <div class="flex items-center gap-2">
-              <div class="h-3 w-24 bg-slate-800 rounded"></div>
-              <div class="h-4 w-16 bg-slate-800 rounded-full"></div>
-              <div class="h-3 w-16 bg-slate-800 rounded"></div>
-            </div>
-            <div class="h-4 w-4/5 bg-slate-800/80 rounded"></div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="h-8 w-24 bg-slate-800 rounded-xl"></div>
-          <div class="h-7 w-12 bg-slate-800 rounded-lg"></div>
-          <div class="h-7 w-12 bg-slate-800 rounded-lg"></div>
-        </div>
-      </div>
-    </div>
+    <DriveListSkeleton v-if="loading" />
 
     <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadDrives()" />
 
