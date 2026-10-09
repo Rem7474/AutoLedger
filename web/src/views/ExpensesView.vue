@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import LoadError from '@/components/LoadError.vue'
-import TabBar, { type TabItem } from '@/components/TabBar.vue'
+import TabBar from '@/components/TabBar.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { t } from '@/i18n'
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
+import { useExpensesTabs, type ExpensesTab } from '@/composables/useExpensesTabs'
+import { useExpenseDeletions } from '@/composables/useExpenseDeletions'
 import { useDocumentPreview } from '@/composables/useDocumentPreview'
 import { useReminders } from '@/composables/useReminders'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
@@ -18,6 +20,7 @@ import ChargesPanel from '@/components/expenses/ChargesPanel.vue'
 import FuelLogsPanel from '@/components/manual/FuelLogsPanel.vue'
 import EnergyEfficiencyPanel from '@/components/dashboard/EnergyEfficiencyPanel.vue'
 import EstimatedEnergyPanel from '@/components/manual/EstimatedEnergyPanel.vue'
+import ExpensesHeaderActions from '@/components/expenses/ExpensesHeaderActions.vue'
 import DocumentsPanel from '@/components/expenses/DocumentsPanel.vue'
 import TollModal from '@/components/expenses/TollModal.vue'
 import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
@@ -28,55 +31,25 @@ import CompleteReminderModal from '@/components/expenses/CompleteReminderModal.v
 import WebhookModal from '@/components/expenses/WebhookModal.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
 import QualifyChargesModal from '@/components/expenses/QualifyChargesModal.vue'
-import { Receipt, Fuel, Plus, Wrench, Zap, Gauge, Calculator, Paperclip, Eye, Bell, Radio, UploadCloud, Landmark } from 'lucide-vue-next'
-import { formatAmount } from '@/currency'
-import { formatNumber } from '@/utils/numbers'
+import { Zap, Eye } from 'lucide-vue-next'
 
 // The page owns the lists, the active tab and which modal is open; each modal owns its form and its API
 // call and reports back with "saved".
 const router = useRouter()
 const route = useRoute()
 const vehicleStore = useVehicleStore()
-const { showConfirm, showAlert } = useConfirm()
+const { showAlert } = useConfirm()
 
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
 const currentOdometer = computed(() => vehicleStore.activeVehicle?.current_odometer || 0)
 const { previewDoc, loadingDocId, closeDocPreview, viewOrDownloadDocument } = useDocumentPreview(() => vehicleStore.activeVehicle?.id)
 
-type TabType = 'TOLLS' | 'FIXED' | 'MAINTENANCE' | 'REMINDERS' | 'CHARGES' | 'FUEL' | 'DOCUMENTS' | 'EFFICIENCY' | 'ESTIMATE'
-
-// One view, three menu entries: /expenses (tolls, fixed costs, receipts), /maintenance (maintenance, reminders)
-// and /energy (efficiency, charges, estimate)
-const isMaintenanceSection = computed(() => route.meta.section === 'maintenance')
-const isEnergySection = computed(() => route.meta.section === 'energy')
-// Electric: efficiency, charges, estimate. Combustion: fill-ups. Hybrid: efficiency, charges and fill-ups.
-function energyTabs(): TabType[] {
-  if (!vehicleStore.canCharge) return ['FUEL']
-  return vehicleStore.canRefuel ? ['EFFICIENCY', 'CHARGES', 'FUEL'] : ['EFFICIENCY', 'CHARGES', 'ESTIMATE']
-}
-const sectionTabs = computed<TabType[]>(() => {
-  if (isMaintenanceSection.value) return ['MAINTENANCE', 'REMINDERS']
-  if (isEnergySection.value) return energyTabs()
-  return ['TOLLS', 'FIXED', 'DOCUMENTS']
-})
-
-function parseTab(raw: unknown): TabType {
-  const upper = String(Array.isArray(raw) ? raw[0] : (raw ?? '')).toUpperCase() as TabType
-  return sectionTabs.value.includes(upper) ? upper : sectionTabs.value[0]
-}
-
-const activeTab = ref<TabType>(parseTab(route.query.tab))
-
-watch(activeTab, (newTab) => {
-  if (route.query.tab !== newTab) {
-    router.replace({ query: { ...route.query, tab: newTab } })
-  }
-})
-
-watch([() => route.query.tab, () => route.meta.section, () => vehicleStore.canRefuel], ([qTab]) => {
-  const tab = parseTab(qTab)
-  if (activeTab.value !== tab) activeTab.value = tab
-})
+const { activeTab, pageTitle, pageSubtitle, pageIcon, tabs } = useExpensesTabs(() => ({
+  urgentReminders: urgentRemindersCount.value,
+  overdueReminders: overdueReminders.value.length,
+  chargesWithoutCost: chargesWithoutCost.value,
+  documents: documents.value.length,
+}))
 
 const driveExpenses = ref<any[]>([])
 const maintenanceExpenses = ref<any[]>([])
@@ -203,6 +176,8 @@ async function loadData() {
   }
 }
 
+const { handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, loadData)
+
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value, vehicleStore.lastSyncTimestamp],
   () => {
@@ -241,23 +216,6 @@ function openEditTollModal(e: any) {
   ensureDocumentsLoaded()
 }
 
-async function handleDeleteToll(e: any) {
-  if (!vehicleStore.activeVehicle) return
-  const ok = await showConfirm({
-    title: t('expenses.expensesView.deleteExpenseTitle'),
-    message: t('expenses.expensesView.deleteTollMessage', { amount: formatAmount(Number(e.amount), e.currency || vehicleStore.currency) }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-  try {
-    await api.deleteDriveExpense(vehicleStore.activeVehicle.id, e.id)
-    await loadData()
-  } catch (err: any) {
-    showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-
 // Maintenance & fixed expenses
 const newExpenseCategory = ref('MAINTENANCE')
 function openAddMaintModal() {
@@ -271,23 +229,6 @@ function openEditMaintModal(m: any) {
   editingMaint.value = m
   showAddMaintModal.value = true
   ensureDocumentsLoaded()
-}
-
-async function handleDeleteMaint(m: any) {
-  if (!vehicleStore.activeVehicle) return
-  const ok = await showConfirm({
-    title: t('expenses.expensesView.deleteExpenseTitle'),
-    message: t('expenses.expensesView.deleteExpenseMessage', { description: m.description, amount: formatAmount(Number(m.amount), m.currency || vehicleStore.currency) }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-  try {
-    await api.deleteMaintenance(vehicleStore.activeVehicle.id, m.id)
-    await loadData()
-  } catch (err: any) {
-    showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
 }
 
 // Charges: manual entry and cost completion
@@ -330,94 +271,11 @@ function openEditChargeModal(c: any) {
   ensureDocumentsLoaded()
 }
 
-async function handleDeleteCharge(c: any) {
-  if (!vehicleStore.activeVehicle) return
-  const ok = await showConfirm({
-    title: t('expenses.expensesView.deleteChargeTitle'),
-    message: t('expenses.expensesView.deleteChargeMessage', { kwh: formatNumber(c.kwh_added, 2) }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-  try {
-    await api.deleteCharge(vehicleStore.activeVehicle.id, c.id)
-    await loadData()
-  } catch (err: any) {
-    showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-
 // Documents
 function openUploadDocumentModal() {
   showUploadDocModal.value = true
 }
 
-async function handleDeleteDocument(doc: ExpenseDocumentHeader) {
-  if (!vehicleStore.activeVehicle) return
-  const ok = await showConfirm({
-    title: t('expenses.expensesView.deleteReceiptTitle'),
-    message: t('expenses.expensesView.deleteReceiptMessage', { filename: doc.filename }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-  try {
-    await api.deleteDocument(vehicleStore.activeVehicle.id, doc.id)
-    documents.value = documents.value.filter((d) => d.id !== doc.id)
-    showAlert(t('expenses.expensesView.receiptDeleted'), t('common.success'), 'success')
-    await loadData()
-  } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-
-const sectionKey = computed(() => (isMaintenanceSection.value ? 'maintenance' : isEnergySection.value ? 'energy' : 'expenses'))
-const pageTitle = computed(() => t(`expenses.expensesView.${sectionKey.value}Title`))
-const pageSubtitle = computed(() => t(`expenses.expensesView.${sectionKey.value}Subtitle`))
-const pageIcon = computed(() => (isMaintenanceSection.value ? Wrench : isEnergySection.value ? Zap : Receipt))
-
-const tabs = computed<TabItem[]>(() => {
-  if (isMaintenanceSection.value) {
-    return [
-      { key: 'MAINTENANCE', label: t('expenses.expensesView.maintenance'), icon: Wrench },
-      {
-        key: 'REMINDERS',
-        label: t('expenses.expensesView.reminders'),
-        icon: Bell,
-        badge: urgentRemindersCount.value > 0 ? urgentRemindersCount.value : undefined,
-        badgeTone: overdueReminders.value.length > 0 ? 'danger' : 'warning',
-      },
-    ]
-  }
-  if (isEnergySection.value) {
-    const list: TabItem[] = [
-      { key: 'EFFICIENCY', label: t('expenses.expensesView.efficiency'), icon: Gauge },
-      {
-        key: 'CHARGES',
-        label: t('expenses.expensesView.charges'),
-        icon: Zap,
-        badge: chargesWithoutCost.value > 0 ? chargesWithoutCost.value : undefined,
-        badgeTone: 'warning',
-      },
-    ]
-    if (!vehicleStore.canRefuel) list.push({ key: 'ESTIMATE', label: t('expenses.expensesView.estimate'), icon: Calculator })
-    const fuel: TabItem = { key: 'FUEL', label: t('expenses.expensesView.fillUps'), icon: Fuel }
-    if (!vehicleStore.canCharge) return [fuel]
-    if (vehicleStore.canRefuel) list.push(fuel)
-    return list
-  }
-  const list: TabItem[] = [
-    { key: 'TOLLS', label: t('expenses.expensesView.tolls'), icon: Receipt },
-    { key: 'FIXED', label: t('expenses.expensesView.fixedCosts'), icon: Landmark },
-  ]
-  list.push({
-    key: 'DOCUMENTS',
-    label: t('expenses.expensesView.receipts'),
-    icon: Paperclip,
-    badge: documents.value.length > 0 ? documents.value.length : undefined,
-  })
-  return list
-})
 </script>
 
 <template>
@@ -426,77 +284,16 @@ const tabs = computed<TabItem[]>(() => {
     <PageHeader :title="pageTitle" :icon="pageIcon">
       {{ pageSubtitle }}
       <template #actions>
-      <div v-if="vehicleStore.canEdit" class="flex items-center gap-2">
-        <button
-          v-if="activeTab === 'TOLLS'"
-          @click="openAddTollModal"
-          class="btn btn-lg btn-primary"
-        >
-          <Plus class="w-3.5 h-3.5" />
-          {{ $t('expenses.expensesView.add') }}
-          <span class="hidden font-normal sm:inline">{{ $t('expenses.expensesView.tollParking') }}</span>
-        </button>
-        <button
-          v-if="activeTab === 'MAINTENANCE' || activeTab === 'FIXED'"
-          @click="openAddMaintModal"
-          class="btn btn-lg btn-primary"
-        >
-          <Plus class="w-3.5 h-3.5" />
-          {{ $t('expenses.expensesView.add') }}
-          <span class="hidden font-normal sm:inline">{{ activeTab === 'FIXED' ? $t('expenses.expensesView.fixedCosts') : $t('expenses.expensesView.maintenance') }}</span>
-        </button>
-        <button
-          v-if="activeTab === 'REMINDERS'"
-          @click="openWebhookModal"
-          class="btn btn-lg btn-secondary"
-          :title="$t('expenses.expensesView.setUpTheWebhookTo')"
-        >
-          <Radio class="w-3.5 h-3.5" />
-          <span class="hidden sm:inline">{{ $t('expenses.expensesView.homelabWebhook') }}</span>
-          <span class="sm:hidden">{{ $t('expenses.expensesView.webhook') }}</span>
-        </button>
-        <button
-          v-if="activeTab === 'REMINDERS'"
-          @click="openAddReminderModal()"
-          class="btn btn-lg btn-primary"
-        >
-          <Plus class="w-3.5 h-3.5" />
-          {{ $t('expenses.expensesView.newReminder') }}
-        </button>
-        <button
-          v-if="activeTab === 'FUEL' && vehicleStore.canEdit"
-          @click="openCSVImportModal"
-          class="btn btn-lg btn-secondary"
-        >
-          <UploadCloud class="w-3.5 h-3.5" />
-          <span>{{ $t('expenses.expensesView.importCsv') }}</span>
-        </button>
-        <template v-if="activeTab === 'CHARGES' && vehicleStore.canCharge">
-          <button
-            @click="openCSVImportModal"
-            class="btn btn-lg btn-secondary"
-          >
-            <UploadCloud class="w-3.5 h-3.5" />
-            <span>{{ $t('expenses.expensesView.importCsv') }}</span>
-          </button>
-          <button
-            @click="openAddChargeModal"
-            class="btn btn-lg btn-primary"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            {{ $t('expenses.expensesView.addCharge') }}
-          </button>
-        </template>
-        <button
-          v-if="activeTab === 'DOCUMENTS'"
-          @click="openUploadDocumentModal"
-          class="btn btn-lg btn-primary"
-        >
-          <Plus class="w-3.5 h-3.5" />
-          {{ $t('expenses.expensesView.addAReceipt') }}
-        </button>
-      </div>
-    
+        <ExpensesHeaderActions
+          :active-tab="activeTab"
+          @add-toll="openAddTollModal"
+          @add-maintenance="openAddMaintModal"
+          @open-webhook="openWebhookModal"
+          @add-reminder="openAddReminderModal()"
+          @import-csv="openCSVImportModal"
+          @add-charge="openAddChargeModal"
+          @upload-document="openUploadDocumentModal"
+        />
       </template>
     </PageHeader>
 
@@ -509,7 +306,7 @@ const tabs = computed<TabItem[]>(() => {
       <span>{{ $t('expenses.expensesView.youAreViewingThisVehicle') }} <strong>{{ $t('expenses.expensesView.readOnly') }}</strong>{{ $t('expenses.expensesView.modeAdditionsAndChangesAre') }}</span>
     </div>
 
-    <TabBar :model-value="activeTab" :tabs="tabs" :label="pageTitle" id-prefix="expenses-tab" @update:model-value="activeTab = $event as TabType" />
+    <TabBar :model-value="activeTab" :tabs="tabs" :label="pageTitle" id-prefix="expenses-tab" @update:model-value="activeTab = $event as ExpensesTab" />
 
     <LoadError v-if="loadError !== null" :message="loadError" @retry="loadData" />
 
