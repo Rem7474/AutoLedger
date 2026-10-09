@@ -313,6 +313,35 @@ func TestUpdateDistanceUnitStoresAValidChoiceAndRejectsAnythingElse(t *testing.T
 	}
 }
 
+func TestUpdateVolumeUnitStoresAValidChoiceAndRejectsAnythingElse(t *testing.T) {
+	repo := authTestRepo(t)
+	ctx := context.Background()
+	hash, _ := auth.HashPassword("Correct-Horse-9")
+	user, _ := repo.CreateUser(ctx, "volume@example.org", hash)
+	if user.VolumeUnit != "l" {
+		t.Fatalf("expected the default volume unit to be l, got %q", user.VolumeUnit)
+	}
+	h := NewAuthHandler(repo, authTestConfig(), nil)
+
+	for _, unit := range []string{"gal_us", "gal_uk", "l"} {
+		rec := as(user.ID, nil, http.MethodPut, "/api/auth/volume-unit", `{"volume_unit":"`+unit+`"}`, h.UpdateVolumeUnit, nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("update to %s: %d %s", unit, rec.Code, rec.Body.String())
+		}
+		if got, err := repo.GetUserByID(ctx, user.ID); err != nil || got.VolumeUnit != unit {
+			t.Fatalf("expected the stored volume unit to be %s, got %q (err=%v)", unit, got.VolumeUnit, err)
+		}
+	}
+
+	rec := as(user.ID, nil, http.MethodPut, "/api/auth/volume-unit", `{"volume_unit":"pint"}`, h.UpdateVolumeUnit, nil)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("an unsupported unit: got %d, want 400", rec.Code)
+	}
+	if got, _ := repo.GetUserByID(ctx, user.ID); got.VolumeUnit != "l" {
+		t.Errorf("a rejected update must not change the stored unit, got %q", got.VolumeUnit)
+	}
+}
+
 func TestListSessionsHidesExpiredAndRevokedTokens(t *testing.T) {
 	repo := authTestRepo(t)
 	ctx := context.Background()

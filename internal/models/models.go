@@ -23,6 +23,7 @@ type User struct {
 	DisplayName  *string   `json:"display_name,omitempty"` // from IdP "name" claim
 	Language     string    `json:"language"`               // "en" or "fr": used for messages built outside a request (reminder webhooks, sync alerts)
 	DistanceUnit string    `json:"distance_unit"`          // "km" or "mi": distances are always stored in km, this only drives display/input conversion
+	VolumeUnit   string    `json:"volume_unit"`            // "l", "gal_us" or "gal_uk": volumes are always stored in litres, this only drives display/input conversion
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

@@ -213,3 +213,28 @@ func (h *AuthHandler) UpdateDistanceUnit(w http.ResponseWriter, r *http.Request)
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Distance unit updated"})
 }
+
+type UpdateVolumeUnitRequest struct {
+	VolumeUnit string `json:"volume_unit"`
+}
+
+// UpdateVolumeUnit stores the unit ("l", "gal_us" or "gal_uk") the frontend converts fuel volumes
+// to for display and form input. Stored volumes stay in litres either way, like distances in km.
+func (h *AuthHandler) UpdateVolumeUnit(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	var req UpdateVolumeUnitRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
+		return
+	}
+	if req.VolumeUnit != "l" && req.VolumeUnit != "gal_us" && req.VolumeUnit != "gal_uk" {
+		writeAPIError(w, http.StatusBadRequest, apierror.New("account.volume_unit_invalid", "Volume unit must be \"l\", \"gal_us\" or \"gal_uk\""))
+		return
+	}
+	if err := h.repo.UpdateUserVolumeUnit(r.Context(), userID, req.VolumeUnit); err != nil {
+		writeRepoError(w, r, err, "Could not update the volume unit")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "Volume unit updated"})
+}

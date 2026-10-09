@@ -40,6 +40,7 @@ func (h *apiHandlers) registerSessionAuthRoutes(r chi.Router, activeSession func
 	r.With(activeSession).Get("/api/auth/oidc/link", h.auth.OIDCLink)
 	r.Put("/api/auth/language", h.auth.UpdateLanguage)
 	r.Put("/api/auth/distance-unit", h.auth.UpdateDistanceUnit)
+	r.Put("/api/auth/volume-unit", h.auth.UpdateVolumeUnit)
 
 	// API Tokens (External Integrations / Home Assistant)
 	r.Route("/api/auth/tokens", func(r chi.Router) {
