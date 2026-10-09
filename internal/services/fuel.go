@@ -148,8 +148,12 @@ func ComputeFuelStats(logs []models.FuelLog, refs []OdometerRef) FuelStats {
 		}
 		if anchor >= 0 {
 			segEstimated = segEstimated || estimated[i] || estimated[anchor]
-			if segComplete && effective[i] != nil && effective[anchor] != nil && *effective[i]-*effective[anchor] > 0 {
-				km := round1(*effective[i] - *effective[anchor])
+			var km float64
+			if effective[i] != nil && effective[anchor] != nil {
+				km = round1(*effective[i] - *effective[anchor])
+			}
+			// A segment smaller than the reporting precision cannot support a rate.
+			if segComplete && km > 0 {
 				l100 := round3(segLiters / km * 100)
 				cpk := round3(segCost / km)
 				st.Logs[i].SegmentKm = &km
