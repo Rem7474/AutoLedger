@@ -2,12 +2,12 @@
 import { formatNumber, formatPercent } from '@/utils/numbers'
 import { intlLocale, t } from '@/i18n'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { Coins, Zap, Receipt, Disc, Wrench, Briefcase, ArrowRight, Activity, Shield, X, ChevronLeft, ChevronRight, PieChart, Info, SlidersHorizontal } from 'lucide-vue-next'
+import { Coins, Zap, Receipt, Disc, Wrench, Briefcase, ArrowRight, Activity, Shield, ChevronLeft, ChevronRight, PieChart, Info, SlidersHorizontal } from 'lucide-vue-next'
 import { buildMonthBreakdown, formatMonthName, type MonthDetailMode } from '@/utils/dashboard'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import { distanceUnit, formatDistance, formatDistanceValue, perDistance } from '@/units'
 
 // Cost detail of one month with a donut chart and the itemized list; ← / → move between months, Esc closes.
@@ -68,21 +68,20 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-useEscapeToClose(() => !!selectedMonth.value, closeMonthDetail)
-
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <div
+  <ModalShell
     v-if="selectedMonth && selectedMonthBreakdown"
-    class="fixed inset-0 z-modal bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
-    @click.self="closeMonthDetail"
+    :open="true"
+    size="lg"
+    body-class="space-y-5"
+    footer-class="flex-col sm:flex-row sm:items-center justify-between gap-3"
+    @update:open="closeMonthDetail"
   >
-    <div v-dialog class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden my-auto">
-      <!-- Header with Month Title, Prev/Next Navigation, and Close Button -->
-      <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between gap-2 shrink-0 bg-slate-900/95">
+    <template #title>
         <div class="flex items-center gap-2 sm:gap-3 min-w-0 pr-2">
           <div class="p-2 bg-sky-500/10 text-sky-400 rounded-xl shrink-0">
             <PieChart class="w-5 h-5" />
@@ -96,8 +95,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             </p>
           </div>
         </div>
-
-        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+    </template>
+    <template #actions>
           <div class="flex items-center bg-slate-800/80 rounded-xl border border-slate-700/60 p-0.5">
             <button
               type="button"
@@ -118,19 +117,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
               <ChevronRight class="w-4 h-4" />
             </button>
           </div>
-          <button
-            type="button"
-            @click="closeMonthDetail"
-            class="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
-            :title="$t('dashboard.monthDetailModal.closeEsc')" :aria-label="$t('dashboard.monthDetailModal.closeEsc')"
-          >
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-      </div>
+    </template>
 
-      <!-- Body -->
-      <div class="p-5 overflow-y-auto flex-1 overscroll-contain space-y-5">
 
       <!-- 4 KPI Summary Cards for the Month -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
@@ -327,10 +315,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           </div>
         </div>
       </div>
-      </div>
 
-      <!-- Footer with Quick Links and Close Button -->
-      <div class="px-5 py-3.5 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 bg-slate-900/95">
+    <template #footer>
         <div class="flex items-center gap-2">
           <router-link
             to="/drives"
@@ -355,7 +341,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         >
           {{ $t('common.close') }}
         </button>
-      </div>
-    </div>
-  </div>
+    </template>
+  </ModalShell>
 </template>
