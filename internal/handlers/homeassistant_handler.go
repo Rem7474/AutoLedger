@@ -235,8 +235,8 @@ func (h *HomeAssistantHandler) recordChargingSession(w http.ResponseWriter, r *h
 		c := money.Cents(*req.Data.CostCents)
 		cost = &c
 	} else if plan, _ := h.repo.GetVehicleTariffPlanAt(r.Context(), target.ID, h.tariffService.DayOf(startTime)); plan != nil {
-		if computed, err := h.tariffService.CalculateSessionCost(plan, startTime, endTime, energyKwh); err == nil && computed > 0 {
-			cost = &computed
+		if computed, err := h.tariffService.CalculateSessionCostIfApplicable(plan, startTime, endTime, energyKwh); err == nil {
+			cost = computed
 		}
 	}
 

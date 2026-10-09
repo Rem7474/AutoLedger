@@ -202,6 +202,25 @@ func (s *TariffService) CalculateSessionCost(plan *models.TariffPlan, startTime,
 	return money.FromFloat(cost), nil
 }
 
+// CalculateSessionCostIfApplicable distinguishes a known free session from an unknown cost.
+// An absent, unusable or out-of-date plan leaves the cost nil; an applicable zero rate returns a pointer to zero.
+func (s *TariffService) CalculateSessionCostIfApplicable(plan *models.TariffPlan, startTime, endTime time.Time, kwh float64) (*money.Cents, error) {
+	if plan == nil || kwh <= 0 || !plan.AppliesOn(s.DayOf(startTime)) {
+		return nil, nil
+	}
+	if plan.PlanType == models.TariffTypeTimeOfUse && len(plan.TimeWindows) > 0 && (plan.PeakRateCents == nil || plan.OffpeakRateCents == nil) {
+		return nil, nil
+	}
+	if _, _, _, ok := effectiveGrid(plan); !ok {
+		return nil, nil
+	}
+	cost, err := s.CalculateSessionCost(plan, startTime, endTime, kwh)
+	if err != nil {
+		return nil, err
+	}
+	return &cost, nil
+}
+
 // CalculatePublicCharging computes decomposed public charging fees (connection + energy + time + idle).
 func (s *TariffService) CalculatePublicCharging(req models.PublicChargingCalculationRequest) models.PublicChargingBreakdown {
 	energyCost := req.PricePerKwh.Cost(req.Kwh)
