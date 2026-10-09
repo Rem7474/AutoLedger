@@ -98,6 +98,15 @@ func (c *client) seed(ds demodata.Dataset, apiToken string) error {
 	if err != nil {
 		return err
 	}
+	if o := ds.Ownership; o.PriceCents > 0 {
+		err := c.do("PUT", "/api/vehicles/"+v.ID+"/ownership", map[string]any{
+			"acquisition_type": "CASH", "start_date": day(o.Date), "start_odometer": o.Odometer,
+			"purchase_price": units(o.PriceCents), "purchase_fees": units(o.FeesCents),
+		}, nil, "")
+		if err != nil {
+			return err
+		}
+	}
 	for _, e := range ds.Events {
 		err := c.do("POST", "/api/integrations/homeassistant/event", map[string]any{
 			"event_type": e.Type, "vehicle_id": v.ID, "event_id": e.ID,
