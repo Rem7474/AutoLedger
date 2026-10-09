@@ -4,13 +4,13 @@ import EmptyState from '@/components/EmptyState.vue'
 import { intlLocale, t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
-import { Fuel, Plus, Pencil, Trash2, X } from 'lucide-vue-next'
+import { Fuel, Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { currencySymbol, formatAmount } from '@/currency'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import { distanceUnit, formatDistance, formatFuelConsumptionValue, formatVolumeValue, fuelConsumptionUnit, litresToDisplayVolume, perDistance, perVolume, volumeUnitLabel } from '@/units'
 import LoadError from '@/components/LoadError.vue'
 import { toLocalDay } from '@/utils/dates'
@@ -29,7 +29,6 @@ const loading = ref(false)
 const loadError = ref<string | null>(null)
 const saving = ref(false)
 const showForm = ref(false)
-useEscapeToClose(showForm, () => (showForm.value = false))
 const editingId = ref<string | null>(null)
 const formError = ref('')
 
@@ -256,15 +255,8 @@ onMounted(load)
     </ul>
 
     <!-- Add / edit modal -->
-    <div v-if="showForm" class="fixed inset-0 z-modal bg-black/60 flex items-center justify-center p-4 overflow-y-auto">
-      <form v-dialog class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-3.5 my-auto shadow-2xl" @submit.prevent="save">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-bold text-white">{{ editingId ? $t('manual.fuelLogsPanel.edit') : $t('manual.fuelLogsPanel.new') }}</h3>
-          <button type="button" :aria-label="$t('common.close')" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800" @click="showForm = false">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-
+    <ModalShell v-model:open="showForm" size="sm" :title="editingId ? $t('manual.fuelLogsPanel.edit') : $t('manual.fuelLogsPanel.new')">
+      <form id="fuel-log-form" class="space-y-3.5" @submit.prevent="save">
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label for="fuel-date" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('common.date') }}</label>
@@ -316,14 +308,14 @@ onMounted(load)
         </div>
 
         <p v-if="formError" class="text-xs text-red-300" role="alert">{{ formError }}</p>
-
-        <div class="flex justify-end gap-2 pt-1">
-          <button type="button" class="btn btn-lg btn-secondary" @click="showForm = false">{{ $t('common.cancel') }}</button>
-          <button type="submit" :disabled="saving" class="btn btn-lg btn-primary">
-            {{ saving ? $t('manual.fuelLogsPanel.saving') : $t('common.save') }}
-          </button>
-        </div>
       </form>
-    </div>
+
+      <template #footer>
+        <button type="button" class="btn btn-lg btn-secondary" @click="showForm = false">{{ $t('common.cancel') }}</button>
+        <button type="submit" form="fuel-log-form" :disabled="saving" class="btn btn-lg btn-primary">
+          {{ saving ? $t('manual.fuelLogsPanel.saving') : $t('common.save') }}
+        </button>
+      </template>
+    </ModalShell>
   </div>
 </template>
