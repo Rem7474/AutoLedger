@@ -8,6 +8,7 @@ export function emptyComparisonForm(canCompareTracked: boolean) {
   return {
     mode: (canCompareTracked ? 'RETROSPECTIVE' : 'PROJECTION') as ComparisonMode,
     name: '',
+    vehicle_id: undefined as string | undefined,
     annual_km: 12000,
     years: 5,
     ice: {
@@ -76,6 +77,7 @@ export function scenarioToForm(sc: any, canCompareTracked: boolean): ComparisonF
   return {
     ...base,
     mode: sc.mode,
+    vehicle_id: sc.vehicle_id || undefined,
     name: sc.name,
     annual_km: sc.annual_km,
     years: sc.years,
@@ -110,7 +112,7 @@ export function buildComparisonPayload(form: ComparisonForm, vehicleId: string |
     },
   }
   if (retro) {
-    payload.vehicle_id = vehicleId
+    payload.vehicle_id = form.vehicle_id ?? vehicleId
   } else {
     payload.tracked = {
       ...form.tracked,
@@ -152,4 +154,9 @@ export function toggleSelection(selected: string[], id: string, max = MAX_COMPAR
 export function costRowValues(result: any): { key: string; tracked: number; ice: number }[] {
   if (!result) return []
   return ['energy', 'maintenance', 'insurance', 'tax', 'depreciation'].map((key) => ({ key, tracked: result.tracked[key], ice: result.ice[key] }))
+}
+
+// Editing a saved comparison follows its original reference, even when another vehicle is active.
+export function comparisonReferenceVehicle<T extends { id: string }>(referenceId: string | undefined, active: T | null | undefined, vehicles: T[]): T | null | undefined {
+  return referenceId ? vehicles.find((vehicle) => vehicle.id === referenceId) : active
 }
