@@ -7,13 +7,13 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { api, type VehiclePerson } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
-import { Layers, MapPin, ExternalLink, X, Users, Coins, AlertTriangle, Pencil, ArrowLeft, User } from 'lucide-vue-next'
+import { Layers, MapPin, ExternalLink, Users, Coins, AlertTriangle, Pencil, ArrowLeft, User } from 'lucide-vue-next'
 import { teslamateDriveUrl as buildTeslamateDriveUrl } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { buildDriveBreakdown } from '@/utils/costBreakdown'
 import { formatAmount } from '@/currency'
 import CostDonut from '@/components/costs/CostDonut.vue'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import { distanceUnit, formatDistance, kmToDisplayDistance, speedUnit } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 import DriveCostLegs from '@/components/drives/DriveCostLegs.vue'
@@ -42,7 +42,6 @@ const emit = defineEmits<{
   back: []
 }>()
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 const selectedCostDrive = defineModel<any | null>('drive', { required: true })
 const router = useRouter()
 const vehicleStore = useVehicleStore()
@@ -132,14 +131,8 @@ async function handleDriverChange(event: Event) {
 </script>
 
 <template>
-  <div
-    v-if="open && selectedCostDrive"
-    class="fixed inset-0 z-modal bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
-    @click.self="open = false"
-  >
-    <div v-dialog class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden my-auto">
-      <!-- Header -->
-      <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-900/95">
+  <ModalShell v-if="selectedCostDrive" v-model:open="open" size="lg" footer-class="items-center justify-between">
+    <template #title>
         <div class="flex items-center gap-2.5 min-w-0 pr-2">
           <button
             v-if="parentTrip || backLabel"
@@ -160,24 +153,21 @@ async function handleDriverChange(event: Event) {
             <p class="text-xs text-slate-400">{{ formatDate(selectedCostDrive.start_time) }}</p>
           </div>
         </div>
+    </template>
+    <template #actions>
         <a
           v-if="teslamateDriveUrl(selectedCostDrive)"
           :href="teslamateDriveUrl(selectedCostDrive)!"
           target="_blank"
           rel="noopener noreferrer"
-          class="btn btn-secondary ml-auto mr-1 shrink-0"
+          class="btn btn-secondary shrink-0"
           :title="$t('drives.driveCostModal.openThisDriveInThe')"
         >
           <ExternalLink class="w-3.5 h-3.5 text-info-400" />
           <span class="hidden sm:inline">TeslaMate</span>
         </a>
-        <button @click="open = false" class="tap p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0" :aria-label="$t('common.close')">
-          <X class="w-5 h-5" />
-        </button>
-      </div>
+    </template>
 
-      <!-- Body -->
-      <div class="p-5 overflow-y-auto flex-1 overscroll-contain space-y-4">
 
       <!-- Trip Summary Route -->
       <div class="bg-slate-800/60 border border-slate-700/60 p-3.5 rounded-2xl space-y-2">
@@ -304,10 +294,7 @@ async function handleDriverChange(event: Event) {
       </div>
       </div>
 
-      </div>
-
-      <!-- Footer Actions -->
-      <div class="px-5 py-3.5 border-t border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-900/95">
+    <template #footer>
         <button
           @click="open = false"
           class="btn btn-lg btn-secondary"
@@ -351,6 +338,6 @@ async function handleDriverChange(event: Event) {
           </button>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </ModalShell>
 </template>
