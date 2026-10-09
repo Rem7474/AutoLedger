@@ -3,11 +3,12 @@ import { saveBlob } from '@/utils/download'
 import { ref, watch } from 'vue'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
+import ModalShell from '@/components/ModalShell.vue'
 import MileageRatesEditor from '@/components/MileageRatesEditor.vue'
-import { X, Download } from 'lucide-vue-next'
+import { Download } from 'lucide-vue-next'
 
-const props = defineProps<{ open: boolean; vehicleId: string }>()
-const emit = defineEmits<{ (e: 'update:open', val: boolean): void }>()
+const props = defineProps<{ vehicleId: string }>()
+const open = defineModel<boolean>('open', { required: true })
 
 const TYPES = ['charges', 'drives', 'fuel', 'odometer', 'expenses', 'maintenance', 'mileage'] as const
 
@@ -22,7 +23,7 @@ const loading = ref(false)
 const error = ref('')
 
 watch(
-  () => props.open,
+  open,
   (isOpen) => {
     if (isOpen) error.value = ''
   },
@@ -41,7 +42,7 @@ async function download() {
       rates: type.value === 'mileage' ? rates.value : '',
     })
     saveBlob(blob, filename)
-    emit('update:open', false)
+    open.value = false
   } catch (e) {
     error.value = e instanceof Error ? e.message : t('import.exportFailed')
   } finally {
@@ -51,71 +52,54 @@ async function download() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div
-      v-if="open"
-      class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
-      @click.self="emit('update:open', false)"
-    >
-      <div v-dialog="() => emit('update:open', false)" class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 my-auto" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-between">
-          <h2 class="text-base font-bold text-white">{{ $t('import.exportTitle') }}</h2>
-          <button type="button" class="text-slate-400 hover:text-white" :aria-label="$t('common.close')" @click="emit('update:open', false)">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        <p class="text-xs text-slate-400">{{ $t('import.exportIntro') }}</p>
+  <ModalShell v-model:open="open" :title="$t('import.exportTitle')" size="sm">
+    <p class="text-xs text-slate-400">{{ $t('import.exportIntro') }}</p>
 
-        <label class="block space-y-1">
-          <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportType') }}</span>
-          <select v-model="type" class="field">
-            <option v-for="k in TYPES" :key="k" :value="k">{{ $t(`import.exportTypes.${k}`) }}</option>
-          </select>
-        </label>
-        <template v-if="type === 'mileage'">
-          <label class="block space-y-1">
-            <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportTag') }}</span>
-            <input v-model="tag" class="field" />
-          </label>
-          <label class="block space-y-1">
-            <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportRates') }}</span>
-            <select v-model="rates" class="field">
-              <option value="">{{ $t('import.exportNoRates') }}</option>
-              <option v-for="l in scaleLabels" :key="l" :value="l">{{ l }}</option>
-            </select>
-          </label>
-        </template>
-        <label class="block space-y-1">
-          <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportFormat') }}</span>
-          <select v-model="format" class="field">
-            <option value="csv">CSV</option>
-            <option value="json">JSON</option>
-          </select>
-        </label>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="block space-y-1">
-            <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportFrom') }}</span>
-            <input v-model="from" type="date" class="field" />
-          </label>
-          <label class="block space-y-1">
-            <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportTo') }}</span>
-            <input v-model="to" type="date" class="field" />
-          </label>
-        </div>
-
-        <MileageRatesEditor v-if="type === 'mileage'" @change="scaleLabels = $event" />
-
-        <p v-if="error" class="text-xs text-danger-400" role="alert">{{ error }}</p>
-        <button
-          type="button"
-          class="btn btn-lg btn-primary w-full"
-          :disabled="loading"
-          @click="download"
-        >
-          <Download class="w-4 h-4" />
-          {{ $t('import.exportDownload') }}
-        </button>
-      </div>
+    <label class="block space-y-1">
+      <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportType') }}</span>
+      <select v-model="type" class="field">
+        <option v-for="k in TYPES" :key="k" :value="k">{{ $t(`import.exportTypes.${k}`) }}</option>
+      </select>
+    </label>
+    <template v-if="type === 'mileage'">
+      <label class="block space-y-1">
+        <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportTag') }}</span>
+        <input v-model="tag" class="field" />
+      </label>
+      <label class="block space-y-1">
+        <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportRates') }}</span>
+        <select v-model="rates" class="field">
+          <option value="">{{ $t('import.exportNoRates') }}</option>
+          <option v-for="l in scaleLabels" :key="l" :value="l">{{ l }}</option>
+        </select>
+      </label>
+    </template>
+    <label class="block space-y-1">
+      <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportFormat') }}</span>
+      <select v-model="format" class="field">
+        <option value="csv">CSV</option>
+        <option value="json">JSON</option>
+      </select>
+    </label>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block space-y-1">
+        <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportFrom') }}</span>
+        <input v-model="from" type="date" class="field" />
+      </label>
+      <label class="block space-y-1">
+        <span class="text-xs font-semibold text-slate-300">{{ $t('import.exportTo') }}</span>
+        <input v-model="to" type="date" class="field" />
+      </label>
     </div>
-  </Teleport>
+
+    <MileageRatesEditor v-if="type === 'mileage'" @change="scaleLabels = $event" />
+
+    <p v-if="error" class="text-xs text-danger-400" role="alert">{{ error }}</p>
+    <template #footer>
+      <button type="button" class="btn btn-lg btn-primary w-full" :disabled="loading" @click="download">
+        <Download class="w-4 h-4" />
+        {{ $t('import.exportDownload') }}
+      </button>
+    </template>
+  </ModalShell>
 </template>
