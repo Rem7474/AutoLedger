@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { formatNumber, formatPercent } from '@/utils/numbers'
 import { ref, onMounted, computed, watch } from 'vue'
-import { Zap, Check, Trash2, X, Car, Calendar, User, ArrowRight, Clock } from 'lucide-vue-next'
+import { Zap, Check, Trash2, Car, Calendar, User, ArrowRight, Clock } from 'lucide-vue-next'
 import { api, type PendingCharge } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatChargeWindow } from '@/utils/dates'
 import { t } from '@/i18n'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import LoadError from '@/components/LoadError.vue'
 
 const vehicleStore = useVehicleStore()
@@ -16,7 +16,6 @@ const emit = defineEmits<{
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 
 const pendingCharges = ref<PendingCharge[]>([])
 const loadError = ref<string | null>(null)
@@ -98,26 +97,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="open = false">
-    <div v-dialog class="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-      <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-slate-800">
+  <ModalShell v-model:open="open" size="lg">
+    <template #title>
         <div class="flex items-center gap-2">
           <div class="p-2 bg-warning-500/10 text-warning-400 rounded-lg">
             <Zap class="w-4 h-4" />
           </div>
           <div>
-            <h2 class="text-base font-bold text-white">{{ t('pendingCharges.modalTitle') }}</h2>
+            <h3 class="text-base font-bold text-white">{{ t('pendingCharges.modalTitle') }}</h3>
             <p class="text-xs text-slate-400">{{ t('pendingCharges.modalSubtitle') }}</p>
           </div>
         </div>
-        <button @click="open = false" class="tap p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800" :aria-label="$t('common.close')">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
+    </template>
 
-      <!-- Content -->
-      <div class="p-5 overflow-y-auto space-y-4">
         <div v-if="loading" class="text-center py-8 text-sm text-slate-400">
           {{ t('pendingCharges.loading') }}
         </div>
@@ -193,10 +185,8 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Footer -->
-      <div class="p-3 border-t border-slate-800 bg-slate-950/40 flex justify-end">
+    <template #footer>
         <button
           type="button"
           @click="open = false"
@@ -204,7 +194,6 @@ onMounted(() => {
         >
           {{ t('common.close') }}
         </button>
-      </div>
-    </div>
-  </div>
+    </template>
+  </ModalShell>
 </template>
