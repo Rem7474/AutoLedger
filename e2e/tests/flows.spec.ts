@@ -253,3 +253,166 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
   await page.getByRole('dialog').last().getByRole('button', { name: 'Delete', exact: true }).click()
   await expect(page.getByText('E2E carpool')).toHaveCount(0)
 })
+
+test('a charges CSV is previewed, imported, then undone from the import history', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const undoLeftovers = async () => {
+    const batches = await (await request.get(`/api/vehicles/${ev.id}/import/batches`, { headers })).json()
+    for (const b of batches ?? []) await request.delete(`/api/vehicles/${ev.id}/import/batches/${b.id}`, { headers })
+  }
+  // A run that stopped half way must not leave its batch behind for the next one
+  await undoLeftovers()
+
+  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+  await page.getByRole('button', { name: 'Import CSV' }).first().click()
+  const dialog = page.getByRole('dialog', { name: 'Import data (CSV)' })
+  await dialog.locator('#csv-file-input').setInputFiles({
+    name: 'charges.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from('date,kwh,cost,currency,location\n2020-03-04 18:30,12.5,2.5,EUR,E2E csv import\n'),
+  })
+  await dialog.getByRole('button', { name: 'Preview' }).click()
+  await expect(dialog.getByText(/1 valid/i)).toBeVisible()
+
+  await dialog.getByRole('button', { name: 'Import rows' }).click()
+  await expect(dialog.getByText('Import completed successfully')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Close', exact: true }).last().click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+
+  const charges = await (await request.get(`/api/vehicles/${ev.id}/charges?limit=500`, { headers })).json()
+  expect(JSON.stringify(charges)).toContain('E2E csv import')
+
+  // The import history of the dialog undoes the batch
+  await page.getByRole('button', { name: 'Import CSV' }).first().click()
+  const history = page.getByRole('dialog', { name: 'Import data (CSV)' })
+  await history.getByText('Import history').click()
+  await history.getByRole('button', { name: 'Undo this import' }).first().click()
+  await page.getByRole('dialog').last().getByRole('button', { name: 'Undo this import' }).click()
+  await expect.poll(async () => JSON.stringify(await (await request.get(`/api/vehicles/${ev.id}/charges?limit=500`, { headers })).json())).not.toContain('E2E csv import')
+})
+
+test.describe('a charge priced from a tariff plan', () => {
+  // The server reads tariff hours in its reporting timezone (Europe/Paris by default): the browser uses the same one
+  test.use({ timezoneId: 'Europe/Paris' })
+
+  test('is priced hour by hour when it ends after midnight', async ({ page, request }) => {
+    const headers = await authHeaders(request)
+    const vehicleUrl = `/api/vehicles/${ev.id}`
+    const vehicle = await (await request.get(vehicleUrl, { headers })).json()
+    const plansUrl = '/api/tariffs/plans'
+    const dropPlans = async () => {
+      await request.put(vehicleUrl, { headers, data: { ...vehicle, tariff_plan_id: null } })
+      const { plans } = await (await request.get(plansUrl, { headers })).json()
+      for (const p of plans.filter((x: { name: string }) => x.name === 'E2E night')) await request.delete(`${plansUrl}/${p.id}`, { headers })
+    }
+    const dropCharges = async () => {
+      const list = await (await request.get(`${vehicleUrl}/charges?limit=500`, { headers })).json()
+      for (const c of (list.charges ?? list).filter((x: { notes?: string }) => x.notes === 'e2e tariff midnight')) {
+        await request.delete(`${vehicleUrl}/charges/${c.id}`, { headers })
+      }
+    }
+    // A run that stopped half way must not leave its plan or charge behind for the next one
+    await dropCharges()
+    await dropPlans()
+
+    try {
+      // 0.30 a kWh by day, 0.10 from midnight to 06:00
+      const created = await request.post(plansUrl, {
+        headers,
+        data: {
+          name: 'E2E night',
+          plan_type: 'BANDS',
+          currency: 'EUR',
+          default_band: 'day',
+          bands: [{ name: 'day', rate_cents: 0.3 }, { name: 'night', rate_cents: 0.1 }],
+          rules: [{ start: '00:00', end: '06:00', band: 'night' }],
+        },
+      })
+      expect(created.ok()).toBeTruthy()
+      const plan = await created.json()
+      expect((await request.put(vehicleUrl, { headers, data: { ...vehicle, tariff_plan_id: plan.id } })).ok()).toBeTruthy()
+
+      // The form starts at 23:00 on 4 March 2020
+      await page.clock.setFixedTime(new Date('2020-03-04T23:00:00+01:00'))
+      await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+      await page.getByRole('button', { name: 'Add a charge' }).first().click()
+      const dialog = page.getByRole('dialog', { name: 'New charge' })
+      await expect(dialog.locator('input[aria-label="Datepicker input"]').first()).toHaveValue('04/03/2020 23:00')
+
+      // It ends at 01:00 the next day
+      await dialog.locator('input[aria-label="Datepicker input"]').nth(1).click()
+      const picker = page.locator('.dp--menu')
+      await picker.getByLabel('March 5th, 2020').click()
+      await picker.getByLabel('Open time picker').click()
+      await picker.getByLabel('Increment hours').click({ clickCount: 2 })
+      await expect(picker.getByText('05/03/2020 01:00')).toBeVisible()
+      await picker.getByRole('button', { name: 'Apply' }).click()
+
+      // One hour on each side of midnight: 10 kWh at 0.30 and 10 kWh at 0.10
+      await dialog.locator('#charge-form-kwh').fill('20')
+      await expect(dialog.locator('#charge-form-cost')).toHaveValue('4')
+      await expect(dialog.getByText('E2E night').first()).toBeVisible()
+
+      await dialog.locator('#charge-form-notes').fill('e2e tariff midnight')
+      await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+      await expect(dialog).toHaveCount(0)
+      const list = await (await request.get(`${vehicleUrl}/charges?limit=500`, { headers })).json()
+      const saved = (list.charges ?? list).find((x: { notes?: string }) => x.notes === 'e2e tariff midnight')
+      expect(saved.cost).toBe(4)
+    } finally {
+      await dropCharges()
+      await dropPlans()
+    }
+  })
+})
+
+test('a session from a shared charger is qualified onto a vehicle', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const dropSecondVehicle = async () => {
+    const body = await (await request.get('/api/vehicles', { headers })).json()
+    for (const v of (Array.isArray(body) ? body : body.vehicles).filter((x: Vehicle) => x.name === 'E2E second EV')) {
+      await request.delete(`/api/vehicles/${v.id}`, { headers })
+    }
+  }
+  const dropPending = async () => {
+    const { pending_charges: pending } = await (await request.get('/api/pending-charges', { headers })).json()
+    for (const p of (pending ?? []).filter((x: { energy_kwh: number }) => x.energy_kwh === 17.25)) {
+      await request.delete(`/api/pending-charges/${p.id}`, { headers })
+    }
+  }
+  // A run that stopped half way must not leave its vehicle or its session behind for the next one
+  await dropSecondVehicle()
+  await dropPending()
+
+  // With two electric vehicles, a session that names none waits for the household to say whose it is
+  const second = await request.post('/api/vehicles', { headers, data: { name: 'E2E second EV', powertrain: 'EV', currency: 'EUR', current_odometer: 0 } })
+  expect(second.ok()).toBeTruthy()
+  try {
+    const sent = await request.post('/api/integrations/homeassistant/event', {
+      headers,
+      data: {
+        event_id: `e2e-wallbox:${Date.now()}`,
+        event_type: 'charging_session_end',
+        data: { start_time: '2020-03-04T20:00:00Z', end_time: '2020-03-04T22:00:00Z', energy_added_kwh: 17.25 },
+      },
+    })
+    expect((await sent.json()).status).toBe('pending_qualification')
+
+    await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+    await page.getByRole('button', { name: 'Qualify' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Charges to Qualify' })
+    await expect(dialog.getByText('17.25 kWh')).toBeVisible()
+    await dialog.getByLabel('Select vehicle').selectOption({ label: ev.name })
+    await dialog.getByRole('button', { name: 'Assign' }).click()
+    await expect(dialog.getByText('17.25 kWh')).toHaveCount(0)
+
+    // The session is now a charge of the chosen vehicle
+    const list = await (await request.get(`/api/vehicles/${ev.id}/charges?limit=500`, { headers })).json()
+    const charge = (list.charges ?? list).find((c: { kwh_added: number }) => c.kwh_added === 17.25)
+    expect(charge).toBeTruthy()
+    await request.delete(`/api/vehicles/${ev.id}/charges/${charge.id}`, { headers })
+  } finally {
+    await dropPending()
+    await dropSecondVehicle()
+  }
+})
