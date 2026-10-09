@@ -15,6 +15,7 @@ import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
 import { downloadCsv } from '@/utils/csv'
 import { currencySymbol } from '@/currency'
+import { canCharge } from '@/utils/vehicles'
 import { comparisonSavings } from '@/utils/comparisonSavings'
 import { scenarioSide, sideKey } from '@/utils/comparisonSide'
 import ComparisonCompare from '@/components/comparison/ComparisonCompare.vue'
@@ -22,6 +23,7 @@ import ComparisonCharts from '@/components/comparison/ComparisonCharts.vue'
 import {
   applyComparisonDefaults,
   buildComparisonPayload,
+  comparisonReferenceVehicle,
   comparisonStepErrorKey,
   costRowValues,
   emptyComparisonForm,
@@ -61,6 +63,8 @@ const canCompareTrackedVehicle = computed(() => !!vehicleStore.activeVehicle && 
 const emptyForm = () => emptyComparisonForm(canCompareTrackedVehicle.value)
 const form = reactive(emptyForm())
 const showAdvanced = ref(false)
+const formVehicle = computed(() => comparisonReferenceVehicle(form.vehicle_id, vehicleStore.activeVehicle, vehicleStore.vehicles))
+const canCompareFormVehicle = computed(() => !!formVehicle.value && canCharge(formVehicle.value.powertrain))
 
 const isRetro = computed(() => form.mode === 'RETROSPECTIVE')
 
@@ -79,9 +83,11 @@ const evFields = [
   { key: 'insurance_yearly', label: 'comparison.fields.insuranceYearly' },
 ] as const
 
-// Amounts are in the active vehicle's currency: the tracked side comes from its own data, and the
-// hypothetical figures are typed in by the same user in the currency they think in
-const currency = computed(() => vehicleStore.currency)
+// A tracked scenario's amounts, defaults and labels follow its saved reference vehicle.
+const currency = computed(() => {
+  const referenceId = view.value === 'edit' ? form.vehicle_id : view.value === 'result' && currentScenario.value?.mode === 'RETROSPECTIVE' ? currentScenario.value?.vehicle_id : undefined
+  return comparisonReferenceVehicle(referenceId, vehicleStore.activeVehicle, vehicleStore.vehicles)?.currency || vehicleStore.currency
+})
 const currencySign = computed(() => currencySymbol(currency.value))
 
 function fmtMoney(v: number | null | undefined, digits = 0): string {
@@ -112,9 +118,9 @@ async function loadScenarios() {
 
 async function loadDefaults() {
   // A tracked combustion vehicle prefills the ICE side of a projection with its measured consumption and fuel price
-  const vehicleId = isRetro.value || vehicleStore.fuelOnly ? vehicleStore.activeVehicle?.id : undefined
+  const vehicleId = isRetro.value ? formVehicle.value?.id : vehicleStore.fuelOnly ? vehicleStore.activeVehicle?.id : undefined
   try {
-    defaults.value = await api.getComparisonDefaults(vehicleId, vehicleStore.currency)
+    defaults.value = await api.getComparisonDefaults(vehicleId, currency.value)
   } catch (err) {
     console.error('Failed to load comparison defaults', err)
   }
@@ -159,7 +165,7 @@ function editScenario(sc: any) {
 }
 
 async function nextStep() {
-  const errorKey = comparisonStepErrorKey(step.value, form, canCompareTrackedVehicle.value)
+  const errorKey = comparisonStepErrorKey(step.value, form, canCompareFormVehicle.value)
   formError.value = errorKey ? t(errorKey) : ''
   if (formError.value) return
   if (step.value < 2) {
@@ -399,8 +405,8 @@ onMounted(async () => {
         <div>
           <label for="cmp-mode" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('comparison.comparisonView.comparisonType') }}</label>
           <select id="cmp-mode" v-model="form.mode" :disabled="!!editingId" class="field" @change="onModeChange">
-            <option value="RETROSPECTIVE" :disabled="!canCompareTrackedVehicle">
-              {{ $t('comparison.comparisonView.myTrackedEv') }}{{ vehicleStore.activeVehicle ? ` (${vehicleStore.activeVehicle.name})` : '' }} {{ $t('comparison.comparisonView.vsIce') }}
+            <option value="RETROSPECTIVE" :disabled="!canCompareFormVehicle">
+              {{ $t('comparison.comparisonView.myTrackedEv') }}{{ formVehicle ? ` (${formVehicle.name})` : '' }} {{ $t('comparison.comparisonView.vsIce') }}
             </option>
             <option value="PROJECTION">{{ $t('comparison.comparisonView.projectionICompareTwoVehicles') }}</option>
           </select>
