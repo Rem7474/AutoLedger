@@ -120,7 +120,7 @@ async function handleSubmit() {
 
 <template>
   <div v-if="open" class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" @click.self="close">
-    <div v-dialog="close" class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div v-dialog="close" class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
         <h3 class="text-base font-bold text-white flex items-center gap-2">

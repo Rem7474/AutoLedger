@@ -71,7 +71,7 @@ async function save() {
   <div v-if="open" class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
     <form
       v-dialog
-      class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+      class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
       :aria-label="planId ? $t('tariffs.editor.editTitle') : $t('tariffs.editor.newTitle')"
       @submit.prevent="save"
     >
