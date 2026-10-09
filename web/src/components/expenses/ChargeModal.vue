@@ -7,10 +7,10 @@ import { api, type ExpenseDocumentHeader } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDocumentAttach } from '@/composables/useDocumentAttach'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Zap, X, Paperclip, FileText, Eye, UploadCloud, Calculator } from 'lucide-vue-next'
+import { Zap, Paperclip, FileText, Eye, UploadCloud, Calculator } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { currencyPayload, formatDate, toLocalDateTimeInput } from '@/utils/expenses'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import ChargeAmountFields from '@/components/charges/ChargeAmountFields.vue'
 import { loadMemory, rememberCharge } from '@/utils/quickAdd'
 import PublicChargeCalculatorModal from '@/components/expenses/PublicChargeCalculatorModal.vue'
@@ -27,7 +27,6 @@ const emit = defineEmits<{
   'view-document': [docId: string | null | undefined, filename?: string | null, download?: boolean]
 }>()
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 const { showAlert } = useConfirm()
 const vehicleStore = useVehicleStore()
 const { isUploadingDocument, onSelectExistingDoc, onFileInputChange } = useDocumentAttach(
@@ -144,13 +143,8 @@ const handleSaveCharge = () => runOnce(handleSaveChargeAction)
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-modal bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
-    @click.self="open = false"
-  >
-    <div v-dialog class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden my-auto">
-      <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-900/95">
+  <ModalShell v-model:open="open" size="md">
+    <template #title>
         <div class="min-w-0 pr-2">
           <h3 class="text-base font-bold text-white flex items-center gap-2 truncate">
             <Zap class="w-5 h-5 text-info-400 shrink-0" />
@@ -160,12 +154,9 @@ const handleSaveCharge = () => runOnce(handleSaveChargeAction)
             {{ $t('expenses.chargeModal.teslamateChargeOfKwhThe', { date: formatDate(editingCharge.date), kwh_added: formatNumber(editingCharge.kwh_added, 2) }) }}
           </p>
         </div>
-        <button @click="open = false" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0" :aria-label="$t('common.close')">
-          <X class="w-5 h-5" />
-        </button>
-      </div>
+    </template>
 
-      <form id="charge-modal-form" @submit.prevent="handleSaveCharge" class="p-5 overflow-y-auto flex-1 overscroll-contain space-y-4">
+      <form id="charge-modal-form" @submit.prevent="handleSaveCharge" class="space-y-4">
         <template v-if="!editingCharge || editingCharge.is_manual">
           <div>
             <label for="charge-form-date" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.chargeModal.start') }}</label>
@@ -287,16 +278,15 @@ const handleSaveCharge = () => runOnce(handleSaveChargeAction)
         </div>
       </form>
 
-      <div class="px-5 py-3.5 border-t border-slate-800/80 flex justify-end gap-2 shrink-0 bg-slate-900/95">
+    <template #footer>
         <button type="button" @click="open = false" class="btn btn-lg btn-secondary">
           {{ $t('common.cancel') }}
         </button>
         <button :disabled="submitting" type="submit" form="charge-modal-form" class="btn btn-lg btn-primary">
           {{ $t('common.save') }}
         </button>
-      </div>
-    </div>
-  </div>
+    </template>
+  </ModalShell>
 
   <PublicChargeCalculatorModal
     v-model:open="showPublicCalc"
