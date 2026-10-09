@@ -10,12 +10,9 @@ import { AlertCircle, ArrowRight, CheckCircle2, Download, FileSpreadsheet, KeyRo
 
 // Optional last step of the wizard: the TeslaMate link, a Home Assistant webhook and CSV templates.
 // The form is edited in place; the wizard reads it when it creates the vehicle.
-const props = defineProps<{
-  powertrain: Powertrain
-  teslamate: ReturnType<typeof emptyTeslaMateForm>
-  saving: boolean
-}>()
+defineProps<{ powertrain: Powertrain; saving: boolean }>()
 const emit = defineEmits<{ back: []; finalize: [] }>()
+const teslamate = defineModel<ReturnType<typeof emptyTeslaMateForm>>('teslamate', { required: true })
 const useWebhook = defineModel<boolean>('useWebhook', { required: true })
 
 const testing = ref(false)
@@ -27,16 +24,16 @@ function downloadTemplate(type: CsvTemplateType) {
 }
 
 async function testConnection() {
-  const teslamate = props.teslamate
+  const form = teslamate.value
   testResult.value = null
   testing.value = true
   try {
-    if (!teslamate.url) throw new Error(t('onboarding.apiUrlRequired'))
+    if (!form.url) throw new Error(t('onboarding.apiUrlRequired'))
     const payload = {
-      teslamate_api_url: teslamate.url,
-      teslamate_auth_type: teslamate.authType,
-      teslamate_car_id: teslaMateCarId(teslamate),
-      ...teslaMateCredentials(teslamate),
+      teslamate_api_url: form.url,
+      teslamate_auth_type: form.authType,
+      teslamate_car_id: teslaMateCarId(form),
+      ...teslaMateCredentials(form),
     }
     const res = await api.testTeslaMateRaw(payload)
     const st = res.status

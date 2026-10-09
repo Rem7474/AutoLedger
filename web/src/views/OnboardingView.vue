@@ -369,10 +369,10 @@ async function addFirstEntry() {
       <!-- STEP 3: Data sources (optional) -->
       <OnboardingDataSourcesStep
         v-else-if="currentStep === 3"
+        v-model:teslamate="teslamate"
         v-model:use-webhook="useWebhook"
         :powertrain="vehiclePowertrain"
-        :teslamate="teslamate"
-        :saving="loading"
+                :saving="loading"
         @back="currentStep = 2"
         @finalize="handleFinalSubmit"
       />
