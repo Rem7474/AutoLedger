@@ -17,6 +17,7 @@ import (
 
 // ServiceBookHandler serves the printable service book of a vehicle.
 type ServiceBookHandler struct {
+	calendarDates
 	repo *database.Repository
 	book *services.ServiceBookService
 }
@@ -33,12 +34,12 @@ func (h *ServiceBookHandler) Download(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	from, err := parseExportDate(q.Get("from"), false)
+	from, err := parseExportDate(q.Get("from"), false, h.dateLocation())
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return
 	}
-	to, err := parseExportDate(q.Get("to"), true)
+	to, err := parseExportDate(q.Get("to"), true, h.dateLocation())
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return

@@ -116,6 +116,10 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		ha:             handlers.NewHomeAssistantHandler(repo, tariffService),
 	}
 	h.ha.SetTimezone(cfg.ReportingTimezone)
+	h.fuel.SetTimezone(cfg.ReportingTimezone)
+	h.export.SetTimezone(cfg.ReportingTimezone)
+	h.mileage.SetTimezone(cfg.ReportingTimezone)
+	h.serviceBook.SetTimezone(cfg.ReportingTimezone)
 	if cfg.GeocodingEnabled {
 		geocoder := geocode.New(cfg.GeocodingURL, cfg.GeocodingUserAgent)
 		h.ha.SetGeocoder(geocoder)

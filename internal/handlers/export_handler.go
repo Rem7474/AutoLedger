@@ -18,6 +18,7 @@ import (
 )
 
 type ExportHandler struct {
+	calendarDates
 	repo   *database.Repository
 	export *services.ExportService
 }
@@ -29,16 +30,16 @@ func NewExportHandler(repo *database.Repository, export *services.ExportService)
 var unsafeFilenameChars = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
 
 // parseExportDate reads a YYYY-MM-DD query value; the end date covers the whole day.
-func parseExportDate(raw string, endOfDay bool) (*time.Time, error) {
+func parseExportDate(raw string, endOfDay bool, locations ...*time.Location) (*time.Time, error) {
 	if raw == "" {
 		return nil, nil
 	}
-	d, err := time.Parse("2006-01-02", raw)
+	d, err := time.ParseInLocation("2006-01-02", raw, dateLocation(locations))
 	if err != nil {
 		return nil, apierror.New("export.invalid_date", "Dates must be formatted YYYY-MM-DD")
 	}
 	if endOfDay {
-		d = d.Add(24*time.Hour - time.Nanosecond)
+		d = d.AddDate(0, 0, 1).Add(-time.Nanosecond)
 	}
 	return &d, nil
 }
@@ -50,12 +51,12 @@ func (h *ExportHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	from, err := parseExportDate(q.Get("from"), false)
+	from, err := parseExportDate(q.Get("from"), false, h.dateLocation())
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return
 	}
-	to, err := parseExportDate(q.Get("to"), true)
+	to, err := parseExportDate(q.Get("to"), true, h.dateLocation())
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return

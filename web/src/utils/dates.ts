@@ -13,6 +13,11 @@ export function toLocalDateTimeInput(d: string | Date = new Date()): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+/** The local calendar day of a timestamp, or today when omitted. */
+export function toLocalDay(d: string | Date = new Date()): string {
+  return toLocalDateTimeInput(d).substring(0, 10)
+}
+
 /** A "YYYY-MM" month key as a short month in the current language ("févr. 26"); anything else is returned untouched. */
 export function formatMonthLabel(month: string): string {
   const m = /^(\d{4})-(\d{2})$/.exec(month)

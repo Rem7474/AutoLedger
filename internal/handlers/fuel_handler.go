@@ -19,6 +19,7 @@ import (
 
 // FuelHandler manages the fuel fill-ups of combustion vehicles.
 type FuelHandler struct {
+	calendarDates
 	repo *database.Repository
 }
 
@@ -55,8 +56,8 @@ func validateFuelPrice(price *float64) error {
 }
 
 // buildFuelLog validates a request and derives the missing one of amount / liters / price per liter.
-func buildFuelLog(vehicleID string, req *SaveFuelLogRequest) (*models.FuelLog, error) {
-	date, err := parseDate(req.Date)
+func buildFuelLog(vehicleID string, req *SaveFuelLogRequest, locations ...*time.Location) (*models.FuelLog, error) {
+	date, err := parseDate(req.Date, locations...)
 	if err != nil {
 		return nil, apierror.New("request.invalid_date", "Invalid date")
 	}
@@ -157,7 +158,7 @@ func (h *FuelHandler) buildChecked(w http.ResponseWriter, r *http.Request, vehic
 		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
 		return nil, false
 	}
-	f, err := buildFuelLog(vehicleID, &req)
+	f, err := buildFuelLog(vehicleID, &req, h.dateLocation())
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return nil, false

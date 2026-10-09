@@ -13,6 +13,7 @@ import { currencySymbol, formatAmount } from '@/currency'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import { distanceUnit, formatDistance, formatFuelConsumptionValue, formatVolumeValue, fuelConsumptionUnit, litresToDisplayVolume, perDistance, perVolume, volumeUnitLabel } from '@/units'
 import LoadError from '@/components/LoadError.vue'
+import { toLocalDay } from '@/utils/dates'
 
 const props = defineProps<{
   vehicleId: string
@@ -43,7 +44,7 @@ const fuelTypes = [
 
 function emptyForm() {
   return {
-    date: new Date().toISOString().substring(0, 10),
+    date: toLocalDay(),
     odometer: null as number | null,
     amount: null as number | null,
     liters: null as number | null,
@@ -103,7 +104,7 @@ function openAdd() {
 function openEdit(log: any) {
   editingId.value = log.id
   form.value = {
-    date: String(log.date).substring(0, 10),
+    date: toLocalDay(log.date),
     odometer: log.odometer ?? null,
     amount: log.amount,
     liters: log.liters ?? null,

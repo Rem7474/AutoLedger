@@ -15,6 +15,7 @@ import (
 )
 
 type MileageHandler struct {
+	calendarDates
 	repo    *database.Repository
 	mileage *services.MileageService
 }
@@ -30,12 +31,12 @@ func (h *MileageHandler) Report(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	from, err := parseExportDate(q.Get("from"), false)
+	from, err := parseExportDate(q.Get("from"), false, h.dateLocation())
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return
 	}
-	to, err := parseExportDate(q.Get("to"), true)
+	to, err := parseExportDate(q.Get("to"), true, h.dateLocation())
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return

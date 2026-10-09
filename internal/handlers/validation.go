@@ -57,12 +57,12 @@ func writeRepoError(w http.ResponseWriter, r *http.Request, err error, fallback 
 }
 
 // parseDate accepts RFC3339 timestamps and YYYY-MM-DD dates.
-func parseDate(value string) (time.Time, error) {
+func parseDate(value string, locations ...*time.Location) (time.Time, error) {
 	value = strings.TrimSpace(value)
 	if t, err := time.Parse(time.RFC3339, value); err == nil {
 		return t, nil
 	}
-	if t, err := time.Parse("2006-01-02", value); err == nil {
+	if t, err := time.ParseInLocation("2006-01-02", value, dateLocation(locations)); err == nil {
 		return t, nil
 	}
 	return time.Time{}, apierror.Newf("request.invalid_date_value", "Invalid date: %q", value)
