@@ -234,7 +234,7 @@ func median(values []float64) float64 {
 
 // fullChargeCost extrapolates the cost of going from 0 to 100 % from the sessions that have both a cost and a swing.
 func fullChargeCost(cost money.Cents, swing float64) *float64 {
-	return ratioPtr(cost.Float()*100, swing, 2)
+	return costRatioPtr(cost.Float()*100, swing, 2)
 }
 
 func ratioPtr(num, den float64, digits int) *float64 {
@@ -247,6 +247,19 @@ func ratioPtr(num, den float64, digits int) *float64 {
 	}
 	v := float64(int64(num/den*f+0.5)) / f
 	return &v
+}
+
+// costRatioPtr distinguishes a known free price from an unavailable denominator.
+// Callers of distance-based metrics must also establish that some energy cost is known.
+func costRatioPtr(num, den float64, digits int) *float64 {
+	if den <= 0 || num < 0 {
+		return nil
+	}
+	if num == 0 {
+		zero := 0.0
+		return &zero
+	}
+	return ratioPtr(num, den, digits)
 }
 
 // previousMonths lists the n calendar months ending at month (inclusive), oldest first.
@@ -361,29 +374,30 @@ func computeEnergyStats(drives []energyDriveMonth, charges []energyCharge, odome
 			KwhAdded:            round1(a.kwhAdded),
 			ChargeEfficiency:    ratioPtr(a.effAdded, a.effUsed, 3),
 			EnergyCost:          a.cost,
-			PricePerKwh:         ratioPtr(a.cost.Float(), a.kwhPriced, 3),
+			PricePerKwh:         costRatioPtr(a.cost.Float(), a.kwhPriced, 3),
 		}
 		if len(a.capacities) > 0 {
 			em.CapacitySamples = len(a.capacities)
 			c := round1(median(append([]float64(nil), a.capacities...)))
 			em.EstimatedCapacityKwh = &c
 		}
-		if a.distanceKm >= minDistanceForCostPer100km {
-			em.CostPer100km = ratioPtr(a.cost.Float()*100, a.distanceKm, 2)
+		if a.distanceKm >= minDistanceForCostPer100km && a.kwhPriced > 0 {
+			em.CostPer100km = costRatioPtr(a.cost.Float()*100, a.distanceKm, 2)
 		}
 
 		// Trailing window: energy bought and energy driven rarely fall in the same month. Months without tracked
 		// distance (before tracking started) are left out, their energy has no matching kilometres.
-		var winKm float64
+		var winKm, winPricedKwh float64
 		var winCost money.Cents
 		for _, wm := range previousMonths(m, trailingMonths) {
 			if w := months[wm]; w != nil && w.distanceKm > 0 {
 				winKm += w.distanceKm
 				winCost += w.cost
+				winPricedKwh += w.kwhPriced
 			}
 		}
-		if winKm >= minDistanceForTrailing {
-			em.CostPer100kmTrailing = ratioPtr(winCost.Float()*100, winKm, 2)
+		if winKm >= minDistanceForTrailing && winPricedKwh > 0 {
+			em.CostPer100kmTrailing = costRatioPtr(winCost.Float()*100, winKm, 2)
 		}
 		if derivedMonths[m] && em.ConsumptionKwh100km == nil && winKm >= minDistanceForTrailing {
 			var winKwh float64
@@ -407,7 +421,7 @@ func computeEnergyStats(drives []energyDriveMonth, charges []energyCharge, odome
 			Sessions:          c.sessions,
 			KwhAdded:          round1(c.kwhAdded),
 			EnergyCost:        c.cost,
-			PricePerKwh:       ratioPtr(c.cost.Float(), c.kwhPriced, 3),
+			PricePerKwh:       costRatioPtr(c.cost.Float(), c.kwhPriced, 3),
 			ChargeEfficiency:  ratioPtr(c.effAdded, c.effUsed, 3),
 			CostPerFullCharge: fullChargeCost(c.costSwingPriced, c.socSwingPriced),
 		})
@@ -416,12 +430,13 @@ func computeEnergyStats(drives []energyDriveMonth, charges []energyCharge, odome
 	// Cost per 100 km only counts the months where distance is tracked: energy bought before tracking started has no
 	// matching distance and would inflate it.
 	var trackedCost money.Cents
-	var trackedKm, trackedKwh, derivedKm float64
+	var trackedKm, trackedKwh, trackedPricedKwh, derivedKm float64
 	for m, a := range months {
 		if a.distanceKm > 0 {
 			trackedCost += a.cost
 			trackedKm += a.distanceKm
 			trackedKwh += a.kwhAdded
+			trackedPricedKwh += a.kwhPriced
 			if derivedMonths[m] {
 				derivedKm += a.distanceKm
 			}
@@ -432,11 +447,11 @@ func computeEnergyStats(drives []energyDriveMonth, charges []energyCharge, odome
 		KwhAdded:            round1(total.kwhAdded),
 		ConsumptionKwh100km: ratioPtr(total.driveKwh*100, total.measuredKm, 1),
 		ChargeEfficiency:    ratioPtr(total.effAdded, total.effUsed, 3),
-		PricePerKwh:         ratioPtr(total.cost.Float(), total.kwhPriced, 3),
+		PricePerKwh:         costRatioPtr(total.cost.Float(), total.kwhPriced, 3),
 		SessionsWithoutCost: sessionsWithoutCost,
 	}
-	if trackedKm >= minDistanceForCostPer100km {
-		out.Summary.CostPer100km = ratioPtr(trackedCost.Float()*100, trackedKm, 2)
+	if trackedKm >= minDistanceForCostPer100km && trackedPricedKwh > 0 {
+		out.Summary.CostPer100km = costRatioPtr(trackedCost.Float()*100, trackedKm, 2)
 	}
 	if out.Summary.ConsumptionKwh100km == nil && derivedKm >= minDistanceForTrailing {
 		out.Summary.ConsumptionKwh100km = ratioPtr(trackedKwh*100, trackedKm, 1)
