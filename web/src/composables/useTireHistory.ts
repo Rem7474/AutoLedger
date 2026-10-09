@@ -63,7 +63,7 @@ export function useTireHistory(options: {
 
   function openTimelineTire(tireId: string) {
     const found = tires.value.find((x) => x.tire.id === tireId)
-    if (found) openHistoryModal(found)
+    if (found) void openHistoryModal(found)
   }
 
   /** Reload the list, then the open history so it shows the change. */
