@@ -102,6 +102,17 @@ func calculateMaintenanceAmortization(items []*MaintenanceAmortItem, monthlyDist
 		sortedMonths = append(sortedMonths, m)
 	}
 	sort.Strings(sortedMonths)
+	// Time-based coverage continues during months with no recorded mileage or expense.
+	if len(sortedMonths) > 0 {
+		first, firstErr := time.Parse("2006-01", sortedMonths[0])
+		last, lastErr := time.Parse("2006-01", sortedMonths[len(sortedMonths)-1])
+		if firstErr == nil && lastErr == nil {
+			sortedMonths = nil
+			for month := first; !month.After(last); month = month.AddDate(0, 1, 0) {
+				sortedMonths = append(sortedMonths, month.Format("2006-01"))
+			}
+		}
+	}
 
 	result := make(map[string]money.Cents)
 
