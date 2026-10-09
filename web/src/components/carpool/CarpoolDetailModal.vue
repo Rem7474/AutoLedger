@@ -2,13 +2,13 @@
 import { formatNumber, formatPercent } from '@/utils/numbers'
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Users, X, MapPin, Navigation, Pencil, RotateCw, CheckCircle2, Sparkles, ChevronRight, Zap, Disc, Wrench, Shield, Receipt } from 'lucide-vue-next'
+import { Users, MapPin, Navigation, Pencil, RotateCw, CheckCircle2, Sparkles, ChevronRight, Zap, Disc, Wrench, Shield, Receipt } from 'lucide-vue-next'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { buildCarpoolBreakdown } from '@/utils/costBreakdown'
 import { carpoolCoverage, formatDate, stopNames } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import { distanceUnit, formatDistance, perDistance } from '@/units'
 
 // Detail of a carpool trip, laid out like the drive and trip cost breakdown: summary, legs, cost split, passengers,
@@ -17,7 +17,6 @@ import { distanceUnit, formatDistance, perDistance } from '@/units'
 const props = defineProps<{ trip: any | null; recalculating: boolean }>()
 const emit = defineEmits<{ edit: [trip: any]; recalculate: [trip: any]; 'open-drive': [driveId: string] }>()
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
 const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
@@ -39,14 +38,8 @@ const stops = computed(() => stopNames(props.trip?.legs || []))
 </script>
 
 <template>
-  <div
-    v-if="open && trip"
-    class="fixed inset-0 z-modal bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
-    @click.self="open = false"
-  >
-    <div v-dialog class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden my-auto">
-      <!-- Header -->
-      <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-900/95">
+  <ModalShell v-if="trip" v-model:open="open" size="lg" footer-class="items-center justify-between">
+    <template #title>
         <div class="flex items-center gap-2.5 min-w-0 pr-2">
           <div class="p-2 rounded-xl shrink-0 bg-rose-500/10 text-rose-400">
             <Users class="w-5 h-5" />
@@ -56,13 +49,8 @@ const stops = computed(() => stopNames(props.trip?.legs || []))
             <p class="text-xs text-slate-400">{{ formatDate(trip.date) }}</p>
           </div>
         </div>
-        <button @click="open = false" class="tap p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0" :title="$t('common.close')" :aria-label="$t('common.close')">
-          <X class="w-5 h-5" />
-        </button>
-      </div>
+    </template>
 
-      <!-- Body -->
-      <div class="p-5 overflow-y-auto flex-1 overscroll-contain space-y-4">
         <!-- Summary route -->
         <div class="bg-slate-800/60 border border-slate-700/60 p-3.5 rounded-2xl space-y-2">
           <div class="text-sm font-semibold text-white flex items-center gap-2">
@@ -228,10 +216,8 @@ const stops = computed(() => stopNames(props.trip?.legs || []))
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Footer Actions -->
-      <div class="px-5 py-3.5 border-t border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-900/95">
+    <template #footer>
         <button @click="open = false" class="btn btn-lg btn-secondary">
           {{ $t('common.close') }}
         </button>
@@ -254,7 +240,6 @@ const stops = computed(() => stopNames(props.trip?.legs || []))
             <span>{{ $t('common.edit') }}</span>
           </button>
         </div>
-      </div>
-    </div>
-  </div>
+    </template>
+  </ModalShell>
 </template>
