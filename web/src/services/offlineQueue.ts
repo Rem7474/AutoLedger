@@ -3,6 +3,8 @@
 
 export interface QueuedMutation {
   id: string
+  // Optional only for entries created before account-scoped queues were introduced.
+  accountId?: string
   method: string
   endpoint: string
   body?: string
