@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import ModalShell from '@/components/ModalShell.vue'
 import { Key, Plus, Trash2, Copy, Check, ExternalLink, ShieldAlert, Sparkles } from 'lucide-vue-next'
 import { api, type APITokenInfo, type APITokenCreatedResponse } from '@/services/api'
 import { describeRelativeTime } from '@/utils/userAgent'
@@ -186,110 +187,92 @@ onMounted(() => {
     </ul>
 
     <!-- Modal Create Token -->
-    <div
-      v-if="showCreateModal"
-      class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      @click.self="closeCreateModal"
+    <ModalShell
+      :open="showCreateModal"
+      size="sm"
+      :title="createdTokenResponse ? t('account.tokens.tokenGeneratedTitle') : t('account.tokens.modalTitle')"
+      @update:open="closeCreateModal"
     >
-      <div v-dialog="closeCreateModal" class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-        <!-- Step 1: Input -->
-        <template v-if="!createdTokenResponse">
-          <h3 class="text-base font-bold text-white">{{ t('account.tokens.modalTitle') }}</h3>
-          <p class="text-xs text-slate-400">{{ t('account.tokens.modalSubtitle') }}</p>
+      <!-- Step 1: Input -->
+      <template v-if="!createdTokenResponse">
+        <p class="text-xs text-slate-400">{{ t('account.tokens.modalSubtitle') }}</p>
 
-          <form @submit.prevent="handleCreateToken" class="space-y-3">
-            <div>
-              <label for="token-name-input" class="block text-xs font-medium text-slate-300 mb-1">
-                {{ t('account.tokens.nameLabel') }}
-              </label>
-              <input
-                id="token-name-input"
-                v-model="tokenName"
-                type="text"
-                required
-                maxlength="100"
-                :placeholder="t('account.tokens.namePlaceholder')"
-                class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label for="token-expiry-select" class="block text-xs font-medium text-slate-300 mb-1">
-                {{ t('account.tokens.expiryLabel') }}
-              </label>
-              <select
-                id="token-expiry-select"
-                v-model="tokenExpiresDays"
-                class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-rose-500 focus:outline-none"
-              >
-                <option :value="null">{{ t('account.tokens.noExpiry') }}</option>
-                <option :value="30">30 {{ t('account.tokens.days') }}</option>
-                <option :value="90">90 {{ t('account.tokens.days') }}</option>
-                <option :value="365">1 {{ t('account.tokens.year') }}</option>
-              </select>
-            </div>
-
-            <p v-if="createError" class="text-xs text-danger-400 bg-danger-500/10 border border-danger-500/20 rounded-lg p-2">
-              {{ createError }}
-            </p>
-
-            <div class="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                @click="closeCreateModal"
-                class="btn btn-lg btn-secondary"
-              >
-                {{ t('common.cancel') }}
-              </button>
-              <button
-                type="submit"
-                :disabled="creating || !tokenName.trim()"
-                class="btn btn-lg btn-primary"
-              >
-                {{ creating ? t('account.tokens.generating') : t('account.tokens.generate') }}
-              </button>
-            </div>
-          </form>
-        </template>
-
-        <!-- Step 2: Display Token (One time) -->
-        <template v-else>
-          <div class="space-y-3">
-            <h3 class="text-base font-bold text-white">{{ t('account.tokens.tokenGeneratedTitle') }}</h3>
-            <div class="p-3 bg-warning-500/10 border border-warning-500/20 rounded-xl flex items-start gap-2.5">
-              <ShieldAlert class="h-4 w-4 text-warning-400 shrink-0 mt-0.5" />
-              <p class="text-xs text-warning-200">
-                {{ t('account.tokens.tokenWarning') }}
-              </p>
-            </div>
-
-            <div class="relative">
-              <div class="p-3 bg-slate-950 border border-slate-700 rounded-xl font-mono text-xs text-success-400 break-all select-all pr-12">
-                {{ createdTokenResponse.token }}
-              </div>
-              <button
-                type="button"
-                @click="copyToken"
-                class="absolute right-2 top-2 p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                :title="t('account.tokens.copy')" :aria-label="t('account.tokens.copy')"
-              >
-                <Check v-if="copied" class="h-4 w-4 text-success-400" />
-                <Copy v-else class="h-4 w-4" />
-              </button>
-            </div>
-
-            <div class="flex justify-end pt-2">
-              <button
-                type="button"
-                @click="closeCreateModal"
-                class="btn btn-lg btn-primary"
-              >
-                {{ t('common.done') }}
-              </button>
-            </div>
+        <form id="api-token-form" @submit.prevent="handleCreateToken" class="space-y-3">
+          <div>
+            <label for="token-name-input" class="block text-xs font-medium text-slate-300 mb-1">
+              {{ t('account.tokens.nameLabel') }}
+            </label>
+            <input
+              id="token-name-input"
+              v-model="tokenName"
+              type="text"
+              required
+              maxlength="100"
+              :placeholder="t('account.tokens.namePlaceholder')"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none"
+            />
           </div>
+
+          <div>
+            <label for="token-expiry-select" class="block text-xs font-medium text-slate-300 mb-1">
+              {{ t('account.tokens.expiryLabel') }}
+            </label>
+            <select
+              id="token-expiry-select"
+              v-model="tokenExpiresDays"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-rose-500 focus:outline-none"
+            >
+              <option :value="null">{{ t('account.tokens.noExpiry') }}</option>
+              <option :value="30">30 {{ t('account.tokens.days') }}</option>
+              <option :value="90">90 {{ t('account.tokens.days') }}</option>
+              <option :value="365">1 {{ t('account.tokens.year') }}</option>
+            </select>
+          </div>
+
+          <p v-if="createError" class="text-xs text-danger-400 bg-danger-500/10 border border-danger-500/20 rounded-lg p-2">
+            {{ createError }}
+          </p>
+        </form>
+      </template>
+
+      <!-- Step 2: Display Token (One time) -->
+      <template v-else>
+        <div class="p-3 bg-warning-500/10 border border-warning-500/20 rounded-xl flex items-start gap-2.5">
+          <ShieldAlert class="h-4 w-4 text-warning-400 shrink-0 mt-0.5" />
+          <p class="text-xs text-warning-200">
+            {{ t('account.tokens.tokenWarning') }}
+          </p>
+        </div>
+
+        <div class="relative">
+          <div class="p-3 bg-slate-950 border border-slate-700 rounded-xl font-mono text-xs text-success-400 break-all select-all pr-12">
+            {{ createdTokenResponse.token }}
+          </div>
+          <button
+            type="button"
+            @click="copyToken"
+            class="absolute right-2 top-2 p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            :title="t('account.tokens.copy')" :aria-label="t('account.tokens.copy')"
+          >
+            <Check v-if="copied" class="h-4 w-4 text-success-400" />
+            <Copy v-else class="h-4 w-4" />
+          </button>
+        </div>
+      </template>
+
+      <template #footer>
+        <template v-if="!createdTokenResponse">
+          <button type="button" @click="closeCreateModal" class="btn btn-lg btn-secondary">
+            {{ t('common.cancel') }}
+          </button>
+          <button type="submit" form="api-token-form" :disabled="creating || !tokenName.trim()" class="btn btn-lg btn-primary">
+            {{ creating ? t('account.tokens.generating') : t('account.tokens.generate') }}
+          </button>
         </template>
-      </div>
-    </div>
+        <button v-else type="button" @click="closeCreateModal" class="btn btn-lg btn-primary">
+          {{ t('common.done') }}
+        </button>
+      </template>
+    </ModalShell>
   </section>
 </template>
