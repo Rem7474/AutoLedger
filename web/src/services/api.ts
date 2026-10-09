@@ -140,6 +140,7 @@ export const api = {
   changePassword: (data: { current_password: string; new_password: string }) =>
     request<any>('/auth/password', { method: 'POST', body: JSON.stringify(data) }),
   updateLanguage: (language: string) => request<any>('/auth/language', { method: 'PUT', body: JSON.stringify({ language }) }),
+  updateVolumeUnit: (volume_unit: string) => request<any>('/auth/volume-unit', { method: 'PUT', body: JSON.stringify({ volume_unit }) }),
   updateDistanceUnit: (distance_unit: string) => request<any>('/auth/distance-unit', { method: 'PUT', body: JSON.stringify({ distance_unit }) }),
   getAuthConfig: () => request<AuthConfig>('/auth/config'),
 

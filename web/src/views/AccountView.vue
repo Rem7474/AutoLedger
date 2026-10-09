@@ -4,6 +4,7 @@ import { UserRound as PageIcon } from 'lucide-vue-next'
 import { t } from '@/i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import DistanceUnitSwitcher from '@/components/DistanceUnitSwitcher.vue'
+import VolumeUnitSwitcher from '@/components/VolumeUnitSwitcher.vue'
 import ApiTokensSection from '@/components/account/ApiTokensSection.vue'
 import TariffPlansPanel from '@/components/tariffs/TariffPlansPanel.vue'
 import { computed, onMounted, ref } from 'vue'
@@ -230,6 +231,10 @@ onMounted(() => {
       <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-4">
         <span class="text-sm font-medium text-white">{{ $t('account.distanceUnit') }}</span>
         <DistanceUnitSwitcher />
+      </div>
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-4">
+        <span class="text-sm font-medium text-white">{{ $t('account.volumeUnit') }}</span>
+        <VolumeUnitSwitcher />
       </div>
       <p class="mt-3 text-xs text-slate-400">{{ $t('account.currencyPerVehicle') }}</p>
     </section>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import NumberInput from '@/components/NumberInput.vue'
+import DistanceInput from '@/components/DistanceInput.vue'
 import { t } from '@/i18n'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ChevronDown } from 'lucide-vue-next'
@@ -9,7 +10,7 @@ import QuickOdometerField from './QuickOdometerField.vue'
 import QuickDateLine from './QuickDateLine.vue'
 import { currencySymbol, formatAmount } from '@/currency'
 import { buildFuelPayload, checkOdometer, isQueued, toLocalDateInput, toNumber, totalFromUnitPrice, unitPriceText } from '@/utils/quickAdd'
-import { formatDistance } from '@/units'
+import { formatDistance, volumeUnitLabel } from '@/units'
 
 const props = defineProps<{ vehicle: any }>()
 const currency: string = props.vehicle.currency || 'EUR'
@@ -91,13 +92,13 @@ async function submit() {
     </div>
 
     <div>
-      <label for="qf-liters" class="quick-label">{{ $t('quickadd.quickFuelForm.quantityL') }}</label>
-      <NumberInput text id="qf-liters" v-model="form.liters" min="0" class="quick-input" @input="sync" />
+      <label for="qf-liters" class="quick-label">{{ $t('quickadd.quickFuelForm.quantityL', { unit: volumeUnitLabel() }) }}</label>
+      <DistanceInput kind="volume" text :digits="2" id="qf-liters" v-model="form.liters" min="0" class="quick-input" @input="sync" />
     </div>
 
     <div>
-      <label for="qf-price" class="quick-label">{{ $t('quickadd.quickFuelForm.pricePerLiter', { cur: currencySymbol(currency) }) }}</label>
-      <NumberInput text id="qf-price" v-model="form.price" min="0" class="quick-input" @input="onPriceInput" />
+      <label for="qf-price" class="quick-label">{{ $t('quickadd.quickFuelForm.pricePerLiter', { cur: currencySymbol(currency), unit: volumeUnitLabel() }) }}</label>
+      <DistanceInput kind="per-volume" text :digits="3" id="qf-price" v-model="form.price" min="0" class="quick-input" @input="onPriceInput" />
     </div>
 
     <label class="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-800 px-4 text-sm font-semibold text-white">
