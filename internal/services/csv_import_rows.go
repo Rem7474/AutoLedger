@@ -311,6 +311,9 @@ func parseFuelRow(rc *rowContext, row []string, line int) (*parsedRow, *apierror
 		price = &p
 	case amount > 0 && liters == nil && price != nil:
 		l := math.Round(amount.Float() / *price * 100) / 100
+		if l <= 0 || l > maxFuelLiters || math.IsNaN(l) || math.IsInf(l, 0) {
+			return nil, apierror.Newf("import.row.invalid_liters", "Line %d: invalid quantity (0 to %d L)", line, maxFuelLiters)
+		}
 		liters = &l
 	}
 	if price != nil && *price > maxFuelPrice {

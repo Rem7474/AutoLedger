@@ -89,6 +89,9 @@ func buildFuelLog(vehicleID string, req *SaveFuelLogRequest, locations ...*time.
 		price = &p
 	case amount > 0 && liters == nil && price != nil:
 		l := math.Round(amount.Float() / *price * 100) / 100
+		if err := validateRange(l, 0.01, 500, apierror.New("fuel.liters_range", "Invalid quantity (0.01 to 500 L)")); err != nil {
+			return nil, err
+		}
 		liters = &l
 	}
 	if err := validateFuelPrice(price); err != nil {
