@@ -173,6 +173,7 @@
     "execute_failed": "Échec du traitement de l'import CSV",
     "no_rows": "Le fichier CSV doit contenir un en-tête et au moins une ligne",
     "unsupported_type": "Type d’import non reconnu ou non pris en charge : « {p0} »",
+    "ev_fuel": "Ce véhicule ne consomme pas de carburant : importez ses sessions de recharge à la place",
     "ice_charges": "Un véhicule thermique n’a pas de recharges à importer : importez plutôt ses pleins",
     "batch_not_found": "Cet import n’existe pas ou a déjà été annulé",
     "profile_invalid_name": "Le nom du profil doit comporter de 1 à 60 caractères",
