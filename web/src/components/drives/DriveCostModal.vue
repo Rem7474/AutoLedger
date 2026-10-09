@@ -337,7 +337,6 @@ async function handleDriverChange(event: Event) {
             <span>{{ $t('drives.driveCostModal.shareAsACarpool') }}</span>
           </button>
         </div>
-      </div>
     </template>
   </ModalShell>
 </template>
