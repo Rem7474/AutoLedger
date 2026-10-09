@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import TabBar, { type TabItem } from '@/components/TabBar.vue'
 import PageHeader from '@/components/PageHeader.vue'
-import { useSubmit } from '@/composables/useSubmit'
+import { useTireHistory } from '@/composables/useTireHistory'
 import { useTireList } from '@/composables/useTireList'
 import { useTireSelection } from '@/composables/useTireSelection'
 import LoadError from '@/components/LoadError.vue'
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import { Disc as PageIcon } from 'lucide-vue-next'
-import { intlLocale, t } from '@/i18n'
+import { t } from '@/i18n'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
-import { api } from '@/services/api'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
+import TireQuickRotationBar from '@/components/tires/TireQuickRotationBar.vue'
 import TireOdometerTimeline from '@/components/tires/TireOdometerTimeline.vue'
 import TireWheelCard from '@/components/tires/TireWheelCard.vue'
 import TireStorageCard from '@/components/tires/TireStorageCard.vue'
@@ -29,23 +29,13 @@ import TireBatchSessionModal from '@/components/tires/TireBatchSessionModal.vue'
 import TireDuplicateSessionModal from '@/components/tires/TireDuplicateSessionModal.vue'
 import TireBatchDisposeModal from '@/components/tires/TireBatchDisposeModal.vue'
 import TireCopyHistoryModal from '@/components/tires/TireCopyHistoryModal.vue'
-import { Archive, ArrowUpDown, Copy, Disc, History, Package, Pencil, Plus, RefreshCw, Shuffle, Snowflake } from 'lucide-vue-next'
-import {
-  copiedSessionFromSession,
-  emptySessionForm,
-  formatDate,
-  sessionFormFromCopy,
-  sessionFormFromSession,
-  type SessionForm,
-  type TireLogForm,
-  getLastDismountInfo,
-} from '@/utils/tires'
-import { todayIso, toIsoDay } from '@/utils/dates'
+import { Archive, Copy, Disc, History, Package, Pencil, Plus, Snowflake } from 'lucide-vue-next'
+import { getLastDismountInfo } from '@/utils/tires'
 
 // The page owns the tire list, the selection and which modal is open; each modal owns its form and
 // its API call and reports back with "saved".
 const vehicleStore = useVehicleStore()
-const { showConfirm, showAlert } = useConfirm()
+const { showAlert } = useConfirm()
 const {
   tires,
   loading,
@@ -78,32 +68,12 @@ const wheels = [
 
 // Modals
 const showAddTireModal = ref(false)
-const showHistoryModal = ref(false)
-const showSessionModal = ref(false)
 const showBatchSessionModal = ref(false)
-const showDuplicateSessionModal = ref(false)
 const showCopyHistoryModal = ref(false)
 const showBatchDisposeModal = ref(false)
-const showLogModal = ref(false)
 const showPackSwapModal = ref(false)
 const showTireEditModal = ref(false)
 const showDisposeModal = ref(false)
-
-// Tire shown in the history modal, with its stats, mount sessions and tread depth logs
-const selectedTire = ref<any | null>(null)
-const selectedTireStats = ref<any | null>(null)
-const tireSessions = ref<any[]>([])
-const tireLogs = ref<any[]>([])
-
-// Mount session form (add / edit / paste) and the session kept by the "copy" button
-const editingSessionId = ref<string | null>(null)
-const sessionInitialForm = ref<SessionForm>(emptySessionForm())
-const copiedSession = ref<SessionForm | null>(null)
-const sessionToDuplicate = ref<any | null>(null)
-
-// Tread depth log form
-const editingLogId = ref<string | null>(null)
-const logInitialForm = ref<TireLogForm>({ depth_mm: 6.5, odometer: 0, notes: '', date: todayIso() })
 
 const tireEditIds = ref<string[]>([])
 const copyHistorySource = ref<any | null>(null)
@@ -117,6 +87,38 @@ const {
   toggleSelectAllCurrentTab,
   canBatchDispose,
 } = useTireSelection({ tires, mountedTires, storageTires, disposedTires, activeTab })
+
+const {
+  showHistoryModal,
+  showSessionModal,
+  showDuplicateSessionModal,
+  showLogModal,
+  selectedTire,
+  selectedTireStats,
+  tireSessions,
+  tireLogs,
+  editingSessionId,
+  sessionInitialForm,
+  copiedSession,
+  sessionToDuplicate,
+  editingLogId,
+  logInitialForm,
+  openHistoryModal,
+  openTimelineTire,
+  refreshAfterHistoryChange,
+  reloadHistoryAndList,
+  onTireDisposed,
+  handleDeleteTire,
+  openAddSessionModal,
+  openEditSessionModal,
+  handleDeleteSession,
+  copySession,
+  pasteSessionToCurrentTire,
+  openDuplicateSessionModal,
+  openLogModal,
+  editLog,
+  handleDeleteLog,
+} = useTireHistory({ tires, loadTires, selectedTireIds })
 
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value],
@@ -136,24 +138,6 @@ onMounted(() => {
   loadTires()
 })
 
-// Quick rotations
-const { pending: rotating, run: runOnce } = useSubmit()
-async function quickRotateAction(mode: 'FRONT_BACK' | 'CROSS') {
-  if (!vehicleStore.activeVehicle) return
-  const odo = Math.round(vehicleStore.activeVehicle.current_odometer || 0)
-
-  try {
-    await api.quickRotateTires(vehicleStore.activeVehicle.id, {
-      mode,
-      odometer: odo,
-    })
-    await loadTires()
-  } catch (err: any) {
-    showAlert(t('tires.tiresView.rotationError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-const handleQuickRotate = (mode: 'FRONT_BACK' | 'CROSS') => runOnce(() => quickRotateAction(mode))
-
 function openPackSwapModal() {
   if (!vehicleStore.activeVehicle) return
   if (storageTires.value.length === 0) {
@@ -172,33 +156,6 @@ function openAddModal() {
   showAddTireModal.value = true
 }
 
-// History modal
-function openTimelineTire(tireId: string) {
-  const t = tires.value.find((x) => x.tire.id === tireId)
-  if (t) openHistoryModal(t)
-}
-
-async function openHistoryModal(tire: any) {
-  selectedTire.value = tire.tire
-  selectedTireStats.value = tire
-  try {
-    const res = await api.getTireHistory(vehicleStore.activeVehicle!.id, tire.tire.id)
-    selectedTire.value = res.tire
-    selectedTireStats.value = res.stats
-    tireSessions.value = res.sessions || []
-    tireLogs.value = res.logs || []
-    showHistoryModal.value = true
-  } catch (err: any) {
-    showAlert(t('tires.tiresView.loadError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-
-/** Reload the list, then the open history so it shows the change. */
-async function refreshAfterHistoryChange() {
-  await loadTires()
-  if (showHistoryModal.value && selectedTire.value) await openHistoryModal({ tire: selectedTire.value })
-}
-
 // Edit one or several tires
 function openTireEdit(ids: string[]) {
   tireEditIds.value = [...ids]
@@ -208,13 +165,6 @@ function openTireEdit(ids: string[]) {
 async function onTireEdited() {
   selectedTireIds.value = []
   await refreshAfterHistoryChange()
-}
-
-// Dispose (worn out, damaged, sold) keeps history and cost; delete removes an erroneous entry
-async function onTireDisposed(tireId: string) {
-  showHistoryModal.value = false
-  selectedTireIds.value = selectedTireIds.value.filter((id) => id !== tireId)
-  await loadTires()
 }
 
 function openBatchSessionModal() {
@@ -249,120 +199,12 @@ async function onHistoryCopied() {
   await refreshAfterHistoryChange()
 }
 
-async function handleDeleteTire(tire: any) {
-  if (!vehicleStore.activeVehicle) return
-  const ok = await showConfirm({
-    title: t('tires.tiresView.deleteTireTitle'),
-    message: t('tires.tiresView.deleteTireMessage', { brand: tire.brand, model: tire.model, dimension: tire.dimension }),
-    confirmText: t('tires.tiresView.deleteTireConfirm'),
-    type: 'danger',
-  })
-  if (!ok) return
-
-  try {
-    await api.deleteTire(vehicleStore.activeVehicle.id, tire.id)
-    showHistoryModal.value = false
-    selectedTireIds.value = selectedTireIds.value.filter((id) => id !== tire.id)
-    await loadTires()
-  } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-
-// Mount sessions
-function openAddSessionModal() {
-  editingSessionId.value = null
-  sessionInitialForm.value = emptySessionForm()
-  showSessionModal.value = true
-}
-
-function openEditSessionModal(s: any) {
-  editingSessionId.value = s.id
-  sessionInitialForm.value = sessionFormFromSession(s)
-  showSessionModal.value = true
-}
-
 async function onSessionSaved() {
-  await openHistoryModal({ tire: selectedTire.value })
-  await loadTires()
-}
-
-async function handleDeleteSession(session: any) {
-  if (!vehicleStore.activeVehicle || !selectedTire.value) return
-  const ok = await showConfirm({
-    title: t('tires.tiresView.deleteSessionTitle'),
-    message: t('tires.tiresView.deleteSessionMessage'),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-
-  try {
-    await api.deleteTireSession(vehicleStore.activeVehicle.id, selectedTire.value.id, session.id)
-    await openHistoryModal({ tire: selectedTire.value })
-    await loadTires()
-  } catch (err: any) {
-    showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-}
-
-// Copy a session, paste it on another tire, or duplicate it onto several
-function copySession(s: any) {
-  copiedSession.value = copiedSessionFromSession(s)
-}
-
-function pasteSessionToCurrentTire() {
-  if (!copiedSession.value) return
-  editingSessionId.value = null
-  sessionInitialForm.value = sessionFormFromCopy(copiedSession.value, selectedTire.value)
-  showSessionModal.value = true
-}
-
-function openDuplicateSessionModal(s: any) {
-  sessionToDuplicate.value = s
-  showDuplicateSessionModal.value = true
-}
-
-// Tread depth measurements
-function openLogModal(tire: any, log?: any) {
-  selectedTire.value = tire.tire
-  editingLogId.value = log ? log.id : null
-  logInitialForm.value = log
-    ? { depth_mm: log.depth_mm, odometer: Math.round(log.odometer), notes: log.notes || '', date: toIsoDay(log.date) }
-    : {
-        depth_mm: tire.current_depth_mm || 6.5,
-        odometer: Math.round(vehicleStore.activeVehicle?.current_odometer || 0),
-        notes: '',
-        date: todayIso(),
-      }
-  showLogModal.value = true
-}
-
-function editLog(log: any) {
-  openLogModal(selectedTireStats.value || { tire: selectedTire.value }, log)
+  await reloadHistoryAndList()
 }
 
 async function onLogSaved() {
   await refreshAfterHistoryChange()
-}
-
-async function handleDeleteLog(l: any) {
-  if (!vehicleStore.activeVehicle || !selectedTire.value) return
-  const ok = await showConfirm({
-    title: t('tires.tiresView.deleteReadingTitle'),
-    message: t('tires.tiresView.deleteReadingMessage', { depth: l.depth_mm, date: formatDate(l.date) }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-
-  try {
-    await api.deleteTireLog(vehicleStore.activeVehicle.id, selectedTire.value.id, l.id)
-    await openHistoryModal({ tire: selectedTire.value })
-    await loadTires()
-  } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
 }
 </script>
 
@@ -456,32 +298,7 @@ async function handleDeleteLog(l: any) {
         :current-odometer="vehicleStore.activeVehicle?.current_odometer || 0"
         @select-tire="openTimelineTire"
       />
-      <div v-if="vehicleStore.canEdit" class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div class="flex items-center gap-2 text-slate-300 font-semibold">
-          <RefreshCw class="w-4 h-4 text-rose-400" />
-          <span>{{ $t('tires.tiresView.quickVehicleRotationsIn1') }}</span>
-        </div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <button
-            @click="handleQuickRotate('FRONT_BACK')"
-            :disabled="rotating || !hasMountedTires"
-            :title="$t('tires.tiresView.rotateTooltip', { pairs: 'FL ⇄ RL, FR ⇄ RR' })"
-            class="tap btn btn-secondary"
-          >
-            <ArrowUpDown class="w-3.5 h-3.5 text-blue-400" />
-            {{ $t('tires.tiresView.frontRear') }}
-          </button>
-          <button
-            @click="handleQuickRotate('CROSS')"
-            :disabled="rotating || !hasMountedTires"
-            :title="$t('tires.tiresView.rotateTooltip', { pairs: 'FL ⇄ RR, FR ⇄ RL' })"
-            class="tap btn btn-secondary"
-          >
-            <Shuffle class="w-3.5 h-3.5 text-sky-400" />
-            {{ $t('tires.tiresView.crossRotation') }}
-          </button>
-        </div>
-      </div>
+      <TireQuickRotationBar v-if="vehicleStore.canEdit" :has-mounted-tires="hasMountedTires" @rotated="loadTires" />
 
       <div v-if="vehicleStore.canEdit && currentTabTireIds.length > 0" class="flex items-center justify-between text-xs text-slate-400 px-2">
         <SelectAllToggle
