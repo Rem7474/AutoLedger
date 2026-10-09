@@ -135,7 +135,7 @@
   "fuel": {
     "combustion_only": "Les pleins de carburant ne concernent pas les véhicules électriques",
     "liters_range": "Quantité invalide (0,01 à 500 L)",
-    "price_range": "Prix au litre invalide (0 à 10)",
+    "price_range": "Prix au litre invalide (0 à {p0})",
     "type_invalid": "Carburant invalide",
     "amount_required": "Montant du plein requis (ou litres et prix au litre)"
   },

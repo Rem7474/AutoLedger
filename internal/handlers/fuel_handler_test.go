@@ -61,7 +61,7 @@ func TestBuildFuelLog(t *testing.T) {
 		{name: "negative odometer", req: SaveFuelLogRequest{Date: "2026-03-01", Odometer: f64(-1), Amount: cents(50)}, wantErr: "odometer.range"},
 		{name: "huge odometer", req: SaveFuelLogRequest{Date: "2026-03-01", Odometer: f64(3_000_000), Amount: cents(50)}, wantErr: "odometer.range"},
 		{name: "too many liters", req: SaveFuelLogRequest{Date: "2026-03-01", Odometer: f64(1), Amount: cents(50), Liters: f64(900)}, wantErr: "fuel.liters_range"},
-		{name: "absurd price", req: SaveFuelLogRequest{Date: "2026-03-01", Odometer: f64(1), Amount: cents(50), PricePerLiter: f64(50)}, wantErr: "fuel.price_range"},
+		{name: "price above storage limit", req: SaveFuelLogRequest{Date: "2026-03-01", Odometer: f64(1), Amount: cents(50), PricePerLiter: f64(models.MaxFuelPricePerLiter + 1)}, wantErr: "fuel.price_range"},
 		{name: "unknown fuel", req: SaveFuelLogRequest{Date: "2026-03-01", Odometer: f64(1), Amount: cents(50), FuelType: strPtr("KEROSENE")}, wantErr: "fuel.type_invalid"},
 		{
 			name: "known fuel and trimmed notes",

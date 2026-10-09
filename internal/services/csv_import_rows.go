@@ -19,7 +19,7 @@ const (
 	maxOdometerKm = 2_000_000
 	maxFxRate     = 999_999
 	maxFuelLiters = 500
-	maxFuelPrice  = 10
+	maxFuelPrice  = models.MaxFuelPricePerLiter
 )
 
 var currencyCode = regexp.MustCompile(`^[A-Z]{3}$`)
@@ -292,7 +292,7 @@ func parseFuelRow(rc *rowContext, row []string, line int) (*parsedRow, *apierror
 	}
 	price, ok := rc.optionalPositive(rc.col(row, "price_per_liter", "price_per_litre", "unit_price", "price"), maxFuelPrice)
 	if !ok {
-		return nil, apierror.Newf("import.row.invalid_price", "Line %d: invalid price per litre (0 to %d)", line, maxFuelPrice)
+		return nil, apierror.Newf("import.row.invalid_price", "Line %d: invalid price per litre (0 to %.3f)", line, maxFuelPrice)
 	}
 
 	var amount money.Cents
@@ -312,6 +312,12 @@ func parseFuelRow(rc *rowContext, row []string, line int) (*parsedRow, *apierror
 	case amount > 0 && liters == nil && price != nil:
 		l := math.Round(amount.Float() / *price * 100) / 100
 		liters = &l
+	}
+	if price != nil && *price > maxFuelPrice {
+		return nil, apierror.Newf("import.row.invalid_price", "Line %d: invalid price per litre (0 to %.3f)", line, maxFuelPrice)
+	}
+	if amount > money.Max {
+		return nil, apierror.Newf("import.row.invalid_amount", "Line %d: invalid amount %q", line, amount.String())
 	}
 	if amount <= 0 {
 		return nil, apierror.Newf("import.row.amount_required", "Line %d: the amount of a fill-up is required (or litres and price per litre)", line)

@@ -46,6 +46,14 @@ func positiveOrNil(v *float64) *float64 {
 	return v
 }
 
+func validateFuelPrice(price *float64) error {
+	if price == nil {
+		return nil
+	}
+	return validateRange(*price, 0.001, models.MaxFuelPricePerLiter,
+		apierror.Newf("fuel.price_range", "Invalid price per litre (0 to %.3f)", models.MaxFuelPricePerLiter))
+}
+
 // buildFuelLog validates a request and derives the missing one of amount / liters / price per liter.
 func buildFuelLog(vehicleID string, req *SaveFuelLogRequest) (*models.FuelLog, error) {
 	date, err := parseDate(req.Date)
@@ -64,10 +72,8 @@ func buildFuelLog(vehicleID string, req *SaveFuelLogRequest) (*models.FuelLog, e
 			return nil, err
 		}
 	}
-	if price != nil {
-		if err := validateRange(*price, 0.001, 10, apierror.New("fuel.price_range", "Invalid price per litre (0 to 10)")); err != nil {
-			return nil, err
-		}
+	if err := validateFuelPrice(price); err != nil {
+		return nil, err
 	}
 
 	var amount money.Cents
@@ -83,6 +89,9 @@ func buildFuelLog(vehicleID string, req *SaveFuelLogRequest) (*models.FuelLog, e
 	case amount > 0 && liters == nil && price != nil:
 		l := math.Round(amount.Float() / *price * 100) / 100
 		liters = &l
+	}
+	if err := validateFuelPrice(price); err != nil {
+		return nil, err
 	}
 	if err := validateAmount(amount, false); err != nil {
 		return nil, apierror.New("fuel.amount_required", "The fill-up amount is required (or litres and price per litre)")
