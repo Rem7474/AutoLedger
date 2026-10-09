@@ -9,7 +9,8 @@ import { distanceUnit } from '@/units'
 import { toLocalDateTimeInput } from '@/utils/dates'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import DistanceInput from '@/components/DistanceInput.vue'
-import { X, Plus, Calendar, MapPin, Gauge, Zap } from 'lucide-vue-next'
+import ModalShell from '@/components/ModalShell.vue'
+import { Plus, Calendar, MapPin, Gauge, Zap } from 'lucide-vue-next'
 
 const props = defineProps<{
   open: boolean
@@ -119,21 +120,8 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" @click.self="close">
-    <div v-dialog="close" class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-      <!-- Header -->
-      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <Plus class="w-5 h-5 text-rose-400" />
-          {{ drive ? $t('drives.manualModal.titleEdit') : $t('drives.manualModal.titleNew') }}
-        </h3>
-        <button @click="close" class="tap p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" :aria-label="$t('common.close')">
-          <X class="w-5 h-5" />
-        </button>
-      </div>
-
-      <!-- Body -->
-      <form @submit.prevent="handleSubmit" class="p-6 space-y-4 overflow-y-auto">
+  <ModalShell :open="open" @update:open="close" size="md" :icon="Plus" icon-class="text-rose-400" :title="drive ? $t('drives.manualModal.titleEdit') : $t('drives.manualModal.titleNew')">
+    <form id="manual-drive-form" @submit.prevent="handleSubmit" class="space-y-4">
         <div v-if="error" class="p-3 bg-danger-500/10 border border-danger-500/20 rounded-xl text-xs text-danger-400">
           {{ error }}
         </div>
@@ -263,25 +251,15 @@ async function handleSubmit() {
             </button>
           </div>
         </div>
+    </form>
 
-        <!-- Submit Button -->
-        <div class="pt-4 flex justify-end gap-3">
-          <button
-            type="button"
-            @click="close"
-            class="px-4 py-2.5 rounded-xl border border-slate-700 text-sm font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
-          >
-            {{ $t('common.cancel') }}
-          </button>
-          <button
-            type="submit"
-            :disabled="loading"
-            class="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white text-sm font-semibold rounded-xl shadow-lg shadow-rose-600/25 transition-all disabled:opacity-50"
-          >
-            {{ loading ? $t('drives.manualModal.saving') : $t('drives.manualModal.save') }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+    <template #footer>
+      <button type="button" @click="close" class="btn btn-lg btn-secondary">
+        {{ $t('common.cancel') }}
+      </button>
+      <button type="submit" form="manual-drive-form" :disabled="loading" class="btn btn-lg btn-primary">
+        {{ loading ? $t('drives.manualModal.saving') : $t('drives.manualModal.save') }}
+      </button>
+    </template>
+  </ModalShell>
 </template>
