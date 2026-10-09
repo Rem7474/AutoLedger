@@ -337,18 +337,18 @@ watch(
     >
       <p v-if="tollDetectionError" class="text-danger-400">{{ tollDetectionError }}</p>
       <template v-else-if="tollDetection?.segments?.length">
-        <div class="flex items-center justify-between gap-2 text-slate-300">
+        <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 text-slate-300">
           <button
             type="button"
             @click="showTollSegments = !showTollSegments"
             :aria-expanded="showTollSegments"
-            class="flex items-center gap-1 text-sky-400 hover:text-sky-300"
+            class="flex items-center gap-1 text-sky-400 hover:text-sky-300 whitespace-nowrap"
           >
             <Radar class="w-3 h-3" />
             {{ $t('drives.driveCostModal.detectedGates', tollDetection.segments.length) }}
             <ChevronDown class="w-3 h-3 transition-transform" :class="{ 'rotate-180': showTollSegments }" />
           </button>
-          <span v-if="tollDetectionEstimatedTotal != null" class="flex items-center gap-2 shrink-0">
+          <span v-if="tollDetectionEstimatedTotal != null" class="flex flex-wrap items-center justify-end gap-x-2 gap-y-1.5 ml-auto">
             <span class="text-slate-400">{{ $t('drives.driveCostModal.totalEstimate') }}</span>
             <span class="text-warning-400 font-mono font-semibold" :title="$t('drives.driveCostModal.class1LightVehicle')">{{ formatAmount(tollDetectionEstimatedTotal, 'EUR') }}</span>
             <button
