@@ -1,7 +1,8 @@
 {
   "account": {
     "language_invalid": "Language must be \"en\" or \"fr\"",
-    "distance_unit_invalid": "Distance unit must be \"km\" or \"mi\""
+    "distance_unit_invalid": "Distance unit must be \"km\" or \"mi\"",
+    "volume_unit_invalid": "Volume unit must be \"l\", \"gal_us\" or \"gal_uk\""
   },
   "access": {
     "read_only": "Read-only access: changes are not allowed",

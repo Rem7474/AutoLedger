@@ -18,11 +18,11 @@ func (r *Repository) CreateUser(ctx context.Context, email, passwordHash string)
 	query := `
 		INSERT INTO users (email, password_hash)
 		VALUES ($1, $2)
-		RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, created_at, updated_at;
+		RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, volume_unit, created_at, updated_at;
 	`
 	var u models.User
 	err := r.pool.QueryRow(ctx, query, email, passwordHash).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.CreatedAt, &u.UpdatedAt,
+		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.VolumeUnit, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
@@ -32,13 +32,13 @@ func (r *Repository) CreateUser(ctx context.Context, email, passwordHash string)
 
 func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `
-		SELECT id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, created_at, updated_at
+		SELECT id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, volume_unit, created_at, updated_at
 		FROM users
 		WHERE email = $1;
 	`
 	var u models.User
 	err := r.pool.QueryRow(ctx, query, email).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.CreatedAt, &u.UpdatedAt,
+		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.VolumeUnit, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -51,13 +51,13 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*models.
 
 func (r *Repository) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	query := `
-		SELECT id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, created_at, updated_at
+		SELECT id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, volume_unit, created_at, updated_at
 		FROM users
 		WHERE id = $1;
 	`
 	var u models.User
 	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.CreatedAt, &u.UpdatedAt,
+		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.VolumeUnit, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -83,13 +83,13 @@ func (r *Repository) GetUserCount(ctx context.Context) (int, error) {
 // as the same email can appear across different providers.
 func (r *Repository) GetUserByOIDCSubject(ctx context.Context, provider, subject string) (*models.User, error) {
 	query := `
-		SELECT id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, created_at, updated_at
+		SELECT id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, volume_unit, created_at, updated_at
 		FROM users
 		WHERE oidc_provider = $1 AND oidc_subject = $2;
 	`
 	var u models.User
 	err := r.pool.QueryRow(ctx, query, provider, subject).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.CreatedAt, &u.UpdatedAt,
+		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.VolumeUnit, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -129,11 +129,11 @@ func (r *Repository) UpsertOIDCUser(ctx context.Context, email, subject, provide
 			email        = EXCLUDED.email,
 			display_name = EXCLUDED.display_name,
 			updated_at   = NOW()
-		RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, created_at, updated_at;
+		RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, volume_unit, created_at, updated_at;
 	`
 	var u models.User
 	err := r.pool.QueryRow(ctx, query, email, subject, provider, displayName).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.CreatedAt, &u.UpdatedAt,
+		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.VolumeUnit, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		// Conflict on email: an account has this address. Only a local one, with no identity yet, can be linked,
@@ -150,11 +150,11 @@ func (r *Repository) UpsertOIDCUser(ctx context.Context, email, subject, provide
 			    display_name  = COALESCE($3, display_name),
 			    updated_at    = NOW()
 			WHERE email = $4 AND oidc_subject IS NULL
-			RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, created_at, updated_at;
+			RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, volume_unit, created_at, updated_at;
 		`
 		var linked models.User
 		linkErr := r.pool.QueryRow(ctx, linkQuery, subject, provider, displayName, email).Scan(
-			&linked.ID, &linked.Email, &linked.PasswordHash, &linked.OIDCSubject, &linked.OIDCProvider, &linked.DisplayName, &linked.Language, &linked.DistanceUnit, &linked.CreatedAt, &linked.UpdatedAt,
+			&linked.ID, &linked.Email, &linked.PasswordHash, &linked.OIDCSubject, &linked.OIDCProvider, &linked.DisplayName, &linked.Language, &linked.DistanceUnit, &linked.VolumeUnit, &linked.CreatedAt, &linked.UpdatedAt,
 		)
 		if linkErr != nil {
 			return nil, fmt.Errorf("failed to upsert OIDC user: insert=%w, link=%v", err, linkErr)
@@ -173,9 +173,9 @@ func (r *Repository) LinkOIDCIdentity(ctx context.Context, userID, email, subjec
 		UPDATE users
 		SET oidc_subject = $3, oidc_provider = $4, updated_at = NOW()
 		WHERE id::text = $1 AND oidc_subject IS NULL AND LOWER(email) = LOWER($2)
-		RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, created_at, updated_at;
+		RETURNING id, email, password_hash, oidc_subject, oidc_provider, display_name, language, distance_unit, volume_unit, created_at, updated_at;
 	`, userID, email, subject, provider).Scan(
-		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.CreatedAt, &u.UpdatedAt,
+		&u.ID, &u.Email, &u.PasswordHash, &u.OIDCSubject, &u.OIDCProvider, &u.DisplayName, &u.Language, &u.DistanceUnit, &u.VolumeUnit, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err == nil {
 		return &u, nil
@@ -441,6 +441,19 @@ func (r *Repository) UpdateUserDistanceUnit(ctx context.Context, userID, unit st
 	tag, err := r.pool.Exec(ctx, `UPDATE users SET distance_unit = $2, updated_at = NOW() WHERE id = $1;`, userID, unit)
 	if err != nil {
 		return fmt.Errorf("failed to update distance unit: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// UpdateUserVolumeUnit sets the unit fuel volumes are converted to for display and form input.
+// unit must already be validated ("l", "gal_us" or "gal_uk"); stored volumes stay in litres either way.
+func (r *Repository) UpdateUserVolumeUnit(ctx context.Context, userID, unit string) error {
+	tag, err := r.pool.Exec(ctx, `UPDATE users SET volume_unit = $2, updated_at = NOW() WHERE id = $1;`, userID, unit)
+	if err != nil {
+		return fmt.Errorf("failed to update volume unit: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrNotFound
