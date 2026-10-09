@@ -6,7 +6,7 @@ import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useConfirm } from '@/composables/useConfirm'
-import { RefreshCw, X, FileText, ChevronLeft, ChevronRight, Check, Wallet, CreditCard, KeyRound } from 'lucide-vue-next'
+import { RefreshCw, FileText, ChevronLeft, ChevronRight, Check, Wallet, CreditCard, KeyRound } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import {
   ownershipSteps,
@@ -19,7 +19,7 @@ import {
   ownershipPayload,
   ownershipStepError,
 } from '@/utils/vehicles'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import { distanceUnit, formatDistance, formatDistanceValue, formatPerDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
 
@@ -29,7 +29,6 @@ const props = defineProps<{ vehicle: any | null; ownership: any | null }>()
 const emit = defineEmits<{ saved: [ownership: any]; deleted: [] }>()
 const currency = computed(() => props.vehicle?.currency || 'EUR')
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 const { showConfirm, showAlert } = useConfirm()
 
 const ownershipVehicle = computed(() => props.vehicle)
@@ -107,427 +106,411 @@ async function deleteOwnershipAction() {
 </script>
 
 <template>
-  <div
-    v-if="open && ownershipVehicle"
-    class="fixed inset-0 z-modal bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
-    @click.self="open = false"
-  >
-    <div v-dialog class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden my-auto">
-      <!-- Modal Header -->
-      <div class="px-5 py-4 border-b border-slate-800/80 shrink-0 bg-slate-900/95">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-bold text-white flex items-center gap-2 truncate pr-2">
-            <FileText class="w-5 h-5 text-sky-400 shrink-0" />
-            <span class="truncate">{{ $t('vehicles.ownershipWizardModal.acquisitionAndFinancing', { name: ownershipVehicle.name }) }}</span>
-          </h3>
-          <button @click="open = false" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0" :aria-label="$t('common.close')">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
+  <ModalShell v-if="ownershipVehicle" v-model:open="open" size="lg" footer-class="items-center justify-between gap-2">
+    <template #title>
+      <h3 class="text-base font-bold text-white flex items-center gap-2 min-w-0">
+        <FileText class="w-5 h-5 text-sky-400 shrink-0" aria-hidden="true" />
+        <span class="truncate">{{ $t('vehicles.ownershipWizardModal.acquisitionAndFinancing', { name: ownershipVehicle.name }) }}</span>
+      </h3>
+    </template>
 
-        <!-- Wizard Stepper Indicator -->
-        <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800/60">
+    <!-- Wizard Stepper Indicator -->
+    <div class="grid grid-cols-3 gap-2">
+      <button
+        v-for="s in ownershipSteps()"
+        :key="s.step"
+        type="button"
+        @click="s.step < currentOwnershipStep ? currentOwnershipStep = s.step : null"
+        :disabled="s.step > currentOwnershipStep"
+        class="flex items-center gap-2 p-1.5 rounded-xl text-left transition-colors"
+        :class="[
+          currentOwnershipStep === s.step
+            ? 'bg-sky-500/15 border border-sky-500/40 text-sky-300'
+            : currentOwnershipStep > s.step
+            ? 'bg-slate-800/60 text-slate-300 hover:bg-slate-800 cursor-pointer'
+            : 'bg-slate-900/40 text-slate-400 opacity-60 cursor-not-allowed'
+        ]"
+      >
+        <div
+          class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
+          :class="[
+            currentOwnershipStep === s.step
+              ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/40'
+              : currentOwnershipStep > s.step
+              ? 'bg-success-500/20 text-success-400 border border-success-500/30'
+              : 'bg-slate-800 text-slate-400 border border-slate-700'
+          ]"
+        >
+          <Check v-if="currentOwnershipStep > s.step" class="w-3.5 h-3.5" />
+          <span v-else>{{ s.step }}</span>
+        </div>
+        <div class="min-w-0 hidden sm:block">
+          <div class="text-xs font-semibold truncate">{{ s.title }}</div>
+          <div class="text-xs text-slate-400 truncate">{{ s.description }}</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- STEP 1: Acquisition Type & Dates -->
+    <div v-show="currentOwnershipStep === 1" class="space-y-4">
+      <div>
+        <span class="block text-xs font-semibold text-slate-300 mb-2">{{ $t('vehicles.ownershipWizardModal.acquisitionMode') }}</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <button
-            v-for="s in ownershipSteps()"
-            :key="s.step"
             type="button"
-            @click="s.step < currentOwnershipStep ? currentOwnershipStep = s.step : null"
-            :disabled="s.step > currentOwnershipStep"
-            class="flex items-center gap-2 p-1.5 rounded-xl text-left transition-colors"
+            @click="ownershipForm.acquisition_type = 'CASH'"
+            class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
             :class="[
-              currentOwnershipStep === s.step
-                ? 'bg-sky-500/15 border border-sky-500/40 text-sky-300'
-                : currentOwnershipStep > s.step
-                ? 'bg-slate-800/60 text-slate-300 hover:bg-slate-800 cursor-pointer'
-                : 'bg-slate-900/40 text-slate-400 opacity-60 cursor-not-allowed'
+              ownershipForm.acquisition_type === 'CASH'
+                ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
+                : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
             ]"
           >
-            <div
-              class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
-              :class="[
-                currentOwnershipStep === s.step
-                  ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/40'
-                  : currentOwnershipStep > s.step
-                  ? 'bg-success-500/20 text-success-400 border border-success-500/30'
-                  : 'bg-slate-800 text-slate-400 border border-slate-700'
-              ]"
-            >
-              <Check v-if="currentOwnershipStep > s.step" class="w-3.5 h-3.5" />
-              <span v-else>{{ s.step }}</span>
+            <div class="flex items-center justify-between mb-2">
+              <Wallet class="w-5 h-5 text-success-400" />
+              <span v-if="ownershipForm.acquisition_type === 'CASH'" class="w-2 h-2 rounded-full bg-sky-400"></span>
             </div>
-            <div class="min-w-0 hidden sm:block">
-              <div class="text-xs font-semibold truncate">{{ s.title }}</div>
-              <div class="text-xs text-slate-400 truncate">{{ s.description }}</div>
+            <div>
+              <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.cash') }}</div>
+              <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.directPurchase') }}</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            @click="ownershipForm.acquisition_type = 'LOAN'"
+            class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
+            :class="[
+              ownershipForm.acquisition_type === 'LOAN'
+                ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
+                : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
+            ]"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <CreditCard class="w-5 h-5 text-sky-400" />
+              <span v-if="ownershipForm.acquisition_type === 'LOAN'" class="w-2 h-2 rounded-full bg-sky-400"></span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.loan') }}</div>
+              <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.bankLoan') }}</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            @click="ownershipForm.acquisition_type = 'LOA'"
+            class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
+            :class="[
+              ownershipForm.acquisition_type === 'LOA'
+                ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
+                : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
+            ]"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <KeyRound class="w-5 h-5 text-warning-400" />
+              <span v-if="ownershipForm.acquisition_type === 'LOA'" class="w-2 h-2 rounded-full bg-sky-400"></span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.loa') }}</div>
+              <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.purchaseOption') }}</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            @click="ownershipForm.acquisition_type = 'LLD'"
+            class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
+            :class="[
+              ownershipForm.acquisition_type === 'LLD'
+                ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
+                : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
+            ]"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <RefreshCw class="w-5 h-5 text-info-400" />
+              <span v-if="ownershipForm.acquisition_type === 'LLD'" class="w-2 h-2 rounded-full bg-sky-400"></span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.lld') }}</div>
+              <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.longTerm') }}</div>
             </div>
           </button>
         </div>
       </div>
 
-      <!-- Wizard Content -->
-      <div class="p-5 overflow-y-auto flex-1 overscroll-contain space-y-4">
-        <!-- STEP 1: Acquisition Type & Dates -->
-        <div v-show="currentOwnershipStep === 1" class="space-y-4">
-          <div>
-            <span class="block text-xs font-semibold text-slate-300 mb-2">{{ $t('vehicles.ownershipWizardModal.acquisitionMode') }}</span>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <button
-                type="button"
-                @click="ownershipForm.acquisition_type = 'CASH'"
-                class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
-                :class="[
-                  ownershipForm.acquisition_type === 'CASH'
-                    ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
-                    : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
-                ]"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <Wallet class="w-5 h-5 text-success-400" />
-                  <span v-if="ownershipForm.acquisition_type === 'CASH'" class="w-2 h-2 rounded-full bg-sky-400"></span>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.cash') }}</div>
-                  <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.directPurchase') }}</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                @click="ownershipForm.acquisition_type = 'LOAN'"
-                class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
-                :class="[
-                  ownershipForm.acquisition_type === 'LOAN'
-                    ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
-                    : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
-                ]"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <CreditCard class="w-5 h-5 text-sky-400" />
-                  <span v-if="ownershipForm.acquisition_type === 'LOAN'" class="w-2 h-2 rounded-full bg-sky-400"></span>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.loan') }}</div>
-                  <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.bankLoan') }}</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                @click="ownershipForm.acquisition_type = 'LOA'"
-                class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
-                :class="[
-                  ownershipForm.acquisition_type === 'LOA'
-                    ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
-                    : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
-                ]"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <KeyRound class="w-5 h-5 text-warning-400" />
-                  <span v-if="ownershipForm.acquisition_type === 'LOA'" class="w-2 h-2 rounded-full bg-sky-400"></span>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.loa') }}</div>
-                  <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.purchaseOption') }}</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                @click="ownershipForm.acquisition_type = 'LLD'"
-                class="p-3 rounded-xl border text-left flex flex-col justify-between transition-all"
-                :class="[
-                  ownershipForm.acquisition_type === 'LLD'
-                    ? 'border-sky-500 bg-sky-500/15 text-white shadow-sm'
-                    : 'border-slate-800 bg-slate-800/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800'
-                ]"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <RefreshCw class="w-5 h-5 text-info-400" />
-                  <span v-if="ownershipForm.acquisition_type === 'LLD'" class="w-2 h-2 rounded-full bg-sky-400"></span>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">{{ $t('vehicles.ownershipWizardModal.lld') }}</div>
-                  <div class="text-xs text-slate-400">{{ $t('vehicles.ownershipWizardModal.longTerm') }}</div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div>
-              <label for="own-start-date" class="block text-xs font-semibold text-slate-300 mb-1">
-                {{ isLease ? $t('vehicles.ownershipWizardModal.leaseStart') : $t('vehicles.ownershipWizardModal.purchaseDate') }} <span class="text-rose-400">*</span>
-              </label>
-              <AppDatePicker id="own-start-date" v-model="ownershipForm.start_date" required size="sm" />
-            </div>
-            <div>
-              <label for="own-start-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.odometerAtTheStartKm', { unit: distanceUnit() }) }}</label>
-              <DistanceInput id="own-start-odometer" v-model="ownershipForm.start_odometer" min="0" :placeholder="$t('common.example', { value: '0' })" class="field" />
-            </div>
-          </div>
-        </div>
-
-        <!-- STEP 2: Financial Terms -->
-        <div v-show="currentOwnershipStep === 2" class="space-y-4">
-          <!-- Purchase terms -->
-          <div v-if="isPurchase" class="space-y-3">
-            <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Wallet class="w-4 h-4" />
-              <span>{{ $t('vehicles.ownershipWizardModal.purchaseTerms') }}</span>
-            </h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label for="own-purchase-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.purchasePriceInclTax', { cur: currencySymbol(currency) }) }} <span class="text-rose-400">*</span></label>
-                <NumberInput id="own-purchase-price" v-model="ownershipForm.purchase_price" min="0" required :placeholder="$t('common.example', { value: '42000' })" class="field" />
-              </div>
-              <div>
-                <label for="own-purchase-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.additionalFeesRegistrationSetUp', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-purchase-fees" v-model="ownershipForm.purchase_fees" min="0" :placeholder="$t('common.example', { value: '350' })" class="field" />
-              </div>
-              <div>
-                <label for="own-incentives" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.bonusesAndGrants', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-incentives" v-model="ownershipForm.incentives" min="0" :placeholder="$t('common.example', { value: '4000' })" class="field" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Loan specific terms -->
-          <div v-if="ownershipForm.acquisition_type === 'LOAN'" class="space-y-3 pt-3 border-t border-slate-800">
-            <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-              <CreditCard class="w-4 h-4" />
-              <span>{{ $t('vehicles.ownershipWizardModal.loanTerms') }}</span>
-            </h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label for="own-loan-amount" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.amountBorrowed', { cur: currencySymbol(currency) }) }} <span class="text-rose-400">*</span></label>
-                <NumberInput id="own-loan-amount" v-model="ownershipForm.loan_amount" min="0" required :placeholder="$t('common.example', { value: '30000' })" class="field" />
-              </div>
-              <div>
-                <label for="own-loan-rate" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.annualRate') }} <span class="text-rose-400">*</span></label>
-                <NumberInput id="own-loan-rate" v-model="ownershipForm.loan_rate_pct" min="0" max="30" required :placeholder="$t('common.example', { value: $n(3.8) })" class="field" />
-              </div>
-              <div>
-                <label for="own-loan-duration" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.durationMonths') }} <span class="text-rose-400">*</span></label>
-                <input id="own-loan-duration" v-model.number="ownershipForm.loan_duration_months" type="number" min="1" max="360" required :placeholder="$t('common.example', { value: '60' })" class="field" />
-              </div>
-              <div>
-                <label for="own-loan-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.arrangementFees', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-loan-fees" v-model="ownershipForm.loan_fees" min="0" :placeholder="$t('common.example', { value: '200' })" class="field" />
-              </div>
-              <div>
-                <label for="own-loan-insurance" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.borrowerInsuranceMonth', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-loan-insurance" v-model="ownershipForm.loan_insurance_monthly" min="0" :placeholder="$t('common.example', { value: '15' })" class="field" />
-              </div>
-            </div>
-
-            <!-- Loan Live Preview Card -->
-            <div v-if="loanPreview" class="p-3 bg-slate-800/70 border border-sky-500/20 rounded-xl space-y-1 text-xs">
-              <div class="flex items-center justify-between text-white font-semibold">
-                <span>{{ $t('vehicles.ownershipWizardModal.estimatedMonthlyPayment') }}</span>
-                <span class="text-sky-300 font-bold text-sm">{{ $t('vehicles.ownershipWizardModal.month2', { payment: formatAmount(loanPreview.payment, currency) }) }}</span>
-              </div>
-              <div class="flex items-center justify-between text-slate-400 text-xs">
-                <span>{{ $t('vehicles.ownershipWizardModal.totalBankInterest') }}</span>
-                <span>{{ formatAmount(loanPreview.totalInterest, currency) }}</span>
-              </div>
-              <div class="flex items-center justify-between text-slate-400 text-xs">
-                <span>{{ $t('vehicles.ownershipWizardModal.totalCostOfTheLoan') }}</span>
-                <span class="text-slate-200 font-medium">{{ formatAmount(loanPreview.totalCost, currency) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Lease specific terms -->
-          <div v-if="isLease" class="space-y-3">
-            <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-              <RefreshCw class="w-4 h-4" />
-              <span>{{ $t('vehicles.ownershipWizardModal.leaseTerms', { acquisition_type: ownershipForm.acquisition_type }) }}</span>
-            </h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label for="own-lease-down" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.downPaymentIncreasedFirstRent', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-lease-down" v-model="ownershipForm.lease_down_payment" min="0" :placeholder="$t('common.example', { value: '3000' })" class="field" />
-              </div>
-              <div>
-                <label for="own-lease-rent" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.monthlyRent', { cur: currencySymbol(currency) }) }} <span class="text-rose-400">*</span></label>
-                <NumberInput id="own-lease-rent" v-model="ownershipForm.lease_monthly_rent" min="0" required :placeholder="$t('common.example', { value: '450' })" class="field" />
-              </div>
-              <div>
-                <label for="own-lease-duration" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.durationMonths') }} <span class="text-rose-400">*</span></label>
-                <input id="own-lease-duration" v-model.number="ownershipForm.lease_duration_months" type="number" min="1" max="360" required :placeholder="$t('common.example', { value: '36' })" class="field" />
-              </div>
-              <div>
-                <label for="own-lease-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.arrangementFees', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-lease-fees" v-model="ownershipForm.lease_fees" min="0" :placeholder="$t('common.example', { value: '150' })" class="field" />
-              </div>
-              <div>
-                <label for="own-lease-deposit" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.refundableSecurityDeposit', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-lease-deposit" v-model="ownershipForm.lease_deposit" min="0" :placeholder="$t('common.example', { value: '500' })" class="field" />
-              </div>
-            </div>
-
-            <!-- Lease Live Preview Card -->
-            <div v-if="leasePreview" class="p-3 bg-slate-800/70 border border-sky-500/20 rounded-xl space-y-1 text-xs">
-              <div class="flex items-center justify-between text-white font-semibold">
-                <span>{{ $t('vehicles.ownershipWizardModal.totalRentCommitted') }}</span>
-                <span class="text-sky-300 font-bold text-sm">{{ formatAmount(leasePreview.total, currency) }}</span>
-              </div>
-              <div class="flex items-center justify-between text-slate-400 text-xs">
-                <span>{{ $t('vehicles.ownershipWizardModal.averageSmoothedOverTheTerm') }}</span>
-                <span>{{ $t('vehicles.ownershipWizardModal.month', { perMonth: formatAmount(leasePreview.perMonth, currency) }) }}</span>
-              </div>
-              <div v-if="leasePreview.totalKm" class="flex items-center justify-between text-slate-400 text-xs">
-                <span>{{ $t('vehicles.ownershipWizardModal.totalMileageIncludedInThe') }}</span>
-                <span class="text-slate-200 font-medium">{{ formatDistance(leasePreview.totalKm) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- STEP 3: Usage, Buyout, Holding & End of Ownership -->
-        <div v-show="currentOwnershipStep === 3" class="space-y-4">
-          <!-- Lease Conditions & Buyout -->
-          <div v-if="isLease" class="space-y-3">
-            <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.mileageAllowanceAndInclusions') }}</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label for="own-lease-allowance" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.mileageAllowanceKmYear', { unit: distanceUnit() }) }}</label>
-                <DistanceInput id="own-lease-allowance" v-model="ownershipForm.lease_km_allowance_per_year" min="0" :placeholder="$t('common.example', { value: formatDistanceValue(15000) })" class="field" />
-              </div>
-              <div>
-                <label for="own-lease-excess" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.pricePerExtraKmKm', { unit: distanceUnit(), cur: currencySymbol(currency) }) }}</label>
-                <DistanceInput kind="per-distance" :digits="3" id="own-lease-excess" v-model="ownershipForm.lease_excess_km_price" step="0.001" min="0" max="5" :placeholder="$t('common.example', { value: formatPerDistanceValue(0.15, 2) })" class="field" />
-              </div>
-              <div>
-                <label for="own-lease-end-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.estimatedReturnFees', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-lease-end-fees" v-model="ownershipForm.lease_end_fees_estimate" min="0" :placeholder="$t('common.example', { value: '400' })" class="field" />
-              </div>
-            </div>
-
-            <!-- Included Services -->
-            <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800 space-y-2">
-              <div class="text-xs font-semibold text-slate-300">{{ $t('vehicles.ownershipWizardModal.servicesIncludedInTheContract') }}</div>
-              <div class="flex flex-wrap gap-x-6 gap-y-2">
-                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white">
-                  <input id="own-incl-maintenance" v-model="ownershipForm.lease_includes_maintenance" type="checkbox" class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0" />
-                  <span>{{ $t('vehicles.ownershipWizardModal.maintenanceIncluded') }}</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white">
-                  <input id="own-incl-insurance" v-model="ownershipForm.lease_includes_insurance" type="checkbox" class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0" />
-                  <span>{{ $t('vehicles.ownershipWizardModal.insuranceIncluded') }}</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white">
-                  <input id="own-incl-tires" v-model="ownershipForm.lease_includes_tires" type="checkbox" class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0" />
-                  <span>{{ $t('vehicles.ownershipWizardModal.tiresIncluded') }}</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- LOA Buyout Option -->
-            <div v-if="ownershipForm.acquisition_type === 'LOA'" class="pt-2 border-t border-slate-800/80">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label for="own-lease-option" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.residualPurchaseOptionInclTax', { cur: currencySymbol(currency) }) }}</label>
-                  <NumberInput id="own-lease-option" v-model="ownershipForm.lease_purchase_option_price" min="0" :placeholder="$t('common.example', { value: '18000' })" class="field" />
-                </div>
-                <div>
-                  <label for="own-option-date" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.optionExercisedOnEmptyIf') }}</label>
-                  <AppDatePicker id="own-option-date" v-model="ownershipForm.option_exercised_date" size="sm" :clearable="true" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Depreciation for owned vehicles -->
-          <div v-if="isOwnedPhase" class="space-y-3 pt-3 border-t border-slate-800">
-            <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.depreciationAndPlannedHolding') }}</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label for="own-resale" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.estimatedPlannedResale', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-resale" v-model="ownershipForm.expected_resale_value" min="0" :placeholder="$t('common.example', { value: '22000' })" class="field" />
-              </div>
-              <div>
-                <label for="own-holding" class="block text-xs font-semibold text-slate-300 mb-1">
-                  {{ ownershipForm.acquisition_type === 'LOA' && ownershipForm.option_exercised_date ? $t('vehicles.ownershipWizardModal.holdingAfterBuyout') : $t('vehicles.ownershipWizardModal.holdingTotal') }}
-                </label>
-                <input id="own-holding" v-model.number="ownershipForm.expected_holding_months" type="number" min="1" max="360" :placeholder="$t('common.example', { value: '48' })" class="field" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Clôture / End of Contract -->
-          <div class="space-y-3 pt-3 border-t border-slate-800">
-            <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.actualClosingIfFinished') }}</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label for="own-end-date" class="block text-xs font-semibold text-slate-300 mb-1">
-                  {{ isLease && !ownershipForm.option_exercised_date ? $t('vehicles.ownershipWizardModal.returnedOn') : $t('vehicles.ownershipWizardModal.soldOn') }}
-                </label>
-                <AppDatePicker id="own-end-date" v-model="ownershipForm.end_date" size="sm" :clearable="true" />
-              </div>
-              <div v-if="isOwnedPhase">
-                <label for="own-sale-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.actualResalePrice', { cur: currencySymbol(currency) }) }}</label>
-                <NumberInput id="own-sale-price" v-model="ownershipForm.sale_price" min="0" :placeholder="$t('common.example', { value: '21500' })" class="field" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Footer: Navigation Controls -->
-      <div class="px-5 py-3.5 border-t border-slate-800/80 flex justify-between items-center gap-2 shrink-0 bg-slate-900/95">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         <div>
-          <button
-            v-if="ownership"
-            type="button"
-            @click="handleDeleteOwnership"
-            :disabled="submitting"
-            class="px-4 py-2 bg-slate-800 hover:bg-rose-900/40 text-rose-400 text-xs font-semibold rounded-xl transition-colors"
-          >
-            {{ $t('vehicles.ownershipWizardModal.deleteTheContract') }}
-          </button>
+          <label for="own-start-date" class="block text-xs font-semibold text-slate-300 mb-1">
+            {{ isLease ? $t('vehicles.ownershipWizardModal.leaseStart') : $t('vehicles.ownershipWizardModal.purchaseDate') }} <span class="text-rose-400">*</span>
+          </label>
+          <AppDatePicker id="own-start-date" v-model="ownershipForm.start_date" required size="sm" />
         </div>
-
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            @click="open = false"
-            class="btn btn-lg btn-secondary"
-          >
-            {{ $t('common.cancel') }}
-          </button>
-
-          <button
-            v-if="currentOwnershipStep > 1"
-            type="button"
-            @click="prevOwnershipStep"
-            class="btn btn-lg btn-secondary"
-          >
-            <ChevronLeft class="w-4 h-4" />
-            <span>{{ $t('vehicles.ownershipWizardModal.previous') }}</span>
-          </button>
-
-          <button
-            v-if="currentOwnershipStep < 3"
-            type="button"
-            @click="nextOwnershipStep"
-            class="btn btn-lg btn-primary"
-          >
-            <span>{{ $t('vehicles.ownershipWizardModal.next') }}</span>
-            <ChevronRight class="w-4 h-4" />
-          </button>
-
-          <button
-            v-else
-            type="button"
-            @click="handleSaveOwnership"
-            :disabled="submitting"
-            class="btn btn-lg btn-primary"
-          >
-            <Check class="w-4 h-4" />
-            <span>{{ $t('vehicles.ownershipWizardModal.saveTheContract') }}</span>
-          </button>
+        <div>
+          <label for="own-start-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.odometerAtTheStartKm', { unit: distanceUnit() }) }}</label>
+          <DistanceInput id="own-start-odometer" v-model="ownershipForm.start_odometer" min="0" :placeholder="$t('common.example', { value: '0' })" class="field" />
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- STEP 2: Financial Terms -->
+    <div v-show="currentOwnershipStep === 2" class="space-y-4">
+      <!-- Purchase terms -->
+      <div v-if="isPurchase" class="space-y-3">
+        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+          <Wallet class="w-4 h-4" />
+          <span>{{ $t('vehicles.ownershipWizardModal.purchaseTerms') }}</span>
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="own-purchase-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.purchasePriceInclTax', { cur: currencySymbol(currency) }) }} <span class="text-rose-400">*</span></label>
+            <NumberInput id="own-purchase-price" v-model="ownershipForm.purchase_price" min="0" required :placeholder="$t('common.example', { value: '42000' })" class="field" />
+          </div>
+          <div>
+            <label for="own-purchase-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.additionalFeesRegistrationSetUp', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-purchase-fees" v-model="ownershipForm.purchase_fees" min="0" :placeholder="$t('common.example', { value: '350' })" class="field" />
+          </div>
+          <div>
+            <label for="own-incentives" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.bonusesAndGrants', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-incentives" v-model="ownershipForm.incentives" min="0" :placeholder="$t('common.example', { value: '4000' })" class="field" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Loan specific terms -->
+      <div v-if="ownershipForm.acquisition_type === 'LOAN'" class="space-y-3 pt-3 border-t border-slate-800">
+        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+          <CreditCard class="w-4 h-4" />
+          <span>{{ $t('vehicles.ownershipWizardModal.loanTerms') }}</span>
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="own-loan-amount" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.amountBorrowed', { cur: currencySymbol(currency) }) }} <span class="text-rose-400">*</span></label>
+            <NumberInput id="own-loan-amount" v-model="ownershipForm.loan_amount" min="0" required :placeholder="$t('common.example', { value: '30000' })" class="field" />
+          </div>
+          <div>
+            <label for="own-loan-rate" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.annualRate') }} <span class="text-rose-400">*</span></label>
+            <NumberInput id="own-loan-rate" v-model="ownershipForm.loan_rate_pct" min="0" max="30" required :placeholder="$t('common.example', { value: $n(3.8) })" class="field" />
+          </div>
+          <div>
+            <label for="own-loan-duration" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.durationMonths') }} <span class="text-rose-400">*</span></label>
+            <input id="own-loan-duration" v-model.number="ownershipForm.loan_duration_months" type="number" min="1" max="360" required :placeholder="$t('common.example', { value: '60' })" class="field" />
+          </div>
+          <div>
+            <label for="own-loan-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.arrangementFees', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-loan-fees" v-model="ownershipForm.loan_fees" min="0" :placeholder="$t('common.example', { value: '200' })" class="field" />
+          </div>
+          <div>
+            <label for="own-loan-insurance" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.borrowerInsuranceMonth', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-loan-insurance" v-model="ownershipForm.loan_insurance_monthly" min="0" :placeholder="$t('common.example', { value: '15' })" class="field" />
+          </div>
+        </div>
+
+        <!-- Loan Live Preview Card -->
+        <div v-if="loanPreview" class="p-3 bg-slate-800/70 border border-sky-500/20 rounded-xl space-y-1 text-xs">
+          <div class="flex items-center justify-between text-white font-semibold">
+            <span>{{ $t('vehicles.ownershipWizardModal.estimatedMonthlyPayment') }}</span>
+            <span class="text-sky-300 font-bold text-sm">{{ $t('vehicles.ownershipWizardModal.month2', { payment: formatAmount(loanPreview.payment, currency) }) }}</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span>{{ $t('vehicles.ownershipWizardModal.totalBankInterest') }}</span>
+            <span>{{ formatAmount(loanPreview.totalInterest, currency) }}</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span>{{ $t('vehicles.ownershipWizardModal.totalCostOfTheLoan') }}</span>
+            <span class="text-slate-200 font-medium">{{ formatAmount(loanPreview.totalCost, currency) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lease specific terms -->
+      <div v-if="isLease" class="space-y-3">
+        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+          <RefreshCw class="w-4 h-4" />
+          <span>{{ $t('vehicles.ownershipWizardModal.leaseTerms', { acquisition_type: ownershipForm.acquisition_type }) }}</span>
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="own-lease-down" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.downPaymentIncreasedFirstRent', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-lease-down" v-model="ownershipForm.lease_down_payment" min="0" :placeholder="$t('common.example', { value: '3000' })" class="field" />
+          </div>
+          <div>
+            <label for="own-lease-rent" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.monthlyRent', { cur: currencySymbol(currency) }) }} <span class="text-rose-400">*</span></label>
+            <NumberInput id="own-lease-rent" v-model="ownershipForm.lease_monthly_rent" min="0" required :placeholder="$t('common.example', { value: '450' })" class="field" />
+          </div>
+          <div>
+            <label for="own-lease-duration" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.durationMonths') }} <span class="text-rose-400">*</span></label>
+            <input id="own-lease-duration" v-model.number="ownershipForm.lease_duration_months" type="number" min="1" max="360" required :placeholder="$t('common.example', { value: '36' })" class="field" />
+          </div>
+          <div>
+            <label for="own-lease-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.arrangementFees', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-lease-fees" v-model="ownershipForm.lease_fees" min="0" :placeholder="$t('common.example', { value: '150' })" class="field" />
+          </div>
+          <div>
+            <label for="own-lease-deposit" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.refundableSecurityDeposit', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-lease-deposit" v-model="ownershipForm.lease_deposit" min="0" :placeholder="$t('common.example', { value: '500' })" class="field" />
+          </div>
+        </div>
+
+        <!-- Lease Live Preview Card -->
+        <div v-if="leasePreview" class="p-3 bg-slate-800/70 border border-sky-500/20 rounded-xl space-y-1 text-xs">
+          <div class="flex items-center justify-between text-white font-semibold">
+            <span>{{ $t('vehicles.ownershipWizardModal.totalRentCommitted') }}</span>
+            <span class="text-sky-300 font-bold text-sm">{{ formatAmount(leasePreview.total, currency) }}</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span>{{ $t('vehicles.ownershipWizardModal.averageSmoothedOverTheTerm') }}</span>
+            <span>{{ $t('vehicles.ownershipWizardModal.month', { perMonth: formatAmount(leasePreview.perMonth, currency) }) }}</span>
+          </div>
+          <div v-if="leasePreview.totalKm" class="flex items-center justify-between text-slate-400 text-xs">
+            <span>{{ $t('vehicles.ownershipWizardModal.totalMileageIncludedInThe') }}</span>
+            <span class="text-slate-200 font-medium">{{ formatDistance(leasePreview.totalKm) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Usage, Buyout, Holding & End of Ownership -->
+    <div v-show="currentOwnershipStep === 3" class="space-y-4">
+      <!-- Lease Conditions & Buyout -->
+      <div v-if="isLease" class="space-y-3">
+        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.mileageAllowanceAndInclusions') }}</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="own-lease-allowance" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.mileageAllowanceKmYear', { unit: distanceUnit() }) }}</label>
+            <DistanceInput id="own-lease-allowance" v-model="ownershipForm.lease_km_allowance_per_year" min="0" :placeholder="$t('common.example', { value: formatDistanceValue(15000) })" class="field" />
+          </div>
+          <div>
+            <label for="own-lease-excess" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.pricePerExtraKmKm', { unit: distanceUnit(), cur: currencySymbol(currency) }) }}</label>
+            <DistanceInput kind="per-distance" :digits="3" id="own-lease-excess" v-model="ownershipForm.lease_excess_km_price" step="0.001" min="0" max="5" :placeholder="$t('common.example', { value: formatPerDistanceValue(0.15, 2) })" class="field" />
+          </div>
+          <div>
+            <label for="own-lease-end-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.estimatedReturnFees', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-lease-end-fees" v-model="ownershipForm.lease_end_fees_estimate" min="0" :placeholder="$t('common.example', { value: '400' })" class="field" />
+          </div>
+        </div>
+
+        <!-- Included Services -->
+        <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800 space-y-2">
+          <div class="text-xs font-semibold text-slate-300">{{ $t('vehicles.ownershipWizardModal.servicesIncludedInTheContract') }}</div>
+          <div class="flex flex-wrap gap-x-6 gap-y-2">
+            <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white">
+              <input id="own-incl-maintenance" v-model="ownershipForm.lease_includes_maintenance" type="checkbox" class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0" />
+              <span>{{ $t('vehicles.ownershipWizardModal.maintenanceIncluded') }}</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white">
+              <input id="own-incl-insurance" v-model="ownershipForm.lease_includes_insurance" type="checkbox" class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0" />
+              <span>{{ $t('vehicles.ownershipWizardModal.insuranceIncluded') }}</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white">
+              <input id="own-incl-tires" v-model="ownershipForm.lease_includes_tires" type="checkbox" class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0" />
+              <span>{{ $t('vehicles.ownershipWizardModal.tiresIncluded') }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- LOA Buyout Option -->
+        <div v-if="ownershipForm.acquisition_type === 'LOA'" class="pt-2 border-t border-slate-800/80">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="own-lease-option" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.residualPurchaseOptionInclTax', { cur: currencySymbol(currency) }) }}</label>
+              <NumberInput id="own-lease-option" v-model="ownershipForm.lease_purchase_option_price" min="0" :placeholder="$t('common.example', { value: '18000' })" class="field" />
+            </div>
+            <div>
+              <label for="own-option-date" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.optionExercisedOnEmptyIf') }}</label>
+              <AppDatePicker id="own-option-date" v-model="ownershipForm.option_exercised_date" size="sm" :clearable="true" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Depreciation for owned vehicles -->
+      <div v-if="isOwnedPhase" class="space-y-3 pt-3 border-t border-slate-800">
+        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.depreciationAndPlannedHolding') }}</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="own-resale" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.estimatedPlannedResale', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-resale" v-model="ownershipForm.expected_resale_value" min="0" :placeholder="$t('common.example', { value: '22000' })" class="field" />
+          </div>
+          <div>
+            <label for="own-holding" class="block text-xs font-semibold text-slate-300 mb-1">
+              {{ ownershipForm.acquisition_type === 'LOA' && ownershipForm.option_exercised_date ? $t('vehicles.ownershipWizardModal.holdingAfterBuyout') : $t('vehicles.ownershipWizardModal.holdingTotal') }}
+            </label>
+            <input id="own-holding" v-model.number="ownershipForm.expected_holding_months" type="number" min="1" max="360" :placeholder="$t('common.example', { value: '48' })" class="field" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Clôture / End of Contract -->
+      <div class="space-y-3 pt-3 border-t border-slate-800">
+        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.actualClosingIfFinished') }}</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="own-end-date" class="block text-xs font-semibold text-slate-300 mb-1">
+              {{ isLease && !ownershipForm.option_exercised_date ? $t('vehicles.ownershipWizardModal.returnedOn') : $t('vehicles.ownershipWizardModal.soldOn') }}
+            </label>
+            <AppDatePicker id="own-end-date" v-model="ownershipForm.end_date" size="sm" :clearable="true" />
+          </div>
+          <div v-if="isOwnedPhase">
+            <label for="own-sale-price" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.actualResalePrice', { cur: currencySymbol(currency) }) }}</label>
+            <NumberInput id="own-sale-price" v-model="ownershipForm.sale_price" min="0" :placeholder="$t('common.example', { value: '21500' })" class="field" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+    <div>
+      <button
+        v-if="ownership"
+        type="button"
+        @click="handleDeleteOwnership"
+        :disabled="submitting"
+        class="px-4 py-2 bg-slate-800 hover:bg-rose-900/40 text-rose-400 text-xs font-semibold rounded-xl transition-colors"
+      >
+        {{ $t('vehicles.ownershipWizardModal.deleteTheContract') }}
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        @click="open = false"
+        class="btn btn-lg btn-secondary"
+      >
+        {{ $t('common.cancel') }}
+      </button>
+
+      <button
+        v-if="currentOwnershipStep > 1"
+        type="button"
+        @click="prevOwnershipStep"
+        class="btn btn-lg btn-secondary"
+      >
+        <ChevronLeft class="w-4 h-4" />
+        <span>{{ $t('vehicles.ownershipWizardModal.previous') }}</span>
+      </button>
+
+      <button
+        v-if="currentOwnershipStep < 3"
+        type="button"
+        @click="nextOwnershipStep"
+        class="btn btn-lg btn-primary"
+      >
+        <span>{{ $t('vehicles.ownershipWizardModal.next') }}</span>
+        <ChevronRight class="w-4 h-4" />
+      </button>
+
+      <button
+        v-else
+        type="button"
+        @click="handleSaveOwnership"
+        :disabled="submitting"
+        class="btn btn-lg btn-primary"
+      >
+        <Check class="w-4 h-4" />
+        <span>{{ $t('vehicles.ownershipWizardModal.saveTheContract') }}</span>
+      </button>
+    </div>
+    </template>
+  </ModalShell>
 </template>
