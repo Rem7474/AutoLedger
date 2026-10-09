@@ -4,11 +4,11 @@ import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Users, X, Lock } from 'lucide-vue-next'
+import { Users, Lock } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import DrivePicker from '@/components/drives/DrivePicker.vue'
 import { COST_FIELDS, allocate, cents, clampPassengerStops as clampStops, earliestSelectedDriveDate, emptyLeg, estimateTitle, legsFromEstimate, legsFromTrip, newPassenger, passengersFromTrip, remapPassengerStops, stopNames, toDateInputString, type LegForm, type PassengerForm } from '@/utils/carpool'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import { formatAmount } from '@/currency'
 
 import CarpoolLegs from '@/components/carpool/CarpoolLegs.vue'
@@ -25,7 +25,6 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 const { showAlert } = useConfirm()
 
 const editingTripId = computed<string | null>(() => props.editing?.id ?? null)
@@ -311,23 +310,14 @@ async function handleModalRecalculate() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-modal bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
-    @click.self="open = false"
+  <ModalShell
+    v-model:open="open"
+    size="lg"
+    :icon="Users"
+    icon-class="text-rose-400"
+    :title="editingTripId ? $t('carpool.carpoolTripModal.edit') : $t('carpool.carpoolView.newCarpool')"
+    body-class="space-y-5"
   >
-    <div v-dialog class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden my-auto">
-      <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-900/95">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <Users class="w-5 h-5 text-rose-400" />
-          {{ editingTripId ? $t('carpool.carpoolTripModal.edit') : $t('carpool.carpoolView.newCarpool') }}
-        </h3>
-        <button @click="open = false" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors" :aria-label="$t('common.close')">
-          <X class="w-5 h-5" />
-        </button>
-      </div>
-
-      <div class="p-5 overflow-y-auto flex-1 overscroll-contain space-y-5">
 
       <!-- Source -->
       <div class="space-y-3">
@@ -430,9 +420,7 @@ async function handleModalRecalculate() {
         <input id="carpool-notes" v-model="form.notes" class="field" />
       </div>
 
-      </div>
-
-      <div class="px-5 py-3.5 border-t border-slate-800/80 flex justify-end gap-2 shrink-0 bg-slate-900/95">
+    <template #footer>
         <button
           type="button"
           @click="open = false"
@@ -448,7 +436,6 @@ async function handleModalRecalculate() {
         >
           {{ modalSubmitting ? $t('carpool.carpoolTripModal.saving') : $t('common.save') }}
         </button>
-      </div>
-    </div>
-  </div>
+    </template>
+  </ModalShell>
 </template>
