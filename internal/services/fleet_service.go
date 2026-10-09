@@ -18,10 +18,21 @@ const (
 	fleetAnnualMinMonths = 3
 )
 
+// fleetStore is the slice of *database.Repository that FleetService uses.
+type fleetStore interface {
+	GetFleetSummary(ctx context.Context, userID string) (*models.FleetSummaryResponse, error)
+	SetFleetMonthlyBudget(ctx context.Context, userID string, budget *money.Cents) error
+}
+
+// vehicleTCO is the slice of *TCOService that FleetService uses.
+type vehicleTCO interface {
+	ComputeVehicleTCO(ctx context.Context, vehicleID string) (*TCOSummary, error)
+}
+
 // FleetService coordinates aggregated multi-vehicle analytics for households.
 type FleetService struct {
-	repo *database.Repository
-	tco  *TCOService
+	repo fleetStore
+	tco  vehicleTCO
 }
 
 func NewFleetService(repo *database.Repository, tco *TCOService) *FleetService {
