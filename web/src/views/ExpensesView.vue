@@ -434,7 +434,7 @@ const tabs = computed<TabItem[]>(() => {
         >
           <Plus class="w-3.5 h-3.5" />
           {{ $t('expenses.expensesView.add') }}
-          <span class="hidden font-normal opacity-75 sm:inline">{{ $t('expenses.expensesView.tollParking') }}</span>
+          <span class="hidden font-normal sm:inline">{{ $t('expenses.expensesView.tollParking') }}</span>
         </button>
         <button
           v-if="activeTab === 'MAINTENANCE' || activeTab === 'FIXED'"
@@ -443,7 +443,7 @@ const tabs = computed<TabItem[]>(() => {
         >
           <Plus class="w-3.5 h-3.5" />
           {{ $t('expenses.expensesView.add') }}
-          <span class="hidden font-normal opacity-75 sm:inline">{{ activeTab === 'FIXED' ? $t('expenses.expensesView.fixedCosts') : $t('expenses.expensesView.maintenance') }}</span>
+          <span class="hidden font-normal sm:inline">{{ activeTab === 'FIXED' ? $t('expenses.expensesView.fixedCosts') : $t('expenses.expensesView.maintenance') }}</span>
         </button>
         <button
           v-if="activeTab === 'REMINDERS'"
