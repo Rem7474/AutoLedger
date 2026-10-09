@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import NumberInput from '@/components/NumberInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
-import { Calculator, X, Sparkles, Check, BookmarkPlus, Info } from 'lucide-vue-next'
+import { Calculator, Sparkles, Check, BookmarkPlus, Info } from 'lucide-vue-next'
 import { api, type PublicChargingPreset, type PublicChargingBreakdown } from '@/services/api'
 import { formatAmount } from '@/currency'
 import { t } from '@/i18n'
 import { publicChargingRates, publicChargingRequest } from '@/utils/publicCharging'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 
 const props = defineProps<{
   currency: string
@@ -18,7 +18,6 @@ const emit = defineEmits<{
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 
 const presets = ref<PublicChargingPreset[]>([])
 const selectedPresetId = ref<string>('')
@@ -138,26 +137,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-modal-nested flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="open = false">
-    <div v-dialog class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-      <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-slate-800">
+  <ModalShell v-model:open="open" size="md" nested body-class="space-y-4 text-xs">
+    <template #title>
         <div class="flex items-center gap-2">
           <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
             <Calculator class="w-4 h-4" />
           </div>
           <div>
-            <h2 class="text-base font-bold text-white">{{ t('tariffs.publicModal.title') }}</h2>
+            <h3 class="text-base font-bold text-white">{{ t('tariffs.publicModal.title') }}</h3>
             <p class="text-xs text-slate-400">{{ t('tariffs.publicModal.subtitle') }}</p>
           </div>
         </div>
-        <button @click="open = false" class="tap p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800" :aria-label="$t('common.close')">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
+    </template>
 
-      <!-- Content -->
-      <div class="p-5 overflow-y-auto space-y-4 text-xs">
         <!-- Preset selector -->
         <div>
           <label for="public-preset-select" class="block text-slate-300 font-medium mb-1">{{ t('tariffs.publicModal.presetLabel') }}</label>
@@ -337,10 +329,8 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Footer -->
-      <div class="flex items-center justify-end gap-2 p-4 border-t border-slate-800 bg-slate-950/40">
+    <template #footer>
         <button
           type="button"
           @click="open = false"
@@ -356,7 +346,6 @@ onMounted(() => {
         >
           {{ t('tariffs.publicModal.applyButton') }}
         </button>
-      </div>
-    </div>
-  </div>
+    </template>
+  </ModalShell>
 </template>
