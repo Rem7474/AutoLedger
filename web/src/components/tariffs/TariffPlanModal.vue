@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Plus, Trash2, X, Zap } from 'lucide-vue-next'
+import { Plus, Trash2, Zap } from 'lucide-vue-next'
 import { api, type TariffPlan } from '@/services/api'
 import { intlLocale, t } from '@/i18n'
 import { currencySymbol } from '@/currency'
-import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import ModalShell from '@/components/ModalShell.vue'
 import NumberInput from '@/components/NumberInput.vue'
 import {
   WEEK_ORDER,
@@ -20,7 +20,6 @@ import {
 const props = defineProps<{ planId: string | null; seed: PlanForm | null; currency: string }>()
 const emit = defineEmits<{ (e: 'saved', plan: TariffPlan): void }>()
 const open = defineModel<boolean>('open', { required: true })
-useEscapeToClose(open, () => (open.value = false))
 
 const form = ref<PlanForm>(emptyPlanForm(props.currency))
 const saving = ref(false)
@@ -68,24 +67,21 @@ async function save() {
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-    <form
-      v-dialog
-      class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
-      :aria-label="planId ? $t('tariffs.editor.editTitle') : $t('tariffs.editor.newTitle')"
-      @submit.prevent="save"
-    >
-      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+  <ModalShell
+    v-model:open="open"
+    size="lg"
+    body-class=""
+    footer-class="items-center justify-between gap-3"
+    :aria-label="planId ? $t('tariffs.editor.editTitle') : $t('tariffs.editor.newTitle')"
+  >
+    <template #title>
         <div class="flex items-center gap-3">
           <div class="p-2 bg-warning-500/10 text-warning-400 rounded-xl"><Zap class="w-5 h-5" /></div>
           <h3 class="text-base font-bold text-white">{{ planId ? $t('tariffs.editor.editTitle') : $t('tariffs.editor.newTitle') }}</h3>
         </div>
-        <button type="button" class="tap p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800" :aria-label="$t('common.close')" @click="open = false">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
+    </template>
 
-      <div class="flex-1 overflow-y-auto p-5 space-y-5">
+    <form id="tariff-plan-form" class="space-y-5" @submit.prevent="save">
         <div class="grid sm:grid-cols-2 gap-3">
           <div>
             <label for="tp-name" class="field-label">{{ $t('tariffs.editor.name') }}</label>
@@ -198,15 +194,14 @@ async function save() {
         </section>
 
         <p v-if="error" role="alert" class="rounded-lg border border-danger-500/30 bg-danger-500/10 px-3 py-2 text-xs text-danger-300">{{ error }}</p>
-      </div>
+    </form>
 
-      <div class="px-5 py-3 border-t border-slate-800 flex items-center justify-between gap-3 shrink-0">
+    <template #footer>
         <p class="text-xs text-warning-300 min-w-0" role="status">{{ problemText }}</p>
         <div class="flex gap-2 shrink-0">
           <button type="button" class="btn btn-secondary" @click="open = false">{{ $t('common.cancel') }}</button>
-          <button type="submit" class="btn btn-primary" :disabled="saving || !!problem">{{ saving ? $t('account.saving') : $t('common.save') }}</button>
+          <button type="submit" form="tariff-plan-form" class="btn btn-primary" :disabled="saving || !!problem">{{ saving ? $t('account.saving') : $t('common.save') }}</button>
         </div>
-      </div>
-    </form>
-  </div>
+    </template>
+  </ModalShell>
 </template>
