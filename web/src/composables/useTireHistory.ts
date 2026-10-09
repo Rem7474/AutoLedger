@@ -57,7 +57,7 @@ export function useTireHistory(options: {
       tireLogs.value = res.logs || []
       showHistoryModal.value = true
     } catch (err: any) {
-      showAlert(t('tires.tiresView.loadError', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('tires.tiresView.loadError', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
@@ -101,7 +101,7 @@ export function useTireHistory(options: {
       selectedTireIds.value = selectedTireIds.value.filter((id) => id !== tire.id)
       await loadTires()
     } catch (err: any) {
-      showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
@@ -132,7 +132,7 @@ export function useTireHistory(options: {
       await api.deleteTireSession(vehicleStore.activeVehicle.id, selectedTire.value.id, session.id)
       await reloadHistoryAndList()
     } catch (err: any) {
-      showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
@@ -186,7 +186,7 @@ export function useTireHistory(options: {
       await api.deleteTireLog(vehicleStore.activeVehicle.id, selectedTire.value.id, l.id)
       await reloadHistoryAndList()
     } catch (err: any) {
-      showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
