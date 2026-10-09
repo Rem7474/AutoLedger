@@ -96,3 +96,23 @@ func TestOnlyTheElectricDatasetCarriesAComparison(t *testing.T) {
 		t.Error("the combustion dataset has no comparison")
 	}
 }
+
+func TestDatasetsCarryAnAcquisitionAndRecentActivity(t *testing.T) {
+	for key, typ := range map[string]string{"ev": "charging_session_end", "ice": "fuel"} {
+		ds, _ := Build(key, ref)
+		if ds.Ownership.PriceCents <= 0 || !ds.Ownership.Date.Before(ref.AddDate(0, 0, -Days)) {
+			t.Errorf("%s: acquisition %+v", key, ds.Ownership)
+		}
+		if ds.Ownership.Odometer > ds.Vehicle.StartOdometer {
+			t.Errorf("%s: acquired after the first reading", key)
+		}
+		if last := lastEventAt(ds.Events, typ); ref.Sub(last) > 6*24*time.Hour {
+			t.Errorf("%s: last %s is %s old", key, typ, ref.Sub(last))
+		}
+		for _, tire := range ds.Tires {
+			if tire.MountedOdometer != ds.Vehicle.StartOdometer {
+				t.Errorf("%s: tire mounted at %.0f", key, tire.MountedOdometer)
+			}
+		}
+	}
+}

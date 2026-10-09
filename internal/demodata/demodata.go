@@ -38,6 +38,14 @@ type Expense struct {
 	Date        time.Time
 }
 
+// Ownership is the acquisition record of the vehicle (cash purchase).
+type Ownership struct {
+	Date       time.Time
+	Odometer   float64
+	PriceCents int64
+	FeesCents  int64
+}
+
 type Reminder struct {
 	Title string
 	Due   time.Time
@@ -73,6 +81,8 @@ type Dataset struct {
 	Expenses  []Expense
 	Reminders []Reminder
 	Tires     []Tire
+	// Ownership is the acquisition of the vehicle, which completes the TCO.
+	Ownership Ownership
 	// Comparison is nil for a dataset that carries no scenario.
 	Comparison *Comparison
 	// FinalOdometer is the odometer after the last event.
@@ -96,6 +106,17 @@ func Build(key string, today time.Time) (Dataset, error) {
 func round(v float64, decimals int) float64 {
 	p := math.Pow(10, float64(decimals))
 	return math.Round(v*p) / p
+}
+
+// lastEventAt returns the time of the latest event of the given type (zero when there is none).
+func lastEventAt(events []Event, typ string) time.Time {
+	var last time.Time
+	for _, e := range events {
+		if e.Type == typ && e.At.After(last) {
+			last = e.At
+		}
+	}
+	return last
 }
 
 func rfc(t time.Time) string { return t.UTC().Format(time.RFC3339) }
@@ -185,8 +206,23 @@ func buildEV(today time.Time) Dataset {
 			soc = target
 		}
 	}
+	// The most recent session always falls in the last days, so the current month is never empty.
+	if lastCharge := lastEventAt(ds.Events, "charging_session_end"); today.Sub(lastCharge) > 5*24*time.Hour {
+		start := today.AddDate(0, 0, -1).Add(22 * time.Hour)
+		added := (80 - soc) / 100 * battery
+		ds.Events = append(ds.Events, Event{
+			ID: "demo-ev-charge-latest", Type: "charging_session_end", At: start,
+			Data: map[string]any{
+				"start_time": rfc(start), "end_time": rfc(start.Add(4 * time.Hour)),
+				"energy_kwh": round(added, 2), "energy_added_kwh": round(added, 2), "cost": round(added*homePrice, 2),
+				"location": "Home", "charger_name": "Home", "odometer_km": round(odo, 1),
+				"soc_start": int(math.Round(soc)), "soc_end": 80,
+			},
+		})
+	}
 	ds.FinalOdometer = odo
 	at := func(d int) time.Time { return today.AddDate(0, 0, -d) }
+	ds.Ownership = Ownership{Date: at(Days + 30), Odometer: ds.Vehicle.StartOdometer - 400, PriceCents: 4290000, FeesCents: 38000}
 	ds.Expenses = []Expense{
 		{"maintenance", "INSURANCE", "Insurance, 12 months", 58000, at(215)},
 		{"maintenance", "MAINTENANCE", "Annual inspection", 18900, at(150)},
@@ -201,10 +237,10 @@ func buildEV(today time.Time) Dataset {
 		{"Technical inspection", today.AddDate(0, 6, 0)},
 	}
 	ds.Tires = []Tire{
-		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "FL", ds.Vehicle.StartOdometer + 300, 40000},
-		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "FR", ds.Vehicle.StartOdometer + 300, 40000},
-		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "RL", ds.Vehicle.StartOdometer + 300, 40000},
-		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "RR", ds.Vehicle.StartOdometer + 300, 40000},
+		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "FL", ds.Vehicle.StartOdometer, 40000},
+		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "FR", ds.Vehicle.StartOdometer, 40000},
+		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "RL", ds.Vehicle.StartOdometer, 40000},
+		{"Michelin", "Pilot Sport 4", "235/45 R18", "SUMMER", at(200), 79200, "RR", ds.Vehicle.StartOdometer, 40000},
 	}
 	ds.Comparison = &Comparison{
 		Name: "Model 3 vs Clio", AnnualKm: 13000, Years: 5, FuelType: "SP95_E10", LPer100Km: 5.6, FuelPrice: 1.82,
@@ -259,8 +295,20 @@ func buildICE(today time.Time) Dataset {
 			fuel = tank
 		}
 	}
+	if lastFill := lastEventAt(ds.Events, "fuel"); today.Sub(lastFill) > 5*24*time.Hour {
+		liters := round(tank-fuel, 2)
+		at := today.AddDate(0, 0, -1).Add(18 * time.Hour)
+		ds.Events = append(ds.Events, Event{
+			ID: "demo-ice-fuel-latest", Type: "fuel", At: at,
+			Data: map[string]any{
+				"liters": liters, "price_per_liter": 1.789, "amount": round(liters*1.789, 2),
+				"fuel_type": "SP95_E10", "is_full_tank": true, "odometer_km": round(odo, 1),
+			},
+		})
+	}
 	ds.FinalOdometer = odo
 	at := func(d int) time.Time { return today.AddDate(0, 0, -d) }
+	ds.Ownership = Ownership{Date: at(Days + 90), Odometer: ds.Vehicle.StartOdometer - 1500, PriceCents: 1450000, FeesCents: 12000}
 	ds.Expenses = []Expense{
 		{"maintenance", "INSURANCE", "Insurance, 12 months", 61200, at(230)},
 		{"maintenance", "MAINTENANCE", "Service: oil, oil filter, air filter", 21900, at(120)},
