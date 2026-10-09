@@ -163,14 +163,14 @@ test.describe('the tire modals share one frame', () => {
 
 test('the expense and vehicle modals open named and close on Escape', async ({ page }) => {
   await useVehicle(page, ev.id, '/expenses')
-  await page.getByRole('button', { name: 'Toll / Parking' }).click()
+  await page.getByRole('button', { name: 'Add Toll / parking' }).click()
   const toll = page.getByRole('dialog', { name: 'Add a toll / parking fee' })
   await expect(toll).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(toll).toHaveCount(0)
 
   await page.getByRole('tab', { name: 'Fixed costs' }).click()
-  await page.getByRole('button', { name: 'Add an expense' }).click()
+  await page.getByRole('button', { name: 'Add Fixed costs' }).click()
   const maintenance = page.getByRole('dialog', { name: /Add maintenance \/ fixed expense/ })
   await expect(maintenance).toBeVisible()
   await maintenance.getByRole('button', { name: 'Close', exact: true }).first().click()
