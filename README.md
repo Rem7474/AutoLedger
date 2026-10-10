@@ -121,6 +121,7 @@ French captures sit next to the English ones (`*.fr.png`); `scripts/screenshots/
 ### 🛞 Tire Lifecycle Management
 - **Axle-Level Tracking**: Mount, swap, and dismount tires across axles (`FL`, `FR`, `RL`, `RR`, `STORAGE`, `DISPOSED`) with chronological session logs.
 - **Wear & Mileage Projections**: Tread-depth measurement history with automatic projection of remaining safe mileage (storage periods are automatically excluded).
+- **Replacement Forecast**: Estimated replacement month of each tire, from the vehicle's average monthly mileage and the months its season is fitted (winter and summer sets are not on the car all year).
 - **Universal Specifications**: Brand, model, ISO dimension, load/speed index, season (summer/winter/all-season), DOT manufacturing code, and purchase cost.
 
 ### 👥 Fair Carpooling Module

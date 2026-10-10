@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -48,7 +50,44 @@ func (h *TireHandler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	h.attachForecasts(r.Context(), vehicleID, statsList)
+
 	writeJSON(w, http.StatusOK, statsList)
+}
+
+// attachForecasts predicts the replacement date of every tire from the vehicle's mileage and from the months
+// the tires of its season are on the car. A failure to read the mileage only leaves the forecasts out.
+func (h *TireHandler) attachForecasts(ctx context.Context, vehicleID string, stats []services.TireWearStats) {
+	stored, err := h.repo.ListOdometerAnchors(ctx, vehicleID)
+	if err != nil {
+		slog.Warn("tire forecast: odometer history unavailable", "component", "tires", "vehicle_id", vehicleID, "error", err)
+		return
+	}
+	anchors := make([]services.OdometerAnchor, len(stored))
+	for i, a := range stored {
+		anchors[i] = services.OdometerAnchor{Date: a.Date, Km: a.Km, Origin: a.Origin}
+	}
+	bySeason := map[models.TireSeason][]models.TireMountSession{}
+	for _, st := range stats {
+		bySeason[st.Tire.Season] = append(bySeason[st.Tire.Season], st.Sessions...)
+	}
+	now := time.Now()
+	for i := range stats {
+		if stats[i].Tire.CurrentPosition == models.TirePosDisposed {
+			continue
+		}
+		remaining := stats[i].EstimatedRemainingKm
+		if stats[i].DrivesCount > 0 {
+			remaining = stats[i].DynamicRemainingKm
+		}
+		stats[i].ReplacementForecast = services.ForecastTireReplacement(services.TireForecastInput{
+			Now:            now,
+			RemainingKm:    remaining,
+			Season:         stats[i].Tire.Season,
+			SeasonSessions: bySeason[stats[i].Tire.Season],
+			Anchors:        anchors,
+		})
+	}
 }
 
 type CreateTireRequest struct {

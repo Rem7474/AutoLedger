@@ -350,5 +350,11 @@
   "wearBar": {
     "label": "Estimated wear"
   },
-  "openTire": "Open {name}"
+  "openTire": "Open {name}",
+  "forecast": {
+    "label": "Replacement forecast",
+    "dueNow": "Replace now",
+    "tooltipLearned": "Based on about {km} {unit} a month and the months this season's tires were fitted before ({months}).",
+    "tooltipDefault": "Based on about {km} {unit} a month, with the tires fitted in the usual months ({months})."
+  }
 }

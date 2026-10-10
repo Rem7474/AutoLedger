@@ -43,6 +43,17 @@ export function formatDate(d: string) {
   })
 }
 
+// Month and year of a predicted replacement date (YYYY-MM-DD)
+export function forecastMonthLabel(d: string) {
+  return new Date(d).toLocaleDateString(intlLocale(), { month: 'long', year: 'numeric' })
+}
+
+// A forecast date that is today or past means the tire is already at its limit
+export function isForecastDue(d?: string | null, now: Date = new Date()) {
+  if (!d) return false
+  return new Date(d).getTime() <= now.getTime()
+}
+
 export function getTireSelectLabel(item: any): string {
   if (!item || !item.tire) return ''
   const pos = item.tire.current_position === 'STORAGE'
