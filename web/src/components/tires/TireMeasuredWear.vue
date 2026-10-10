@@ -12,6 +12,9 @@ defineProps<{ stat: any }>()
       <span>{{ $t('tires.measuredWear.label') }} · {{ $t('tires.measuredWear.value', { depth: formatNumber(Number(stat.current_depth_mm), 1), pct: formatPercent(Number(stat.wear_percentage)) }) }}</span>
     </div>
     <TireWearBar :pct="stat.wear_percentage" :condition="stat.condition" />
+    <p v-if="stat.wear_rate_source === 'measured' && stat.wear_rate_confidence < 0.5" class="text-xs text-slate-400">
+      {{ $t('tires.measuredWear.lowConfidence') }}
+    </p>
   </div>
   <p v-else class="text-xs text-slate-400">{{ $t('tires.measuredWear.none') }}</p>
 </template>

@@ -27,8 +27,9 @@ type TireWearStats struct {
 	CostPerKm            float64                   `json:"cost_per_km"`
 	WearRatePer10kKm     float64                   `json:"wear_rate_per_10k_km"`
 	EstimatedRemainingKm float64                   `json:"estimated_remaining_km"`
-	WearRateSource       string                    `json:"wear_rate_source"` // "measured" from the depth logs, "default" average EV wear
-	Condition            string                    `json:"condition"`        // "GOOD", "WARNING", "CRITICAL"
+	WearRateConfidence   float64                   `json:"wear_rate_confidence"` // weight of the measured rate in the blend with the average one (0 to 1)
+	WearRateSource       string                    `json:"wear_rate_source"`     // "measured" from the depth logs, "default" average EV wear
+	Condition            string                    `json:"condition"`            // "GOOD", "WARNING", "CRITICAL"
 	LogsCount            int                       `json:"logs_count"`
 	Sessions             []models.TireMountSession `json:"sessions"`
 
@@ -90,6 +91,13 @@ const (
 	// A set rotated every 10 000 km spends the same distance on both axles, so a tire's future wear follows the average
 	// of the four positions whichever one it sits on today.
 	tireRotationIntervalKm = 10000
+)
+
+// A few tenths of a millimetre of measured wear are within the measuring error: the measured rate is blended with the
+// average one, and takes over as the wear grows.
+const (
+	defaultWearRatePer10k = 1.2 // average EV tread wear in mm per 10 000 km
+	wearPriorMm           = 1.0 // measured wear at which the measure and the average rate weigh the same
 )
 
 const rotatedAxleWeight = (2*frontAxleWeight + 2*rearAxleWeight) / 4
@@ -231,21 +239,17 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 	remainingDepth := math.Max(0, currentDepth-minLegal)
 	wearPct := math.Min(100.0, (wornDepth/usableDepth)*100.0)
 
-	wearRatePer10k := 0.0
-	estimatedRemainingKm := 0.0
+	wearRatePer10k := defaultWearRatePer10k
+	measuredRate, wearConfidence := 0.0, 0.0
 	wearSource := "default"
 
 	if distanceTraveled > 500 && measuredWear > 0.05 {
 		wearSource = "measured"
-		wearRatePer10k = (measuredWear / distanceTraveled) * 10000.0
-		if wearRatePer10k > 0 {
-			estimatedRemainingKm = (remainingDepth / wearRatePer10k) * 10000.0
-		}
-	} else {
-		// Fallback estimation using EV average wear rate (approx 1.2 mm / 10,000 km)
-		wearRatePer10k = 1.2
-		estimatedRemainingKm = (remainingDepth / 1.2) * 10000.0
+		measuredRate = (measuredWear / distanceTraveled) * 10000.0
+		wearConfidence = measuredWear / (measuredWear + wearPriorMm)
+		wearRatePer10k = wearConfidence*measuredRate + (1-wearConfidence)*defaultWearRatePer10k
 	}
+	estimatedRemainingKm := (remainingDepth / wearRatePer10k) * 10000.0
 
 	// TeslaMate dynamic telemetry & power stress calculation.
 	// Only drives performed while the tire was physically mounted are considered.
@@ -324,9 +328,10 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 		// A measured rate already holds the driving style and the axles of the past: dividing it by the past axle weight
 		// gives the rate of a tire that stayed on a neutral axle. The default average rate has no history, so the
 		// driving style applies to it. The future is then simulated with the rotation.
-		neutralRate := wearRatePer10k * styleIndex
+		neutralRate := defaultWearRatePer10k * styleIndex
 		if wearSource == "measured" {
-			neutralRate = wearRatePer10k / pastAxleWeight(sessions, logLo, logHi, tire.CurrentPosition)
+			neutralRate = wearConfidence*measuredRate/pastAxleWeight(sessions, logLo, logHi, tire.CurrentPosition) +
+				(1-wearConfidence)*neutralRate
 		}
 		if neutralRate > 0 {
 			dynamicRemainingKm = projectRemainingKm(remainingDepth, neutralRate, tire.CurrentPosition, math.Max(0, tireRotationIntervalKm-currentRunKm))
@@ -372,6 +377,7 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 		CostPerKm:              costPerKm,
 		WearRatePer10kKm:       math.Round(wearRatePer10k*100) / 100,
 		EstimatedRemainingKm:   math.Round(estimatedRemainingKm),
+		WearRateConfidence:     math.Round(wearConfidence*100) / 100,
 		WearRateSource:         wearSource,
 		Condition:              condition,
 		LogsCount:              len(logs),
