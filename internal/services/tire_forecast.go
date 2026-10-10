@@ -57,21 +57,32 @@ func defaultTireMonths(season models.TireSeason) [12]bool {
 	return m
 }
 
-// learnTireMonths reads the calendar months covered by finished mount sessions. ok is false without any.
-func learnTireMonths(sessions []models.TireMountSession) (months [12]bool, ok bool) {
+// coveredMonths marks the calendar months between two dates (twelve at most).
+func coveredMonths(from, to time.Time, months *[12]bool) {
+	d := time.Date(from.Year(), from.Month(), 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(to.Year(), to.Month(), 1, 0, 0, 0, 0, time.UTC)
+	for i := 0; i < 12 && !d.After(end); i++ {
+		months[d.Month()-1] = true
+		d = d.AddDate(0, 1, 0)
+	}
+}
+
+// learnTireMonths reads the calendar months a set is on the car. Finished sessions give the season window (ok is
+// false without any); a session still open adds the months it has already covered, so a set kept on through the
+// year (no winter tires required in some regions) is recognised as it goes.
+func learnTireMonths(sessions []models.TireMountSession, now time.Time) (closed, open [12]bool, ok bool) {
 	for _, s := range sessions {
-		if s.DismountedDate == nil || s.DismountedDate.Before(s.MountedDate) {
-			continue
-		}
-		ok = true
-		d := time.Date(s.MountedDate.Year(), s.MountedDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-		end := time.Date(s.DismountedDate.Year(), s.DismountedDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-		for i := 0; i < 12 && !d.After(end); i++ {
-			months[d.Month()-1] = true
-			d = d.AddDate(0, 1, 0)
+		switch {
+		case s.DismountedDate == nil:
+			if s.MountedDate.Before(now) {
+				coveredMonths(s.MountedDate, now, &open)
+			}
+		case !s.DismountedDate.Before(s.MountedDate):
+			ok = true
+			coveredMonths(s.MountedDate, *s.DismountedDate, &closed)
 		}
 	}
-	return months, ok
+	return closed, open, ok
 }
 
 // averageMonthlyKm is the distance driven per month over the last year, or over the history when it is shorter.
@@ -178,8 +189,16 @@ func monthlyKmWhileMounted(anchors []OdometerAnchor, now time.Time, mounted [12]
 func ForecastTireReplacement(in TireForecastInput) *TireForecast {
 	months, source := defaultTireMonths(in.Season), TireForecastMonthsDefault
 	if in.Season != models.TireSeasonAllSeason {
-		if learned, ok := learnTireMonths(in.SeasonSessions); ok {
-			months, source = learned, TireForecastMonthsLearned
+		closed, open, hasClosed := learnTireMonths(in.SeasonSessions, in.Now)
+		base := months
+		if hasClosed {
+			base, source = closed, TireForecastMonthsLearned
+		}
+		for i := range months {
+			months[i] = base[i] || open[i]
+			if open[i] && !base[i] {
+				source = TireForecastMonthsLearned
+			}
 		}
 	}
 	perMonth, monthly, ok := monthlyKmWhileMounted(in.Anchors, in.Now, months)

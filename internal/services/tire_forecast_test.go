@@ -72,13 +72,13 @@ func TestForecastLearnsMonthsFromFinishedSessions(t *testing.T) {
 	end := d(2026, 3, 15)
 	sessions := []models.TireMountSession{
 		{MountedDate: d(2025, 12, 1), DismountedDate: &end},
-		{MountedDate: d(2026, 9, 1)}, // still mounted: says nothing about the end of the season
+		{MountedDate: d(2026, 9, 1)}, // still mounted: its months so far are on the car too
 	}
 	f := ForecastTireReplacement(TireForecastInput{Now: now, RemainingKm: 3000, Season: models.TireSeasonWinter, SeasonSessions: sessions, Anchors: steadyAnchors(now)})
 	if f == nil || f.MonthsSource != TireForecastMonthsLearned {
 		t.Fatalf("expected learned months, got %+v", f)
 	}
-	want := []int{1, 2, 3, 12}
+	want := []int{1, 2, 3, 9, 10, 12}
 	if len(f.MountedMonths) != len(want) {
 		t.Fatalf("mounted months %v, want %v", f.MountedMonths, want)
 	}
@@ -135,5 +135,29 @@ func TestForecastUsesTheMileageOfTheMountedMonths(t *testing.T) {
 	wd, _ := time.Parse("2006-01-02", winter.ReplacementDate)
 	if wd.Before(d(2027, 1, 5)) || wd.After(d(2027, 1, 25)) {
 		t.Fatalf("winter replacement %s, want mid-January 2027", winter.ReplacementDate)
+	}
+}
+
+// Summer tires kept on all year (no winter tires required): the open session that already spans the winter says so.
+func TestForecastRecognisesASetKeptOnAllYear(t *testing.T) {
+	now := d(2026, 12, 15)
+	open := []models.TireMountSession{{MountedDate: d(2026, 4, 1)}}
+	f := ForecastTireReplacement(TireForecastInput{Now: now, RemainingKm: 3000, Season: models.TireSeasonSummer, SeasonSessions: open, Anchors: steadyAnchors(now)})
+	if f == nil || f.MonthsSource != TireForecastMonthsLearned {
+		t.Fatalf("expected learned months, got %+v", f)
+	}
+	if got := len(f.MountedMonths); got != 9 { // April to October by default, plus November and December already driven
+		t.Fatalf("mounted months %v", f.MountedMonths)
+	}
+
+	// A full year on the car covers every month.
+	long := []models.TireMountSession{{MountedDate: d(2025, 4, 1)}}
+	f = ForecastTireReplacement(TireForecastInput{Now: now, RemainingKm: 3000, Season: models.TireSeasonSummer, SeasonSessions: long, Anchors: steadyAnchors(now)})
+	if len(f.MountedMonths) != 12 {
+		t.Fatalf("a set mounted for over a year runs all year, got %v", f.MountedMonths)
+	}
+	date, _ := time.Parse("2006-01-02", f.ReplacementDate)
+	if date.After(d(2027, 4, 1)) { // ~1000 km/month, no storage
+		t.Fatalf("year-round set should be due by spring, got %s", f.ReplacementDate)
 	}
 }
