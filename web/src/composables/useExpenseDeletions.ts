@@ -24,7 +24,7 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
       await api.deleteDriveExpense(vehicleStore.activeVehicle.id, e.id)
       await reload()
     } catch (err: any) {
-      showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
@@ -41,7 +41,7 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
       await api.deleteMaintenance(vehicleStore.activeVehicle.id, m.id)
       await reload()
     } catch (err: any) {
-      showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
@@ -58,7 +58,7 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
       await api.deleteCharge(vehicleStore.activeVehicle.id, c.id)
       await reload()
     } catch (err: any) {
-      showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
@@ -74,10 +74,10 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
     try {
       await api.deleteDocument(vehicleStore.activeVehicle.id, doc.id)
       documents.value = documents.value.filter((d) => d.id !== doc.id)
-      showAlert(t('expenses.expensesView.receiptDeleted'), t('common.success'), 'success')
+      void showAlert(t('expenses.expensesView.receiptDeleted'), t('common.success'), 'success')
       await reload()
     } catch (err: any) {
-      showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
 
