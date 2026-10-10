@@ -57,7 +57,7 @@ async function handleDisposeTireAction() {
     open.value = false
     emit('saved', tireId)
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleDisposeTire = () => runOnce(handleDisposeTireAction)

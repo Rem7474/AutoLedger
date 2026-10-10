@@ -22,7 +22,7 @@ async function quickRotateAction(mode: 'FRONT_BACK' | 'CROSS') {
     await api.quickRotateTires(vehicleStore.activeVehicle.id, { mode, odometer: odo })
     emit('rotated')
   } catch (err: any) {
-    showAlert(t('tires.tiresView.rotationError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('tires.tiresView.rotationError', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleQuickRotate = (mode: 'FRONT_BACK' | 'CROSS') => runOnce(() => quickRotateAction(mode))

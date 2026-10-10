@@ -43,7 +43,7 @@ async function saveBudget(amount: number | null) {
     summary.value.monthly_budget = res.monthly_budget
     editingBudget.value = false
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     savingBudget.value = false
   }
@@ -52,7 +52,7 @@ async function saveBudget(amount: number | null) {
 function submitBudget() {
   const amount = parseBudgetInput(budgetInput.value)
   if (amount === null) {
-    showAlert(t('fleet.budget.invalid'), t('shell.confirm.error'), 'danger')
+    void showAlert(t('fleet.budget.invalid'), t('shell.confirm.error'), 'danger')
     return
   }
   void saveBudget(amount)

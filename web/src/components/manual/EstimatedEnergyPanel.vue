@@ -51,11 +51,11 @@ async function save() {
   if (kwh100 !== null && (kwh100 < 1 || kwh100 > 100)) {
     const min = perDistance(1).toLocaleString(intlLocale(), { maximumFractionDigits: 1 })
     const max = perDistance(100).toLocaleString(intlLocale(), { maximumFractionDigits: 1 })
-    showAlert(t('manual.estimatedEnergyPanel.invalidConsumption', { unit: distanceUnit(), min, max }), t('manual.estimatedEnergyPanel.invalidField'), 'warning')
+    void showAlert(t('manual.estimatedEnergyPanel.invalidConsumption', { unit: distanceUnit(), min, max }), t('manual.estimatedEnergyPanel.invalidField'), 'warning')
     return
   }
   if (rate !== null && (rate <= 0 || rate > 10)) {
-    showAlert(t('manual.estimatedEnergyPanel.invalidRate', { cur: currencySymbol(vehicleStore.currency) }), t('manual.estimatedEnergyPanel.invalidField'), 'warning')
+    void showAlert(t('manual.estimatedEnergyPanel.invalidRate', { cur: currencySymbol(vehicleStore.currency) }), t('manual.estimatedEnergyPanel.invalidField'), 'warning')
     return
   }
   saving.value = true
@@ -67,9 +67,9 @@ async function save() {
     await vehicleStore.fetchVehicles()
     await loadTco()
     vehicleStore.lastSyncTimestamp = Date.now()
-    showAlert(t('manual.estimatedEnergyPanel.saved'), t('common.success'), 'success')
+    void showAlert(t('manual.estimatedEnergyPanel.saved'), t('common.success'), 'success')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     saving.value = false
   }

@@ -141,7 +141,7 @@ onMounted(() => {
 function openPackSwapModal() {
   if (!vehicleStore.activeVehicle) return
   if (storageTires.value.length === 0) {
-    showAlert(t('tires.tiresView.changeSetNeedsStorage'), t('tires.tiresView.changeSet'), 'info')
+    void showAlert(t('tires.tiresView.changeSetNeedsStorage'), t('tires.tiresView.changeSet'), 'info')
     return
   }
   showPackSwapModal.value = true

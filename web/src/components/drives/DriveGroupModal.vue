@@ -56,13 +56,13 @@ async function handleCreateGroupAndExpenseAction() {
       })
     }
 
-    showAlert(t('drives.driveGroupModal.created'), t('common.success'), 'success')
+    void showAlert(t('drives.driveGroupModal.created'), t('common.success'), 'success')
     open.value = false
     groupName.value = ''
     tollAmount.value = ''
     emit('saved')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleCreateGroupAndExpense = () => runOnce(handleCreateGroupAndExpenseAction)

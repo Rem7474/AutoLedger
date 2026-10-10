@@ -125,7 +125,7 @@ async function handleDriverChange(event: Event) {
       selectedCostDrive.value = refreshed
     }
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 </script>

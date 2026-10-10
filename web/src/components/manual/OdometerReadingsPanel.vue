@@ -43,7 +43,7 @@ async function load() {
     readings.value = list
     fuelLogs.value = fuel?.logs ?? []
   } catch (err: any) {
-    showAlert(t('manual.odometerReadingsPanel.loadError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('manual.odometerReadingsPanel.loadError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     loading.value = false
   }
@@ -72,7 +72,7 @@ const { pending: submitting, run: runOnce } = useSubmit()
 async function saveAction() {
   const odo = Number(form.value.odometer)
   if (form.value.odometer === '' || Number.isNaN(odo) || odo < 0) {
-    showAlert(t('manual.odometerReadingsPanel.validOdometer'), t('common.requiredField'), 'warning')
+    void showAlert(t('manual.odometerReadingsPanel.validOdometer'), t('common.requiredField'), 'warning')
     return
   }
   try {
@@ -92,7 +92,7 @@ async function saveAction() {
     await vehicleStore.fetchVehicles()
     vehicleStore.lastSyncTimestamp = Date.now()
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const save = () => runOnce(saveAction)
@@ -110,7 +110,7 @@ async function remove(r: any) {
     await load()
     vehicleStore.lastSyncTimestamp = Date.now()
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 

@@ -242,7 +242,7 @@ async function loadMoreCharges() {
     charges.value = [...charges.value, ...res.charges]
     chargesTotal.value = res.total || 0
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     loadingMoreCharges.value = false
   }

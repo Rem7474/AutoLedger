@@ -50,7 +50,7 @@ const leasePreview = computed(() => buildLeasePreview(ownershipForm.value))
 function validateOwnershipStep(step: number): boolean {
   const error = ownershipStepError(ownershipForm.value, step)
   if (error) {
-    showAlert(error, t('common.requiredField'), 'warning')
+    void showAlert(error, t('common.requiredField'), 'warning')
     return false
   }
   return true
@@ -78,7 +78,7 @@ async function saveOwnershipAction() {
     open.value = false
     emit('saved', saved)
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -100,7 +100,7 @@ async function deleteOwnershipAction() {
     open.value = false
     emit('deleted')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 </script>

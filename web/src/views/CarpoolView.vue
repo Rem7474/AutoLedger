@@ -126,7 +126,7 @@ async function openLegDrive(driveId: string) {
     showDetail.value = false
     showDriveModal.value = true
   } catch (err: any) {
-    showAlert(t('drives.drivesView.detailsLoadError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('drives.drivesView.detailsLoadError', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -141,7 +141,7 @@ async function toggleLegDriveTag(drive: any, tag: string) {
     await api.updateDriveTags(vehicleId.value, drive.id, tags)
     drive.tags = tags
   } catch (err: any) {
-    showAlert(t('drives.drivesView.tagUpdateError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('drives.drivesView.tagUpdateError', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -172,7 +172,7 @@ async function handleDelete(trip: any) {
     await api.deleteCarpool(vehicleStore.activeVehicle.id, trip.id)
     await loadData()
   } catch (err: any) {
-    showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -181,10 +181,10 @@ async function handleRecalculateSingle(trip: any) {
   recalculating.value = true
   try {
     await api.recalculateCarpools(vehicleStore.activeVehicle.id, [trip.id])
-    showAlert(t('carpool.carpoolView.recalcDone', { title: trip.title }), t('carpool.carpoolView.recalcDoneTitle'), 'success')
+    void showAlert(t('carpool.carpoolView.recalcDone', { title: trip.title }), t('carpool.carpoolView.recalcDoneTitle'), 'success')
     await loadData()
   } catch (err: any) {
-    showAlert(t('carpool.carpoolView.recalcError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('carpool.carpoolView.recalcError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     recalculating.value = false
   }
@@ -196,11 +196,11 @@ async function handleBatchRecalculate() {
   recalculating.value = true
   try {
     const res = await api.recalculateCarpools(vehicleStore.activeVehicle.id, selectedTripIds.value)
-    showAlert(t('carpool.carpoolView.recalcSelectedDone', { count: res.updated_count || count }), t('carpool.carpoolView.recalcDoneTitle'), 'success')
+    void showAlert(t('carpool.carpoolView.recalcSelectedDone', { count: res.updated_count || count }), t('carpool.carpoolView.recalcDoneTitle'), 'success')
     clearTripSelection()
     await loadData()
   } catch (err: any) {
-    showAlert(t('carpool.carpoolView.recalcError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('carpool.carpoolView.recalcError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     recalculating.value = false
   }

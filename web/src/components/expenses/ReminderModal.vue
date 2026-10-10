@@ -159,15 +159,15 @@ async function handleSaveReminderAction() {
     }
     if (editingReminderId.value) {
       await api.updateReminder(props.vehicleId, editingReminderId.value, payload)
-      showAlert(t('expenses.reminderModal.updated'), t('common.success'), 'success')
+      void showAlert(t('expenses.reminderModal.updated'), t('common.success'), 'success')
     } else {
       await api.createReminder(props.vehicleId, payload)
-      showAlert(t('expenses.reminderModal.created'), t('common.success'), 'success')
+      void showAlert(t('expenses.reminderModal.created'), t('common.success'), 'success')
     }
     open.value = false
     emit('saved')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleSaveReminder = () => runOnce(handleSaveReminderAction)

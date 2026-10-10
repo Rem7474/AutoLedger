@@ -97,7 +97,7 @@ function onBatchOdometerChange() {
 async function handleSaveBatchSession() {
   if (!props.vehicleId || batchSessionTireIds.value.length === 0) return
   if (!batchSessionForm.value.mounted_date || !batchSessionForm.value.dismounted_date) {
-    showAlert(t('tires.tireBatchSessionModal.datesRequired'), t('tires.tireBatchSessionModal.datesRequiredTitle'), 'warning')
+    void showAlert(t('tires.tireBatchSessionModal.datesRequired'), t('tires.tireBatchSessionModal.datesRequiredTitle'), 'warning')
     return
   }
 
@@ -123,9 +123,9 @@ async function handleSaveBatchSession() {
 
     open.value = false
     emit('saved')
-    showAlert(t('tires.tireBatchSessionModal.saved', { count: batchSessionTireIds.value.length }), t('common.success'), 'success')
+    void showAlert(t('tires.tireBatchSessionModal.saved', { count: batchSessionTireIds.value.length }), t('common.success'), 'success')
   } catch (err: any) {
-    showAlert(t('tires.tireBatchSessionModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('tires.tireBatchSessionModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     savingBatchSession.value = false
   }

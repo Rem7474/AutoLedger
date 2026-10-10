@@ -96,10 +96,10 @@ async function handleApplyTollEstimate() {
     if (res.status === 'created' || res.status === 'updated') {
       await refreshCostModal()
     } else {
-      showAlert(tollApplyStatusLabel(res.status), t('drives.driveCostModal.tollNotApplied'), 'warning')
+      void showAlert(tollApplyStatusLabel(res.status), t('drives.driveCostModal.tollNotApplied'), 'warning')
     }
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     applyingToll.value = false
   }
@@ -134,7 +134,7 @@ async function loadDriveExpenses(driveId: string) {
 async function handleAddTollToDrive() {
   if (!props.vehicleId || !selectedCostDrive.value) return
   if (!inlineTollAmount.value || Number(inlineTollAmount.value) <= 0) {
-    showAlert(t('drives.driveCostModal.enterValidAmount'), t('drives.driveCostModal.invalidAmount'), 'warning')
+    void showAlert(t('drives.driveCostModal.enterValidAmount'), t('drives.driveCostModal.invalidAmount'), 'warning')
     return
   }
 
@@ -156,7 +156,7 @@ async function handleAddTollToDrive() {
     inlineTollAmount.value = ''
     inlineTollNotes.value = ''
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     addingToll.value = false
   }
@@ -180,7 +180,7 @@ async function handleSaveExpenseEdit(exp: any) {
   if (!props.vehicleId) return
   const amount = Number(expenseEditForm.value.amount)
   if (!amount || amount <= 0) {
-    showAlert(t('drives.driveCostModal.enterValidAmount'), t('drives.driveCostModal.invalidAmount'), 'warning')
+    void showAlert(t('drives.driveCostModal.enterValidAmount'), t('drives.driveCostModal.invalidAmount'), 'warning')
     return
   }
   try {
@@ -198,7 +198,7 @@ async function handleSaveExpenseEdit(exp: any) {
     editingExpenseId.value = null
     await refreshCostModal()
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -216,7 +216,7 @@ async function handleDeleteExpense(exp: any) {
     await api.deleteDriveExpense(props.vehicleId, exp.id)
     await refreshCostModal()
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 

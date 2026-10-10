@@ -48,7 +48,7 @@ async function handlePackSwapSubmitAction() {
   ].filter(Boolean)
 
   if (selectedIDs.length !== 4) {
-    showAlert(t('tires.tirePackSwapModal.selectFour'), t('tires.tirePackSwapModal.selectionRequired'), 'warning')
+    void showAlert(t('tires.tirePackSwapModal.selectFour'), t('tires.tirePackSwapModal.selectionRequired'), 'warning')
     return
   }
 
@@ -61,7 +61,7 @@ async function handlePackSwapSubmitAction() {
     open.value = false
     emit('saved')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handlePackSwapSubmit = () => runOnce(handlePackSwapSubmitAction)

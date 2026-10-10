@@ -99,7 +99,7 @@ async function handleDeleteManualDrive(drive: any) {
     await api.deleteDrive(vehicleStore.activeVehicle.id, drive.id)
     await loadDrives()
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -327,7 +327,7 @@ async function markNoToll(d: any) {
       total.value = Math.max(0, total.value - 1)
     }
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -383,7 +383,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
     await api.updateDriveTags(vehicleStore.activeVehicle.id, drive.id, currentTags)
     drive.tags = currentTags
   } catch (err: any) {
-    showAlert(t('drives.drivesView.tagUpdateError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('drives.drivesView.tagUpdateError', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 </script>
