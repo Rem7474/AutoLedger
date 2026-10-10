@@ -90,12 +90,13 @@ func TestCalculateTireWearMeasuredRate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.WearRatePer10kKm != 2 {
-		t.Errorf("expected measured rate 2 mm/10k km, got %v", got.WearRatePer10kKm)
+	// 2 mm worn weighs 2/3 against the 1.2 mm average rate: 2/3*2 + 1/3*1.2.
+	if got.WearRatePer10kKm != 1.73 || got.WearRateConfidence != 0.67 {
+		t.Errorf("expected blended rate 1.73 at confidence 0.67, got %v at %v", got.WearRatePer10kKm, got.WearRateConfidence)
 	}
-	// (6 - 1.6) mm remaining at 2 mm / 10 000 km.
-	if got.EstimatedRemainingKm != 22000 {
-		t.Errorf("expected 22000 km remaining, got %v", got.EstimatedRemainingKm)
+	// (6 - 1.6) mm remaining at the blended rate.
+	if math.Abs(got.EstimatedRemainingKm-4.4/(2.0/3*2+1.2/3)*10000) > 1 {
+		t.Errorf("unexpected remaining km, got %v", got.EstimatedRemainingKm)
 	}
 	if got.DistanceTraveledKm != 10000 || got.LogsCount != 2 {
 		t.Errorf("unexpected distance/logs: %+v", got)
@@ -117,8 +118,9 @@ func TestCalculateTireWearSingleLogCountsInitialDistance(t *testing.T) {
 	if got.DistanceTraveledKm != 10000 {
 		t.Errorf("expected 10000 km, got %v", got.DistanceTraveledKm)
 	}
-	if got.WearRatePer10kKm != 1 {
-		t.Errorf("expected 1 mm/10k km, got %v", got.WearRatePer10kKm)
+	// 1 mm worn weighs the same as the average rate: (1 + 1.2) / 2.
+	if got.WearRatePer10kKm != 1.1 {
+		t.Errorf("expected 1.1 mm/10k km, got %v", got.WearRatePer10kKm)
 	}
 }
 
@@ -404,5 +406,36 @@ func TestCalculateTireWearOverdueRotationSwapsAtOnce(t *testing.T) {
 	}
 	if math.Abs(due.DynamicRemainingKm-overdue.DynamicRemainingKm) > 1 {
 		t.Fatalf("overdue rotation should project like one due now: %v vs %v", overdue.DynamicRemainingKm, due.DynamicRemainingKm)
+	}
+}
+
+// A few tenths of a millimetre must not drive the projection: two tires with the same distance and 0.4 mm versus
+// 1.15 mm of measured wear project much closer than their raw rates (a factor 2.9) would give.
+func TestCalculateTireWearSmallWearIsBlendedWithTheAverage(t *testing.T) {
+	run := func(depth float64) *TireWearStats {
+		store := &fakeTireWearStore{
+			logs:     []models.TireLog{{DepthMm: depth, Odometer: 10000}, {DepthMm: 6.5, Odometer: 0}},
+			sessions: []models.TireMountSession{{MountedOdometer: 0}},
+		}
+		got, err := NewTireWearService(store).CalculateTireWear(context.Background(), wearTire(models.TirePosStorage), 10000)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return got
+	}
+	front, rear := run(6.1), run(5.35)
+	if front.WearRateConfidence >= 0.5 || rear.WearRateConfidence <= 0.5 {
+		t.Errorf("confidence should follow the wear: front %v rear %v", front.WearRateConfidence, rear.WearRateConfidence)
+	}
+	if ratio := rear.WearRatePer10kKm / front.WearRatePer10kKm; ratio > 1.6 {
+		t.Errorf("blended rates should stay close, got a ratio of %v", ratio)
+	}
+	if ratio := front.EstimatedRemainingKm / rear.EstimatedRemainingKm; ratio > 2 {
+		t.Errorf("remaining km should stay within a factor 2, got %v", ratio)
+	}
+	// A large wear is almost entirely the measured rate.
+	big := run(2.5)
+	if big.WearRateConfidence < 0.8 {
+		t.Errorf("4 mm worn should be mostly measured, got %v", big.WearRateConfidence)
 	}
 }

@@ -364,6 +364,7 @@
   "measuredWear": {
     "label": "Measured wear",
     "value": "{depth} mm tread · {pct} worn",
-    "none": "No measurement: add a tread depth to replace the theoretical estimate."
+    "none": "No measurement: add a tread depth to replace the theoretical estimate.",
+    "lowConfidence": "Few millimetres worn so far: the forecast leans on the average wear rate. Add a reading to refine it."
   }
 }
