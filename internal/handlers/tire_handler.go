@@ -68,7 +68,11 @@ func (h *TireHandler) attachForecasts(ctx context.Context, vehicleID string, sta
 		anchors[i] = services.OdometerAnchor{Date: a.Date, Km: a.Km, Origin: a.Origin}
 	}
 	bySeason := map[models.TireSeason][]models.TireMountSession{}
+	var present []models.TireSeason
 	for _, st := range stats {
+		if st.Tire.CurrentPosition != models.TirePosDisposed {
+			present = append(present, st.Tire.Season)
+		}
 		bySeason[st.Tire.Season] = append(bySeason[st.Tire.Season], st.Sessions...)
 	}
 	now := time.Now()
@@ -85,6 +89,7 @@ func (h *TireHandler) attachForecasts(ctx context.Context, vehicleID string, sta
 			RemainingKm:    remaining,
 			Season:         stats[i].Tire.Season,
 			SeasonSessions: bySeason[stats[i].Tire.Season],
+			KeptAllYear:    services.KeptOnAllYear(stats[i].Tire.Season, present),
 			Anchors:        anchors,
 		})
 	}

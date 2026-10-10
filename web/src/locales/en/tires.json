@@ -355,6 +355,7 @@
     "label": "Replacement forecast",
     "dueNow": "Replace now",
     "tooltipLearned": "Based on about {km} {unit} a month and the months this season's tires were fitted before ({months}).",
-    "tooltipDefault": "Based on about {km} {unit} a month, with the tires fitted in the usual months ({months})."
+    "tooltipDefault": "Based on about {km} {unit} a month, with the tires fitted in the usual months ({months}).",
+    "tooltipAllYear": "Based on about {km} {unit} a month, with no other tire set to swap with: the tires stay on the car all year."
   }
 }

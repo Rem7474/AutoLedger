@@ -355,6 +355,7 @@
     "label": "Remplacement prévu",
     "dueNow": "À remplacer maintenant",
     "tooltipLearned": "D'après environ {km} {unit} par mois et les mois où les pneus de cette saison ont déjà été montés ({months}).",
-    "tooltipDefault": "D'après environ {km} {unit} par mois, avec des pneus montés aux mois habituels ({months})."
+    "tooltipDefault": "D'après environ {km} {unit} par mois, avec des pneus montés aux mois habituels ({months}).",
+    "tooltipAllYear": "D'après environ {km} {unit} par mois, sans autre train de pneus pour alterner : les pneus restent montés toute l'année."
   }
 }

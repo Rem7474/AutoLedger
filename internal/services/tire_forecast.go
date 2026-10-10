@@ -9,8 +9,9 @@ import (
 
 // Sources of the months a tire is expected on the car.
 const (
-	TireForecastMonthsLearned = "learned" // read from the past mount sessions of tires of the same season
-	TireForecastMonthsDefault = "default" // typical season windows, no usable history
+	TireForecastMonthsLearned = "learned"  // read from the past mount sessions of tires of the same season
+	TireForecastMonthsDefault = "default"  // typical season windows, no usable history
+	TireForecastMonthsAllYear = "all_year" // no tire of another season to swap with: the set stays on the car
 )
 
 const (
@@ -38,7 +39,23 @@ type TireForecastInput struct {
 	Season      models.TireSeason
 	// SeasonSessions are the mount sessions of every tire of this season on the vehicle, the tire's own included.
 	SeasonSessions []models.TireMountSession
-	Anchors        []OdometerAnchor
+	// KeptAllYear is set when the vehicle has no tire to swap this one with (see KeptOnAllYear).
+	KeptAllYear bool
+	Anchors     []OdometerAnchor
+}
+
+// KeptOnAllYear tells whether a seasonal set is presumably never swapped: the vehicle has no other seasonal set
+// (winter for a summer one and the reverse) and no all-season tire. present lists the seasons of its tires in use.
+func KeptOnAllYear(season models.TireSeason, present []models.TireSeason) bool {
+	if season != models.TireSeasonSummer && season != models.TireSeasonWinter {
+		return false
+	}
+	for _, p := range present {
+		if p == models.TireSeasonAllSeason || (p != season && (p == models.TireSeasonSummer || p == models.TireSeasonWinter)) {
+			return false
+		}
+	}
+	return true
 }
 
 // defaultTireMonths gives the typical months a tire of a season is on the car in the northern hemisphere.
@@ -191,8 +208,11 @@ func ForecastTireReplacement(in TireForecastInput) *TireForecast {
 	if in.Season != models.TireSeasonAllSeason {
 		closed, open, hasClosed := learnTireMonths(in.SeasonSessions, in.Now)
 		base := months
-		if hasClosed {
+		switch {
+		case hasClosed:
 			base, source = closed, TireForecastMonthsLearned
+		case in.KeptAllYear:
+			base, source = defaultTireMonths(models.TireSeasonAllSeason), TireForecastMonthsAllYear
 		}
 		for i := range months {
 			months[i] = base[i] || open[i]

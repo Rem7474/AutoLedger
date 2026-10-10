@@ -16,7 +16,8 @@ const tooltip = computed(() => {
   const months = (f.mounted_months as number[])
     .map((m) => new Date(2024, m - 1, 1).toLocaleDateString(intlLocale(), { month: 'short' }))
     .join(', ')
-  return translate(f.months_source === 'learned' ? 'tires.forecast.tooltipLearned' : 'tires.forecast.tooltipDefault', {
+  const key = { learned: 'tooltipLearned', all_year: 'tooltipAllYear' }[f.months_source as string] ?? 'tooltipDefault'
+  return translate(`tires.forecast.${key}`, {
     km: formatDistanceValue(Math.round(f.monthly_km)),
     unit: distanceUnit(),
     months,

@@ -161,3 +161,40 @@ func TestForecastRecognisesASetKeptOnAllYear(t *testing.T) {
 		t.Fatalf("year-round set should be due by spring, got %s", f.ReplacementDate)
 	}
 }
+
+func TestKeptOnAllYear(t *testing.T) {
+	sum, win, all := models.TireSeasonSummer, models.TireSeasonWinter, models.TireSeasonAllSeason
+	cases := []struct {
+		name    string
+		season  models.TireSeason
+		present []models.TireSeason
+		want    bool
+	}{
+		{"summer alone", sum, []models.TireSeason{sum, sum}, true},
+		{"winter alone", win, []models.TireSeason{win}, true},
+		{"summer with a winter set", sum, []models.TireSeason{sum, win}, false},
+		{"winter with a summer set", win, []models.TireSeason{win, sum}, false},
+		{"summer with all-season tires", sum, []models.TireSeason{sum, all}, false},
+		{"all-season", all, []models.TireSeason{all}, false},
+	}
+	for _, c := range cases {
+		if got := KeptOnAllYear(c.season, c.present); got != c.want {
+			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+func TestForecastRunsAllYearWithoutAnotherSet(t *testing.T) {
+	now := d(2026, 10, 10)
+	in := TireForecastInput{Now: now, RemainingKm: 3000, Season: models.TireSeasonSummer, Anchors: steadyAnchors(now), KeptAllYear: true}
+	f := ForecastTireReplacement(in)
+	if f == nil || f.MonthsSource != TireForecastMonthsAllYear || len(f.MountedMonths) != 12 {
+		t.Fatalf("expected twelve months, got %+v", f)
+	}
+	// Finished sessions still win over the deduction.
+	end := d(2026, 3, 15)
+	in.SeasonSessions = []models.TireMountSession{{MountedDate: d(2025, 4, 1), DismountedDate: &end}}
+	if f = ForecastTireReplacement(in); f.MonthsSource != TireForecastMonthsLearned {
+		t.Fatalf("history must take precedence, got %+v", f)
+	}
+}
