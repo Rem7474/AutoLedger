@@ -303,7 +303,7 @@
   },
   "tireWheelCard": {
     "noTireFittedAtThe": "No tire fitted at the {label} ({pos})",
-    "estimatedLifespanWearKm": "Estimated lifespan wear ({estimated_lifespan_km} {unit})",
+    "estimatedLifespanWearKm": "Distance driven / estimated lifespan ({estimated_lifespan_km} {unit})",
     "costKm": "Cost / {unit}",
     "totalDriven": "Total driven",
     "removeFromSelection": "Remove from the selection",
@@ -356,6 +356,14 @@
     "dueNow": "Replace now",
     "tooltipLearned": "Based on about {km} {unit} a month and the months this season's tires were fitted before ({months}).",
     "tooltipDefault": "Based on about {km} {unit} a month, with the tires fitted in the usual months ({months}).",
-    "tooltipAllYear": "Based on about {km} {unit} a month, with no other tire set to swap with: the tires stay on the car all year."
+    "tooltipAllYear": "Based on about {km} {unit} a month, with no other tire set to swap with: the tires stay on the car all year.",
+    "basisMeasured": "Wear rate taken from your tread-depth measurements.",
+    "basisDefault": "No usable measurement yet: average EV wear (1.2 mm per 10,000 km) is used.",
+    "rotation": "Tires are assumed to be rotated every 10,000 km."
+  },
+  "measuredWear": {
+    "label": "Measured wear",
+    "value": "{depth} mm tread · {pct} worn",
+    "none": "No measurement: add a tread depth to replace the theoretical estimate."
   }
 }

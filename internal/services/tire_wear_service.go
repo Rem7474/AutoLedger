@@ -27,7 +27,8 @@ type TireWearStats struct {
 	CostPerKm            float64                   `json:"cost_per_km"`
 	WearRatePer10kKm     float64                   `json:"wear_rate_per_10k_km"`
 	EstimatedRemainingKm float64                   `json:"estimated_remaining_km"`
-	Condition            string                    `json:"condition"` // "GOOD", "WARNING", "CRITICAL"
+	WearRateSource       string                    `json:"wear_rate_source"` // "measured" from the depth logs, "default" average EV wear
+	Condition            string                    `json:"condition"`        // "GOOD", "WARNING", "CRITICAL"
 	LogsCount            int                       `json:"logs_count"`
 	Sessions             []models.TireMountSession `json:"sessions"`
 
@@ -81,6 +82,49 @@ func TireDistanceAtOdometer(sessions []models.TireMountSession, odometer float64
 	return total
 }
 
+// Wear weight of an axle on an electric car: the rear axle takes the acceleration and regeneration torque, the front one
+// the steering and braking transfer.
+const (
+	frontAxleWeight = 0.92
+	rearAxleWeight  = 1.15
+	// A set rotated every 10 000 km spends the same distance on both axles, so a tire's future wear follows the average
+	// of the four positions whichever one it sits on today.
+	tireRotationIntervalKm = 10000
+)
+
+const rotatedAxleWeight = (2*frontAxleWeight + 2*rearAxleWeight) / 4
+
+func axleWeight(pos models.TirePosition) float64 {
+	switch pos {
+	case models.TirePosRL, models.TirePosRR:
+		return rearAxleWeight
+	case models.TirePosFL, models.TirePosFR:
+		return frontAxleWeight
+	}
+	return 1.0
+}
+
+// pastAxleWeight is the average axle weight of the distance driven between two odometer readings, from the positions
+// the tire held (a measured wear rate already contains that history). Without a session in the window it falls back to
+// the weight of the current position.
+func pastAxleWeight(sessions []models.TireMountSession, lo, hi float64, current models.TirePosition) float64 {
+	var sum, dist float64
+	for _, s := range sessions {
+		start, end := math.Max(s.MountedOdometer, lo), hi
+		if s.DismountedOdometer != nil && *s.DismountedOdometer < end {
+			end = *s.DismountedOdometer
+		}
+		if end > start {
+			sum += (end - start) * axleWeight(s.Position)
+			dist += end - start
+		}
+	}
+	if dist <= 0 {
+		return axleWeight(current)
+	}
+	return sum / dist
+}
+
 // CalculateTireWear computes wear metrics based on depth logs, mount sessions, and TeslaMate power telemetry.
 func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Tire, vehicleCurrentOdometer float64) (*TireWearStats, error) {
 	logs, err := s.repo.ListTireLogs(ctx, tire.ID)
@@ -107,6 +151,7 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 	currentDepth := initialDepth
 	distanceTraveled := 0.0
 	measuredWear := 0.0
+	var logLo, logHi float64 // odometer window of the measured wear
 
 	if len(logs) > 0 {
 		// Latest log is first due to ORDER BY date DESC
@@ -119,10 +164,12 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 		if len(logs) >= 2 {
 			distanceTraveled = math.Max(0, TireDistanceAtOdometer(sessions, latestLog.Odometer)-TireDistanceAtOdometer(sessions, oldestLog.Odometer))
 			measuredWear = math.Max(0, oldestLog.DepthMm-latestLog.DepthMm)
+			logLo, logHi = oldestLog.Odometer, latestLog.Odometer
 		} else {
 			// Single measure: wear since new over the tire's whole life at that reading.
 			distanceTraveled = tire.InitialDistanceKm + TireDistanceAtOdometer(sessions, latestLog.Odometer)
 			measuredWear = math.Max(0, initialDepth-latestLog.DepthMm)
+			logLo, logHi = 0, latestLog.Odometer
 		}
 	}
 
@@ -154,8 +201,10 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 
 	wearRatePer10k := 0.0
 	estimatedRemainingKm := 0.0
+	wearSource := "default"
 
 	if distanceTraveled > 500 && measuredWear > 0.05 {
+		wearSource = "measured"
 		wearRatePer10k = (measuredWear / distanceTraveled) * 10000.0
 		if wearRatePer10k > 0 {
 			estimatedRemainingKm = (remainingDepth / wearRatePer10k) * 10000.0
@@ -219,13 +268,6 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 		consumptionFactor = math.Max(0.85, math.Min(1.35, avgConsumption/16.0))
 	}
 
-	positionWeight := 1.0
-	if tire.CurrentPosition == models.TirePosRL || tire.CurrentPosition == models.TirePosRR {
-		positionWeight = 1.15 // Rear axle takes major acceleration torque and regen torque on Tesla
-	} else if tire.CurrentPosition == models.TirePosFL || tire.CurrentPosition == models.TirePosFR {
-		positionWeight = 0.92 // Front axle takes steering and braking transfer
-	}
-
 	var stressIndex float64
 	var drivingStyle string
 	var dynamicLifespan = lifespan
@@ -233,20 +275,27 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 	var wearExplanation *apierror.Message
 
 	if drivesCount > 0 {
-		stressIndex = (0.45*accelFactor + 0.30*regenFactor + 0.25*consumptionFactor) * positionWeight
-		stressIndex = math.Max(0.75, math.Min(1.60, stressIndex))
+		// The driving style does not depend on where the tire sits; the stress index adds the axle weight of a rotated set.
+		styleIndex := math.Max(0.75, math.Min(1.60, 0.45*accelFactor+0.30*regenFactor+0.25*consumptionFactor))
+		stressIndex = math.Max(0.75, math.Min(1.60, styleIndex*rotatedAxleWeight))
 		stressIndex = math.Round(stressIndex*100) / 100
 
-		if stressIndex <= 0.93 {
+		if styleIndex <= 0.93 {
 			drivingStyle = "ECO"
-		} else if stressIndex >= 1.12 {
+		} else if styleIndex >= 1.12 {
 			drivingStyle = "SPORT"
 		} else {
 			drivingStyle = "BALANCED"
 		}
 
 		dynamicLifespan = int(math.Round(float64(lifespan) / stressIndex))
-		dynamicWearRatePer10k := wearRatePer10k * stressIndex
+		// A measured rate already holds the driving style and the axles of the past: only the change of axle weight
+		// applies. The default average rate has neither, so the whole stress index applies.
+		rateFactor := stressIndex
+		if wearSource == "measured" {
+			rateFactor = rotatedAxleWeight / pastAxleWeight(sessions, logLo, logHi, tire.CurrentPosition)
+		}
+		dynamicWearRatePer10k := wearRatePer10k * rateFactor
 		if dynamicWearRatePer10k > 0 {
 			dynamicRemainingKm = math.Max(0, (remainingDepth/dynamicWearRatePer10k)*10000.0)
 		}
@@ -260,11 +309,6 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 		}
 
 		axle := "kw:any_axle"
-		if positionWeight > 1.0 {
-			axle = "kw:rear_axle"
-		} else if positionWeight < 1.0 {
-			axle = "kw:front_axle"
-		}
 
 		// Parameters: style and axle are keywords the front end translates.
 		wearExplanation = apierror.NewMessagef("tire.wear_explanation",
@@ -296,6 +340,7 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 		CostPerKm:              costPerKm,
 		WearRatePer10kKm:       math.Round(wearRatePer10k*100) / 100,
 		EstimatedRemainingKm:   math.Round(estimatedRemainingKm),
+		WearRateSource:         wearSource,
 		Condition:              condition,
 		LogsCount:              len(logs),
 		Sessions:               sessions,
