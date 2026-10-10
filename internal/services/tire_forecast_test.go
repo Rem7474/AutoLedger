@@ -104,3 +104,36 @@ func TestForecastBeyondHorizonHasNoDate(t *testing.T) {
 		t.Fatalf("expected a forecast without date, got %+v", f)
 	}
 }
+
+// Summer months at 2000 km, winter months at 500 km: a winter tire must be forecast with the winter mileage.
+func TestForecastUsesTheMileageOfTheMountedMonths(t *testing.T) {
+	now := d(2026, 10, 10)
+	var anchors []OdometerAnchor
+	km := 0.0
+	for m := d(2024, 10, 1); m.Before(now); m = m.AddDate(0, 1, 0) {
+		anchors = append(anchors, OdometerAnchor{Date: m, Km: km + 1})
+		if mo := m.Month(); mo >= 4 && mo <= 10 {
+			km += 2000
+		} else {
+			km += 500
+		}
+	}
+	anchors = append(anchors, OdometerAnchor{Date: now, Km: km + 1})
+
+	winter := ForecastTireReplacement(TireForecastInput{Now: now, RemainingKm: 1250, Season: models.TireSeasonWinter, Anchors: anchors})
+	summer := ForecastTireReplacement(TireForecastInput{Now: now, RemainingKm: 1250, Season: models.TireSeasonSummer, Anchors: anchors})
+	if winter == nil || summer == nil {
+		t.Fatal("expected forecasts")
+	}
+	if winter.MonthlyKm < 450 || winter.MonthlyKm > 550 {
+		t.Fatalf("winter monthly km %.0f, want ~500", winter.MonthlyKm)
+	}
+	if summer.MonthlyKm < 1900 || summer.MonthlyKm > 2100 {
+		t.Fatalf("summer monthly km %.0f, want ~2000", summer.MonthlyKm)
+	}
+	// 1250 km at 500 km/month in winter: Nov 1 + 2.5 months, mid-January.
+	wd, _ := time.Parse("2006-01-02", winter.ReplacementDate)
+	if wd.Before(d(2027, 1, 5)) || wd.After(d(2027, 1, 25)) {
+		t.Fatalf("winter replacement %s, want mid-January 2027", winter.ReplacementDate)
+	}
+}
