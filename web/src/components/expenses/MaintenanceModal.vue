@@ -49,7 +49,7 @@ const insuranceAnnualPremium = ref<number | ''>('')
 function applyMonthlyPremium() {
   const annual = Number(insuranceAnnualPremium.value)
   if (!annual || annual <= 0) {
-    showAlert(t('expenses.maintenanceModal.enterAnnualPremium'), t('common.requiredField'), 'warning')
+    void showAlert(t('expenses.maintenanceModal.enterAnnualPremium'), t('common.requiredField'), 'warning')
     return
   }
   maintForm.value.amount = (Math.round((annual / 12) * 100) / 100).toFixed(2)
@@ -221,7 +221,7 @@ async function handleCreateMaintAction() {
     open.value = false
     emit('saved')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleCreateMaint = () => runOnce(handleCreateMaintAction)

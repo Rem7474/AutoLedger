@@ -37,7 +37,7 @@ async function downloadServiceBook() {
     })
     saveBlob(blob, filename)
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     bookLoading.value = false
   }

@@ -66,10 +66,10 @@ async function handleCopyHistorySubmit() {
       adapt_position: copyHistoryOptions.value.adapt_position,
     })
     open.value = false
-    showAlert(t('tires.tireCopyHistoryModal.copied', { count: copyHistoryTargetTireIds.value.length }), t('common.success'), 'success')
+    void showAlert(t('tires.tireCopyHistoryModal.copied', { count: copyHistoryTargetTireIds.value.length }), t('common.success'), 'success')
     emit('saved')
   } catch (err: any) {
-    showAlert(t('tires.tireCopyHistoryModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('tires.tireCopyHistoryModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     copyingHistory.value = false
   }

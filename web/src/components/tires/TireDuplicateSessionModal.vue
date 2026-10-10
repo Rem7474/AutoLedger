@@ -60,9 +60,9 @@ async function handleDuplicateSessionSubmit() {
 
     open.value = false
     emit('saved')
-    showAlert(t('tires.tireDuplicateSessionModal.duplicated', { count: duplicateTargetTireIds.value.length }), t('common.success'), 'success')
+    void showAlert(t('tires.tireDuplicateSessionModal.duplicated', { count: duplicateTargetTireIds.value.length }), t('common.success'), 'success')
   } catch (err: any) {
-    showAlert(t('tires.tireDuplicateSessionModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('tires.tireDuplicateSessionModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     duplicatingSession.value = false
   }

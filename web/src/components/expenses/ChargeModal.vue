@@ -136,7 +136,7 @@ async function handleSaveChargeAction() {
     open.value = false
     emit('saved')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleSaveCharge = () => runOnce(handleSaveChargeAction)

@@ -32,7 +32,7 @@ watch(open, (isOpen) => {
 async function handleSaveWebhook() {
   if (!props.vehicleId) return
   if (!webhookForm.value.url.trim()) {
-    showAlert(t('expenses.webhookModal.enterValidUrl'), t('common.requiredField'), 'warning')
+    void showAlert(t('expenses.webhookModal.enterValidUrl'), t('common.requiredField'), 'warning')
     return
   }
   isSavingWebhook.value = true
@@ -43,10 +43,10 @@ async function handleSaveWebhook() {
       enabled: webhookForm.value.enabled,
     })
     emit('update:webhook', saved)
-    showAlert(t('expenses.webhookModal.saved'), t('common.success'), 'success')
+    void showAlert(t('expenses.webhookModal.saved'), t('common.success'), 'success')
     open.value = false
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     isSavingWebhook.value = false
   }
@@ -55,7 +55,7 @@ async function handleSaveWebhook() {
 async function handleTestWebhook() {
   if (!props.vehicleId) return
   if (!webhookForm.value.url.trim()) {
-    showAlert(t('expenses.webhookModal.enterUrlFirst'), t('common.requiredField'), 'warning')
+    void showAlert(t('expenses.webhookModal.enterUrlFirst'), t('common.requiredField'), 'warning')
     return
   }
   isTestingWebhook.value = true
@@ -86,10 +86,10 @@ async function handleDeleteWebhook() {
     await api.deleteVehicleWebhook(props.vehicleId)
     emit('update:webhook', null)
     webhookForm.value = { url: '', type: 'DISCORD', enabled: true }
-    showAlert(t('expenses.webhookModal.deleted'), t('common.success'), 'success')
+    void showAlert(t('expenses.webhookModal.deleted'), t('common.success'), 'success')
     open.value = false
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 </script>

@@ -38,7 +38,7 @@ function toggleDrive(driveId: string) {
 async function handleSave() {
   if (!props.vehicleId || !form.value.name.trim()) return
   if (!selectedDriveIds.value.length) {
-    showAlert(t('drives.drivesView.tripNeedsDrive'), t('drives.drivesView.actionImpossible'), 'warning')
+    void showAlert(t('drives.drivesView.tripNeedsDrive'), t('drives.drivesView.actionImpossible'), 'warning')
     return
   }
   saving.value = true
@@ -51,7 +51,7 @@ async function handleSave() {
     open.value = false
     emit('saved')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     saving.value = false
   }

@@ -57,10 +57,10 @@ async function handleBatchDisposeSubmit() {
       odometer: batchDisposeForm.value.odometer !== '' ? Number(batchDisposeForm.value.odometer) : null,
     })
     open.value = false
-    showAlert(t('tires.tireBatchDisposeModal.scrapped', { count }), t('tires.tireBatchDisposeModal.scrapTitle'), 'success')
+    void showAlert(t('tires.tireBatchDisposeModal.scrapped', { count }), t('tires.tireBatchDisposeModal.scrapTitle'), 'success')
     emit('saved')
   } catch (err: any) {
-    showAlert(t('tires.tireBatchDisposeModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('tires.tireBatchDisposeModal.error', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     disposingBatch.value = false
   }

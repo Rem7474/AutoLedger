@@ -90,11 +90,11 @@ async function handleCompleteReminderAction() {
       maintenance_id: maintenanceId,
     })
 
-    showAlert(t('expenses.completeReminderModal.done'), t('common.success'), 'success')
+    void showAlert(t('expenses.completeReminderModal.done'), t('common.success'), 'success')
     open.value = false
     emit('saved', completeForm.value.expense_mode === 'create')
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleCompleteReminder = () => runOnce(handleCompleteReminderAction)

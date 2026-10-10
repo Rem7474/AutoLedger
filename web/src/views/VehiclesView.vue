@@ -94,7 +94,7 @@ async function handleDelete(id: string) {
     await api.deleteVehicle(id)
     await vehicleStore.fetchVehicles()
   } catch (err: any) {
-    showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 

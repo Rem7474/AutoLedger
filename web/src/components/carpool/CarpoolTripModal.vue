@@ -107,7 +107,7 @@ async function estimateFromDrives() {
       if (first) form.value.date = first
     }
   } catch (err: any) {
-    showAlert(t('carpool.carpoolTripModal.estimateError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('carpool.carpoolTripModal.estimateError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     estimating.value = false
   }
@@ -123,7 +123,7 @@ async function toggleDrive(driveId: string) {
 async function estimateManualLeg(index: number) {
   const leg = form.value.legs[index]
   if (!props.vehicleId || !(Number(leg.distance_km) > 0)) {
-    showAlert(t('carpool.carpoolTripModal.legDistanceFirst'), t('common.requiredField'), 'warning')
+    void showAlert(t('carpool.carpoolTripModal.legDistanceFirst'), t('common.requiredField'), 'warning')
     return
   }
   estimating.value = true
@@ -136,7 +136,7 @@ async function estimateManualLeg(index: number) {
     leg.maintenance_cost = estimated.maintenance_cost
     leg.insurance_cost = estimated.insurance_cost
   } catch (err: any) {
-    showAlert(t('carpool.carpoolTripModal.estimateError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('carpool.carpoolTripModal.estimateError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     estimating.value = false
   }
@@ -213,7 +213,7 @@ async function initCreate(options: { driveIds?: string[]; tripGroupId?: string }
       }
       anchorPickerOnSelection()
     } catch (err: any) {
-      showAlert(t('carpool.carpoolTripModal.estimateError', { message: err.message }), t('shell.confirm.error'), 'danger')
+      void showAlert(t('carpool.carpoolTripModal.estimateError', { message: err.message }), t('shell.confirm.error'), 'danger')
     } finally {
       estimating.value = false
     }
@@ -288,7 +288,7 @@ async function handleSave() {
     open.value = false
     emit('saved')
   } catch (err: any) {
-    showAlert(t('carpool.carpoolTripModal.saveError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('carpool.carpoolTripModal.saveError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     modalSubmitting.value = false
   }
@@ -305,7 +305,7 @@ async function handleModalRecalculate() {
       }
     }
   }
-  showAlert(t('carpool.carpoolTripModal.reestimated'), t('carpool.carpoolTripModal.reestimatedTitle'), 'success')
+  void showAlert(t('carpool.carpoolTripModal.reestimated'), t('carpool.carpoolTripModal.reestimatedTitle'), 'success')
 }
 </script>
 

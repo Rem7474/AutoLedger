@@ -25,7 +25,7 @@ watch(open, (isOpen) => {
 
 async function handleUploadStandaloneDocument() {
   if (!props.vehicleId || !uploadDocFile.value) {
-    showAlert(t('expenses.uploadDocumentModal.selectFile'), t('common.requiredField'), 'warning')
+    void showAlert(t('expenses.uploadDocumentModal.selectFile'), t('common.requiredField'), 'warning')
     return
   }
   isUploadingDocument.value = true
@@ -33,9 +33,9 @@ async function handleUploadStandaloneDocument() {
     const doc = await api.uploadDocument(props.vehicleId, uploadDocFile.value, uploadDocDescription.value)
     emit('document-added', doc)
     open.value = false
-    showAlert(t('expenses.uploadDocumentModal.added', { filename: doc.filename }), t('common.success'), 'success')
+    void showAlert(t('expenses.uploadDocumentModal.added', { filename: doc.filename }), t('common.success'), 'success')
   } catch (err: any) {
-    showAlert(t('shell.documents.uploadError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    void showAlert(t('shell.documents.uploadError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     isUploadingDocument.value = false
   }
