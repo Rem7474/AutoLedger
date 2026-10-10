@@ -344,7 +344,65 @@ func TestCalculateTireWearMeasuredRateIsNormalisedByPastAxles(t *testing.T) {
 	if rear <= front {
 		t.Fatalf("rear-worn tire should project longer once rotated: rear %v front %v", rear, front)
 	}
-	if run(models.TirePosFL, models.TirePosRL) != rear {
-		t.Fatal("projection must follow the past axles, not the current position")
+	// The past axles set the neutral rate; the current position only sets which axle comes first.
+	if other := run(models.TirePosFL, models.TirePosRL); math.Abs(other-rear)/rear > 0.05 {
+		t.Fatalf("projection must follow the past axles, not the current position: %v vs %v", other, rear)
+	}
+}
+
+func TestProjectRemainingKm(t *testing.T) {
+	cases := []struct {
+		name   string
+		depth  float64
+		start  models.TirePosition
+		first  float64
+		wantKm float64
+	}{
+		// Even number of periods: 10 000 km at the rear (1.15 mm) then 10 000 km at the front (0.92 mm).
+		{"two periods from the rear", 2.07, models.TirePosRL, 10000, 20000},
+		{"two periods from the front", 2.07, models.TirePosFR, 10000, 20000},
+		// Odd number: one more period on the starting axle.
+		{"rear then half a front period", 1.61, models.TirePosRL, 10000, 15000},
+		{"front then rear", 1.61, models.TirePosFL, 10000, 16000},
+		// A rotation done 6 000 km ago: 4 000 km left on the current axle (rear, 0.46 mm), then the front axle.
+		{"first period shortened", 1.38, models.TirePosRR, 4000, 14000},
+		// Rotation due now: the tire goes to the other axle at once.
+		{"rotation due", 0.92, models.TirePosRL, 0, 10000},
+		// Off a wheel: average weight of the set.
+		{"storage", 1.035, models.TirePosStorage, 10000, 10000},
+	}
+	for _, c := range cases {
+		if got := projectRemainingKm(c.depth, 1.0, c.start, c.first); math.Abs(got-c.wantKm) > 1 {
+			t.Errorf("%s: got %.1f km, want %.1f", c.name, got, c.wantKm)
+		}
+	}
+	if projectRemainingKm(0, 1, models.TirePosFL, 10000) != 0 || projectRemainingKm(2, 0, models.TirePosFL, 10000) != 0 {
+		t.Error("no depth or no wear rate gives no projection")
+	}
+}
+
+// A set that has been on its axle for more than a rotation interval is overdue: the projection swaps it to the other
+// axle at once, exactly as for a rotation due now, and a longer run changes nothing more.
+func TestCalculateTireWearOverdueRotationSwapsAtOnce(t *testing.T) {
+	run := func(mountedAt float64) *TireWearStats {
+		tire := wearTire(models.TirePosRL)
+		tire.MountedOdometer = &mountedAt
+		store := &fakeTireWearStore{
+			logs:     []models.TireLog{{DepthMm: 6.8, Odometer: 10000}, {DepthMm: 8, Odometer: 0}},
+			powerMax: 80, powerMin: -35, consumption: 16, drives: 5,
+			sessions: []models.TireMountSession{{MountedOdometer: mountedAt, Position: models.TirePosRL}},
+		}
+		got, err := NewTireWearService(store).CalculateTireWear(context.Background(), tire, 10000)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return got
+	}
+	due, overdue := run(0), run(-15000)
+	if overdue.CurrentRunKm <= tireRotationIntervalKm {
+		t.Fatalf("setup: run %v km must exceed the rotation interval", overdue.CurrentRunKm)
+	}
+	if math.Abs(due.DynamicRemainingKm-overdue.DynamicRemainingKm) > 1 {
+		t.Fatalf("overdue rotation should project like one due now: %v vs %v", overdue.DynamicRemainingKm, due.DynamicRemainingKm)
 	}
 }

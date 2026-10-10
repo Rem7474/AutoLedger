@@ -125,6 +125,38 @@ func pastAxleWeight(sessions []models.TireMountSession, lo, hi float64, current 
 	return sum / dist
 }
 
+// projectRemainingKm simulates the rest of the life of a tire rotated every tireRotationIntervalKm: starting on its
+// current axle, it swaps between the rear and the front axle and wears at neutralRatePer10k times the weight of the
+// axle it is on. firstPeriodKm is what is left of the current period (the distance since the last rotation is already
+// spent). A tire that is not on a wheel keeps the average weight of the rotated set.
+func projectRemainingKm(remainingDepth, neutralRatePer10k float64, start models.TirePosition, firstPeriodKm float64) float64 {
+	if remainingDepth <= 0 || neutralRatePer10k <= 0 {
+		return 0
+	}
+	if axleWeight(start) == 1.0 {
+		return remainingDepth / (neutralRatePer10k * rotatedAxleWeight) * 10000.0
+	}
+	rear := axleWeight(start) == rearAxleWeight
+	depth, km, period := remainingDepth, 0.0, firstPeriodKm
+	for i := 0; i < 1000; i++ {
+		weight := frontAxleWeight
+		if rear {
+			weight = rearAxleWeight
+		}
+		perKm := neutralRatePer10k * weight / 10000.0
+		if period > 0 {
+			if cost := period * perKm; cost < depth {
+				depth -= cost
+				km += period
+			} else {
+				return km + depth/perKm
+			}
+		}
+		rear, period = !rear, tireRotationIntervalKm
+	}
+	return km
+}
+
 // CalculateTireWear computes wear metrics based on depth logs, mount sessions, and TeslaMate power telemetry.
 func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Tire, vehicleCurrentOdometer float64) (*TireWearStats, error) {
 	logs, err := s.repo.ListTireLogs(ctx, tire.ID)
@@ -289,15 +321,15 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 		}
 
 		dynamicLifespan = int(math.Round(float64(lifespan) / stressIndex))
-		// A measured rate already holds the driving style and the axles of the past: only the change of axle weight
-		// applies. The default average rate has neither, so the whole stress index applies.
-		rateFactor := stressIndex
+		// A measured rate already holds the driving style and the axles of the past: dividing it by the past axle weight
+		// gives the rate of a tire that stayed on a neutral axle. The default average rate has no history, so the
+		// driving style applies to it. The future is then simulated with the rotation.
+		neutralRate := wearRatePer10k * styleIndex
 		if wearSource == "measured" {
-			rateFactor = rotatedAxleWeight / pastAxleWeight(sessions, logLo, logHi, tire.CurrentPosition)
+			neutralRate = wearRatePer10k / pastAxleWeight(sessions, logLo, logHi, tire.CurrentPosition)
 		}
-		dynamicWearRatePer10k := wearRatePer10k * rateFactor
-		if dynamicWearRatePer10k > 0 {
-			dynamicRemainingKm = math.Max(0, (remainingDepth/dynamicWearRatePer10k)*10000.0)
+		if neutralRate > 0 {
+			dynamicRemainingKm = projectRemainingKm(remainingDepth, neutralRate, tire.CurrentPosition, math.Max(0, tireRotationIntervalKm-currentRunKm))
 		}
 
 		style := "kw:balanced"
