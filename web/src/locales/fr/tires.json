@@ -350,5 +350,11 @@
   "wearBar": {
     "label": "Usure estimée"
   },
-  "openTire": "Ouvrir {name}"
+  "openTire": "Ouvrir {name}",
+  "forecast": {
+    "label": "Remplacement prévu",
+    "dueNow": "À remplacer maintenant",
+    "tooltipLearned": "D'après environ {km} {unit} par mois et les mois où les pneus de cette saison ont déjà été montés ({months}).",
+    "tooltipDefault": "D'après environ {km} {unit} par mois, avec des pneus montés aux mois habituels ({months})."
+  }
 }

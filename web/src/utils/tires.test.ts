@@ -6,6 +6,7 @@ import {
   getLastDismountInfo,
   getSeasonIcon,
   getTireSelectLabel,
+  isForecastDue,
   isMountedPosition,
   lastUsedDay,
   positionLabel,
@@ -235,5 +236,18 @@ describe('lastUsedDay', () => {
   it('is null without any finished session', () => {
     expect(lastUsedDay([{ dismounted_date: null }])).toBeNull()
     expect(lastUsedDay(undefined)).toBeNull()
+  })
+})
+
+describe('isForecastDue', () => {
+  const now = new Date('2026-10-10T12:00:00Z')
+  it('is false without a date', () => {
+    expect(isForecastDue(undefined, now)).toBe(false)
+    expect(isForecastDue('', now)).toBe(false)
+  })
+  it('is true for today or earlier, false for a future date', () => {
+    expect(isForecastDue('2026-10-10', now)).toBe(true)
+    expect(isForecastDue('2026-01-01', now)).toBe(true)
+    expect(isForecastDue('2027-04-01', now)).toBe(false)
   })
 })

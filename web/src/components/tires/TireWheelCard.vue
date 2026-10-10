@@ -5,6 +5,7 @@ import { intlLocale } from '@/i18n'
 import { Disc } from 'lucide-vue-next'
 import { getConditionBadge } from '@/utils/tires'
 import TireWearBar from '@/components/tires/TireWearBar.vue'
+import TireForecastLine from '@/components/tires/TireForecastLine.vue'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
 import { distanceUnit, formatDistance, formatDistanceValue, perDistance } from '@/units'
@@ -66,6 +67,7 @@ const vehicleStore = useVehicleStore()
       </div>
       <TireWearBar :pct="stat.life_progress_pct" :condition="stat.condition" />
     </div>
+    <TireForecastLine :forecast="stat.replacement_forecast" />
   </div>
   <div v-else class="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-center text-slate-400 flex flex-col items-center justify-center space-y-2">
     <Disc class="w-8 h-8 opacity-30" />

@@ -41,6 +41,9 @@ type TireWearStats struct {
 	DynamicLifespanKm      int               `json:"dynamic_lifespan_km"`
 	DynamicRemainingKm     float64           `json:"dynamic_remaining_km"`
 	WearExplanation        *apierror.Message `json:"wear_explanation,omitempty"`
+
+	// ReplacementForecast is filled by the list endpoint, which knows the vehicle's mileage history.
+	ReplacementForecast *TireForecast `json:"replacement_forecast,omitempty"`
 }
 
 // tireWearStore is the narrow slice of *database.Repository that TireWearService actually
