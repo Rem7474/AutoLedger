@@ -1,6 +1,6 @@
 # Contributing to AutoLedger
 
-Thanks for helping. This page covers how to propose changes; the technical conventions are in [CLAUDE.md](CLAUDE.md) (layout, commands, backend and frontend rules).
+Thanks for helping. This page covers how to propose changes; the technical conventions are in [CLAUDE.md](CLAUDE.md) (commands, backend and frontend rules).
 
 ## Before you start
 
