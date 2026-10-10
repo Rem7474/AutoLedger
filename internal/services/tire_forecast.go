@@ -23,7 +23,7 @@ const (
 type TireForecast struct {
 	// ReplacementDate is the first day the tire is expected to be at its limit (YYYY-MM-DD); empty when it cannot be predicted.
 	ReplacementDate string `json:"replacement_date,omitempty"`
-	// MonthlyKm is the vehicle's average distance per month while the forecast is computed.
+	// MonthlyKm is the vehicle's average distance per month over the months the tire is on the car.
 	MonthlyKm float64 `json:"monthly_km"`
 	// MountedMonths lists the calendar months (1-12) the tire is expected on the car.
 	MountedMonths []int `json:"mounted_months"`
@@ -101,18 +101,90 @@ func averageMonthlyKm(anchors []OdometerAnchor, now time.Time) float64 {
 	return (end - start) / months
 }
 
-// ForecastTireReplacement spreads the remaining distance of a tire over the months it is on the car at the average
-// monthly mileage of the vehicle. Returns nil when the vehicle has no usable mileage history.
-func ForecastTireReplacement(in TireForecastInput) *TireForecast {
-	monthly := averageMonthlyKm(in.Anchors, in.Now)
-	if monthly <= 0 {
-		return nil
+// monthlyKmProfile is the distance driven in each calendar month, averaged over the complete months of the last two
+// years that the history covers. observed marks the months that have at least one.
+func monthlyKmProfile(anchors []OdometerAnchor, now time.Time) (km [12]float64, observed [12]bool) {
+	first := now
+	for _, a := range anchors {
+		if a.Km > 0 && a.Date.Before(first) {
+			first = a.Date
+		}
 	}
+	var sum [12]float64
+	var n [12]int
+	thisMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	for i := 1; i <= 24; i++ {
+		start := thisMonth.AddDate(0, -i, 0)
+		if start.Before(first) {
+			break
+		}
+		a, _, okA := EstimateOdometerAt(anchors, start)
+		b, _, okB := EstimateOdometerAt(anchors, start.AddDate(0, 1, 0))
+		if !okA || !okB || b < a {
+			continue
+		}
+		sum[start.Month()-1] += b - a
+		n[start.Month()-1]++
+	}
+	for i := range km {
+		if n[i] > 0 {
+			km[i], observed[i] = sum[i]/float64(n[i]), true
+		}
+	}
+	return km, observed
+}
+
+// monthlyKmWhileMounted gives the distance driven per calendar month, from the months the tire is on the car only
+// (the mileage differs between winter and summer). A month never observed takes the average of the observed mounted
+// months; with none of those, the average of the vehicle's last year. ok is false without any usable mileage.
+func monthlyKmWhileMounted(anchors []OdometerAnchor, now time.Time, mounted [12]bool) (km [12]float64, avg float64, ok bool) {
+	profile, observed := monthlyKmProfile(anchors, now)
+	var sum, all float64
+	var n, nAll int
+	for i := range profile {
+		if !observed[i] {
+			continue
+		}
+		all += profile[i]
+		nAll++
+		if mounted[i] {
+			sum += profile[i]
+			n++
+		}
+	}
+	switch {
+	case n > 0:
+		avg = sum / float64(n)
+	case nAll > 0:
+		avg = all / float64(nAll)
+	default:
+		avg = averageMonthlyKm(anchors, now)
+	}
+	if avg <= 0 {
+		return km, 0, false
+	}
+	for i := range km {
+		if observed[i] {
+			km[i] = profile[i]
+		} else {
+			km[i] = avg
+		}
+	}
+	return km, avg, true
+}
+
+// ForecastTireReplacement spreads the remaining distance of a tire over the months it is on the car, at the mileage
+// the vehicle drives in each of those calendar months. Returns nil when the vehicle has no usable mileage history.
+func ForecastTireReplacement(in TireForecastInput) *TireForecast {
 	months, source := defaultTireMonths(in.Season), TireForecastMonthsDefault
 	if in.Season != models.TireSeasonAllSeason {
 		if learned, ok := learnTireMonths(in.SeasonSessions); ok {
 			months, source = learned, TireForecastMonthsLearned
 		}
+	}
+	perMonth, monthly, ok := monthlyKmWhileMounted(in.Anchors, in.Now, months)
+	if !ok {
+		return nil
 	}
 	f := &TireForecast{MonthlyKm: monthly, MonthsSource: source}
 	for i, on := range months {
@@ -127,14 +199,14 @@ func ForecastTireReplacement(in TireForecastInput) *TireForecast {
 		f.ReplacementDate = in.Now.Format("2006-01-02")
 		return f
 	}
-	perDay := monthly * 12 / 365
 	day := time.Date(in.Now.Year(), in.Now.Month(), in.Now.Day(), 0, 0, 0, 0, time.UTC)
 	limit := day.AddDate(tireForecastHorizonYears, 0, 0)
 	for ; day.Before(limit); day = day.AddDate(0, 0, 1) {
 		if !months[day.Month()-1] {
 			continue
 		}
-		remaining -= perDay
+		daysInMonth := time.Date(day.Year(), day.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
+		remaining -= perMonth[day.Month()-1] / float64(daysInMonth)
 		if remaining <= 0 {
 			f.ReplacementDate = day.Format("2006-01-02")
 			return f
