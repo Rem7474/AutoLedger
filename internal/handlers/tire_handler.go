@@ -92,6 +92,9 @@ func (h *TireHandler) attachForecasts(ctx context.Context, vehicleID string, sta
 			KeptAllYear:    services.KeptOnAllYear(stats[i].Tire.Season, present),
 			Anchors:        anchors,
 		})
+		if f := stats[i].ReplacementForecast; f != nil {
+			f.WearBasis = stats[i].WearRateSource
+		}
 	}
 }
 

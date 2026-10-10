@@ -30,6 +30,8 @@ type TireForecast struct {
 	MountedMonths []int `json:"mounted_months"`
 	// MonthsSource tells whether MountedMonths was learned from history or is the default for the season.
 	MonthsSource string `json:"months_source"`
+	// WearBasis tells where the wear rate behind RemainingKm comes from: "measured" (depth logs) or "default" (average EV wear).
+	WearBasis string `json:"wear_basis,omitempty"`
 }
 
 // TireForecastInput is everything the projection needs; it holds no database access so it stays unit-testable.

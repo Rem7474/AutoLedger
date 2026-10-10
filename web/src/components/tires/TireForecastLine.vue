@@ -17,11 +17,13 @@ const tooltip = computed(() => {
     .map((m) => new Date(2024, m - 1, 1).toLocaleDateString(intlLocale(), { month: 'short' }))
     .join(', ')
   const key = { learned: 'tooltipLearned', all_year: 'tooltipAllYear' }[f.months_source as string] ?? 'tooltipDefault'
-  return translate(`tires.forecast.${key}`, {
+  const base = translate(`tires.forecast.${key}`, {
     km: formatDistanceValue(Math.round(f.monthly_km)),
     unit: distanceUnit(),
     months,
   })
+  const basis = translate(f.wear_basis === 'measured' ? 'tires.forecast.basisMeasured' : 'tires.forecast.basisDefault')
+  return `${base} ${basis} ${translate('tires.forecast.rotation')}`
 })
 </script>
 

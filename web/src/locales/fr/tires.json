@@ -303,7 +303,7 @@
   },
   "tireWheelCard": {
     "noTireFittedAtThe": "Aucun pneu monté à l'{label} ({pos})",
-    "estimatedLifespanWearKm": "Usure durée de vie estimée ({estimated_lifespan_km} {unit})",
+    "estimatedLifespanWearKm": "Distance parcourue / durée de vie estimée ({estimated_lifespan_km} {unit})",
     "costKm": "Coût / {unit}",
     "totalDriven": "Total parcouru",
     "removeFromSelection": "Retirer de la sélection",
@@ -356,6 +356,14 @@
     "dueNow": "À remplacer maintenant",
     "tooltipLearned": "D'après environ {km} {unit} par mois et les mois où les pneus de cette saison ont déjà été montés ({months}).",
     "tooltipDefault": "D'après environ {km} {unit} par mois, avec des pneus montés aux mois habituels ({months}).",
-    "tooltipAllYear": "D'après environ {km} {unit} par mois, sans autre train de pneus pour alterner : les pneus restent montés toute l'année."
+    "tooltipAllYear": "D'après environ {km} {unit} par mois, sans autre train de pneus pour alterner : les pneus restent montés toute l'année.",
+    "basisMeasured": "Taux d'usure issu de vos mesures de profondeur.",
+    "basisDefault": "Pas encore de mesure exploitable : l'usure moyenne d'un véhicule électrique (1,2 mm par 10 000 km) est utilisée.",
+    "rotation": "Les pneus sont supposés permutés tous les 10 000 km."
+  },
+  "measuredWear": {
+    "label": "Usure mesurée",
+    "value": "Sculpture {depth} mm · {pct} d'usure",
+    "none": "Aucune mesure : ajoutez une profondeur pour remplacer l'estimation théorique."
   }
 }

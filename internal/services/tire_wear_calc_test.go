@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/teslacost/teslacost/internal/database"
@@ -251,10 +252,10 @@ func TestCalculateTireWearDrivingStyles(t *testing.T) {
 		style                   string
 		stress                  float64
 	}{
-		{"gentle front", models.TirePosFR, 45, -20, 13.5, "ECO", 0.86},
-		{"balanced any axle", models.TirePosStorage, 80, -35, 16, "BALANCED", 1},
-		{"aggressive rear", models.TirePosRL, 200, -90, 22, "SPORT", 1.43},
-		{"no power data front", models.TirePosFL, 0, 0, 0, "ECO", 0.92},
+		{"gentle front", models.TirePosFR, 20, -10, 12, "ECO", 0},
+		{"balanced any axle", models.TirePosStorage, 80, -35, 16, "BALANCED", 1.03},
+		{"aggressive rear", models.TirePosRL, 200, -90, 22, "SPORT", 0},
+		{"no power data front", models.TirePosFL, 0, 0, 0, "BALANCED", 1.03},
 	} {
 		tire := wearTire(tc.pos)
 		tire.MountedOdometer = &odo
@@ -275,5 +276,75 @@ func TestCalculateTireWearDrivingStyles(t *testing.T) {
 		if got.WearExplanation == nil || got.DrivesCount != 5 {
 			t.Errorf("%s: expected an explanation for %d drives", tc.name, got.DrivesCount)
 		}
+	}
+}
+
+// The same driving gives the same index on every axle: a rotated set wears evenly.
+func TestCalculateTireWearStressIgnoresTheCurrentPosition(t *testing.T) {
+	var idx []float64
+	for _, pos := range []models.TirePosition{models.TirePosFL, models.TirePosRR, models.TirePosStorage} {
+		odo := 0.0
+		tire := wearTire(pos)
+		tire.MountedOdometer = &odo
+		store := &fakeTireWearStore{powerMax: 120, powerMin: -60, consumption: 18, drives: 5, sessions: []models.TireMountSession{{MountedOdometer: 0, Position: pos}}}
+		got, err := NewTireWearService(store).CalculateTireWear(context.Background(), tire, 1000)
+		if err != nil {
+			t.Fatal(err)
+		}
+		idx = append(idx, got.DrivingStressIndex)
+	}
+	if idx[0] != idx[1] || idx[1] != idx[2] {
+		t.Fatalf("stress index depends on the position: %v", idx)
+	}
+}
+
+func TestPastAxleWeight(t *testing.T) {
+	odo := func(v float64) *float64 { return &v }
+	sessions := []models.TireMountSession{
+		{MountedOdometer: 0, DismountedOdometer: odo(10000), Position: models.TirePosFL},
+		{MountedOdometer: 10000, Position: models.TirePosRL},
+	}
+	// 10 000 km on the front axle, then 10 000 km on the rear axle.
+	if got, want := pastAxleWeight(sessions, 0, 20000, models.TirePosRL), (frontAxleWeight+rearAxleWeight)/2; math.Abs(got-want) > 1e-9 {
+		t.Errorf("mixed history: got %v want %v", got, want)
+	}
+	// Only the window between two readings counts.
+	if got := pastAxleWeight(sessions, 12000, 20000, models.TirePosRL); got != rearAxleWeight {
+		t.Errorf("window on the rear axle: got %v", got)
+	}
+	// No session in the window: the current position stands in.
+	if got := pastAxleWeight(nil, 0, 20000, models.TirePosFR); got != frontAxleWeight {
+		t.Errorf("no session: got %v", got)
+	}
+}
+
+// A measured rate keeps its history: a tire that wore on the rear axle and is now at the front projects the
+// measured rate scaled by the rotated weight over the rear weight, whatever its position today.
+func TestCalculateTireWearMeasuredRateIsNormalisedByPastAxles(t *testing.T) {
+	run := func(pos models.TirePosition, past models.TirePosition) float64 {
+		odo := 0.0
+		tire := wearTire(pos)
+		tire.MountedOdometer = &odo
+		store := &fakeTireWearStore{
+			logs:     []models.TireLog{{DepthMm: 6.8, Odometer: 10000}, {DepthMm: 8, Odometer: 0}},
+			powerMax: 80, powerMin: -35, consumption: 16, drives: 5,
+			sessions: []models.TireMountSession{{MountedOdometer: 0, Position: past}},
+		}
+		got, err := NewTireWearService(store).CalculateTireWear(context.Background(), tire, 10000)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.WearRateSource != "measured" {
+			t.Fatalf("wear source %q", got.WearRateSource)
+		}
+		return got.DynamicRemainingKm
+	}
+	rear, front := run(models.TirePosRL, models.TirePosRL), run(models.TirePosFL, models.TirePosFL)
+	// Same measured wear: the rear history is more severe, so the rear tire gains more by rotating than the front one loses.
+	if rear <= front {
+		t.Fatalf("rear-worn tire should project longer once rotated: rear %v front %v", rear, front)
+	}
+	if run(models.TirePosFL, models.TirePosRL) != rear {
+		t.Fatal("projection must follow the past axles, not the current position")
 	}
 }

@@ -121,7 +121,7 @@ Les captures anglaises se trouvent à côté des françaises (`*.en.png`) ; `scr
 ### 🛞 Gestion du cycle de vie des pneus
 - **Suivi par essieu** : montez, permutez et démontez les pneus entre les positions (`FL`, `FR`, `RL`, `RR`, `STORAGE`, `DISPOSED`) avec un journal chronologique des sessions.
 - **Usure et projections de kilométrage** : historique des mesures de profondeur de sculpture et projection automatique du kilométrage sûr restant (les périodes de stockage sont exclues automatiquement).
-- **Prévision de remplacement** : mois de remplacement estimé de chaque pneu, d'après le kilométrage mensuel moyen du véhicule et les mois où sa saison est montée (les trains hiver et été ne roulent pas toute l'année).
+- **Prévision de remplacement** : mois de remplacement estimé de chaque pneu, d'après le kilométrage mensuel moyen du véhicule et les mois où sa saison est montée (les trains hiver et été ne roulent pas toute l'année), avec l'usure mesurée sur les profondeurs de sculpture et une permutation supposée tous les 10 000 km.
 - **Caractéristiques universelles** : marque, modèle, dimension ISO, indices de charge et de vitesse, saison (été, hiver, 4 saisons), code DOT de fabrication et prix d'achat.
 
 ### 👥 Module de covoiturage équitable

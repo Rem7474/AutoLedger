@@ -6,6 +6,7 @@ import { formatDate, getSeasonIcon, lastUsedDay, WEAR_TONE_TEXT, wearTone } from
 import { formatPercent } from '@/utils/numbers'
 import TireWearBar from '@/components/tires/TireWearBar.vue'
 import TireForecastLine from '@/components/tires/TireForecastLine.vue'
+import TireMeasuredWear from '@/components/tires/TireMeasuredWear.vue'
 
 // A tire kept in the garage
 defineProps<{ t: any; selected: boolean }>()
@@ -58,6 +59,7 @@ const emit = defineEmits<{ open: [stat: any]; toggle: [tireId: string] }>()
     </div>
 
     <TireWearBar :pct="t.life_progress_pct" :condition="t.condition" />
+    <TireMeasuredWear :stat="t" />
     <TireForecastLine :forecast="t.replacement_forecast" />
   </div>
 </template>
