@@ -51,13 +51,40 @@ type rawFile struct {
 	OpenTollPrice   map[string]rawPrice           `json:"open_toll_price"`
 }
 
-// extraGates lists gates missing from OpenTollData: a closed-network station sometimes has an
-// entry gantry apart from its exit barrier, and the dataset only holds the barrier. Each gate
-// carries the name of the station it belongs to, which is what the networks and prices key on.
-var extraGates = []Station{
-	// Chambéry Nord entry onto the A41, free-flow (crossed at full speed); the dataset position of
-	// the station is its exit barrier, ~1km away.
-	{Name: "CHAMBERY NORD", Operator: "AREA", Type: "close", Lat: 45.61067578, Lon: 5.89419719, FreeFlow: true},
+type rawExtraGates struct {
+	Gates []struct {
+		Station  string  `json:"station"`
+		Lat      float64 `json:"lat"`
+		Lon      float64 `json:"lon"`
+		FreeFlow bool    `json:"free_flow"`
+	} `json:"gates"`
+}
+
+// loadExtraGates returns the gates of extra_gates.json, each taking the operator and type of the
+// dataset station it belongs to (same name, hence same network and prices).
+func loadExtraGates(stations []Station) ([]Station, error) {
+	raw, err := FS.ReadFile("data/extra_gates.json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read embedded extra toll gates: %w", err)
+	}
+	var f rawExtraGates
+	if err := json.Unmarshal(raw, &f); err != nil {
+		return nil, fmt.Errorf("failed to parse embedded extra toll gates: %w", err)
+	}
+
+	byName := make(map[string]Station, len(stations))
+	for _, st := range stations {
+		byName[st.Name] = st
+	}
+	gates := make([]Station, 0, len(f.Gates))
+	for _, g := range f.Gates {
+		base, ok := byName[g.Station]
+		if !ok {
+			return nil, fmt.Errorf("extra toll gate refers to unknown station %q", g.Station)
+		}
+		gates = append(gates, Station{Name: base.Name, Operator: base.Operator, Type: base.Type, Lat: g.Lat, Lon: g.Lon, FreeFlow: g.FreeFlow})
+	}
+	return gates, nil
 }
 
 // Load parses the embedded OpenTollData snapshot into an in-memory Dataset.
@@ -89,7 +116,11 @@ func Load() (*Dataset, error) {
 		ds.Stations = append(ds.Stations, Station{Name: name, Operator: td.Operator, Type: td.Type, Lat: lat, Lon: lon})
 	}
 
-	ds.Stations = append(ds.Stations, extraGates...)
+	gates, err := loadExtraGates(ds.Stations)
+	if err != nil {
+		return nil, err
+	}
+	ds.Stations = append(ds.Stations, gates...)
 
 	for _, net := range f.Networks {
 		for _, toll := range net.Tolls {

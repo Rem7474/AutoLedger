@@ -551,3 +551,16 @@ func TestLoad_ChamberyNordHasAnEntryGateBesideItsBarrier(t *testing.T) {
 		t.Error("the entry gate shares the network of the station it belongs to")
 	}
 }
+
+func TestLoadExtraGates_InheritTheirStationAndRejectUnknownOnes(t *testing.T) {
+	gates, err := loadExtraGates([]Station{{Name: "CHAMBERY NORD", Operator: "AREA", Type: "close"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gates) != 1 || gates[0].Operator != "AREA" || gates[0].Type != "close" || !gates[0].FreeFlow {
+		t.Fatalf("expected the gate to inherit its station's operator and type, got %+v", gates)
+	}
+	if _, err := loadExtraGates(nil); err == nil {
+		t.Fatal("expected an error for a gate whose station is not in the dataset")
+	}
+}
