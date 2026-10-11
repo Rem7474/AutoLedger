@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -42,6 +44,39 @@ func (h *EnergyHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.service.Compute(r.Context(), vehicleID)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to compute energy statistics")
+		return
+	}
+	writeJSON(w, http.StatusOK, stats)
+}
+
+// GetPlaceStats returns the charging of the vehicle by month and by place (months=0 for the whole history).
+func (h *EnergyHandler) GetPlaceStats(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	vehicleID := chi.URLParam(r, "vehicleId")
+
+	vehicle, err := h.repo.GetVehicleByID(r.Context(), vehicleID, userID)
+	if err != nil {
+		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))
+		return
+	}
+
+	months := 12
+	if raw := r.URL.Query().Get("months"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 0 || n > 240 {
+			writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_months", "months must be between 0 and 240"))
+			return
+		}
+		months = n
+	}
+
+	if !vehicle.CanCharge() {
+		writeJSON(w, http.StatusOK, services.EmptyPlaceStats(months))
+		return
+	}
+	stats, err := h.service.PlaceStats(r.Context(), vehicleID, vehicle.UserID, months, time.Now())
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to compute charging statistics")
 		return
 	}
 	writeJSON(w, http.StatusOK, stats)

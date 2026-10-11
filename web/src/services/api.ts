@@ -361,6 +361,7 @@ export const api = {
     request<any>(`/vehicles/${vehicleId}/charges/${chargeId}`, { method: 'PUT', body: JSON.stringify(data) }, t('shell.api.chargeCost')),
   deleteCharge: (vehicleId: string, chargeId: string) =>
     request<any>(`/vehicles/${vehicleId}/charges/${chargeId}`, { method: 'DELETE' }),
+  getChargingPlaceStats: (vehicleId: string, months: number) => request<any>(`/vehicles/${vehicleId}/charging-place-stats?months=${months}`),
   getChargingPlaces: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/charging-places`),
   createChargingPlace: (vehicleId: string, data: { name: string; category: string }) =>
     request<any>(`/vehicles/${vehicleId}/charging-places`, { method: 'POST', body: JSON.stringify(data) }),
