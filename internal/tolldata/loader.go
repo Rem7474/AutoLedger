@@ -16,6 +16,7 @@ type Station struct {
 	Type     string // "open" or "close"
 	Lat      float64
 	Lon      float64
+	FreeFlow bool // closed-network station crossed at full speed, so never filtered as a drive-by
 }
 
 // Dataset is the in-memory, ready-to-query form of the vendored OpenTollData snapshot.
@@ -50,6 +51,15 @@ type rawFile struct {
 	OpenTollPrice   map[string]rawPrice           `json:"open_toll_price"`
 }
 
+// extraGates lists gates missing from OpenTollData: a closed-network station sometimes has an
+// entry gantry apart from its exit barrier, and the dataset only holds the barrier. Each gate
+// carries the name of the station it belongs to, which is what the networks and prices key on.
+var extraGates = []Station{
+	// Chambéry Nord entry onto the A41, free-flow (crossed at full speed); the dataset position of
+	// the station is its exit barrier, ~1km away.
+	{Name: "CHAMBERY NORD", Operator: "AREA", Type: "close", Lat: 45.61067578, Lon: 5.89419719, FreeFlow: true},
+}
+
 // Load parses the embedded OpenTollData snapshot into an in-memory Dataset.
 func Load() (*Dataset, error) {
 	raw, err := FS.ReadFile("data/opentolldata_network.json")
@@ -76,14 +86,10 @@ func Load() (*Dataset, error) {
 			log.Printf("[tolldata] skipping station %q: invalid coordinates (lat=%q lon=%q)", name, td.Lat, td.Lon)
 			continue
 		}
-		ds.Stations = append(ds.Stations, Station{
-			Name:     name,
-			Operator: td.Operator,
-			Type:     td.Type,
-			Lat:      lat,
-			Lon:      lon,
-		})
+		ds.Stations = append(ds.Stations, Station{Name: name, Operator: td.Operator, Type: td.Type, Lat: lat, Lon: lon})
 	}
+
+	ds.Stations = append(ds.Stations, extraGates...)
 
 	for _, net := range f.Networks {
 		for _, toll := range net.Tolls {
