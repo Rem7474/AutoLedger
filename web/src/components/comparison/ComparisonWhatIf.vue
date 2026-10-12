@@ -15,6 +15,7 @@ import {
   whatIfForm,
   whatIfPayload,
   type WhatIfInputs,
+  type WhatIfInputLimits,
   type WhatIfKey,
 } from '@/utils/comparisonWhatIf'
 import { RotateCcw, SlidersHorizontal } from 'lucide-vue-next'
@@ -27,14 +28,15 @@ const emit = defineEmits<{ 'save-as-new': [form: ComparisonForm] }>()
 const DEBOUNCE_MS = 250
 
 const base = computed(() => whatIfBase(props.scenario))
-const bounds = computed(() => whatIfBounds(base.value))
+const limits = computed<WhatIfInputLimits>(() => props.result.input_limits)
+const bounds = computed(() => whatIfBounds(base.value, limits.value))
 const explored = reactive<WhatIfInputs>({ ...base.value })
 const preview = ref<any | null>(null)
 const loading = ref(false)
 const failed = ref(false)
 
 const dirty = computed(() => isWhatIfDirty(base.value, explored))
-const valid = computed(() => isWhatIfValid(explored))
+const valid = computed(() => isWhatIfValid(explored, limits.value))
 const originalFigures = computed(() => whatIfFigures(props.result))
 const exploredFigures = computed(() => whatIfFigures(preview.value))
 
@@ -126,7 +128,7 @@ const rows = computed(() => {
 </script>
 
 <template>
-  <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 no-print" data-testid="what-if">
+  <section v-if="limits" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 no-print" data-testid="what-if">
     <div class="flex items-center justify-between gap-3 mb-3">
       <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-1.5">
         <SlidersHorizontal class="w-4 h-4 text-slate-400" /> {{ $t('comparison.whatIf.title') }}

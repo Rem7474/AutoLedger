@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { isWhatIfDirty, isWhatIfValid, whatIfBase, whatIfBounds, whatIfFigures, whatIfForm, whatIfPayload } from './comparisonWhatIf'
 
+const limits = { annual_km_max: 200_000, fuel_price_max: 999_999_999.999, electricity_price_max: 999_999.999999 }
+
 const scenario = {
   name: 'Vs SUV',
   mode: 'PROJECTION',
@@ -13,13 +15,13 @@ const scenario = {
 
 describe('whatIfBounds', () => {
   it('spans half to twice the saved value and keeps that value on the track', () => {
-    const b = whatIfBounds(whatIfBase(scenario))
+    const b = whatIfBounds(whatIfBase(scenario), limits)
     expect(b.annual_km).toEqual({ min: 6000, max: 24000, step: 500 })
     expect(b.fuel_price).toEqual({ min: 0.87, max: 3.5, step: 0.01 })
     expect(b.eur_per_kwh).toEqual({ min: 0.1, max: 0.4, step: 0.01 })
   })
   it('never leaves the limits of the API', () => {
-    const b = whatIfBounds({ annual_km: 150_000, fuel_price: 8, eur_per_kwh: 0 })
+    const b = whatIfBounds({ annual_km: 150_000, fuel_price: 8, eur_per_kwh: 0 }, limits)
     expect(b.annual_km.max).toBe(200_000)
     expect(b.fuel_price.max).toBe(16)
     expect(b.eur_per_kwh.min).toBe(0)
@@ -38,10 +40,10 @@ describe('what-if inputs', () => {
     expect(isWhatIfDirty(base, { ...base, fuel_price: 1.9 })).toBe(true)
   })
   it('only accepts values the API accepts', () => {
-    expect(isWhatIfValid({ annual_km: 12000, fuel_price: 0, eur_per_kwh: 0 })).toBe(true)
-    expect(isWhatIfValid({ annual_km: 0, fuel_price: 1, eur_per_kwh: 0.2 })).toBe(false)
-    expect(isWhatIfValid({ annual_km: 1000, fuel_price: 1_000_000_000, eur_per_kwh: 0.2 })).toBe(false)
-    expect(isWhatIfValid({ annual_km: 1000, fuel_price: 1, eur_per_kwh: Number.NaN })).toBe(false)
+    expect(isWhatIfValid({ annual_km: 12000, fuel_price: 0, eur_per_kwh: 0 }, limits)).toBe(true)
+    expect(isWhatIfValid({ annual_km: 0, fuel_price: 1, eur_per_kwh: 0.2 }, limits)).toBe(false)
+    expect(isWhatIfValid({ annual_km: 1000, fuel_price: 1_000_000_000, eur_per_kwh: 0.2 }, limits)).toBe(false)
+    expect(isWhatIfValid({ annual_km: 1000, fuel_price: 1, eur_per_kwh: Number.NaN }, limits)).toBe(false)
   })
 })
 
@@ -83,8 +85,19 @@ describe('whatIfFigures', () => {
 })
 
  it('accepts local currency prices and keeps slider endpoints within storage bounds',()=>{
-  expect(isWhatIfValid({annual_km:12000,fuel_price:1400,eur_per_kwh:100})).toBe(true)
-  const b=whatIfBounds({annual_km:12000,fuel_price:999_999_999.999,eur_per_kwh:999_999.999999})
+  expect(isWhatIfValid({annual_km:12000,fuel_price:1400,eur_per_kwh:100}, limits)).toBe(true)
+  const b=whatIfBounds({annual_km:12000,fuel_price:999_999_999.999,eur_per_kwh:999_999.999999}, limits)
   expect(b.fuel_price.max).toBeLessThanOrEqual(999_999_999.999)
   expect(b.eur_per_kwh.max).toBeLessThanOrEqual(999_999.999999)
+ })
+
+ it('uses changed API ceilings without a frontend release and refuses absent limits', () => {
+   const lowerLimits = { annual_km_max: 10000, fuel_price_max: 3, electricity_price_max: 1 }
+   const inputs = { annual_km: 12000, fuel_price: 8, eur_per_kwh: 2 }
+   const bounds = whatIfBounds(inputs, lowerLimits)
+   expect(bounds.annual_km.max).toBeLessThanOrEqual(10000)
+   expect(bounds.fuel_price.min).toBeLessThanOrEqual(bounds.fuel_price.max)
+   expect(bounds.fuel_price.max).toBeLessThanOrEqual(3)
+   expect(isWhatIfValid(inputs, lowerLimits)).toBe(false)
+   expect(isWhatIfValid(inputs, undefined)).toBe(false)
  })

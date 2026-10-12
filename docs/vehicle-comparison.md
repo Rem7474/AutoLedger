@@ -28,3 +28,5 @@ The explored inputs are sent to the same calculation as a saved scenario and are
 ## Free and unknown charging costs
 
 Enter an explicit cost of **0** for a free charge, regardless of why it is free. Zero is a known cost; an absent cost remains unknown. Recorded free charges count as charging records in tracked hybrid comparisons and do not trigger the missing-energy-source warning. Charges with an unknown cost receive a separate reminder to enter their actual cost, or zero if they were free.
+
+The What if fields and slider bounds use the input limits returned by the comparison API.
