@@ -6,6 +6,9 @@ import {
   countFollowUpItems,
   computeMonthFixedVariable,
   currentMonthStats,
+  rollingWindowStats,
+  monthlyCostSeries,
+  plottedCostPerKm,
   filterMonthsByRange,
   formatMonthName,
   nextDueReminder,
@@ -56,6 +59,13 @@ describe('currentMonthStats', () => {
     expect(s.prevDistance).toBe(800)
     expect(s.total).toBe(400)
     expect(s.raw).toBe(list[1])
+  })
+
+  it('separates the instalments still due from what was spent so far', () => {
+    const s = currentMonthStats([{ month: '2026-05', distance_km: 100, total: 700, scheduled: 450 }], new Date('2026-05-15T10:00:00Z'))!
+    expect(s.scheduled).toBe(450)
+    expect(s.total - s.scheduled).toBe(250)
+    expect(currentMonthStats(list, new Date('2026-05-15T10:00:00Z'))!.scheduled).toBe(0)
   })
 
   it('falls back to the latest month when the current one has no row', () => {
@@ -378,5 +388,102 @@ describe('countFollowUpItems', () => {
   })
   it('ignores a missing completeness block', () => {
     expect(countFollowUpItems(null, [soon], true)).toBe(1)
+  })
+})
+
+describe('currentMonthStats with the month named by the server', () => {
+  const list = [
+    { month: '2026-09', distance_km: 300, total: 100 },
+    { month: '2026-10', distance_km: 50, total: 20 },
+  ]
+
+  it('prefers the reporting-timezone month to the clock of the browser', () => {
+    // 23:30 UTC on 30 September is already October in a timezone ahead of UTC.
+    const s = currentMonthStats(list, new Date('2026-09-30T23:30:00Z'), '2026-10')!
+    expect(s.month).toBe('2026-10')
+    expect(s.prevDistance).toBe(300)
+  })
+
+  it('falls back to the clock when the server did not name it', () => {
+    expect(currentMonthStats(list, new Date('2026-09-30T23:30:00Z'))!.month).toBe('2026-09')
+  })
+})
+
+describe('rollingWindowStats', () => {
+  const month = (m: string, total: number, extra: Record<string, number> = {}) => ({
+    month: m,
+    distance_km: 1000,
+    total,
+    energy: total,
+    ...extra,
+  })
+
+  it('sums the last twelve months and reconciles with the bars over the same window', () => {
+    const list = Array.from({ length: 15 }, (_, i) => month(`2026-${String(i + 1).padStart(2, '0')}`, 100 + i))
+    const w = rollingWindowStats(list)!
+    expect(w.months).toBe(12)
+    expect(w.fromMonth).toBe('2026-04')
+    expect(w.toMonth).toBe('2026-15')
+    const bars = list.slice(-12).reduce((sum, m) => sum + m.total, 0)
+    expect(w.cash).toBe(bars)
+    expect(w.distanceKm).toBe(12000)
+  })
+
+  it('reads the real window when the history is shorter', () => {
+    const w = rollingWindowStats([month('2026-08', 200), month('2026-09', 300)])!
+    expect(w.months).toBe(2)
+    expect(w.cash).toBe(500)
+  })
+
+  it('uses the spread cost for the economic figure and the estimate for the named part', () => {
+    const w = rollingWindowStats([
+      { month: '2026-09', distance_km: 500, total: 1200, tires: 800, tires_amortized: 100, energy: 400, smoothed_energy: 150 },
+    ])!
+    expect(w.cash).toBe(1200)
+    expect(w.economic).toBe(500)
+    expect(w.estimatedEnergy).toBe(150)
+    expect(w.economicPerKm).toBe(1)
+  })
+
+  it('leaves the cost per distance unknown without distance or without cost', () => {
+    expect(rollingWindowStats([{ month: '2026-09', distance_km: 0, total: 100, energy: 100 }])!.economicPerKm).toBeNull()
+    expect(rollingWindowStats([{ month: '2026-09', distance_km: 100, total: 0 }])!.economicPerKm).toBeNull()
+    expect(rollingWindowStats([])).toBeNull()
+    expect(rollingWindowStats(undefined)).toBeNull()
+  })
+})
+
+describe('plottedCostPerKm', () => {
+  it('does not plot a month under 50 km', () => {
+    expect(plottedCostPerKm({ distance_km: 25, cost_per_km: 0.81 })).toBeNull()
+    expect(plottedCostPerKm({ distance_km: 50, cost_per_km: 0.2 })).toBe(0.2)
+  })
+
+  it('leaves an unknown cost as a gap', () => {
+    expect(plottedCostPerKm({ distance_km: 400, cost_per_km: null })).toBeNull()
+    expect(plottedCostPerKm({ distance_km: undefined, cost_per_km: 0.3 })).toBeNull()
+  })
+})
+
+describe('monthlyCostSeries', () => {
+  const months = [
+    { month: '2026-08', distance_km: 500, total: 1200, tires: 800, tires_amortized: 100, energy: 400 },
+    { month: '2026-09', distance_km: 300, total: 90, energy: 90 },
+  ]
+
+  it('stacks the spread cost in the economic view', () => {
+    const { series, totals } = monthlyCostSeries(months, 'economic')
+    expect(series.find((s) => s.key === 'tires')!.data).toEqual([100, 0])
+    expect(totals).toEqual([500, 90])
+  })
+
+  it('stacks what was paid in the cash view', () => {
+    const { series, totals } = monthlyCostSeries(months, 'cash')
+    expect(series.find((s) => s.key === 'tires')!.data).toEqual([800, 0])
+    expect(totals).toEqual([1200, 90])
+  })
+
+  it('is empty without months', () => {
+    expect(monthlyCostSeries([], 'cash')).toEqual({ series: [], totals: [] })
   })
 })

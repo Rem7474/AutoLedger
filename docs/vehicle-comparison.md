@@ -16,6 +16,7 @@ Results show energy costs, maintenance, insurance, depreciation, total cost, cos
 - Costs represent purchases in the ledger, not energy measured while driving. Changes in fuel remaining in the tank or battery charge can bias a short history.
 - Both sides use the same annual distance. With less than three months of history, annual distance defaults to 12,000 km; edit it to suit your use.
 - Insurance: a current recurring premium is annualized by its billing interval (100 per month, 300 per quarter and 1,200 every twelve months all give 1,200 per year); a one-off premium with a coverage period is annualized over that period. Payments with neither use their trailing twelve-month total, with an assumption shown in the result. Future and expired policies are excluded, so set an end date on a replaced recurring policy. Both sides use the same insurance inflation, and annual mileage never changes an insurance total.
+- The tracked side is labelled "projected from your recorded costs": it extrapolates what you entered, it is not a measured total. The result states under the verdict, on screen, in print and in the CSV export, what is not compared: tolls, parking, financing, subscriptions and other costs.
 - Financing, loans and leases are excluded. Depreciation follows the existing purchase/resale calculation; break-even compares purchase plus running outlays without deducting resale.
 - **Projection** remains a manually entered electric-versus-combustion scenario. A tracked hybrid comparison needs recorded hybrid data.
 
@@ -27,4 +28,4 @@ The explored inputs are sent to the same calculation as a saved scenario and are
 
 ## Free and unknown charging costs
 
-Enter an explicit cost of **0** for a free charge, regardless of why it is free. Zero is a known cost; an absent cost remains unknown. Recorded free charges count as charging records in tracked hybrid comparisons and do not trigger the missing-energy-source warning. Charges with an unknown cost receive a separate reminder to enter their actual cost, or zero if they were free.
+Enter an explicit cost of **0** for a free charge, regardless of why it is free. Zero is a known cost; an absent cost remains unknown. In a manual projection, enter an electricity price of 0 for free energy; an empty price is not zero. Recorded free charges count as charging records in tracked hybrid comparisons and do not trigger the missing-energy-source warning. Charges with an unknown cost receive a separate reminder to enter their actual cost, or zero if they were free.
