@@ -67,3 +67,28 @@ func TestIntegrationCarpoolComponentsStopAtTripDate(t *testing.T) {
 		t.Fatalf("future entries moved historical rates: before=%+v after=%+v", before, after)
 	}
 }
+
+// A trip just after midnight still counts the entries dated that day, and none dated the next one.
+func TestIntegrationCarpoolDateBoundsUseTheTripDay(t *testing.T) {
+	db, repo := setupIntegrationDB(t, false)
+	ctx := context.Background()
+	v := mustVehicle(t, repo, "historical-day@example.com")
+	ref := time.Date(2026, 1, 10, 0, 30, 0, 0, time.UTC)
+	mustDrive(t, repo, v.ID, 1, ref.AddDate(0, 0, -3), 10000, 1000)
+	for _, e := range []struct {
+		day    time.Time
+		amount float64
+	}{{time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC), 100}, {time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC), 900}} {
+		expense := &models.MaintenanceExpense{VehicleID: v.ID, Category: "MAINTENANCE", Currency: "EUR", Date: e.day, Amount: money.FromFloat(e.amount)}
+		if err := repo.CreateMaintenanceExpense(ctx, expense); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rates, err := NewCarpoolService(db.Pool, repo).GetVehicleUnitRatesAt(ctx, v.ID, &ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rates.MaintenancePerKm != 0.1 {
+		t.Fatalf("maintenance rate should include the trip day only: %+v", rates)
+	}
+}

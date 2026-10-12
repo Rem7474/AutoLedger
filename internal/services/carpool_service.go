@@ -175,6 +175,9 @@ func (s *CarpoolService) GetVehicleUnitRatesAt(ctx context.Context, vehicleID st
 	if historical {
 		ref = *refTime
 	}
+	// Columns of type date (purchases, ledger entries) are bounded by the calendar day of the reference, in its own
+	// location, so that every date clause agrees; instants (drive starts, fittings) keep the time of day.
+	refDay := ref.Format("2006-01-02")
 
 	var totalDistance, lastYearDistance float64
 	if err := s.pool.QueryRow(ctx, `
@@ -267,8 +270,8 @@ func (s *CarpoolService) GetVehicleUnitRatesAt(ctx context.Context, vehicleID st
                   ))), 0),
 		       COALESCE(SUM(purchase_price), 0)
 		FROM tires
-		WHERE vehicle_id = $1 AND purchase_date <= ($2::timestamptz)::date;
-	`, vehicleID, ref, historical).Scan(&mountedTireRate, &totalTiresCost); err != nil {
+		WHERE vehicle_id = $1 AND purchase_date <= $4::date;
+	`, vehicleID, ref, historical, refDay).Scan(&mountedTireRate, &totalTiresCost); err != nil {
 		return nil, err
 	}
 	if mountedTireRate > 0 {
@@ -283,8 +286,8 @@ func (s *CarpoolService) GetVehicleUnitRatesAt(ctx context.Context, vehicleID st
 	var totalMaintCost money.Cents
 	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(amount_eur), 0) FROM cost_ledger
-		WHERE vehicle_id = $1 AND category IN ('MAINTENANCE', 'REPAIR') AND entry_date <= $2;
-	`, vehicleID, ref).Scan(&totalMaintCost); err != nil {
+		WHERE vehicle_id = $1 AND category IN ('MAINTENANCE', 'REPAIR') AND entry_date <= $2::date;
+	`, vehicleID, refDay).Scan(&totalMaintCost); err != nil {
 		return nil, err
 	}
 	if totalDistance > 500 && totalMaintCost > 0 {
