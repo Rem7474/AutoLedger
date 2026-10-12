@@ -178,6 +178,12 @@ describe('buildMonthBreakdown', () => {
     expect(eco.items.find((i) => i.key === 'tires')!.displayAmount).toBe(20)
   })
 
+  it('derives the cost per km from the month total when the API sent none but there is spending and distance', () => {
+    const noRate = { ...month, cost_per_km: null }
+    const b = buildMonthBreakdown(noRate, 'economic')
+    expect(b.costPerKm).toBeCloseTo(b.economicTotal / 1000, 6)
+  })
+
   it('keeps the cost per km unknown for a month with distance but no cost', () => {
     const noCost = { ...month, cost_per_km: null, energy: 0, smoothed_energy: 0, tolls: 0, tires: 0, tires_amortized: 0, maintenance_amortized: 0, insurance: 0, financing: 0, financing_amortized: 0, other: 0, total: 0 }
     expect(buildMonthBreakdown(noCost, 'economic').costPerKm).toBeNull()
