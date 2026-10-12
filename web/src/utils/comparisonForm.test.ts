@@ -136,7 +136,7 @@ describe('comparisonStepErrorKey', () => {
     expect(comparisonStepErrorKey(2, form, false)).toBe('comparison.errors.fuelPrice')
     form.ice.fuel_price = 1.7
     form.ice.purchase_price = 20000
-    form.tracked.eur_per_kwh = 0
+    form.tracked.eur_per_kwh = '' as any
     expect(comparisonStepErrorKey(2, form, false)).toBe('comparison.errors.electricityPrice')
     form.tracked.eur_per_kwh = 0.2
     expect(comparisonStepErrorKey(2, form, false)).toBe('comparison.errors.evPrice')
