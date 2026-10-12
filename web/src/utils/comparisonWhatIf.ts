@@ -29,7 +29,8 @@ export interface WhatIfInputLimits {
   electricity_price_max: number
 }
 
-function inputRanges(limits: WhatIfInputLimits) {
+// What the API accepts for each field: the limits of the text fields next to the sliders.
+export function whatIfRanges(limits: WhatIfInputLimits): Record<WhatIfKey, { min: number; max: number }> {
   return {
     annual_km: { min: 1, max: limits.annual_km_max },
     fuel_price: { min: 0, max: limits.fuel_price_max },
@@ -41,7 +42,7 @@ export function whatIfBounds(base: WhatIfInputs, limits: WhatIfInputLimits): Rec
   const out = {} as Record<WhatIfKey, WhatIfBound>
   for (const key of WHAT_IF_KEYS) {
     const step = STEPS[key]
-    const { min: floor, max: ceiling } = inputRanges(limits)[key]
+    const { min: floor, max: ceiling } = whatIfRanges(limits)[key]
     const value = Number(base[key]) || 0
     const ceilingOnStep = Math.floor(ceiling / step) * step
     // Round outwards to the step so that the saved value always sits on the track
@@ -72,7 +73,7 @@ export function isWhatIfDirty(base: WhatIfInputs, explored: WhatIfInputs): boole
 // The explored values are in range for the API; anything else is not sent.
 export function isWhatIfValid(explored: WhatIfInputs, limits: WhatIfInputLimits | undefined): boolean {
   if (!limits) return false
-  const ranges = inputRanges(limits)
+  const ranges = whatIfRanges(limits)
   return WHAT_IF_KEYS.every((k) => {
     const v = Number(explored[k])
     return Number.isFinite(v) && v >= ranges[k].min && v <= ranges[k].max

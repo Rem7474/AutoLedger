@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isWhatIfDirty, isWhatIfValid, whatIfBase, whatIfBounds, whatIfFigures, whatIfForm, whatIfPayload } from './comparisonWhatIf'
+import { isWhatIfDirty, isWhatIfValid, whatIfBase, whatIfBounds, whatIfFigures, whatIfForm, whatIfPayload, whatIfRanges } from './comparisonWhatIf'
 
 const limits = { annual_km_max: 200_000, fuel_price_max: 999_999_999.999, electricity_price_max: 999_999.999999 }
 
@@ -101,3 +101,20 @@ describe('whatIfFigures', () => {
    expect(isWhatIfValid(inputs, lowerLimits)).toBe(false)
    expect(isWhatIfValid(inputs, undefined)).toBe(false)
  })
+
+describe('whatIfRanges', () => {
+  it('gives the text fields the limits of the API, not a currency-sized guess', () => {
+    const r = whatIfRanges(limits)
+    expect(r.annual_km).toEqual({ min: 1, max: 200_000 })
+    expect(r.fuel_price.max).toBe(999_999_999.999)
+    expect(r.eur_per_kwh.max).toBe(999_999.999999)
+    // A local-currency price above the old hard-coded field limits stays valid
+    expect(isWhatIfValid({ annual_km: 12000, fuel_price: 1400, eur_per_kwh: 100 }, limits)).toBe(true)
+    expect(1400).toBeLessThanOrEqual(r.fuel_price.max)
+    expect(100).toBeLessThanOrEqual(r.eur_per_kwh.max)
+  })
+  it('follows changed API ceilings', () => {
+    const r = whatIfRanges({ annual_km_max: 10000, fuel_price_max: 3, electricity_price_max: 1 })
+    expect([r.annual_km.max, r.fuel_price.max, r.eur_per_kwh.max]).toEqual([10000, 3, 1])
+  })
+})

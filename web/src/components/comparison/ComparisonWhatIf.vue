@@ -11,6 +11,7 @@ import {
   isWhatIfValid,
   whatIfBase,
   whatIfBounds,
+  whatIfRanges,
   whatIfFigures,
   whatIfForm,
   whatIfPayload,
@@ -30,6 +31,7 @@ const DEBOUNCE_MS = 250
 const base = computed(() => whatIfBase(props.scenario))
 const limits = computed<WhatIfInputLimits>(() => props.result.input_limits)
 const bounds = computed(() => whatIfBounds(base.value, limits.value))
+const ranges = computed(() => whatIfRanges(limits.value))
 const explored = reactive<WhatIfInputs>({ ...base.value })
 const preview = ref<any | null>(null)
 const loading = ref(false)
@@ -152,9 +154,9 @@ const rows = computed(() => {
           :aria-label="f.label"
         />
         <div>
-          <DistanceInput v-if="f.key === 'annual_km'" :id="f.id" v-model="explored.annual_km" :digits="0" min="1" max="200000" class="field" />
-          <DistanceInput v-else-if="f.key === 'fuel_price'" :id="f.id" v-model="explored.fuel_price" kind="per-volume" :digits="3" min="0" max="10" class="field" />
-          <NumberInput v-else :id="f.id" v-model="explored.eur_per_kwh" min="0" max="5" class="field" />
+          <DistanceInput v-if="f.key === 'annual_km'" :id="f.id" v-model="explored.annual_km" :digits="0" :min="ranges.annual_km.min" :max="ranges.annual_km.max" class="field" />
+          <DistanceInput v-else-if="f.key === 'fuel_price'" :id="f.id" v-model="explored.fuel_price" kind="per-volume" :digits="3" :min="ranges.fuel_price.min" :max="ranges.fuel_price.max" class="field" />
+          <NumberInput v-else :id="f.id" v-model="explored.eur_per_kwh" :min="ranges.eur_per_kwh.min" :max="ranges.eur_per_kwh.max" class="field" />
           <div class="text-[11px] text-slate-500 mt-0.5">{{ $t('comparison.whatIf.original', { value: originalHint(f.key) }) }}</div>
         </div>
       </div>

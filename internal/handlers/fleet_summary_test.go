@@ -6,9 +6,11 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
+	"github.com/teslacost/teslacost/internal/money"
 	"github.com/teslacost/teslacost/internal/services"
 )
 
@@ -33,7 +35,7 @@ func TestFleetSummaryComputesEnergyCostPer100Km(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	summary, err := repo.GetFleetSummary(ctx, u.ID)
+	summary, err := repo.GetFleetSummary(ctx, u.ID, "UTC")
 	if err != nil {
 		t.Fatalf("GetFleetSummary failed: %v", err)
 	}
@@ -41,8 +43,12 @@ func TestFleetSummaryComputesEnergyCostPer100Km(t *testing.T) {
 		t.Fatalf("expected 1 vehicle, got %d", len(summary.Vehicles))
 	}
 	m := summary.Vehicles[0]
-	if m.EnergyCostPer100Km != 500 {
-		t.Errorf("energy cost per 100 km: got %v, want 500 (1000.00 spent over 200 km)", m.EnergyCostPer100Km)
+	fleet, err := services.NewFleetService(repo, services.NewTCOService(pool, "UTC")).GetSummary(ctx, u.ID)
+	if err != nil {
+		t.Fatalf("GetSummary failed: %v", err)
+	}
+	if got := fleet.Vehicles[0].EnergyCostPer100Km; got == nil || *got != 500 {
+		t.Errorf("energy cost per 100 km: got %v, want 500 (1000.00 spent over 200 km)", got)
 	}
 	if summary.CurrentMonthCost != 100000 || m.MonthCost != 100000 {
 		t.Errorf("month cost in cents: fleet %d, vehicle %d, want 100000", summary.CurrentMonthCost, m.MonthCost)
@@ -68,7 +74,7 @@ func TestFleetBudgetSetValidateAndClear(t *testing.T) {
 		return rec
 	}
 	budget := func() *int64 {
-		s, err := repo.GetFleetSummary(ctx, u.ID)
+		s, err := repo.GetFleetSummary(ctx, u.ID, "UTC")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -136,5 +142,94 @@ func TestFleetSummaryCarriesComparisonFigures(t *testing.T) {
 	}
 	if m.Powertrain != "EV" || m.AnnualCost != nil {
 		t.Errorf("powertrain %q, annual cost %v (one month of history gives none)", m.Powertrain, m.AnnualCost)
+	}
+}
+
+func TestFleetSummaryMonthsFollowTheReportingTimezone(t *testing.T) {
+	repo := authTestRepo(t)
+	ctx := context.Background()
+	paris, err := time.LoadLocation("Europe/Paris")
+	if err != nil {
+		t.Skip("timezone database unavailable")
+	}
+	now := time.Now().In(paris)
+	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, paris)
+	if now.Before(monthStart.Add(3 * time.Hour)) {
+		t.Skip("too close to the month boundary to tell the timezones apart")
+	}
+	u, err := repo.CreateUser(ctx, "fleet-tz@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
+	if err := repo.CreateVehicle(ctx, v); err != nil {
+		t.Fatal(err)
+	}
+	// Thirty minutes into the month in Paris, which is still the last day of the previous month in UTC.
+	start := monthStart.Add(30 * time.Minute)
+	if _, err := repo.Pool().Exec(ctx, `INSERT INTO drives (vehicle_id, start_time, end_time, distance_km, duration_min)
+		VALUES ($1, $2, $3, 10, 30)`, v.ID, start, start.Add(30*time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+
+	inParis, err := repo.GetFleetSummary(ctx, u.ID, "Europe/Paris")
+	if err != nil {
+		t.Fatal(err)
+	}
+	inUTC, err := repo.GetFleetSummary(ctx, u.ID, "UTC")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if inParis.CurrentMonth != now.Format("2006-01") {
+		t.Fatalf("current month = %q, want %q", inParis.CurrentMonth, now.Format("2006-01"))
+	}
+	last := func(s *models.FleetSummaryResponse) models.FleetMonthlyCost {
+		return s.MonthlyCosts[len(s.MonthlyCosts)-1]
+	}
+	if last(inParis).Month != inParis.CurrentMonth || last(inParis).DistanceKm != 10 {
+		t.Fatalf("in Paris the drive belongs to the current month: %+v", last(inParis))
+	}
+	if last(inUTC).DistanceKm != 0 {
+		t.Fatalf("in UTC the same drive belongs to the previous month: %+v", last(inUTC))
+	}
+}
+
+func TestFleetSummaryTotalsPerCurrency(t *testing.T) {
+	repo := authTestRepo(t)
+	ctx := context.Background()
+	u, err := repo.CreateUser(ctx, "fleet-currency@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	eur := &models.Vehicle{UserID: u.ID, Name: "EUR car", Currency: "EUR", TeslaMateAuthType: models.AuthModeNone}
+	chf := &models.Vehicle{UserID: u.ID, Name: "CHF car", Currency: "CHF", TeslaMateAuthType: models.AuthModeNone}
+	for _, v := range []*models.Vehicle{eur, chf} {
+		if err := repo.CreateVehicle(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for id, cost := range map[string]float64{eur.ID: 20, chf.ID: 900} {
+		if _, err := repo.Pool().Exec(ctx, `INSERT INTO charge_logs (vehicle_id, date, kwh_added, cost, cost_source, currency, is_manual)
+			VALUES ($1, now(), 40, $2, 'MANUAL', (SELECT currency FROM vehicles WHERE id = $1), TRUE)`, id, cost); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	summary, err := services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC")).GetSummary(ctx, u.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(summary.Totals) != 2 {
+		t.Fatalf("totals = %+v, want one per currency", summary.Totals)
+	}
+	byCurrency := map[string]money.Cents{}
+	for _, tot := range summary.Totals {
+		byCurrency[tot.Currency] = tot.CurrentMonthCost
+	}
+	if byCurrency["EUR"] != 2000 || byCurrency["CHF"] != 90000 {
+		t.Fatalf("totals by currency = %v", byCurrency)
+	}
+	if summary.CurrentMonthCost != byCurrency[summary.Currency] {
+		t.Fatalf("fleet month %d adds currencies: %s total is %d", summary.CurrentMonthCost, summary.Currency, byCurrency[summary.Currency])
 	}
 }
