@@ -72,18 +72,37 @@ func (h *ChargingPlaceHandler) List(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"places": places, "locations": locations})
 }
 
-func (h *ChargingPlaceHandler) Create(w http.ResponseWriter, r *http.Request) {
-	v := requireVehicleAccess(w, r, h.repo, chi.URLParam(r, "vehicleId"), models.RoleEditor)
+// editorRequest checks that the caller can edit the vehicle and reads the JSON body into a T; it writes the
+// error response and returns false otherwise.
+func editorRequest[T any](w http.ResponseWriter, r *http.Request, repo *database.Repository) (*models.Vehicle, T, bool) {
+	var req T
+	v := requireVehicleAccess(w, r, repo, chi.URLParam(r, "vehicleId"), models.RoleEditor)
 	if v == nil {
-		return
+		return nil, req, false
 	}
-	var req chargingPlaceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
-		return
+		return nil, req, false
+	}
+	return v, req, true
+}
+
+// placeRequest is editorRequest for a place's name and category, validated.
+func (h *ChargingPlaceHandler) placeRequest(w http.ResponseWriter, r *http.Request) (*models.Vehicle, chargingPlaceRequest, bool) {
+	v, req, ok := editorRequest[chargingPlaceRequest](w, r, h.repo)
+	if !ok {
+		return nil, req, false
 	}
 	if err := req.validate(); err != nil {
 		writeErr(w, http.StatusBadRequest, err)
+		return nil, req, false
+	}
+	return v, req, true
+}
+
+func (h *ChargingPlaceHandler) Create(w http.ResponseWriter, r *http.Request) {
+	v, req, ok := h.placeRequest(w, r)
+	if !ok {
 		return
 	}
 	place, err := h.repo.CreateChargingPlace(r.Context(), v.UserID, req.Name, req.Category)
@@ -95,17 +114,8 @@ func (h *ChargingPlaceHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ChargingPlaceHandler) Update(w http.ResponseWriter, r *http.Request) {
-	v := requireVehicleAccess(w, r, h.repo, chi.URLParam(r, "vehicleId"), models.RoleEditor)
-	if v == nil {
-		return
-	}
-	var req chargingPlaceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
-		return
-	}
-	if err := req.validate(); err != nil {
-		writeErr(w, http.StatusBadRequest, err)
+	v, req, ok := h.placeRequest(w, r)
+	if !ok {
 		return
 	}
 	if err := h.repo.UpdateChargingPlace(r.Context(), v.UserID, chi.URLParam(r, "placeId"), req.Name, req.Category); err != nil {
@@ -134,13 +144,8 @@ type chargingAliasRequest struct {
 
 // SetAlias links a reported location text to a place, or unlinks it with a null place.
 func (h *ChargingPlaceHandler) SetAlias(w http.ResponseWriter, r *http.Request) {
-	v := requireVehicleAccess(w, r, h.repo, chi.URLParam(r, "vehicleId"), models.RoleEditor)
-	if v == nil {
-		return
-	}
-	var req chargingAliasRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
+	v, req, ok := editorRequest[chargingAliasRequest](w, r, h.repo)
+	if !ok {
 		return
 	}
 	if err := h.repo.SetChargingPlaceAlias(r.Context(), v.UserID, req.Text, req.PlaceID); err != nil {

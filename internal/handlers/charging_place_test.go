@@ -42,7 +42,10 @@ func TestChargingPlaces(t *testing.T) {
 	router.Post("/vehicles/{vehicleId}/charging-places", places.Create)
 	router.Put("/vehicles/{vehicleId}/charging-places/aliases", places.SetAlias)
 	router.Delete("/vehicles/{vehicleId}/charging-places/{placeId}", places.Delete)
-	router.Put("/vehicles/{vehicleId}/charges/{chargeId}", NewExpenseHandler(repo, nil).UpdateCharge)
+	router.Put("/vehicles/{vehicleId}/charging-places/{placeId}", places.Update)
+	expense := NewExpenseHandler(repo, nil)
+	router.Post("/vehicles/{vehicleId}/charges", expense.CreateManualCharge)
+	router.Put("/vehicles/{vehicleId}/charges/{chargeId}", expense.UpdateCharge)
 	call := func(userID, method, path, body string) (int, map[string]any) {
 		req := httptest.NewRequest(method, path, bytes.NewBufferString(body))
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
@@ -113,6 +116,36 @@ func TestChargingPlaces(t *testing.T) {
 		t.Errorf("deleting a place of another account must fail, got %d", status)
 	}
 
+	// Renaming and recategorising; the same rules as on creation apply
+	if status, _ := call(owner.ID, http.MethodPut, base+"/"+homeID, `{"name":"Maison","category":"HOME"}`); status != http.StatusOK {
+		t.Fatalf("rename: %d", status)
+	}
+	_, otherPlace := call(owner.ID, http.MethodPost, base, `{"name":"Garage","category":"OTHER"}`)
+	if status, _ := call(owner.ID, http.MethodPut, base+"/"+otherPlace["id"].(string), `{"name":"MAISON","category":"OTHER"}`); status != http.StatusConflict {
+		t.Errorf("renaming onto an existing name must conflict, got %d", status)
+	}
+	if status, _ := call(owner.ID, http.MethodPut, base+"/"+homeID, `{"name":"Maison","category":"SPA"}`); status != http.StatusBadRequest {
+		t.Errorf("an unknown category must be refused on update, got %d", status)
+	}
+	if status, _ := call(owner.ID, http.MethodPut, base+"/"+homeID, `{"name":"  ","category":"HOME"}`); status != http.StatusBadRequest {
+		t.Errorf("a blank name must be refused, got %d", status)
+	}
+	if status, _ := call(owner.ID, http.MethodPut, base+"/"+homeID, `{not json`); status != http.StatusBadRequest {
+		t.Errorf("a malformed body must be refused, got %d", status)
+	}
+	if status, _ := call(stranger.ID, http.MethodPut, strangerBase+"/"+homeID, `{"name":"Stolen","category":"HOME"}`); status != http.StatusNotFound {
+		t.Errorf("updating a place of another account must fail, got %d", status)
+	}
+	if status, _ := call(owner.ID, http.MethodPut, base+"/aliases", `{"text":"   ","place_id":"`+homeID+`"}`); status != http.StatusBadRequest {
+		t.Errorf("a blank location text must be refused, got %d", status)
+	}
+
+	// A new charge can name a place of its owner too, never another account's
+	newCharge := func(placeID string) int {
+		status, _ := call(owner.ID, http.MethodPost, "/vehicles/"+ev.ID+"/charges", `{"date":"2026-03-10T08:00:00Z","kwh_added":12,"cost":3,"currency":"EUR","place_id":"`+placeID+`"}`)
+		return status
+	}
+
 	// A single charge can point at a place of its owner, never at another account's
 	listed, _, err := repo.ListCharges(ctx, ev.ID, false, 10, 0)
 	if err != nil || len(listed) == 0 {
@@ -132,6 +165,12 @@ func TestChargingPlaces(t *testing.T) {
 	}
 	if status := update(homeID); status != http.StatusOK {
 		t.Fatalf("own place: %d", status)
+	}
+	if status := newCharge(foreign.ID); status != http.StatusBadRequest {
+		t.Errorf("a new charge at another account's place must be refused, got %d", status)
+	}
+	if status := newCharge(homeID); status != http.StatusCreated {
+		t.Errorf("a new charge at the owner's place: got %d", status)
 	}
 	if got, _, _ := repo.ListCharges(ctx, ev.ID, false, 10, 0); got[0].PlaceID == nil && got[1].PlaceID == nil && got[2].PlaceID == nil {
 		t.Errorf("the chosen place must be stored on the charge")
