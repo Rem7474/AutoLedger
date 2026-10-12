@@ -71,10 +71,10 @@ type UnitRates struct {
 	MaintenanceSource string
 	// InsurancePerKm shares the insurance premiums paid over the last 12 months (or since the first premium)
 	// across the kilometers actually driven over the same window.
-	InsurancePerKm      float64
-	InsuranceSource     string // RECORDED_EXPENSES | INCLUDED_IN_LEASE | INSUFFICIENT_DISTANCE | NONE
-	InsuranceWindowCost *money.Cents
-	InsuranceWindowKm   *float64
+	InsurancePerKm       float64
+	InsuranceSource      string // RECORDED_EXPENSES | INCLUDED_IN_LEASE | INSUFFICIENT_DISTANCE | NONE
+	InsuranceWindowCost  *money.Cents
+	InsuranceWindowKm    *float64
 	DailyInsuranceCost   money.Cents
 	MonthlyInsuranceCost money.Cents
 }
@@ -206,8 +206,9 @@ func (s *CarpoolService) GetVehicleUnitRatesAt(ctx context.Context, vehicleID st
 			SELECT COALESCE(SUM(CASE WHEN currency = (SELECT currency FROM vehicles WHERE id = $1) THEN cost ELSE cost * fx_rate END), 0),
 			       COALESCE(SUM(kwh_added), 0)
 			FROM charge_logs
-			WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL AND cost IS NOT NULL AND (currency = (SELECT currency FROM vehicles WHERE id = $1) OR fx_rate IS NOT NULL);
-		`, vehicleID).Scan(&pricedCost, &pricedKwh); err != nil {
+			WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL AND cost IS NOT NULL
+              AND date <= $2 AND (currency = (SELECT currency FROM vehicles WHERE id = $1) OR fx_rate IS NOT NULL);
+		`, vehicleID, ref).Scan(&pricedCost, &pricedKwh); err != nil {
 			return nil, err
 		}
 		if pricedKwh > 0 && pricedCost > 0 {
