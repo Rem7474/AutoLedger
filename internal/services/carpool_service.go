@@ -71,10 +71,10 @@ type UnitRates struct {
 	MaintenanceSource string
 	// InsurancePerKm shares the insurance premiums paid over the last 12 months (or since the first premium)
 	// across the kilometers actually driven over the same window.
-	InsurancePerKm      float64
-	InsuranceSource     string // RECORDED_EXPENSES | INCLUDED_IN_LEASE | INSUFFICIENT_DISTANCE | NONE
-	InsuranceWindowCost *money.Cents
-	InsuranceWindowKm   *float64
+	InsurancePerKm       float64
+	InsuranceSource      string // RECORDED_EXPENSES | INCLUDED_IN_LEASE | INSUFFICIENT_DISTANCE | NONE
+	InsuranceWindowCost  *money.Cents
+	InsuranceWindowKm    *float64
 	DailyInsuranceCost   money.Cents
 	MonthlyInsuranceCost money.Cents
 }
@@ -276,8 +276,8 @@ func (s *CarpoolService) GetVehicleUnitRatesAt(ctx context.Context, vehicleID st
 		SELECT COALESCE(SUM(
 			CASE
 				WHEN is_recurring AND COALESCE(recurrence_interval_months, 0) > 0
-				THEN ROUND(amount * 12.0 / recurrence_interval_months)
-				ELSE amount
+				THEN ROUND((CASE WHEN currency = (SELECT currency FROM vehicles WHERE id = $1) THEN amount ELSE amount * fx_rate END) * 12.0 / recurrence_interval_months, 2)
+				ELSE CASE WHEN currency = (SELECT currency FROM vehicles WHERE id = $1) THEN amount ELSE amount * fx_rate END
 			END
 		), 0)
 		FROM maintenance_expenses
