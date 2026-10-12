@@ -6,6 +6,8 @@ import "github.com/teslacost/teslacost/internal/money"
 type FleetSummaryResponse struct {
 	TotalVehicles    int         `json:"total_vehicles"`
 	Currency         string      `json:"currency"`
+	// CurrentMonth is the month in progress (YYYY-MM) in the reporting timezone.
+	CurrentMonth     string      `json:"current_month"`
 	CurrentMonthCost money.Cents `json:"current_month_cost"`
 	// MonthlyBudget is the household spending target for a month; nil when none is set.
 	MonthlyBudget          *money.Cents         `json:"monthly_budget"`
