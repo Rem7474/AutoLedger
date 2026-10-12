@@ -450,10 +450,6 @@
   "chargingInsights": {
     "title": "Charging by place",
     "period": "Period",
-    "months6": "6 months",
-    "months12": "12 months",
-    "months24": "24 months",
-    "all": "All history",
     "places": "Places",
     "energy": "Energy",
     "spent": "Spent",
@@ -469,7 +465,9 @@
       "worseBasis": "Charging away was cheaper than at home: {kwh} kWh cost {cost}, against {home} at {price}/kWh.",
       "noHome": "Classify the place you charge at home to get this figure.",
       "noAway": "No charge is classified outside home yet.",
-      "unclassified": "{kwh} kWh at unclassified places are left out."
+      "short": "{kwh} kWh away from home · {price}/kWh at home",
+      "details": "Details",
+      "hideDetails": "Hide details"
     },
     "monthlyEnergy": "Energy per month (kWh)",
     "monthlyPrice": "Average price per month ({cur}/kWh)",
@@ -489,6 +487,8 @@
     "classify": "Classify these places",
     "noteUnclassified": "{share} of the energy is at places not classified yet.",
     "noteZero": "{count} session without energy is not counted. | {count} sessions without energy are not counted.",
-    "basis": "The price is the recorded cost over the energy of the sessions whose cost is known; free sessions count as zero."
+    "basis": "The price is the recorded cost over the energy of the sessions whose cost is known; free sessions count as zero.",
+    "monthlyCost": "Spend per month ({cur})",
+    "emptyPeriod": "No charge in this period."
   }
 }

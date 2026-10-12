@@ -4,7 +4,7 @@ import {
   donutItems,
   groupColors,
   groupLabel,
-  monthlyEnergyDatasets,
+  monthlyDatasets,
   monthlyPrices,
   savingsView,
   unclassifiedShare,
@@ -53,12 +53,17 @@ describe('donutItems', () => {
   })
 })
 
-describe('monthlyEnergyDatasets and monthlyPrices', () => {
+describe('monthlyDatasets and monthlyPrices', () => {
   const s = stats([group({}), group({ key: '', name: undefined, category: undefined, kwh_added: 50, cost: 10 })])
   it('aligns every group on the months, with zero where it did not charge', () => {
-    const sets = monthlyEnergyDatasets(s, groupColors(s.groups), 'U')
+    const sets = monthlyDatasets(s, groupColors(s.groups), 'U', 'energy')
     expect(sets.find((d) => d.key === 'home')!.data).toEqual([100, 0])
     expect(sets.find((d) => d.key === '')!.data).toEqual([0, 50])
+  })
+  it('switches the same layout to the recorded cost', () => {
+    const sets = monthlyDatasets(s, groupColors(s.groups), 'U', 'cost')
+    expect(sets.find((d) => d.key === 'home')!.data).toEqual([20, 0])
+    expect(sets.find((d) => d.key === '')!.data).toEqual([0, 10])
   })
   it('keeps a month without a known cost as a gap', () => {
     expect(monthlyPrices(s)).toEqual([0.2, null])

@@ -14,7 +14,7 @@ A single charge can be given a place of its own in the charge form, which then w
 
 ## Charging by place
 
-**Energy → Charges** opens with a summary of the charges of the last 6, 12 or 24 months, or of the whole history:
+**Energy → Charges** opens with a summary of the charges of the current month. The period is chosen with the presets (1 month, 3 months, 6 months, 1 year, all) or with two days picked on a calendar. **Energy / Cost** switches the monthly bars and the split by place between kWh and the recorded cost:
 
 - the energy, the amount spent and the average price per kWh;
 - the energy of each month by place, and the average price of each month;

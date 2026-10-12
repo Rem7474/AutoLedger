@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"math"
 	"sort"
 	"time"
@@ -80,9 +81,19 @@ type PlaceStatsSummary struct {
 	ZeroKwhSessions int `json:"zero_kwh_sessions"`
 }
 
+// PlacePeriod is the period of the statistics: the current and the previous Months months (0 = the whole history),
+// or the days From to To inclusive (YYYY-MM-DD, read in the reporting timezone), which win when both are set.
+type PlacePeriod struct {
+	Months int
+	From   string
+	To     string
+}
+
 // ChargingPlaceStats is the charging of a vehicle by month and by place.
 type ChargingPlaceStats struct {
 	Months      int               `json:"months"` // 0 = whole history
+	From        string            `json:"from,omitempty"`
+	To          string            `json:"to,omitempty"`
 	Summary     PlaceStatsSummary `json:"summary"`
 	Groups      []PlaceGroup      `json:"groups"`
 	Series      []PlaceMonth      `json:"series"`
@@ -114,8 +125,8 @@ func priceRatio(cost money.Cents, kwh float64) *float64 {
 }
 
 // buildPlaceStats folds the aggregates into groups, a monthly series, a summary and the home substitution.
-func buildPlaceStats(rows []placeRow, months int) *ChargingPlaceStats {
-	out := &ChargingPlaceStats{Months: months, Groups: []PlaceGroup{}, Series: []PlaceMonth{}}
+func buildPlaceStats(rows []placeRow, period PlacePeriod) *ChargingPlaceStats {
+	out := &ChargingPlaceStats{Months: period.Months, From: period.From, To: period.To, Groups: []PlaceGroup{}, Series: []PlaceMonth{}}
 	groups := map[string]*PlaceGroup{}
 	byMonth := map[string]*PlaceMonth{}
 
@@ -217,18 +228,38 @@ func homeSavings(groups map[string]*PlaceGroup) HomeSavings {
 	return h
 }
 
-// PlaceStats reads the charges of a vehicle and groups them by place. ownerID is the vehicle's owner, whose
-// places classify the charges; months limits the period to the current and the previous months (0 = all).
-func (s *EnergyStatsService) PlaceStats(ctx context.Context, vehicleID, ownerID string, months int, now time.Time) (*ChargingPlaceStats, error) {
-	var since *time.Time
-	if months > 0 {
-		loc, err := time.LoadLocation(s.timezone)
-		if err != nil {
-			loc = time.UTC
+// ErrInvalidPlacePeriod is returned for a custom period that is not two ordered YYYY-MM-DD days.
+var ErrInvalidPlacePeriod = errors.New("invalid period")
+
+// bounds turns the period into the half-open interval [since, until) of instants; nil is unbounded.
+func (p PlacePeriod) bounds(loc *time.Location, now time.Time) (since, until *time.Time, err error) {
+	if p.From != "" || p.To != "" {
+		from, errFrom := time.ParseInLocation("2006-01-02", p.From, loc)
+		to, errTo := time.ParseInLocation("2006-01-02", p.To, loc)
+		if errFrom != nil || errTo != nil || to.Before(from) {
+			return nil, nil, ErrInvalidPlacePeriod
 		}
+		end := to.AddDate(0, 0, 1)
+		return &from, &end, nil
+	}
+	if p.Months > 0 {
 		n := now.In(loc)
-		start := time.Date(n.Year(), n.Month(), 1, 0, 0, 0, 0, loc).AddDate(0, -(months - 1), 0)
-		since = &start
+		start := time.Date(n.Year(), n.Month(), 1, 0, 0, 0, 0, loc).AddDate(0, -(p.Months - 1), 0)
+		return &start, nil, nil
+	}
+	return nil, nil, nil
+}
+
+// PlaceStats reads the charges of a vehicle and groups them by place. ownerID is the vehicle's owner, whose
+// places classify the charges.
+func (s *EnergyStatsService) PlaceStats(ctx context.Context, vehicleID, ownerID string, period PlacePeriod, now time.Time) (*ChargingPlaceStats, error) {
+	loc, err := time.LoadLocation(s.timezone)
+	if err != nil {
+		loc = time.UTC
+	}
+	since, until, err := period.bounds(loc, now)
+	if err != nil {
+		return nil, err
 	}
 
 	rows, err := s.pool.Query(ctx, `
@@ -250,9 +281,10 @@ func (s *EnergyStatsService) PlaceStats(ctx context.Context, vehicleID, ownerID 
 		LEFT JOIN cost_ledger l ON l.source_table = 'charge_logs' AND l.source_id = c.id
 		WHERE c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL
 		  AND ($4::timestamptz IS NULL OR c.date >= $4)
+		  AND ($5::timestamptz IS NULL OR c.date < $5)
 		GROUP BY m, COALESCE(c.place_id, a.place_id), p.name, p.category
 		ORDER BY m;
-	`, vehicleID, ownerID, s.timezone, since)
+	`, vehicleID, ownerID, s.timezone, since, until)
 	if err != nil {
 		return nil, err
 	}
@@ -270,10 +302,10 @@ func (s *EnergyStatsService) PlaceStats(ctx context.Context, vehicleID, ownerID 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	return buildPlaceStats(data, months), nil
+	return buildPlaceStats(data, period), nil
 }
 
 // EmptyPlaceStats is the answer for a vehicle that cannot charge.
-func EmptyPlaceStats(months int) *ChargingPlaceStats {
-	return buildPlaceStats(nil, months)
+func EmptyPlaceStats(period PlacePeriod) *ChargingPlaceStats {
+	return buildPlaceStats(nil, period)
 }

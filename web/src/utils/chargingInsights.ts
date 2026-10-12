@@ -97,13 +97,16 @@ export function donutItems(groups: PlaceStatsGroup[], mode: BreakdownMode, color
   }))
 }
 
-/** One stacked-bar dataset per group, one value per month. */
-export function monthlyEnergyDatasets(stats: PlaceStats, colors: Record<string, string>, unclassified: string) {
+/** One stacked-bar dataset per group, one value per month, in kWh or in recorded cost. */
+export function monthlyDatasets(stats: PlaceStats, colors: Record<string, string>, unclassified: string, mode: BreakdownMode) {
   return stats.groups.map((g) => ({
     key: g.key,
     label: groupLabel(g, unclassified),
     color: colors[g.key],
-    data: stats.series.map((m) => m.groups.find((x) => x.key === g.key)?.kwh_added ?? 0),
+    data: stats.series.map((m) => {
+      const x = m.groups.find((y) => y.key === g.key)
+      return x ? (mode === 'energy' ? x.kwh_added : x.cost) : 0
+    }),
   }))
 }
 

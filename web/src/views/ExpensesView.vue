@@ -400,6 +400,7 @@ function openUploadDocumentModal() {
       v-if="activeTab === 'CHARGES' && vehicleStore.canCharge && vehicleStore.activeVehicle"
       :vehicle-id="vehicleStore.activeVehicle.id"
       :currency="vehicleStore.currency"
+      :has-charges="chargesTotal > 0"
       :sync-key="insightsKey"
       @manage-places="showPlacesModal = true"
     />

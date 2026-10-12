@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -60,21 +61,28 @@ func (h *EnergyHandler) GetPlaceStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	months := 12
-	if raw := r.URL.Query().Get("months"); raw != "" {
+	period := services.PlacePeriod{Months: 12}
+	q := r.URL.Query()
+	if from, to := q.Get("from"), q.Get("to"); from != "" || to != "" {
+		period = services.PlacePeriod{From: from, To: to}
+	} else if raw := q.Get("months"); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n < 0 || n > 240 {
 			writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_months", "months must be between 0 and 240"))
 			return
 		}
-		months = n
+		period = services.PlacePeriod{Months: n}
 	}
 
 	if !vehicle.CanCharge() {
-		writeJSON(w, http.StatusOK, services.EmptyPlaceStats(months))
+		writeJSON(w, http.StatusOK, services.EmptyPlaceStats(period))
 		return
 	}
-	stats, err := h.service.PlaceStats(r.Context(), vehicleID, vehicle.UserID, months, time.Now())
+	stats, err := h.service.PlaceStats(r.Context(), vehicleID, vehicle.UserID, period, time.Now())
+	if errors.Is(err, services.ErrInvalidPlacePeriod) {
+		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_date_range", "from and to must be two days (YYYY-MM-DD), from not after to"))
+		return
+	}
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to compute charging statistics")
 		return

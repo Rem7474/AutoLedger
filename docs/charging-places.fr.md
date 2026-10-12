@@ -14,7 +14,7 @@ Une recharge peut recevoir son propre lieu dans le formulaire de recharge, qui l
 
 ## Recharges par lieu
 
-**Énergie → Recharges** s'ouvre sur une synthèse des recharges des 6, 12 ou 24 derniers mois, ou de tout l'historique :
+**Énergie → Recharges** s'ouvre sur une synthèse des recharges du mois en cours. La période se choisit avec les préréglages (1 mois, 3 mois, 6 mois, 1 an, tout) ou avec deux jours pris sur un calendrier. **Énergie / Coût** bascule les barres mensuelles et la répartition par lieu entre kWh et coût enregistré :
 
 - l'énergie, le montant dépensé et le prix moyen au kWh ;
 - l'énergie de chaque mois par lieu, et le prix moyen de chaque mois ;

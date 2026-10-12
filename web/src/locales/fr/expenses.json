@@ -450,10 +450,6 @@
   "chargingInsights": {
     "title": "Recharges par lieu",
     "period": "Période",
-    "months6": "6 mois",
-    "months12": "12 mois",
-    "months24": "24 mois",
-    "all": "Tout l'historique",
     "places": "Lieux",
     "energy": "Énergie",
     "spent": "Dépensé",
@@ -469,7 +465,9 @@
       "worseBasis": "Recharger ailleurs a coûté moins qu'à domicile : {kwh} kWh ont coûté {cost}, contre {home} à {price}/kWh.",
       "noHome": "Classez le lieu où vous rechargez à domicile pour obtenir ce chiffre.",
       "noAway": "Aucune recharge n'est encore classée hors domicile.",
-      "unclassified": "{kwh} kWh dans des lieux non classés sont laissés de côté."
+      "short": "{kwh} kWh hors domicile · {price}/kWh à domicile",
+      "details": "Détail",
+      "hideDetails": "Masquer le détail"
     },
     "monthlyEnergy": "Énergie par mois (kWh)",
     "monthlyPrice": "Prix moyen par mois ({cur}/kWh)",
@@ -489,6 +487,8 @@
     "classify": "Classer ces lieux",
     "noteUnclassified": "{share} de l'énergie est dans des lieux pas encore classés.",
     "noteZero": "{count} session sans énergie n'est pas comptée. | {count} sessions sans énergie ne sont pas comptées.",
-    "basis": "Le prix est le coût enregistré rapporté à l'énergie des sessions dont le coût est connu ; les sessions gratuites comptent pour zéro."
+    "basis": "Le prix est le coût enregistré rapporté à l'énergie des sessions dont le coût est connu ; les sessions gratuites comptent pour zéro.",
+    "monthlyCost": "Dépense par mois ({cur})",
+    "emptyPeriod": "Aucune recharge sur cette période."
   }
 }
