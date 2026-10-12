@@ -29,7 +29,7 @@ export function emptyComparisonForm(canCompareTracked: boolean) {
     },
     tracked: {
       kwh_per_100km: 16,
-      eur_per_kwh: 0.2,
+      eur_per_kwh: 0.2 as number | string,
       purchase_price: 0,
       resale_value: 0,
       maintenance_yearly: 300,
@@ -60,7 +60,7 @@ export function applyComparisonDefaults(form: ComparisonForm, d: ComparisonDefau
   form.ice.maintenance_yearly = d.maintenance_yearly
   form.ice.insurance_yearly = d.insurance_yearly
   // Prices written for another currency are not shown as the vehicle's own: the user types them
-  if (d.indicative_prices === false) form.tracked.eur_per_kwh = 0
+  if (d.indicative_prices === false) form.tracked.eur_per_kwh = ''
   if (d.tracked_kwh_per_100km) form.tracked.kwh_per_100km = d.tracked_kwh_per_100km
   if (d.tracked_eur_per_kwh !== undefined && d.tracked_eur_per_kwh !== null) form.tracked.eur_per_kwh = d.tracked_eur_per_kwh
   const fuel = d.ice?.find((f) => f.fuel_type === form.ice.fuel_type)
