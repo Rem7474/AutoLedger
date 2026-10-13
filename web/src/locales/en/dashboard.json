@@ -352,6 +352,8 @@
   },
   "residualPanel": {
     "title": "Battery health and residual value",
+    "history": "Battery health history",
+    "manageReadings": "Readings ({count})",
     "health": "Battery state of health",
     "noHealth": "Unknown yet: add a reading, or the new-battery capacity so the charges can be compared with it.",
     "healthHint": "A reading can come from an OBD2 scan, a garage report, TeslaMate or the ingestion API. Without one, the capacity estimated from your complete charges is compared with the new-battery capacity.",
