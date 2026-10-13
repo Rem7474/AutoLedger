@@ -2,7 +2,6 @@
   "dashboardView": {
     "createYourFirstVehicle": "Créer un premier véhicule",
     "noVehicleConfigured": "Aucun véhicule configuré.",
-    "viewDrives": "Voir les trajets",
     "expense": "+ Dépense",
     "tcoDashboard": "Tableau de bord TCO",
     "subtitle": "Coût réel de possession et coût au {unit} pour {name}",

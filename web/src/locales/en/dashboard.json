@@ -2,7 +2,6 @@
   "dashboardView": {
     "createYourFirstVehicle": "Create your first vehicle",
     "noVehicleConfigured": "No vehicle configured.",
-    "viewDrives": "View drives",
     "expense": "+ Expense",
     "tcoDashboard": "TCO dashboard",
     "subtitle": "Actual cost of ownership and cost per {unit} for {name}",
