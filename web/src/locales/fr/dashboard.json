@@ -352,6 +352,8 @@
   },
   "residualPanel": {
     "title": "Santé de la batterie et valeur résiduelle",
+    "history": "Historique de la santé de la batterie",
+    "manageReadings": "Mesures ({count})",
     "health": "État de santé de la batterie",
     "noHealth": "Inconnu pour l’instant : ajoutez une mesure, ou la capacité de la batterie neuve pour y comparer les charges.",
     "healthHint": "Une mesure peut venir d’un scan OBD2, d’un rapport de garage, de TeslaMate ou de l’API d’ingestion. À défaut, la capacité estimée à partir de vos charges complètes est comparée à celle de la batterie neuve.",
