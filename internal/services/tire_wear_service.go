@@ -103,11 +103,6 @@ const (
 	warningMarginMm       = 1.5
 )
 
-// tireLifetimeDistanceAtReading includes the mileage already on the tire when tracking began.
-func tireLifetimeDistanceAtReading(tire *models.Tire, sessions []models.TireMountSession, odometer float64) float64 {
-	return tire.InitialDistanceKm + TireDistanceAtOdometer(sessions, odometer)
-}
-
 const rotatedAxleWeight = (2*frontAxleWeight + 2*rearAxleWeight) / 4
 
 func axleWeight(pos models.TirePosition) float64 {
@@ -171,6 +166,11 @@ func projectRemainingKm(remainingDepth, neutralRatePer10k float64, start models.
 		rear, period = !rear, tireRotationIntervalKm
 	}
 	return km
+}
+
+// tireLifetimeDistanceAtReading includes the mileage already on the tire when tracking began.
+func tireLifetimeDistanceAtReading(tire *models.Tire, sessions []models.TireMountSession, odometer float64) float64 {
+	return tire.InitialDistanceKm + TireDistanceAtOdometer(sessions, odometer)
 }
 
 // CalculateTireWear computes wear metrics based on depth logs, mount sessions, and TeslaMate power telemetry.
@@ -262,9 +262,11 @@ func (s *TireWearService) CalculateTireWear(ctx context.Context, tire *models.Ti
 	readingOdometer := 0.0
 	if len(logs) > 0 {
 		readingOdometer = logs[0].Odometer
-		distanceAtReading := tireLifetimeDistanceAtReading(tire, sessions, readingOdometer)
+		var distanceAtReading float64
 		if len(sessions) == 0 && tire.MountedOdometer != nil {
 			distanceAtReading = tire.AccumulatedDistanceKm + math.Max(0, readingOdometer-*tire.MountedOdometer)
+		} else {
+			distanceAtReading = tireLifetimeDistanceAtReading(tire, sessions, readingOdometer)
 		}
 		sinceReadingKm = math.Max(0, totalDistance-distanceAtReading)
 	}
