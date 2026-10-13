@@ -49,9 +49,9 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
             {{ rolling ? $t('dashboard.tcoMetricsGrid.economicPerKmWindow', { unit: distanceUnit(), months: rolling.months }, rolling.months) : $t('dashboard.tcoMetricsGrid.fullCostPerKm', { unit: distanceUnit() }) }}
             <GlossaryTip term="economicCost" />
           </span>
-          <TrendingUp class="mt-0.5 w-4 h-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-success-500/15 text-success-400"><TrendingUp class="w-4 h-4" aria-hidden="true" /></span>
         </div>
-        <div class="text-3xl font-extrabold text-white">
+        <div class="text-3xl font-extrabold text-success-400">
           {{ perUnit(costPerKm) }}<span class="text-sm font-normal text-slate-300">/{{ distanceUnit() }}</span>
         </div>
         <p v-if="tco && tco.depreciation_known === false" class="mt-2 text-xs font-medium text-warning-400">
@@ -70,7 +70,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
             {{ rolling ? $t('dashboard.tcoMetricsGrid.cashPaidWindow', { months: rolling.months }, rolling.months) : $t('dashboard.tcoMetricsGrid.totalCost') }}
             <GlossaryTip term="cashPaid" />
           </span>
-          <Coins class="mt-0.5 w-4 h-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400"><Coins class="w-4 h-4" aria-hidden="true" /></span>
         </div>
         <div class="text-2xl font-extrabold text-white">{{ headline(rolling ? rolling.cash : tco?.total_cost) }}</div>
         <p v-if="rolling && (rolling.estimatedEnergy || tco?.estimated_energy_cost)" class="mt-2 text-xs text-slate-300">
@@ -89,7 +89,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
           <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             {{ month ? $t('dashboard.tcoMetricsGrid.currentMonth', { month: formatMonthName(month.month) }) : $t('dashboard.tcoMetricsGrid.currentMonthShort') }}
           </span>
-          <Calendar class="mt-0.5 w-4 h-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400"><Calendar class="w-4 h-4" aria-hidden="true" /></span>
         </div>
         <template v-if="month">
           <div class="text-2xl font-extrabold text-white">{{ headline(month.total - month.scheduled) }}</div>
@@ -112,9 +112,9 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
       <div class="flex flex-col bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-sm">
         <div class="flex min-h-8 items-start justify-between gap-2 mb-2">
           <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ energyLabel }}</span>
-          <Zap class="mt-0.5 w-4 h-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400"><Zap class="w-4 h-4" aria-hidden="true" /></span>
         </div>
-        <div class="text-2xl font-extrabold text-white">{{ headline(tco?.energy_cost) }}</div>
+        <div class="text-2xl font-extrabold text-sky-400">{{ headline(tco?.energy_cost) }}</div>
         <p class="mt-2 text-xs text-slate-300">{{ perUnit(tco?.energy_cost_per_km) }}/{{ distanceUnit() }}</p>
         <button v-if="canCharge(tco?.powertrain)" type="button" class="tap-text mt-auto self-start pt-1 text-xs font-semibold text-sky-400 underline" @click="showEnergyPanel">
           {{ $t('dashboard.tcoMetricsGrid.energyPanelLink') }}
