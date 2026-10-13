@@ -17,13 +17,13 @@ func (r *Repository) GetComparisonPriceHistory(ctx context.Context, vehicleID, f
 				/ c.kwh_added AS price
 			FROM charge_logs c JOIN vehicles v ON v.id = c.vehicle_id
 			WHERE c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL
-				AND c.cost IS NOT NULL AND c.kwh_added > 0 AND c.kwh_added < 'Infinity'::float8
+				AND c.cost IS NOT NULL AND c.kwh_added > 0
 			UNION ALL
 			SELECT 'fuel', f.amount / f.liters
 			FROM fuel_logs f WHERE f.vehicle_id = $1 AND f.fuel_type = $2
-				AND f.liters > 0 AND f.liters < 'Infinity'::float8
+				AND f.liters > 0
 		), usable AS (
-			SELECT kind, price FROM prices WHERE price >= 0 AND price < 'Infinity'::float8
+			SELECT kind, price FROM prices WHERE price >= 0
 		)
 		SELECT v.currency,
 			COUNT(*) FILTER (WHERE kind = 'fuel'),

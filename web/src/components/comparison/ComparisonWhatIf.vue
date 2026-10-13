@@ -9,6 +9,7 @@ import { formatAmount } from '@/currency'
 import { perVolume, volumeUnitLabel } from '@/units'
 import { useComparisonPriceHistory } from '@/composables/useComparisonPriceHistory'
 import { useEnergyPriceWarning } from '@/composables/useEnergyPriceWarning'
+import { HIGH_PRICE_MULTIPLIER } from '@/utils/energyPriceWarning'
 import type { ComparisonForm } from '@/utils/comparisonForm'
 import {
   isWhatIfDirty,
@@ -80,18 +81,15 @@ watch(
   () => [JSON.stringify(explored), needsConfirmation.value],
   () => {
     clearTimeout(timer)
-    sequence += 1
-    loading.value = false
-    preview.value = null
-    failed.value = false
-    if (!dirty.value) {
+    // A pending confirmation drops the previous result: it was computed for another price.
+    if (!dirty.value || needsConfirmation.value) {
       sequence += 1
       preview.value = null
       loading.value = false
       failed.value = false
       return
     }
-    if (!valid.value || needsConfirmation.value) return
+    if (!valid.value) return
     timer = setTimeout(refresh, DEBOUNCE_MS)
   },
 )
@@ -183,9 +181,11 @@ const rows = computed(() => {
           <NumberInput v-else :id="f.id" v-model="explored.eur_per_kwh" :min="ranges.eur_per_kwh.min" :max="ranges.eur_per_kwh.max" class="field" />
           <div class="text-[11px] text-slate-500 mt-0.5">{{ $t('comparison.whatIf.original', { value: originalHint(f.key) }) }}</div>
         </div>
-        <div v-if="valid && warningFor(f.key)?.needsConfirmation.value" class="sm:col-span-3 rounded-lg border border-warning-500/40 p-3 text-xs text-warning-300" role="status">
-          <p>{{ $t('comparison.priceWarning.high', { median: historicalMedian(f.key), unit: f.key === 'fuel_price' ? volumeUnitLabel() : 'kWh' }) }}</p>
-          <button type="button" class="btn btn-secondary mt-2" @click="warningFor(f.key)?.confirm()">{{ $t('comparison.priceWarning.keep') }}</button>
+        <div class="sm:col-span-3 empty:hidden" aria-live="polite">
+          <div v-if="valid && warningFor(f.key)?.needsConfirmation.value" class="rounded-lg border border-warning-500/40 p-3 text-xs text-warning-300">
+            <p>{{ $t('comparison.priceWarning.high', { factor: HIGH_PRICE_MULTIPLIER, median: historicalMedian(f.key), unit: f.key === 'fuel_price' ? volumeUnitLabel() : 'kWh' }) }}</p>
+            <button type="button" class="btn btn-secondary mt-2" @click="warningFor(f.key)?.confirm()">{{ $t('comparison.priceWarning.keep') }}</button>
+          </div>
         </div>
       </div>
     </div>

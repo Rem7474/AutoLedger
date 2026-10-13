@@ -274,7 +274,7 @@
     "same": "Sélectionnez des comparaisons dans une même devise connue. Modifiez les anciennes projections pour confirmer leur devise d'origine."
   },
   "priceWarning": {
-    "high": "Ce prix dépasse trois fois la médiane enregistrée pour le véhicule sélectionné ({median}/{unit}). Vérifiez la valeur ou confirmez que vous souhaitez la conserver.",
+    "high": "Ce prix dépasse {factor} fois la médiane enregistrée pour le véhicule sélectionné ({median}/{unit}). Vérifiez la valeur ou confirmez que vous souhaitez la conserver.",
     "keep": "Conserver ce prix"
   }
 }

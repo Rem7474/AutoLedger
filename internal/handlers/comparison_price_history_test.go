@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/teslacost/teslacost/internal/middleware"
@@ -21,6 +22,10 @@ func TestComparisonPriceHistoryAccessAndMedian(t *testing.T) {
 		t.Fatal(err)
 	}
 	outsider, err := repo.CreateUser(ctx, "price-outsider@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	viewer, err := repo.CreateUser(ctx, "price-viewer@example.com", "hash")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,6 +60,13 @@ func TestComparisonPriceHistoryAccessAndMedian(t *testing.T) {
 	if _, err := repo.Pool().Exec(ctx, `INSERT INTO fuel_logs (vehicle_id, date, liters, amount, fuel_type) VALUES ($1, NOW(), 10, 99999, 'DIESEL')`, vehicle.ID); err != nil {
 		t.Fatal(err)
 	}
+	// A fill-up without volume has no unit price and is not an observation.
+	if _, err := repo.Pool().Exec(ctx, `INSERT INTO fuel_logs (vehicle_id, date, liters, amount, price_per_liter, fuel_type) VALUES ($1, NOW(), NULL, 99999, 50, 'SP95_E10')`, vehicle.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.AddVehicleMember(ctx, vehicle.ID, viewer.Email, models.RoleViewer, nil); err != nil {
+		t.Fatal(err)
+	}
 	h := NewComparisonHandler(repo, nil)
 	request := func(userID, vehicleID string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(http.MethodGet, "/?vehicle_id="+vehicleID+"&fuel_type=SP95_E10", nil)
@@ -64,8 +76,14 @@ func TestComparisonPriceHistoryAccessAndMedian(t *testing.T) {
 		return w
 	}
 	w := request(outsider.ID, vehicle.ID)
-	if w.Code == http.StatusOK {
-		t.Fatal("another user's prices disclosed")
+	if w.Code != http.StatusNotFound || strings.Contains(w.Body.String(), "median") {
+		t.Fatalf("another user's prices disclosed: %d %s", w.Code, w.Body.String())
+	}
+	if w = request(owner.ID, ""); w.Code != http.StatusNotFound {
+		t.Fatalf("missing vehicle: status %d", w.Code)
+	}
+	if w = request(viewer.ID, vehicle.ID); w.Code != http.StatusOK {
+		t.Fatalf("shared viewer: status %d: %s", w.Code, w.Body.String())
 	}
 	w = request(owner.ID, vehicle.ID)
 	if w.Code != http.StatusOK {
