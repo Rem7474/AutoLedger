@@ -351,7 +351,7 @@ func (p *ChargingPlaceStats) AddEstimatedEnergy(estimates []EstimatedEnergyMonth
 		switch {
 		case since != nil && !custom && first.Before(*since):
 			continue
-		case custom && (first.Before(*since) || first.AddDate(0, 1, 0).After(*until)):
+		case custom && (first.Before(*since) || models.AddCalendarMonths(first, 1).After(*until)):
 			continue
 		}
 		s := &p.Summary
