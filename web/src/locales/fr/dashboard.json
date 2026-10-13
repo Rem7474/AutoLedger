@@ -267,10 +267,12 @@
     "energyPanelLink": "Efficacité énergétique",
     "energyHybrid": "Énergie (charges + pleins)",
     "hybridSplit": "Électricité {electricity} · carburant {fuel}",
-    "cashPaidWindow": "Décaissé · dernier mois | Décaissé · {months} derniers mois",
+    "cashPaid": "Décaissé",
+    "viewExpenses": "Voir les dépenses",
     "economicWindow": "Coût économique : {amount} · {cost_per_km}/{unit}",
     "sincePurchase": "Depuis {month} : {amount}",
-    "economicPerKmWindow": "Coût économique / {unit} · dernier mois | Coût économique / {unit} · {months} derniers mois",
+    "economicPerKm": "Coût économique / {unit}",
+    "windowMonths": "dernier mois | {months} derniers mois",
     "sincePurchasePerKm": "Depuis l'achat : {amount}/{unit}",
     "currentMonth": "{month}",
     "currentMonthShort": "Mois en cours",
@@ -378,6 +380,9 @@
     "advancedHint": "La valeur résiduelle combine l'âge, le kilométrage et la santé de la batterie. Ces poids règlent la part de chacun : laissez les valeurs par défaut si vous hésitez."
   },
   "followUp": {
-    "title": "À suivre"
+    "title": "À suivre",
+    "toComplete": "données à compléter",
+    "maintenanceSoon": "entretien à prévoir",
+    "maintenanceToPlan": "échéance à planifier"
   }
 }

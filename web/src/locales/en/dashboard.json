@@ -267,10 +267,12 @@
     "energyPanelLink": "Energy efficiency",
     "energyHybrid": "Energy (charges + fill-ups)",
     "hybridSplit": "Electricity {electricity} · fuel {fuel}",
-    "cashPaidWindow": "Cash paid · last month | Cash paid · last {months} months",
+    "cashPaid": "Cash paid",
+    "viewExpenses": "View expenses",
     "economicWindow": "Economic cost: {amount} · {cost_per_km}/{unit}",
     "sincePurchase": "Since {month}: {amount}",
-    "economicPerKmWindow": "Economic cost / {unit} · last month | Economic cost / {unit} · last {months} months",
+    "economicPerKm": "Economic cost / {unit}",
+    "windowMonths": "last month | last {months} months",
     "sincePurchasePerKm": "Since purchase: {amount}/{unit}",
     "currentMonth": "{month}",
     "currentMonthShort": "Current month",
@@ -378,6 +380,9 @@
     "advancedHint": "The residual value combines age, mileage and battery health. These weights set the share of each: keep the defaults if unsure."
   },
   "followUp": {
-    "title": "Follow-up"
+    "title": "Follow-up",
+    "toComplete": "data to complete",
+    "maintenanceSoon": "maintenance coming up",
+    "maintenanceToPlan": "maintenance to schedule"
   }
 }
