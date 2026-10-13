@@ -220,7 +220,7 @@ onBeforeUnmount(() => {
         </dt>
         <template v-if="savings && savings.state === 'ok'">
           <dd class="text-lg font-extrabold" :class="savings.better ? 'text-success-400' : 'text-warning-400'">
-            {{ $t(savings.better ? 'expenses.chargingInsights.savings.better' : 'expenses.chargingInsights.savings.worse', { amount: formatAmount(savings.amount, currency) }) }}
+            {{ $t(`expenses.chargingInsights.savings.${savings.better ? 'better' : 'worse'}${savings.pct === null ? '' : 'Pct'}`, { amount: formatAmount(savings.amount, currency), pct: savings.pct === null ? '' : formatPercent(savings.pct, 0) }) }}
           </dd>
           <dd class="text-xs text-slate-400">
             {{ $t('expenses.chargingInsights.savings.short', { kwh: formatNumber(savings.awayKwh, 0), price: formatAmount(savings.homePrice, currency, 3) }) }}
