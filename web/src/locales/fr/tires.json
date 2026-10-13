@@ -373,8 +373,8 @@
     "expected": "Attendue",
     "lifespanGap": "Durée de vie {gap}",
     "same": "Conforme à l'attendu",
-    "declared": "Durée de vie au rythme d'usure mesuré, face à celle que vous avez saisie.",
-    "average": "Durée de vie au rythme d'usure mesuré, face au rythme moyen d'usure.",
-    "thin": "Peu de millimètres usés pour l'instant : ajoutez un relevé pour l'affiner."
+    "declared": "Référence : la durée saisie.",
+    "average": "Référence : l'usure moyenne.",
+    "thin": "Mesure encore faible : ajoutez un relevé."
   }
 }

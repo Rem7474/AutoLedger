@@ -37,9 +37,9 @@ describe('measured tire wear display', () => {
     setLocale('en')
     const html = await render({ ...stat, wear_rate_confidence: 0.3 })
     expect(html).toContain('Lifespan −33%')
-    expect(html).toContain('Few millimetres worn so far')
+    expect(html).toContain('Measure still thin')
     expect(html).not.toContain('border-warning-500/30')
-    expect(await render(stat)).not.toContain('Few millimetres worn so far')
+    expect(await render(stat)).not.toContain('Measure still thin')
   })
   it('converts the lifespans to miles and translates the labels', async () => {
     setLocale('en'); setDistanceUnit('mi')

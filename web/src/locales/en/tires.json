@@ -373,8 +373,8 @@
     "expected": "Expected",
     "lifespanGap": "Lifespan {gap}",
     "same": "On the expected rate",
-    "declared": "Lifespan at the measured wear rate, against the lifespan you entered.",
-    "average": "Lifespan at the measured wear rate, against the average tread-wear rate.",
-    "thin": "Few millimetres worn so far: add a reading to firm it up."
+    "declared": "Reference: the lifespan you entered.",
+    "average": "Reference: the average wear rate.",
+    "thin": "Measure still thin: add a reading."
   }
 }
