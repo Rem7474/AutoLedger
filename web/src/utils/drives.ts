@@ -64,6 +64,20 @@ export function monthRange(yearMonth: string) {
   return { from: `${y}-${mm}-01`, to: `${y}-${mm}-${String(lastDay).padStart(2, '0')}` }
 }
 
+export type PeriodPreset = 'lastMonth' | 'last30' | 'last90' | 'thisYear'
+
+const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+/** The from/to days (YYYY-MM-DD) of a ready-made period, relative to `today`. */
+export function presetRange(preset: PeriodPreset, today: Date = new Date()) {
+  const y = today.getFullYear()
+  const m = today.getMonth()
+  if (preset === 'lastMonth') return { from: isoDay(new Date(y, m - 1, 1)), to: isoDay(new Date(y, m, 0)) }
+  if (preset === 'thisYear') return { from: `${y}-01-01`, to: isoDay(today) }
+  const days = preset === 'last30' ? 29 : 89
+  return { from: isoDay(new Date(y, m, today.getDate() - days)), to: isoDay(today) }
+}
+
 export function formatMonthLabel(yearMonth: string) {
   if (!yearMonth) return ''
   const [y, m] = yearMonth.split('-').map(Number)

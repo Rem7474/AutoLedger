@@ -176,7 +176,10 @@ const {
 } = useDriveSelection(drives)
 
 // Unified selection summary metrics (same as a Voyage)
-const selectedSummaryMetrics = computed(() => selectionSummary(selectedList.value, vehicleStore.currency))
+// The page figures above already are the selection's when the whole page is selected
+const selectedSummaryMetrics = computed(() =>
+  selectedOffPage.value === 0 && selectedDriveIds.value.length === drives.value.length ? '' : selectionSummary(selectedList.value, vehicleStore.currency)
+)
 
 async function loadDrives(silent = false) {
   if (!vehicleStore.activeVehicle) {

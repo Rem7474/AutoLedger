@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 import { formatDistance } from '@/units'
 import { computed } from 'vue'
 import { ChevronLeft, ChevronRight, X, Search, Calendar } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
-import { currentYearMonth, formatMonthLabel, shiftMonth, sumDriveCosts } from '@/utils/drives'
+import ListSummary from '@/components/ListSummary.vue'
+import { currentYearMonth, formatMonthLabel, presetRange, shiftMonth, sumDriveCosts, type PeriodPreset } from '@/utils/drives'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
 
@@ -61,6 +62,14 @@ function onMonthChange() {
   emit('change')
 }
 
+const PRESETS: PeriodPreset[] = ['lastMonth', 'last30', 'last90', 'thisYear']
+function applyPreset(preset: PeriodPreset) {
+  const { from, to } = presetRange(preset)
+  customFrom.value = from
+  customTo.value = to
+  emit('change')
+}
+
 function onCustomDateChange() {
   emit('change')
 }
@@ -69,6 +78,15 @@ function onCustomDateChange() {
 const pageDistance = computed(() => props.drives.reduce((acc, d) => acc + (d.distance_km || 0), 0))
 const pageEnergy = computed(() => props.drives.reduce((acc, d) => acc + (d.energy_consumed_kwh || 0), 0))
 const pageCost = computed(() => sumDriveCosts(props.drives))
+const summaryChips = computed(() => {
+  const distance = { label: t('drives.drivesToolbar.pageDistance').replace(/:$/, ''), value: formatDistance(pageDistance.value), tone: 'sky' as const }
+  if (props.mode === 'TRIPS') return [{ ...distance, label: t('drives.drivesToolbar.totalDistance').replace(/:$/, '') }]
+  return [
+    distance,
+    { label: t('drives.drivesToolbar.pageEnergy').replace(/:$/, ''), value: t('drives.drivesToolbar.kwh', { pageEnergy: Math.round(pageEnergy.value).toLocaleString(intlLocale()) }), tone: 'amber' as const },
+    { label: t('drives.drivesToolbar.pageCost').replace(/:$/, ''), value: formatAmount(pageCost.value, vehicleStore.currency), tone: 'emerald' as const },
+  ]
+})
 </script>
 
 <template>
@@ -81,14 +99,14 @@ const pageCost = computed(() => sumDriveCosts(props.drives))
           <button
             @click="setPeriodMode('ALL')"
             class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
-            :class="periodMode === 'ALL' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
+            :class="periodMode === 'ALL' ? 'bg-slate-700 text-white border border-slate-600' : 'text-slate-400 hover:text-white border border-transparent'"
           >
             {{ $t('drives.drivesToolbar.all') }}
           </button>
           <button
             @click="setPeriodMode('MONTH')"
             class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
-            :class="periodMode === 'MONTH' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
+            :class="periodMode === 'MONTH' ? 'bg-slate-700 text-white border border-slate-600' : 'text-slate-400 hover:text-white border border-transparent'"
           >
             <Calendar class="w-3.5 h-3.5" />
             {{ $t('drives.drivesToolbar.byMonth') }}
@@ -96,7 +114,7 @@ const pageCost = computed(() => sumDriveCosts(props.drives))
           <button
             @click="setPeriodMode('CUSTOM')"
             class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
-            :class="periodMode === 'CUSTOM' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
+            :class="periodMode === 'CUSTOM' ? 'bg-slate-700 text-white border border-slate-600' : 'text-slate-400 hover:text-white border border-transparent'"
           >
             {{ $t('drives.drivesToolbar.period') }}
           </button>
@@ -159,6 +177,17 @@ const pageCost = computed(() => sumDriveCosts(props.drives))
               @change="onCustomDateChange"
             />
           </div>
+          <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
+            <button
+              v-for="p in PRESETS"
+              :key="p"
+              type="button"
+              class="rounded-lg border border-transparent px-2 py-1 font-semibold text-slate-400 transition-colors hover:border-slate-700 hover:text-white"
+              @click="applyPreset(p)"
+            >
+              {{ $t(`drives.drivesToolbar.presets.${p}`) }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -185,26 +214,13 @@ const pageCost = computed(() => sumDriveCosts(props.drives))
       </div>
     </div>
 
-    <!-- Quick Metrics Summary for Current Selection -->
-    <div v-if="total > 0 && !loading && mode === 'TRIPS'" class="flex flex-wrap items-center gap-3 text-xs text-slate-400 px-1">
-      <span class="font-medium text-slate-300">
-        <strong class="text-white">{{ total }}</strong> {{ $t('drives.drivesToolbar.tripSFound') }}
-        <i18n-t v-if="periodMode === 'MONTH'" keypath="drives.drivesToolbar.inMonth" tag="span"><template #month><span class="text-rose-400 font-semibold">{{ formattedSelectedMonth }}</span></template></i18n-t>
-      </span>
-      <span class="text-slate-400">•</span>
-      <span>{{ $t('drives.drivesToolbar.totalDistance') }} <strong class="text-white">{{ formatDistance(pageDistance) }}</strong></span>
-    </div>
-    <div v-else-if="total > 0 && !loading" class="flex flex-wrap items-center gap-3 text-xs text-slate-400 px-1">
-      <span class="font-medium text-slate-300">
-        <strong class="text-white">{{ total }}</strong> {{ $t('drives.drivesToolbar.driveSFound') }}
-        <i18n-t v-if="periodMode === 'MONTH'" keypath="drives.drivesToolbar.inMonth" tag="span"><template #month><span class="text-rose-400 font-semibold">{{ formattedSelectedMonth }}</span></template></i18n-t>
-      </span>
-      <span class="text-slate-400">•</span>
-      <span>{{ $t('drives.drivesToolbar.pageDistance') }} <strong class="text-white">{{ formatDistance(pageDistance) }}</strong></span>
-      <span class="text-slate-400">•</span>
-      <span>{{ $t('drives.drivesToolbar.pageEnergy') }} <strong class="text-white">{{ $t('drives.drivesToolbar.kwh', { pageEnergy: Math.round(pageEnergy).toLocaleString(intlLocale()) }) }}</strong></span>
-      <span class="text-slate-400">•</span>
-      <span>{{ $t('drives.drivesToolbar.pageCost') }} <strong class="text-white">{{ formatAmount(pageCost, vehicleStore.currency) }}</strong></span>
-    </div>
+    <!-- The figures of what is listed: shown once, as chips -->
+    <ListSummary v-if="total > 0 && !loading" :chips="summaryChips">
+      <strong class="text-white">{{ total }}</strong>
+      {{ mode === 'TRIPS' ? $t('drives.drivesToolbar.tripSFound') : $t('drives.drivesToolbar.driveSFound') }}
+      <i18n-t v-if="periodMode === 'MONTH'" keypath="drives.drivesToolbar.inMonth" tag="span">
+        <template #month><span class="font-semibold text-slate-200">{{ formattedSelectedMonth }}</span></template>
+      </i18n-t>
+    </ListSummary>
   </div>
 </template>

@@ -22,6 +22,7 @@ import {
   toggleTag,
   tollApplyStatusLabel,
   mergeExpensesByDrive,
+  presetRange,
 } from './drives'
 
 describe('needsTollQualification', () => {
@@ -323,5 +324,18 @@ describe('sumDriveCosts', () => {
   it('counts a drive without a cost as zero and an empty list as zero', () => {
     expect(sumDriveCosts([{ costs: { total_cost: 12.5 } }, { costs: null }, {}])).toBe(12.5)
     expect(sumDriveCosts([])).toBe(0)
+  })
+})
+
+describe('presetRange', () => {
+  const today = new Date(2026, 7, 31)
+  it('covers last month, the last 30 and 90 days, and the year so far', () => {
+    expect(presetRange('lastMonth', today)).toEqual({ from: '2026-07-01', to: '2026-07-31' })
+    expect(presetRange('last30', today)).toEqual({ from: '2026-08-02', to: '2026-08-31' })
+    expect(presetRange('last90', today)).toEqual({ from: '2026-06-03', to: '2026-08-31' })
+    expect(presetRange('thisYear', today)).toEqual({ from: '2026-01-01', to: '2026-08-31' })
+  })
+  it('crosses a year boundary for last month', () => {
+    expect(presetRange('lastMonth', new Date(2026, 0, 15))).toEqual({ from: '2025-12-01', to: '2025-12-31' })
   })
 })
