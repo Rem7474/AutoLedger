@@ -93,22 +93,14 @@ onMounted(() => {
     <!-- Header Summary -->
     <PageHeader :title="$t('dashboard.dashboardView.tcoDashboard')" :icon="PageIcon">
       {{ $t('dashboard.dashboardView.subtitle', { unit: distanceUnit(), name: vehicleStore.activeVehicle?.name || $t('dashboard.dashboardView.yourVehicle') }) }}
+      <!-- The quick-add button and the bottom bar already cover this on a phone -->
       <template #actions>
-      <div class="flex items-center gap-2">
         <router-link
           to="/expenses"
-          class="btn btn-lg btn-secondary tap-text"
+          class="btn btn-lg btn-secondary tap-text max-sm:hidden"
         >
           {{ $t('dashboard.dashboardView.expense') }}
         </router-link>
-        <router-link
-          to="/drives"
-          class="btn btn-lg btn-secondary tap-text"
-        >
-          {{ $t('dashboard.dashboardView.viewDrives') }}
-        </router-link>
-      </div>
-    
       </template>
     </PageHeader>
 
