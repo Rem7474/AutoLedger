@@ -84,10 +84,10 @@ const summaryChips = computed(() => {
         </button>
       </div>
       <div class="relative">
-        <label for="drives-search-input" class="sr-only">{{ $t('drives.drivesToolbar.searchForACityOr') }}</label>
+        <label for="drives-search-input-phone" class="sr-only">{{ $t('drives.drivesToolbar.searchForACityOr') }}</label>
         <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
-          id="drives-search-input"
+          id="drives-search-input-phone"
           type="text"
           v-model="searchQuery"
           @input="onSearchInput"

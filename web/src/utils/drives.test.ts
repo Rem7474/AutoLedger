@@ -132,6 +132,9 @@ describe('tags', () => {
     expect(applyBatchTag(['Pro'], 'Pro')).toEqual(['Pro'])
     expect(applyBatchTag(['Perso', 'X'], 'Pro')).toEqual(['X', 'Pro'])
     expect(applyBatchTag(['Pro', 'Perso', 'X'], null)).toEqual(['X'])
+    expect(applyBatchTag(['Pro', 'X'], 'Perso')).toEqual(['X', 'Perso'])
+    expect(applyBatchTag(['Perso'], 'Perso')).toEqual(['Perso'])
+    expect(applyBatchTag(undefined, 'Perso')).toEqual(['Perso'])
   })
 })
 
