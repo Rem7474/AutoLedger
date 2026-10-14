@@ -180,7 +180,7 @@ func main() {
 	url := flag.String("url", "http://localhost:8080", "base URL of the AutoLedger instance")
 	email := flag.String("email", "demo@autoledger.example", "demo account email (created when absent)")
 	password := flag.String("password", os.Getenv("DEMO_PASSWORD"), "demo account password (default: $DEMO_PASSWORD)")
-	sets := flag.String("datasets", "ev,ice", "comma-separated datasets: ev, ice")
+	sets := flag.String("datasets", "ev,ice", "comma-separated datasets: ev, ice, layout (a hybrid with long names and another currency, for layout checks)")
 	flag.Parse()
 	if *password == "" {
 		log.Fatal("a password is required (-password or $DEMO_PASSWORD)")

@@ -151,3 +151,26 @@ func TestEVDatasetCarriesACarpoolWithUnevenLegsAndABudget(t *testing.T) {
 		t.Error("ice: the budget is account level and the carpool belongs to the electric vehicle")
 	}
 }
+
+func TestLayoutDatasetStressesTheRendering(t *testing.T) {
+	ds, err := Build("layout", ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ds.Vehicle.Name) < 60 || ds.Vehicle.Currency == "EUR" || ds.Vehicle.Powertrain != "PHEV" {
+		t.Errorf("layout: expected a long name, another currency and a hybrid, got %+v", ds.Vehicle)
+	}
+	if ds.Ownership.ResaleCents != 0 || ds.Ownership.Lease != nil {
+		t.Errorf("layout: the purchase has no planned resale, got %+v", ds.Ownership)
+	}
+	overdue := false
+	for _, r := range ds.Reminders {
+		overdue = overdue || r.Due.Before(ref)
+	}
+	if !overdue {
+		t.Error("layout: expected an overdue reminder")
+	}
+	if len(ds.Events) == 0 || lastEventAt(ds.Events, "fuel").IsZero() || lastEventAt(ds.Events, "charging_session_end").IsZero() {
+		t.Error("layout: expected drives, fuel and charges")
+	}
+}
