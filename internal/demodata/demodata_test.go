@@ -132,3 +132,22 @@ func TestEVDatasetIsALeaseWithAnOptionAboveItsValueAndICEIsAPurchaseWithAPlanned
 		t.Errorf("ice: expected a purchase with a planned resale, got %+v", o)
 	}
 }
+
+func TestEVDatasetCarriesACarpoolWithUnevenLegsAndABudget(t *testing.T) {
+	ev, _ := Build("ev", ref)
+	cp := ev.Carpool
+	if cp == nil || len(cp.Legs) < 2 || len(cp.Passengers) < 2 {
+		t.Fatalf("ev: expected a multi-leg carpool with several passengers, got %+v", cp)
+	}
+	for _, p := range cp.Passengers {
+		if p.Board < 0 || p.Alight < p.Board || p.Alight >= len(cp.Legs) || p.Seats <= 0 {
+			t.Errorf("ev: passenger %+v rides outside the legs", p)
+		}
+	}
+	if ev.MonthlyBudgetCents <= 0 {
+		t.Error("ev: the fleet page needs a monthly budget")
+	}
+	if ice, _ := Build("ice", ref); ice.Carpool != nil || ice.MonthlyBudgetCents != 0 {
+		t.Error("ice: the budget is account level and the carpool belongs to the electric vehicle")
+	}
+}

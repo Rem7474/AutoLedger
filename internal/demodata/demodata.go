@@ -54,6 +54,30 @@ type Ownership struct {
 	Lease         *Lease
 }
 
+// CarpoolLeg is one stage of a carpooled trip, with the costs the driver recorded for it.
+type CarpoolLeg struct {
+	From, To         string
+	DistanceKm       float64
+	ElectricityCents int64
+	TollsCents       int64
+}
+
+// CarpoolPassenger rides from the start of leg Board to the end of leg Alight (0-based leg indexes).
+type CarpoolPassenger struct {
+	Name          string
+	Board, Alight int
+	Seats         int
+	PaidCents     int64
+}
+
+// Carpool is a multi-leg shared trip where passengers get on and off along the way.
+type Carpool struct {
+	Title      string
+	DaysAgo    int
+	Legs       []CarpoolLeg
+	Passengers []CarpoolPassenger
+}
+
 // Lease is a LOA contract.
 type Lease struct {
 	DurationMonths     int
@@ -103,6 +127,10 @@ type Dataset struct {
 	Tires     []Tire
 	// Ownership is the acquisition of the vehicle, which completes the TCO.
 	Ownership Ownership
+	// Carpool fills the carpooling page; nil leaves it empty.
+	Carpool *Carpool
+	// MonthlyBudgetCents is the household budget shown on the fleet page (account level); 0 sets none.
+	MonthlyBudgetCents int64
 	// Comparison is nil for a dataset that carries no scenario.
 	Comparison *Comparison
 	// FinalOdometer is the odometer after the last event.
@@ -248,6 +276,19 @@ func buildEV(today time.Time) Dataset {
 			DurationMonths: 48, MonthlyRentCents: 38900, DownPaymentCents: 400000, KmAllowancePerYear: 12000,
 			ExcessKmPrice: 0.12, OptionPriceCents: 2350000, EndValueCents: 2100000,
 		}}
+	// The second passenger gets on at the stop of the first leg and rides to the end, so the legs are shared unevenly.
+	ds.Carpool = &Carpool{
+		Title: "Lyon to Annecy, Friday evening", DaysAgo: 12,
+		Legs: []CarpoolLeg{
+			{From: "Lyon", To: "Chambery", DistanceKm: 112, ElectricityCents: 1150, TollsCents: 1120},
+			{From: "Chambery", To: "Annecy", DistanceKm: 52, ElectricityCents: 540, TollsCents: 0},
+		},
+		Passengers: []CarpoolPassenger{
+			{Name: "Alice", Board: 0, Alight: 1, Seats: 1, PaidCents: 1500},
+			{Name: "Bruno", Board: 1, Alight: 1, Seats: 1, PaidCents: 300},
+		},
+	}
+	ds.MonthlyBudgetCents = 45000
 	ds.Expenses = []Expense{
 		{"maintenance", "INSURANCE", "Insurance, 12 months", 58000, at(215)},
 		{"maintenance", "MAINTENANCE", "Annual inspection", 18900, at(150)},
