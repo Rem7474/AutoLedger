@@ -222,6 +222,22 @@
     "display": "Display"
   },
   "drivesToolbar": {
+    "units": {
+      "ALL": "All",
+      "DAY": "Day",
+      "WEEK": "Week",
+      "MONTH": "Month",
+      "YEAR": "Year",
+      "CUSTOM": "Range"
+    },
+    "current": {
+      "DAY": "Today",
+      "WEEK": "This week",
+      "MONTH": "This month",
+      "YEAR": "This year"
+    },
+    "previous": "Previous",
+    "next": "Next",
     "presets": {
       "lastMonth": "Last month",
       "last30": "30 days",

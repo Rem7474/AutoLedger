@@ -23,6 +23,9 @@ import {
   tollApplyStatusLabel,
   mergeExpensesByDrive,
   presetRange,
+  unitRange,
+  shiftAnchor,
+  periodBounds,
 } from './drives'
 
 describe('needsTollQualification', () => {
@@ -337,5 +340,30 @@ describe('presetRange', () => {
   })
   it('crosses a year boundary for last month', () => {
     expect(presetRange('lastMonth', new Date(2026, 0, 15))).toEqual({ from: '2025-12-01', to: '2025-12-31' })
+  })
+})
+
+describe('period units', () => {
+  it('ranges a day, an ISO week, a month and a year', () => {
+    expect(unitRange('DAY', '2026-10-14')).toEqual({ from: '2026-10-14', to: '2026-10-14' })
+    expect(unitRange('WEEK', '2026-10-14')).toEqual({ from: '2026-10-12', to: '2026-10-18' })
+    expect(unitRange('WEEK', '2026-10-18')).toEqual({ from: '2026-10-12', to: '2026-10-18' })
+    expect(unitRange('WEEK', '2026-10-19')).toEqual({ from: '2026-10-19', to: '2026-10-25' })
+    expect(unitRange('MONTH', '2026-02-10')).toEqual({ from: '2026-02-01', to: '2026-02-28' })
+    expect(unitRange('YEAR', '2026-10-14')).toEqual({ from: '2026-01-01', to: '2026-12-31' })
+  })
+  it('steps one unit, clamping the day to a shorter month', () => {
+    expect(shiftAnchor('DAY', '2026-03-01', -1)).toBe('2026-02-28')
+    expect(shiftAnchor('WEEK', '2026-12-30', 1)).toBe('2027-01-06')
+    expect(shiftAnchor('MONTH', '2026-03-31', -1)).toBe('2026-02-28')
+    expect(shiftAnchor('MONTH', '2026-12-15', 1)).toBe('2027-01-15')
+    expect(shiftAnchor('YEAR', '2024-02-29', 1)).toBe('2025-02-28')
+  })
+  it('bounds the list for each mode', () => {
+    const f = { anchor: '2026-10-14', month: '2026-09', from: '2026-08-01', to: '' }
+    expect(periodBounds({ ...f, mode: 'ALL' })).toEqual({})
+    expect(periodBounds({ ...f, mode: 'MONTH' })).toEqual({ from: '2026-09-01', to: '2026-09-30' })
+    expect(periodBounds({ ...f, mode: 'WEEK' })).toEqual({ from: '2026-10-12', to: '2026-10-18' })
+    expect(periodBounds({ ...f, mode: 'CUSTOM' })).toEqual({ from: '2026-08-01', to: undefined })
   })
 })

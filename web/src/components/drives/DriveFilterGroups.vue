@@ -11,7 +11,7 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
 </script>
 
 <template>
-  <div id="drives-filter-groups" class="items-center gap-2 bg-slate-900 border border-slate-800 p-1 rounded-xl flex-wrap">
+  <div id="drives-filter-groups" class="flex flex-wrap items-center gap-2">
     <span class="hidden px-2 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500 sm:inline">{{ $t('drives.drivesView.quickFilters') }}</span>
     <ToQualifyFilter
       :count="unqualifiedCount"
