@@ -222,6 +222,7 @@
     "display": "Affichage"
   },
   "drivesToolbar": {
+    "showResults": "Voir {count} résultats",
     "units": {
       "ALL": "Tout",
       "DAY": "Jour",

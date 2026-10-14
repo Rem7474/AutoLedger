@@ -33,7 +33,7 @@ import AddToTripModal from '@/components/drives/AddToTripModal.vue'
 import ManualDriveModal from '@/components/drives/ManualDriveModal.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
 import EmptySourceHints from '@/components/EmptySourceHints.vue'
-import { ChevronDown, Layers, List, RotateCcw, Plus, SlidersHorizontal, UploadCloud } from 'lucide-vue-next'
+import { Layers, List, RotateCcw, Plus, UploadCloud } from 'lucide-vue-next'
 import {
   filterTrips,
   currentYearMonth,
@@ -220,7 +220,6 @@ const viewMode = ref<'DRIVES' | 'TRIPS'>('DRIVES')
 const tripQualifyOnly = ref(false)
 
 // On a phone the filters sit behind one button, so the first drive is not pushed below the fold; a wide screen shows them
-const filtersOpen = ref(false)
 const activeFilterCount = computed(() => countActiveDriveFilters({ mode: viewMode.value, periodMode: periodMode.value, unqualifiedOnly: unqualifiedOnly.value, hasTollOnly: hasTollOnly.value, selectedTag: selectedTag.value, tripQualifyOnly: tripQualifyOnly.value }))
 const {
   tripGroups,
@@ -434,18 +433,6 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
           </button>
         </div>
 
-        <button
-          type="button"
-          class="btn btn-secondary sm:hidden"
-          :aria-expanded="filtersOpen"
-          aria-controls="drives-filter-groups"
-          @click="filtersOpen = !filtersOpen"
-        >
-          <SlidersHorizontal class="w-4 h-4" aria-hidden="true" />
-          <span>{{ $t('drives.drivesView.filters') }}</span>
-          <span v-if="activeFilterCount > 0" class="rounded-full bg-rose-600 px-1.5 text-xs font-bold text-white">{{ activeFilterCount }}</span>
-          <ChevronDown class="w-4 h-4 transition-transform" :class="filtersOpen ? 'rotate-180' : ''" aria-hidden="true" />
-        </button>
 
       </div>
     
@@ -463,7 +450,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       v-model:custom-to="customTo"
       v-model:search-query="searchQuery"
       :mode="viewMode"
-      :collapsed="!filtersOpen"
+      :active-count="activeFilterCount"
       :total="viewMode === 'DRIVES' ? total : shownTrips.length"
       :loading="viewMode === 'DRIVES' ? loading : loadingTrips"
       :drives="viewMode === 'DRIVES' ? drives : shownTrips"
