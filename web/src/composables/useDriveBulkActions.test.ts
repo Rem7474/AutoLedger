@@ -60,6 +60,29 @@ describe('useDriveBulkActions', () => {
     expect(api.updateDrivesDriver).not.toHaveBeenCalled()
   })
 
+  it('has no people without a vehicle or when loading them fails', async () => {
+    store.activeVehicle = null
+    const none = setup()
+    expect(none.h.vehiclePeople.value).toEqual([])
+    expect(api.getVehiclePeople).not.toHaveBeenCalled()
+
+    store.activeVehicle = { id: 'v1' }
+    api.getVehiclePeople.mockRejectedValueOnce(new Error('down'))
+    const failed = setup()
+    await vi.waitFor(() => expect(api.getVehiclePeople).toHaveBeenCalled())
+    expect(failed.h.vehiclePeople.value).toEqual([])
+  })
+
+  it('updates a selected drive that is no longer on the loaded page', async () => {
+    api.updateDrivesDriver.mockResolvedValue({ success: true, updated: 1 })
+    const { h, drives, loadDrives } = setup(['d1'])
+    drives.value = []
+    await vi.waitFor(() => expect(h.vehiclePeople.value).toHaveLength(1))
+    await h.handleBatchDriver('p1')
+    expect(api.updateDrivesDriver).toHaveBeenCalledWith('v1', ['d1'], 'p1')
+    expect(loadDrives).toHaveBeenCalled()
+  })
+
   it('tags every selected drive and reports the count', async () => {
     const { h, drives } = setup()
     await h.handleBatchTag('Perso')

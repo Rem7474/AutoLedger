@@ -118,4 +118,37 @@ func TestUpdateDrivesDriverAssignsAndClearsInOneCall(t *testing.T) {
 	if rec := send(http.MethodPut, path, body(nil, person.ID)); rec.Code != http.StatusBadRequest {
 		t.Errorf("empty selection: status %d, want 400", rec.Code)
 	}
+	if rec := send(http.MethodPut, path, `{not json`); rec.Code != http.StatusBadRequest {
+		t.Errorf("invalid body: status %d, want 400", rec.Code)
+	}
+	tooMany := make([]string, MaxBulkDriverDrives+1)
+	for i := range tooMany {
+		tooMany[i] = a
+	}
+	if rec := send(http.MethodPut, path, body(tooMany, person.ID)); rec.Code != http.StatusBadRequest {
+		t.Errorf("over the limit: status %d, want 400", rec.Code)
+	}
+
+	// An empty driver_id clears the driver like null does.
+	if rec := send(http.MethodPut, path, body([]string{b}, "")); rec.Code != http.StatusOK {
+		t.Fatalf("empty driver_id: status %d, body %s", rec.Code, rec.Body.String())
+	}
+	if got := driverOf(b); got != nil {
+		t.Errorf("empty driver_id kept driver %v", *got)
+	}
+
+	// Drives of another vehicle are not touched even when their id is sent.
+	foreign := &models.Vehicle{UserID: u.ID, Name: "Foreign", TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
+	if err := repo.CreateVehicle(ctx, foreign); err != nil {
+		t.Fatal(err)
+	}
+	rec := send(http.MethodPut, "/vehicles/"+foreign.ID+"/drives/driver", body([]string{untouched}, nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("foreign ids: status %d, body %s", rec.Code, rec.Body.String())
+	}
+	var out struct{ Updated int64 }
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	if out.Updated != 0 {
+		t.Errorf("foreign ids updated %d drives, want 0", out.Updated)
+	}
 }
