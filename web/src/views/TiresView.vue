@@ -15,6 +15,7 @@ import { api } from '@/services/api'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import TireQuickRotationBar from '@/components/tires/TireQuickRotationBar.vue'
+import TireSetSummary from '@/components/tires/TireSetSummary.vue'
 import TireOdometerTimeline from '@/components/tires/TireOdometerTimeline.vue'
 import TireWheelCard from '@/components/tires/TireWheelCard.vue'
 import TireStorageCard from '@/components/tires/TireStorageCard.vue'
@@ -312,6 +313,7 @@ async function onLogSaved() {
 
     <!-- TAB 1: CHASSIS INTERACTIF (PNEUS MONTÉS) -->
     <div v-if="ready && activeTab === 'chassis'" class="space-y-6">
+      <TireSetSummary v-if="hasMountedTires" :mounted="mountedTires" />
       <TireOdometerTimeline
         :tires="tires"
         :current-odometer="vehicleStore.activeVehicle?.current_odometer || 0"

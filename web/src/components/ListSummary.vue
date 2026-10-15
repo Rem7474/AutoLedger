@@ -4,7 +4,7 @@
 export interface SummaryChip {
   label: string
   value: string
-  tone?: 'sky' | 'amber' | 'emerald' | 'slate'
+  tone?: 'sky' | 'amber' | 'emerald' | 'rose' | 'slate'
 }
 defineProps<{ chips: SummaryChip[] }>()
 
@@ -12,6 +12,7 @@ const tones = {
   sky: 'bg-sky-500/10 border-sky-500/20 text-sky-300',
   amber: 'bg-amber-500/10 border-amber-500/20 text-amber-300',
   emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
+  rose: 'bg-rose-500/10 border-rose-500/30 text-rose-300',
   slate: 'bg-slate-800/70 border-slate-700/70 text-slate-200',
 }
 </script>

@@ -375,5 +375,11 @@
     "declared": "Reference: the lifespan you entered.",
     "average": "Reference: the average wear rate.",
     "thin": "Measure still thin: add a reading."
+  },
+  "tireSetSummary": {
+    "fitted": "Wheels fitted",
+    "mostWorn": "Most worn tire",
+    "ofLifespan": "of its lifespan",
+    "nextReplacement": "Next replacement"
   }
 }

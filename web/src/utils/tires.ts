@@ -207,3 +207,29 @@ export function validateTireForm(f: TireFormInput): Partial<Record<TireFormField
   if (!(lifespan > 0)) errors.estimated_lifespan_km = 'tires.tireAddModal.errors.lifespan'
   return errors
 }
+
+export interface TireSetSummary {
+  fitted: number
+  /** The most worn fitted tire: its wear share of the estimated lifespan and the wheel it sits on. */
+  mostWorn: { pct: number; position: string; name: string } | null
+  /** The earliest predicted replacement date (YYYY-MM-DD) among the fitted tires. */
+  nextReplacement: string | null
+}
+
+/** What the page opens on: how many wheels are fitted, the most worn tire and the first replacement to plan. */
+export function summarizeFittedTires(mounted: Record<string, any | null>): TireSetSummary {
+  let fitted = 0
+  let mostWorn: TireSetSummary['mostWorn'] = null
+  let nextReplacement: string | null = null
+  for (const [position, stat] of Object.entries(mounted)) {
+    if (!stat) continue
+    fitted++
+    const pct = Number(stat.life_progress_pct)
+    if (Number.isFinite(pct) && (!mostWorn || pct > mostWorn.pct)) {
+      mostWorn = { pct, position, name: `${stat.tire.brand} ${stat.tire.model}`.trim() }
+    }
+    const date = stat.replacement_forecast?.replacement_date as string | undefined
+    if (date && (!nextReplacement || date < nextReplacement)) nextReplacement = date
+  }
+  return { fitted, mostWorn, nextReplacement }
+}

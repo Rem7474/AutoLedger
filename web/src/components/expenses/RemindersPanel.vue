@@ -5,6 +5,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import type { MaintenanceReminder, VehicleWebhook } from '@/services/api'
 import { Plus, AlertTriangle, Bell, Clock, CheckCircle2, Radio, Sparkles, CircleDashed, Settings } from 'lucide-vue-next'
 import EmptyState from '@/components/EmptyState.vue'
+import ListSummary from '@/components/ListSummary.vue'
 import { reminderPresets, type ReminderPreset } from '@/utils/expenses'
 import { groupRemindersByDue } from '@/utils/dashboard'
 import ReminderRow from '@/components/expenses/ReminderRow.vue'
@@ -35,18 +36,20 @@ const groups = computed(() => groupRemindersByDue(props.reminders))
 <template>
   <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <ul class="flex flex-wrap items-center gap-2 text-xs font-semibold" :aria-label="$t('expenses.remindersPanel.summary')">
-        <li class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">{{ $t('expenses.remindersPanel.totalCount', { count: reminders.length }) }}</li>
-        <li v-if="overdueReminders.length" class="px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center gap-1.5">
-          <AlertTriangle class="w-3 h-3" />{{ overdueReminders.length }} {{ $t('expenses.remindersPanel.overdue') }}
-        </li>
-        <li v-if="dueSoonReminders.length" class="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
-          <Clock class="w-3 h-3" />{{ dueSoonReminders.length }} {{ $t('expenses.remindersPanel.comingUp') }}
-        </li>
-        <li v-if="okReminders.length" class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-          <CheckCircle2 class="w-3 h-3" />{{ okReminders.length }} {{ $t('expenses.remindersPanel.upToDate') }}
-        </li>
-      </ul>
+      <ListSummary
+        v-if="reminders.length"
+        role="group"
+        :aria-label="$t('expenses.remindersPanel.summary')"
+        :chips="[
+          ...(overdueReminders.length ? [{ label: $t('expenses.remindersPanel.overdue'), value: String(overdueReminders.length), tone: 'rose' as const }] : []),
+          ...(dueSoonReminders.length ? [{ label: $t('expenses.remindersPanel.comingUp'), value: String(dueSoonReminders.length), tone: 'amber' as const }] : []),
+          ...(okReminders.length ? [{ label: $t('expenses.remindersPanel.upToDate'), value: String(okReminders.length), tone: 'emerald' as const }] : []),
+          ...(unscheduledReminders.length ? [{ label: $t('expenses.remindersPanel.groupUnscheduled'), value: String(unscheduledReminders.length) }] : []),
+        ]"
+      >
+        {{ $t('expenses.remindersPanel.totalCount', { count: reminders.length }, reminders.length) }}
+      </ListSummary>
+      <span v-else></span>
       <button
         type="button"
         class="btn btn-secondary tap-text"

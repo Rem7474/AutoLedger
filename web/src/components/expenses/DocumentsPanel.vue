@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import ListSummary from '@/components/ListSummary.vue'
+import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { ExpenseDocumentHeader } from '@/services/api'
 import { Trash2, Paperclip, FileText, Download, Eye, UploadCloud, Loader2 } from 'lucide-vue-next'
 import { formatDate, formatFileSize } from '@/utils/expenses'
 
-defineProps<{ documents: ExpenseDocumentHeader[]; loading: boolean; loadingDocId: string | null }>()
+const props = defineProps<{ documents: ExpenseDocumentHeader[]; loading: boolean; loadingDocId: string | null }>()
 const emit = defineEmits<{
   upload: []
   delete: [document: ExpenseDocumentHeader]
   'view-document': [docId: string | null | undefined, filename?: string | null, download?: boolean]
 }>()
 const vehicleStore = useVehicleStore()
+const linkedCount = computed(() => props.documents.filter((d) => d.linked_expenses_count > 0).length)
 </script>
 
 <template>
@@ -25,9 +28,6 @@ const vehicleStore = useVehicleStore()
           {{ $t('expenses.documentsPanel.receiptsInvoicesTicketsWorkshopReports') }}
         </span>
       </div>
-      <span class="font-semibold shrink-0">
-        {{ $t('expenses.documentsPanel.documentS', { length: documents.length }) }}
-      </span>
     </div>
 
     <ListSkeleton v-if="loading" />
@@ -40,7 +40,16 @@ const vehicleStore = useVehicleStore()
       </template>
     </EmptyState>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <template v-else>
+    <ListSummary
+      :chips="[
+        { label: $t('expenses.documentsPanel.linked'), value: String(linkedCount), tone: 'emerald' },
+        { label: $t('expenses.documentsPanel.notLinked'), value: String(documents.length - linkedCount), tone: documents.length - linkedCount ? 'amber' : 'slate' },
+      ]"
+    >
+      {{ $t('expenses.documentsPanel.documentS', { count: documents.length }, documents.length) }}
+    </ListSummary>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div
         v-for="d in documents"
         :key="d.id"
@@ -107,5 +116,6 @@ const vehicleStore = useVehicleStore()
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
