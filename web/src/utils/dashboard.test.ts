@@ -448,6 +448,20 @@ describe('rollingWindowStats', () => {
     expect(w.economicPerKm).toBe(1)
   })
 
+  it('sums the energy of the window, estimate included, and its cost per distance', () => {
+    const w = rollingWindowStats([
+      { month: '2026-08', distance_km: 400, total: 100, energy: 60 },
+      { month: '2026-09', distance_km: 600, total: 200, energy: 140, smoothed_energy: 40 },
+    ])!
+    expect(w.energy).toBe(200)
+    expect(w.energyPerKm).toBe(0.2)
+  })
+
+  it('leaves the energy cost per distance unknown without energy or distance', () => {
+    expect(rollingWindowStats([{ month: '2026-09', distance_km: 100, total: 50 }])!.energyPerKm).toBeNull()
+    expect(rollingWindowStats([{ month: '2026-09', distance_km: 0, total: 50, energy: 50 }])!.energyPerKm).toBeNull()
+  })
+
   it('leaves the cost per distance unknown without distance or without cost', () => {
     expect(rollingWindowStats([{ month: '2026-09', distance_km: 0, total: 100, energy: 100 }])!.economicPerKm).toBeNull()
     expect(rollingWindowStats([{ month: '2026-09', distance_km: 100, total: 0 }])!.economicPerKm).toBeNull()

@@ -354,12 +354,14 @@ export function rollingWindowStats(monthlyCosts: any[] | undefined, months = ROL
   let economic = 0
   let distanceKm = 0
   let estimatedEnergy = 0
+  let energy = 0
   for (const m of window) {
     const b = buildMonthBreakdown(m, 'economic')
     cash += b.cashTotal
     economic += b.economicTotal
     distanceKm += m.distance_km || 0
     estimatedEnergy += m.smoothed_energy || 0
+    energy += Number(m.energy) || 0
   }
   return {
     months: window.length,
@@ -369,8 +371,10 @@ export function rollingWindowStats(monthlyCosts: any[] | undefined, months = ROL
     economic,
     distanceKm,
     estimatedEnergy,
+    energy,
     // Unknown, not zero, without a distance or without any cost over the window
     economicPerKm: distanceKm > 0 && economic > 0 ? economic / distanceKm : null,
+    energyPerKm: distanceKm > 0 && energy > 0 ? energy / distanceKm : null,
   }
 }
 
