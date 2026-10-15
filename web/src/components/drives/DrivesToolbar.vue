@@ -7,17 +7,14 @@ import ModalShell from '@/components/ModalShell.vue'
 import ListSummary from '@/components/ListSummary.vue'
 import DrivesPeriodControls from '@/components/drives/DrivesPeriodControls.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
-import { formatMonthLabel, periodBounds, sumDriveCosts, type PeriodMode } from '@/utils/drives'
-import { formatAmount } from '@/currency'
-import { useVehicleStore } from '@/stores/vehicle'
+import { formatMonthLabel, periodBounds, type PeriodMode } from '@/utils/drives'
 
 // One bar for the list filters: the period, the address search, and the quick filters of the page in the `filters`
 // slot. On a phone the bar is a summary of the period and a Filters button; the period and the quick filters are
-// edited in a sheet. Also shows the metrics of what is listed (the current page of drives, or the trips in trip mode).
+// edited in a sheet. Also shows what is listed: the count and, in trip mode, the distance.
 // Every change of a filter is reported with change so the page reloads from the first page.
 const props = withDefaults(defineProps<{ total: number; loading: boolean; drives: any[]; mode?: 'DRIVES' | 'TRIPS'; activeCount?: number }>(), { mode: 'DRIVES', activeCount: 0 })
 const emit = defineEmits<{ change: [] }>()
-const vehicleStore = useVehicleStore()
 const periodMode = defineModel<PeriodMode>('periodMode', { required: true })
 const selectedMonth = defineModel<string>('selectedMonth', { required: true })
 const anchorDay = defineModel<string>('anchorDay', { required: true })
@@ -53,19 +50,12 @@ const periodSummary = computed(() => {
   return `${fmt(b.from)} – ${fmt(b.to)}`
 })
 
-// Summary metrics of current page drives
-const pageDistance = computed(() => props.drives.reduce((acc, d) => acc + (d.distance_km || 0), 0))
-const pageEnergy = computed(() => props.drives.reduce((acc, d) => acc + (d.energy_consumed_kwh || 0), 0))
-const pageCost = computed(() => sumDriveCosts(props.drives))
-const summaryChips = computed(() => {
-  const distance = { label: t('drives.drivesToolbar.pageDistance').replace(/:$/, ''), value: formatDistance(pageDistance.value), tone: 'sky' as const }
-  if (props.mode === 'TRIPS') return [{ ...distance, label: t('drives.drivesToolbar.totalDistance').replace(/:$/, '') }]
-  return [
-    distance,
-    { label: t('drives.drivesToolbar.pageEnergy').replace(/:$/, ''), value: t('drives.drivesToolbar.kwh', { pageEnergy: Math.round(pageEnergy.value).toLocaleString(intlLocale()) }), tone: 'amber' as const },
-    { label: t('drives.drivesToolbar.pageCost').replace(/:$/, ''), value: formatAmount(pageCost.value, vehicleStore.currency), tone: 'emerald' as const },
-  ]
-})
+// The drives list is paged and the API returns the count of the filter, not its totals: the distance, energy and
+// cost of a page would read as the filter's, so only trips (not paged) carry a total. A selection has its own summary.
+const tripsDistance = computed(() => props.drives.reduce((acc, d) => acc + (d.distance_km || 0), 0))
+const summaryChips = computed(() =>
+  props.mode === 'TRIPS' ? [{ label: t('drives.drivesToolbar.totalDistance').replace(/:$/, ''), value: formatDistance(tripsDistance.value), tone: 'sky' as const }] : [],
+)
 </script>
 
 <template>
@@ -174,7 +164,7 @@ const summaryChips = computed(() => {
     <!-- The figures of what is listed: shown once, as chips -->
     <ListSummary v-if="total > 0 && !loading" :chips="summaryChips">
       <strong class="text-white">{{ total }}</strong>
-      {{ mode === 'TRIPS' ? $t('drives.drivesToolbar.tripSFound') : $t('drives.drivesToolbar.driveSFound') }}
+      {{ mode === 'TRIPS' ? $t('drives.drivesToolbar.tripSFound', {}, total) : $t('drives.drivesToolbar.driveSFound', {}, total) }}
       <i18n-t v-if="periodMode === 'MONTH'" keypath="drives.drivesToolbar.inMonth" tag="span">
         <template #month><span class="font-semibold text-slate-200">{{ formattedSelectedMonth }}</span></template>
       </i18n-t>
