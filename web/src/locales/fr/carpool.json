@@ -32,7 +32,8 @@
     "trips": "voyage | voyages",
     "carpooledTrips": "Trajets covoiturés",
     "covered": "Parts des passagers couvertes",
-    "below": "{amount} sous leur part"
+    "below": "{amount} sous leur part",
+    "allTrips": "Tous les trajets"
   },
   "carpoolDetailModal": {
     "paidByPassengers": "Payé par les passagers",
