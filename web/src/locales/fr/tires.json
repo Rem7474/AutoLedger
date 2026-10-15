@@ -375,5 +375,11 @@
     "declared": "Référence : la durée saisie.",
     "average": "Référence : l'usure moyenne.",
     "thin": "Mesure encore faible : ajoutez un relevé."
+  },
+  "tireSetSummary": {
+    "fitted": "Roues équipées",
+    "mostWorn": "Pneu le plus usé",
+    "ofLifespan": "de sa durée de vie",
+    "nextReplacement": "Prochain remplacement"
   }
 }

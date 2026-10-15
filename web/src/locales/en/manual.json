@@ -93,6 +93,9 @@
     "pointS": "{length} point(s)",
     "fromFillUp": "Fill-up",
     "fromFillUpHint": "Mileage typed on a fill-up. It is edited from the fill-ups list.",
-    "seeFillUps": "See the fill-ups"
+    "seeFillUps": "See the fill-ups",
+    "currentReading": "Current mileage",
+    "lastReading": "Last reading",
+    "sinceLastReading": "Since the last reading"
   }
 }
