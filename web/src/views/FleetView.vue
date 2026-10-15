@@ -87,6 +87,7 @@ const otherTotals = computed(() => (summary.value?.totals ?? []).filter((x) => x
 // Ranking by full cost per km inside each currency, only among vehicles whose figures are complete enough to be compared
 const rankedVehicles = computed(() => rankFleetVehicles(summary.value?.vehicles ?? [], summary.value?.currency ?? ''))
 const cheapestPerKmIdSet = computed(() => cheapestPerKmIds(rankedVehicles.value))
+const showDrivers = computed(() => (summary.value?.member_km_shares.length ?? 0) > 1)
 
 function completenessClass(pct: number): string {
   if (pct >= 80) return 'text-success-400'
@@ -216,6 +217,44 @@ onBeforeUnmount(() => {
     <LoadError v-if="loadError !== null" :message="loadError" @retry="loadFleetSummary" />
     <ListSkeleton v-else-if="loading && !summary" :rows="3" />
 
+    <!-- KPI Grid -->
+    <div v-if="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <KpiCard :label="t('fleet.kpi.vehicles')" :icon="Car" :value="String(summary.total_vehicles)">
+        <p class="mt-1 text-xs text-slate-400">{{ t('fleet.kpi.activeVehicles') }}</p>
+      </KpiCard>
+
+      <KpiCard
+        :label="t('fleet.kpi.cost')"
+        :period="formatMonthName(summary.current_month)"
+        :icon="TrendingDown"
+        :value="formatAmount(summary.current_month_cost, summary.currency)"
+      >
+        <p v-for="tot in otherTotals" :key="tot.currency" class="text-lg font-bold text-white tabular-nums" data-testid="fleet-currency-total">
+          {{ formatAmount(tot.current_month_cost, tot.currency) }}
+        </p>
+        <p class="mt-1 text-xs text-slate-400">{{ otherTotals.length ? t('fleet.kpi.perCurrency') : t('fleet.kpi.currentMonthTotal') }}</p>
+      </KpiCard>
+
+      <KpiCard
+        :label="t('fleet.kpi.distance')"
+        :period="formatMonthName(summary.current_month)"
+        :icon="Gauge"
+        :value="formatDistance(summary.current_month_distance_km)"
+      >
+        <p class="mt-1 text-xs text-slate-400">{{ t('fleet.kpi.fleetTravelled') }}</p>
+      </KpiCard>
+
+      <KpiCard
+        :label="t('fleet.kpi.energy')"
+        :period="formatMonthName(summary.current_month)"
+        :icon="Zap"
+        :value="formatNumber(summary.current_month_energy_kwh)"
+        unit=" kWh"
+      >
+        <p class="mt-1 text-xs text-slate-400">{{ t('fleet.kpi.energyDelivered') }}</p>
+      </KpiCard>
+    </div>
+
     <!-- Monthly budget -->
     <div v-if="summary" class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -262,41 +301,6 @@ onBeforeUnmount(() => {
       </p>
     </div>
 
-    <!-- KPI Grid -->
-    <div v-if="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <KpiCard :label="t('fleet.kpi.vehicles')" :icon="Car" :value="String(summary.total_vehicles)">
-        <p class="mt-1 text-xs text-slate-400">{{ t('fleet.kpi.activeVehicles') }}</p>
-      </KpiCard>
-
-      <KpiCard
-        :label="t('fleet.kpi.monthCost', { month: formatMonthName(summary.current_month) })"
-        :icon="TrendingDown"
-        :value="formatAmount(summary.current_month_cost, summary.currency)"
-      >
-        <p v-for="tot in otherTotals" :key="tot.currency" class="text-lg font-bold text-white tabular-nums" data-testid="fleet-currency-total">
-          {{ formatAmount(tot.current_month_cost, tot.currency) }}
-        </p>
-        <p class="mt-1 text-xs text-slate-400">{{ otherTotals.length ? t('fleet.kpi.perCurrency') : t('fleet.kpi.currentMonthTotal') }}</p>
-      </KpiCard>
-
-      <KpiCard
-        :label="t('fleet.kpi.monthDistance', { month: formatMonthName(summary.current_month) })"
-        :icon="Gauge"
-        :value="formatDistance(summary.current_month_distance_km)"
-      >
-        <p class="mt-1 text-xs text-slate-400">{{ t('fleet.kpi.fleetTravelled') }}</p>
-      </KpiCard>
-
-      <KpiCard
-        :label="t('fleet.kpi.monthEnergy', { month: formatMonthName(summary.current_month) })"
-        :icon="Zap"
-        :value="formatNumber(summary.current_month_energy_kwh)"
-        unit=" kWh"
-      >
-        <p class="mt-1 text-xs text-slate-400">{{ t('fleet.kpi.energyDelivered') }}</p>
-      </KpiCard>
-    </div>
-
     <!-- Cost per distance comparison -->
     <div v-if="summary && summary.vehicles.length > 0" class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
       <div class="flex flex-col gap-1 border-b border-slate-800/80 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
@@ -331,14 +335,6 @@ onBeforeUnmount(() => {
               <dd class="tabular-nums text-slate-200">{{ formatAmountOrUnknown(v.running_cost_per_km == null ? null : perDistance(v.running_cost_per_km), v.currency) }}</dd>
             </div>
             <div>
-              <dt class="text-slate-400">{{ t('fleet.compare.energyCost', { unit: distanceUnitLabel }) }}</dt>
-              <dd class="tabular-nums text-slate-200">{{ energyCost100(v) }}</dd>
-            </div>
-            <div>
-              <dt class="text-slate-400">{{ t('fleet.compare.energy') }} <GlossaryTip term="atThePlug" /></dt>
-              <dd class="tabular-nums text-slate-200">{{ energyPer100(v) }}</dd>
-            </div>
-            <div>
               <dt class="text-slate-400">{{ t('fleet.compare.monthDistance') }}</dt>
               <dd class="tabular-nums text-slate-200">{{ formatDistance(v.month_distance_km) }}</dd>
             </div>
@@ -347,14 +343,27 @@ onBeforeUnmount(() => {
               <dd class="tabular-nums text-slate-200">{{ formatAmount(v.month_cost, v.currency) }}</dd>
             </div>
             <div>
-              <dt class="text-slate-400">{{ t('fleet.compare.annual') }}</dt>
-              <dd class="tabular-nums text-slate-200">{{ v.annual_cost != null ? formatAmount(v.annual_cost, v.currency) : '—' }}</dd>
-            </div>
-            <div>
               <dt class="text-slate-400">{{ t('fleet.compare.completeness') }}</dt>
               <dd class="font-semibold tabular-nums" :class="completenessClass(v.completeness_pct)">{{ formatPercent(v.completeness_pct, 0) }}</dd>
             </div>
           </dl>
+          <details class="group mt-2 border-t border-slate-800/60 pt-2 text-xs">
+            <summary class="tap-text cursor-pointer list-none font-semibold text-sky-400 underline group-open:mb-2">{{ t('fleet.compare.moreFigures') }}</summary>
+            <dl class="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            <div>
+              <dt class="text-slate-400">{{ t('fleet.compare.energyCost', { unit: distanceUnitLabel }) }}</dt>
+              <dd class="tabular-nums text-slate-200">{{ energyCost100(v) }}</dd>
+            </div>
+            <div>
+              <dt class="text-slate-400">{{ t('fleet.compare.energy') }} <GlossaryTip term="atThePlug" /></dt>
+              <dd class="tabular-nums text-slate-200">{{ energyPer100(v) }}</dd>
+            </div>
+            <div>
+              <dt class="text-slate-400">{{ t('fleet.compare.annual') }}</dt>
+              <dd class="tabular-nums text-slate-200">{{ v.annual_cost != null ? formatAmount(v.annual_cost, v.currency) : '—' }}</dd>
+            </div>
+            </dl>
+          </details>
         </li>
       </ul>
       <div class="hidden overflow-x-auto md:block">
@@ -399,7 +408,7 @@ onBeforeUnmount(() => {
     <!-- Charts & Driver Share Row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" v-if="summary">
       <!-- Monthly Cost Chart -->
-      <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4" :class="showDrivers ? 'lg:col-span-2' : 'lg:col-span-3'">
         <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
           <h2 class="text-base font-semibold text-white">
             {{ t('fleet.chart.monthlyCostHistory') }}
@@ -416,8 +425,8 @@ onBeforeUnmount(() => {
         />
       </div>
 
-      <!-- Driver Distance Distribution -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+      <!-- Driver Distance Distribution: a share between drivers needs at least two of them -->
+      <div v-if="showDrivers" class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
         <div class="border-b border-slate-800/80 pb-3">
           <h2 class="text-base font-semibold text-white flex items-center gap-2">
             <Users class="w-4 h-4 text-blue-400" />
@@ -426,7 +435,7 @@ onBeforeUnmount(() => {
           <p class="text-xs text-slate-400 mt-1">{{ t('fleet.drivers.subtitle') }}</p>
         </div>
 
-        <div v-if="summary.member_km_shares.length" class="space-y-3">
+        <div class="space-y-3">
           <div
             v-for="member in summary.member_km_shares"
             :key="member.person_id"
@@ -445,9 +454,6 @@ onBeforeUnmount(() => {
               ></div>
             </div>
           </div>
-        </div>
-        <div v-else class="text-center py-8 text-xs text-slate-400">
-          {{ t('fleet.drivers.noData') }}
         </div>
       </div>
     </div>
