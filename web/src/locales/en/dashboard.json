@@ -272,7 +272,7 @@
     "sincePurchase": "Since {month}: {amount}",
     "economicPerKm": "Economic cost / {unit}",
     "windowMonths": "last month | last {months} months",
-    "sincePurchasePerKm": "Since purchase: {amount}/{unit}",
+    "sincePurchasePerKm": "Full cost since purchase: {amount}/{unit}",
     "currentMonth": "{month}",
     "currentMonthShort": "Current month",
     "monthDistance": "{distance_km} {unit}",
