@@ -21,9 +21,14 @@ type fakeNotificationStore struct {
 	language         string
 	activeVehicles   []models.Vehicle
 	checkedOdometers []float64
+	listErr          error
+	webhookErr       error
 }
 
 func (f *fakeNotificationStore) GetVehicleWebhook(ctx context.Context, vehicleID string) (*models.VehicleWebhook, error) {
+	if f.webhookErr != nil {
+		return nil, f.webhookErr
+	}
 	return f.webhook, nil
 }
 
@@ -33,6 +38,9 @@ func (f *fakeNotificationStore) ListMaintenanceReminders(ctx context.Context, ve
 }
 
 func (f *fakeNotificationStore) ListVehiclesWithActiveWebhook(ctx context.Context) ([]models.Vehicle, error) {
+	if f.listErr != nil {
+		return nil, f.listErr
+	}
 	return f.activeVehicles, nil
 }
 
@@ -327,5 +335,37 @@ func TestCheckAllVehiclesWithoutWebhookVehiclesDoesNothing(t *testing.T) {
 	}
 	if len(store.checkedOdometers) != 0 {
 		t.Fatalf("no vehicle has an active webhook, got %v", store.checkedOdometers)
+	}
+}
+
+func TestCheckAllVehiclesReportsAListingFailure(t *testing.T) {
+	cause := errors.New("database unavailable")
+	svc := NewNotificationService(&fakeNotificationStore{listErr: cause})
+	if err := svc.CheckAllVehicles(context.Background()); !errors.Is(err, cause) {
+		t.Fatalf("CheckAllVehicles = %v, want the listing error", err)
+	}
+}
+
+func TestCheckAllVehiclesKeepsGoingWhenOneVehicleFails(t *testing.T) {
+	store := &fakeNotificationStore{
+		webhookErr:     errors.New("webhook lookup failed"),
+		activeVehicles: []models.Vehicle{{ID: "v1", Name: "Zoe"}, {ID: "v2", Name: "Clio"}},
+	}
+	svc := NewNotificationService(store)
+	if err := svc.CheckAllVehicles(context.Background()); err != nil {
+		t.Fatalf("a failing vehicle must not fail the run, got %v", err)
+	}
+}
+
+func TestCheckAllVehiclesStopsWhenTheContextEnds(t *testing.T) {
+	store := &fakeNotificationStore{activeVehicles: []models.Vehicle{{ID: "v1", Name: "Zoe"}}}
+	svc := NewNotificationService(store)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := svc.CheckAllVehicles(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("CheckAllVehicles = %v, want context.Canceled", err)
+	}
+	if len(store.checkedOdometers) != 0 {
+		t.Fatalf("no vehicle must be evaluated after the context ended, got %v", store.checkedOdometers)
 	}
 }
