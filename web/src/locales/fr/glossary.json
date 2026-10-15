@@ -27,5 +27,13 @@
     "label": "Énergie estimée",
     "definition": "Énergie valorisée pour la distance parcourue sans trajet enregistré, d'après la consommation et le prix moyens du véhicule."
   },
+  "chargeEfficiency": {
+    "label": "Rendement de charge",
+    "definition": "Énergie stockée dans la batterie sur énergie tirée du réseau."
+  },
+  "fullChargeCost": {
+    "label": "Coût d'une charge complète",
+    "definition": "Extrapolé des recharges dont le coût et le niveau de batterie sont connus."
+  },
   "about": "Définition de {term}"
 }
