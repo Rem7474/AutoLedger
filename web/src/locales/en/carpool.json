@@ -32,7 +32,8 @@
     "trips": "trip | trips",
     "carpooledTrips": "Carpooled trips",
     "covered": "Passengers' shares covered",
-    "below": "{amount} below their share"
+    "below": "{amount} below their share",
+    "allTrips": "All trips"
   },
   "carpoolDetailModal": {
     "paidByPassengers": "Paid by the passengers",
