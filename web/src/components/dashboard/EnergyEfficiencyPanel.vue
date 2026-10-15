@@ -231,6 +231,7 @@ onBeforeUnmount(() => {
       <span v-if="summary" class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-300">
         <span>{{ fmt(perUnit(stats?.summary.consumption_kwh_100km), 1) }} kWh/100 {{ distanceUnit() }}</span>
         <span>{{ fmtMoney(perUnit(stats?.summary.cost_per_100km), currency) }}/100 {{ distanceUnit() }}</span>
+        <span class="font-medium text-slate-400">{{ $t('dashboard.energyEfficiencyPanel.wholeHistory') }}</span>
         <ChevronDown class="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
       </span>
     </component>
@@ -239,37 +240,42 @@ onBeforeUnmount(() => {
       <KpiCard
         compact
         :label="$t('dashboard.energyEfficiencyPanel.actualConsumption')"
+        :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
         term="atTheWheel"
         :value="fmt(perUnit(stats?.summary.consumption_kwh_100km), 1)"
         :unit="` kWh/100 ${distanceUnit()}`"
-      >
-        <p class="mt-0.5 hidden text-xs text-slate-400 sm:block">{{ $t('dashboard.energyEfficiencyPanel.energyUsedWhileDrivingMeasured') }}</p>
-      </KpiCard>
+      />
       <KpiCard
         compact
         :label="$t('dashboard.energyEfficiencyPanel.energyCost')"
+        :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
         :value="fmtMoney(perUnit(stats?.summary.cost_per_100km), currency)"
         :unit="` /100 ${distanceUnit()}`"
       >
-        <p class="mt-0.5 hidden text-xs text-slate-400 sm:block">{{ $t('dashboard.energyEfficiencyPanel.thatIsKwhOnAverage', { price_per_kwh: fmtMoney(stats?.summary.price_per_kwh, currency, 3) }) }}</p>
+        <p class="mt-0.5 text-xs text-slate-400">{{ $t('dashboard.energyEfficiencyPanel.thatIsKwhOnAverage', { price_per_kwh: fmtMoney(stats?.summary.price_per_kwh, currency, 3) }) }}</p>
       </KpiCard>
-      <KpiCard compact :label="$t('dashboard.energyEfficiencyPanel.chargingEfficiency')" :value="fmtPercent(stats?.summary.charge_efficiency)">
+      <KpiCard
+        compact
+        :label="$t('dashboard.energyEfficiencyPanel.chargingEfficiency')"
+        :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
+        term="chargeEfficiency"
+        :value="fmtPercent(stats?.summary.charge_efficiency)"
+      >
         <p v-if="stats?.summary.charge_efficiency == null" class="mt-0.5 text-xs text-slate-400">
           {{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyEmpty') }}
           <span class="block">
             <router-link to="/energy?tab=CHARGES" class="tap-text font-semibold text-sky-400 underline">{{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyAction') }}</router-link>
           </span>
         </p>
-        <p v-else class="mt-0.5 hidden text-xs text-slate-400 sm:block">{{ $t('dashboard.energyEfficiencyPanel.energyStoredInTheBattery') }}</p>
       </KpiCard>
       <KpiCard
         compact
         :label="$t('dashboard.energyEfficiencyPanel.fullCharge')"
+        :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
+        term="fullChargeCost"
         :value="fmtMoney(stats?.summary.cost_per_full_charge ?? undefined, currency)"
         unit=" (0 → 100 %)"
-      >
-        <p class="mt-0.5 hidden text-xs text-slate-400 sm:block">{{ $t('dashboard.energyEfficiencyPanel.extrapolatedFromTheChargesWhose') }}</p>
-      </KpiCard>
+      />
     </div>
 
     <p v-if="(stats?.summary.sessions_without_cost ?? 0) > 0" class="rounded-lg border border-warning-500/20 bg-warning-500/10 px-3 py-2 text-xs text-warning-300">
