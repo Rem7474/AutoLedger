@@ -1,40 +1,23 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteComponent, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
+// A page that needs a signed-in session.
+const authRoute = (path: string, name: string, component: RouteComponent): RouteRecordRaw => ({
+  path,
+  name,
+  component,
+  meta: { requiresAuth: true },
+})
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
-      path: '/',
-      name: 'dashboard',
-      component: () => import('@/views/DashboardView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/fleet',
-      name: 'fleet',
-      component: () => import('@/views/FleetView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/drives',
-      name: 'drives',
-      component: () => import('@/views/DrivesView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/carpools',
-      name: 'carpools',
-      component: () => import('@/views/CarpoolView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/odometer',
-      name: 'odometer',
-      component: () => import('@/views/ManualTrackingView.vue'),
-      meta: { requiresAuth: true },
-    },
+    authRoute('/', 'dashboard', () => import('@/views/DashboardView.vue')),
+    authRoute('/fleet', 'fleet', () => import('@/views/FleetView.vue')),
+    authRoute('/drives', 'drives', () => import('@/views/DrivesView.vue')),
+    authRoute('/carpools', 'carpools', () => import('@/views/CarpoolView.vue')),
+    authRoute('/odometer', 'odometer', () => import('@/views/ManualTrackingView.vue')),
     {
       // Former address of the odometer page; the energy estimate and the fill-ups moved to the energy page
       path: '/manual',
@@ -45,18 +28,8 @@ const router = createRouter({
         return { path: '/odometer' }
       },
     },
-    {
-      path: '/comparison',
-      name: 'comparison',
-      component: () => import('@/views/ComparisonView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/tires',
-      name: 'tires',
-      component: () => import('@/views/TiresView.vue'),
-      meta: { requiresAuth: true },
-    },
+    authRoute('/comparison', 'comparison', () => import('@/views/ComparisonView.vue')),
+    authRoute('/tires', 'tires', () => import('@/views/TiresView.vue')),
     {
       path: '/expenses',
       name: 'expenses',
@@ -86,18 +59,8 @@ const router = createRouter({
       component: () => import('@/views/ExpensesView.vue'),
       meta: { requiresAuth: true, section: 'energy' },
     },
-    {
-      path: '/vehicles',
-      name: 'vehicles',
-      component: () => import('@/views/VehiclesView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/account',
-      name: 'account',
-      component: () => import('@/views/AccountView.vue'),
-      meta: { requiresAuth: true },
-    },
+    authRoute('/vehicles', 'vehicles', () => import('@/views/VehiclesView.vue')),
+    authRoute('/account', 'account', () => import('@/views/AccountView.vue')),
     {
       path: '/login',
       name: 'login',
