@@ -93,12 +93,9 @@
     "monthlyConsumptionInKwhPer": "Consommation mensuelle en kWh aux 100 {unit}",
     "monthlyConsumption": "Consommation mensuelle",
     "completeThem": "Les compléter",
-    "extrapolatedFromTheChargesWhose": "Extrapolé des recharges dont le coût et le niveau de batterie sont connus.",
     "fullCharge": "Charge complète",
-    "energyStoredInTheBattery": "Énergie stockée dans la batterie sur énergie tirée du réseau.",
     "chargingEfficiency": "Rendement de charge",
     "energyCost": "Coût de l'énergie",
-    "energyUsedWhileDrivingMeasured": "Énergie consommée en roulant, telle que remontée par la source de données.",
     "actualConsumption": "Consommation à la roue",
     "period": "Période",
     "whatTheCarUsesAnd": "Ce que consomme la voiture et ce que coûte réellement l'énergie.",
@@ -127,7 +124,8 @@
     "placeShare": "{share} % des kWh ({kwh} kWh)",
     "placeUnknown": "{count} recharge(s) sans coût, hors du prix",
     "placeLink": "Tous les lieux et les prix",
-    "noDataHint": "Elles apparaissent dès que des relevés de compteur et des recharges couvrent une même période."
+    "noDataHint": "Elles apparaissent dès que des relevés de compteur et des recharges couvrent une même période.",
+    "wholeHistory": "Tout l'historique"
   },
   "energyTemperatureSection": {
     "drivesOfAtLeast5": "Trajets d'au moins {min}, groupés par température extérieure moyenne ; tranches de moins de {band} masquées.",
