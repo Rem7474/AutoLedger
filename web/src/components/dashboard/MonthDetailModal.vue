@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import GlossaryTip from '@/components/GlossaryTip.vue'
+import KpiCard from '@/components/KpiCard.vue'
+import CostTotalBar from '@/components/CostTotalBar.vue'
 import { formatNumber, formatPercent } from '@/utils/numbers'
 import { intlLocale, t } from '@/i18n'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -9,7 +10,7 @@ import CostDonut from '@/components/costs/CostDonut.vue'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
 import ModalShell from '@/components/ModalShell.vue'
-import { distanceUnit, formatDistance, formatDistanceValue, perDistance } from '@/units'
+import { distanceUnit, formatDistanceValue, perDistance } from '@/units'
 import { contributionCategory } from '@/utils/monthContributions'
 import MonthContributions from './MonthContributions.vue'
 
@@ -129,42 +130,44 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     </template>
 
 
-      <!-- 4 KPI Summary Cards for the Month -->
+      <!-- The month's four figures: the dashboard's cards, in their dense form -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-        <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl">
-          <span class="text-xs font-medium text-slate-400 block">{{ $t('dashboard.monthDetailModal.totalDistance') }}</span>
-          <div class="text-base sm:text-lg font-extrabold text-white mt-0.5">
-            {{ formatDistanceValue(selectedMonthBreakdown.distanceKm) }} <span class="text-xs font-normal text-slate-400">{{ distanceUnit() }}</span>
-          </div>
-          <span v-if="selectedMonthBreakdown.smoothedKm > 0" class="text-xs text-slate-400 block truncate">
-            {{ $t('dashboard.monthDetailModal.ofWhichKmSmoothed', { unit: distanceUnit(), smoothedKm: formatDistanceValue(selectedMonthBreakdown.smoothedKm) }) }}
+        <KpiCard
+          compact
+          :label="$t('dashboard.monthDetailModal.totalDistance')"
+          :value="formatDistanceValue(selectedMonthBreakdown.distanceKm)"
+          :unit="` ${distanceUnit()}`"
+        >
+          <span class="mt-0.5 block truncate text-xs text-slate-400">
+            <template v-if="selectedMonthBreakdown.smoothedKm > 0">{{ $t('dashboard.monthDetailModal.ofWhichKmSmoothed', { unit: distanceUnit(), smoothedKm: formatDistanceValue(selectedMonthBreakdown.smoothedKm) }) }}</template>
+            <template v-else>{{ $t('dashboard.monthDetailModal.100GpsDrives') }}</template>
           </span>
-          <span v-else class="text-xs text-slate-400 block truncate">{{ $t('dashboard.monthDetailModal.100GpsDrives') }}</span>
-        </div>
-
-        <div class="bg-success-500/5 border border-success-500/30 p-3 rounded-xl">
-          <span class="text-xs font-medium text-success-400 block">{{ $t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() }) }}</span>
-          <div class="text-base sm:text-lg font-extrabold text-success-400 mt-0.5">
-            {{ formatAmount(perDistance(selectedMonthBreakdown.costPerKm), currency, 3) }}<span class="text-xs font-normal text-success-500/80">/{{ distanceUnit() }}</span>
-          </div>
-          <span class="text-xs text-success-400/70 block">{{ $t('dashboard.monthDetailModal.actualCostPrice') }}</span>
-        </div>
-
-        <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl">
-          <span class="text-xs font-medium text-slate-400 block">{{ $t('dashboard.monthDetailModal.calculatedRunningCost') }} <GlossaryTip term="economicCost" /></span>
-          <div class="text-base sm:text-lg font-extrabold text-white mt-0.5">
-            {{ formatAmount(selectedMonthBreakdown.economicTotal, currency) }}
-          </div>
-          <span class="text-xs text-slate-400 block">{{ $t('dashboard.monthDetailModal.costPerKmBasis', { unit: distanceUnit() }) }}</span>
-        </div>
-
-        <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl">
-          <span class="text-xs font-medium text-slate-400 block">{{ $t('dashboard.monthDetailModal.totalPaidOutCash') }} <GlossaryTip term="cashPaid" /></span>
-          <div class="text-base sm:text-lg font-extrabold text-white mt-0.5">
-            {{ formatAmount(selectedMonthBreakdown.cashTotal, currency) }}
-          </div>
-          <span class="text-xs text-slate-400 block">{{ $t('dashboard.monthDetailModal.paymentsThisMonth') }}</span>
-        </div>
+        </KpiCard>
+        <KpiCard
+          compact
+          tone="success"
+          :label="$t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() })"
+          :value="formatAmount(perDistance(selectedMonthBreakdown.costPerKm), currency, 3)"
+          :unit="`/${distanceUnit()}`"
+        >
+          <span class="mt-0.5 block text-xs text-slate-400">{{ $t('dashboard.monthDetailModal.actualCostPrice') }}</span>
+        </KpiCard>
+        <KpiCard
+          compact
+          term="economicCost"
+          :label="$t('dashboard.monthDetailModal.calculatedRunningCost')"
+          :value="formatAmount(selectedMonthBreakdown.economicTotal, currency)"
+        >
+          <span class="mt-0.5 block text-xs text-slate-400">{{ $t('dashboard.monthDetailModal.costPerKmBasis', { unit: distanceUnit() }) }}</span>
+        </KpiCard>
+        <KpiCard
+          compact
+          term="cashPaid"
+          :label="$t('dashboard.monthDetailModal.totalPaidOutCash')"
+          :value="formatAmount(selectedMonthBreakdown.cashTotal, currency)"
+        >
+          <span class="mt-0.5 block text-xs text-slate-400">{{ $t('dashboard.monthDetailModal.paymentsThisMonth') }}</span>
+        </KpiCard>
       </div>
 
       <!-- Fixed vs Variable Cost Structure -->
@@ -326,20 +329,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           </div>
 
           <!-- Total Row -->
-          <div class="p-3 bg-sky-500/10 border border-sky-500/30 rounded-xl flex items-center justify-between text-xs mt-2">
-            <div class="font-bold text-white flex items-center gap-2">
-              <span>{{ $t('dashboard.monthDetailModal.monthTotal') }}</span>
-              <span class="text-xs text-slate-400 font-normal">({{ formatDistance(selectedMonthBreakdown.distanceKm) }})</span>
-            </div>
-            <div class="text-right">
-              <div class="font-extrabold text-white text-sm sm:text-base">
-                {{ formatAmount(selectedMonthBreakdown.activeTotal, currency) }}
-              </div>
-              <div class="text-xs font-bold text-success-400">
-                {{ formatAmount(perDistance(selectedMonthBreakdown.distanceKm > 0 ? selectedMonthBreakdown.activeTotal / selectedMonthBreakdown.distanceKm : 0), currency, 3) }}/{{ distanceUnit() }}
-              </div>
-            </div>
-          </div>
+          <CostTotalBar
+            class="mt-2"
+            :total-label="$t('dashboard.monthDetailModal.monthTotal')"
+            :total="formatAmount(selectedMonthBreakdown.activeTotal, currency)"
+            :per-distance-label="$t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() })"
+            :per-distance="`${formatAmount(perDistance(selectedMonthBreakdown.distanceKm > 0 ? selectedMonthBreakdown.activeTotal / selectedMonthBreakdown.distanceKm : 0), currency, 3)}/${distanceUnit()}`"
+          />
         </div>
       </div>
 
