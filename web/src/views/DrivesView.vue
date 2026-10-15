@@ -409,7 +409,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 
     <!-- Header & Filter Tabs -->
     <PageHeader :title="$t('shell.nav.drives')" :icon="PageIcon">
-      {{ $t('drives.drivesView.drivesActualEnergyAndTolls', { unit: distanceUnit(), total }) }}
+      {{ $t('drives.drivesView.subtitle', { unit: distanceUnit() }) }}
       <template #actions>
       <!-- Actions & Tag Filters container -->
       <div class="flex flex-wrap items-center gap-3 self-start sm:self-center">
