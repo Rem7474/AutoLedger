@@ -38,7 +38,7 @@ Text with no HTTP request to translate through (reminder and sync-failure webhoo
 
 ## SonarCloud coverage
 
-Coverage for SonarCloud: CI writes `coverage.out` (`go test -coverprofile -coverpkg=./...`, PostgreSQL-backed, so repositories count) and `web/coverage/lcov.info` (`npm run test:coverage`, scope `utils`, `composables`, `stores`), uploads them as artifacts and the `SonarCloud Scan` job passes them to Sonar through `sonar-project.properties` (`sonar.go.coverage.reportPaths`, `sonar.javascript.lcov.reportPaths`). The job runs only when the repository variable `SONAR_CI_ANALYSIS` is `true` and the secret `SONAR_TOKEN` exists, and requires SonarCloud's automatic analysis to be switched off; Dependabot and fork PRs are not scanned.
+Coverage for SonarCloud: CI writes `coverage.out` (`go test -coverprofile -coverpkg=./...`, PostgreSQL-backed, so repositories count) and `web/coverage/lcov.info` (`npm run test:coverage`, scope `utils`, `composables`, `stores`), uploads them as artifacts and the `SonarCloud Scan` job passes them to Sonar through `sonar-project.properties` (`sonar.go.coverage.reportPaths`, `sonar.javascript.lcov.reportPaths`). The job runs only when the repository variable `SONAR_CI_ANALYSIS` is `true` and the secret `SONAR_TOKEN` exists, and requires SonarCloud's automatic analysis to be switched off; Dependabot and fork PRs are not scanned; a fork PR gets the gate through an internal `contrib-<number>` branch (see `CLAUDE.md`, Git and PRs).
 
 ## Frontend i18n
 
