@@ -111,6 +111,69 @@ func (r *Repository) loadTeslaMateSources(ctx context.Context, vehicles []*model
 	return nil
 }
 
+// RotateTeslaMateSecrets rewrites the stored TeslaMate secrets that rotate changes (the ones still in an earlier
+// storage form) and returns how many rows it rewrote and how many it could not read. A row is updated only while
+// it still holds the values that were read, so a credential saved in the meantime is never overwritten. A secret
+// that cannot be rotated stays as it is and is counted in failed.
+func (r *Repository) RotateTeslaMateSecrets(ctx context.Context, rotate func(stored string) (string, error)) (rotated, failed int, err error) {
+	type row struct {
+		id             string
+		secret, basic  *string
+		newSec, newBas *string
+	}
+	rows, err := r.pool.Query(ctx, `
+		SELECT id::text, secret_encrypted, basic_secret_encrypted
+		FROM vehicle_data_sources
+		WHERE provider = $1 AND (COALESCE(secret_encrypted, '') <> '' OR COALESCE(basic_secret_encrypted, '') <> '')`, providerTeslaMate)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to list the TeslaMate secrets: %w", err)
+	}
+	var pending []row
+	for rows.Next() {
+		var x row
+		if err := rows.Scan(&x.id, &x.secret, &x.basic); err != nil {
+			rows.Close()
+			return 0, 0, err
+		}
+		pending = append(pending, x)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return 0, 0, err
+	}
+
+	rotateOne := func(stored *string) (*string, bool, bool) {
+		if stored == nil || *stored == "" {
+			return stored, false, false
+		}
+		out, err := rotate(*stored)
+		if err != nil {
+			return stored, false, true
+		}
+		return &out, out != *stored, false
+	}
+	for _, x := range pending {
+		var changedSec, changedBas, badSec, badBas bool
+		x.newSec, changedSec, badSec = rotateOne(x.secret)
+		x.newBas, changedBas, badBas = rotateOne(x.basic)
+		if badSec || badBas {
+			failed++
+		}
+		if !changedSec && !changedBas {
+			continue
+		}
+		tag, err := r.pool.Exec(ctx, `
+			UPDATE vehicle_data_sources SET secret_encrypted = $2, basic_secret_encrypted = $3
+			WHERE id = $1::uuid AND secret_encrypted IS NOT DISTINCT FROM $4 AND basic_secret_encrypted IS NOT DISTINCT FROM $5`,
+			x.id, x.newSec, x.newBas, x.secret, x.basic)
+		if err != nil {
+			return rotated, failed, fmt.Errorf("failed to rewrite a TeslaMate secret: %w", err)
+		}
+		rotated += int(tag.RowsAffected())
+	}
+	return rotated, failed, nil
+}
+
 // SourceActivity is what one origin (TESLAMATE, WEBHOOK, CSV, MANUAL) has written for a vehicle.
 type SourceActivity struct {
 	Origin           string     `json:"origin"`

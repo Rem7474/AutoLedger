@@ -322,7 +322,7 @@ Pour revenir à l'état d'avant la mise à niveau, arrêter la pile, vider le vo
 | `AUTOLEDGER_DB_USER` | `DB_USER` | Utilisateur PostgreSQL | `autoledger` |
 | `AUTOLEDGER_DB_PASSWORD` | `DB_PASSWORD` | Mot de passe PostgreSQL (`DB_PASSWORD_FILE` le lit depuis un fichier) | *Généré* |
 | `AUTOLEDGER_DB_NAME` | `DB_NAME` | Nom de la base PostgreSQL | `autoledger` |
-| `AUTOLEDGER_ENCRYPTION_KEY`| `APP_ENCRYPTION_KEY` | Clé AES-256 de 32 octets pour les identifiants sensibles | *Générée* |
+| `AUTOLEDGER_ENCRYPTION_KEY`| `APP_ENCRYPTION_KEY` | Secret dont est dérivée la clé AES-256 des identifiants stockés (Argon2id). Utilisez une valeur aléatoire d'au moins 32 caractères (`openssl rand -hex 32`) ; la modifier rend les identifiants stockés illisibles jusqu'à leur nouvelle saisie | *Générée* |
 | `AUTOLEDGER_JWT_SECRET` | `JWT_SECRET` | Clé secrète de signature des sessions utilisateur | *Généré* |
 | `AUTOLEDGER_STORAGE_DIR` | `STORAGE_DIR` | Chemin du système de fichiers pour les pièces jointes | `/data/documents` |
 | `APP_TIMEZONE` | - | Fuseau horaire IANA pour les rapports et agrégations | `Europe/Paris` |

@@ -47,6 +47,23 @@ func insecureDefaultsError(cfg *config.Config) error {
 		"and set them in .env, or set ENVIRONMENT=development for a throwaway local instance", strings.Join(warnings, "; "))
 }
 
+// rotateStoredSecrets rewrites the credentials still stored in the earlier form into the current one. It runs at
+// every start and finds nothing to do once the values are rotated; a value it cannot read (the secret changed
+// since it was stored) stays as it is, is counted in the log, and is replaced when the credential is entered again.
+func rotateStoredSecrets(repo *database.Repository, encryptor *crypto.Encryptor) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	rotated, unreadable, err := repo.RotateTeslaMateSecrets(ctx, encryptor.Rotate)
+	switch {
+	case err != nil:
+		slog.Error("stored credentials could not be rewritten, they stay readable in their current form", "component", "security", "error", err)
+	case unreadable > 0:
+		slog.Warn("stored credentials cannot be read with the current encryption secret, enter them again", "component", "security", "rotated", rotated, "unreadable_sources", unreadable)
+	case rotated > 0:
+		slog.Info("stored credentials rewritten with the current key derivation", "component", "security", "rotated", rotated)
+	}
+}
+
 func main() {
 	// 1. Load configuration
 	cfg := config.Load()
@@ -72,6 +89,9 @@ func main() {
 	if err != nil {
 		slog.Error("failed to initialize crypto module", "error", err)
 		os.Exit(1)
+	}
+	if warning := cfg.WeakEncryptionKey(); warning != "" {
+		slog.Warn("weak encryption secret", "component", "security", "detail", warning)
 	}
 
 	// 3. Connect to PostgreSQL. A container restarted after a host reboot can come up before PostgreSQL has
@@ -99,6 +119,7 @@ func main() {
 		os.Exit(1)
 	}
 	repo := database.NewRepository(dbPool.Pool)
+	rotateStoredSecrets(repo, encryptor)
 
 	seedInitialAdmin(ctx, cfg, repo)
 

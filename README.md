@@ -322,7 +322,7 @@ To restore the pre-upgrade state, stop the stack, empty the data volume, and ext
 | `AUTOLEDGER_DB_USER` | `DB_USER` | PostgreSQL user | `autoledger` |
 | `AUTOLEDGER_DB_PASSWORD` | `DB_PASSWORD` | PostgreSQL password (`DB_PASSWORD_FILE` reads it from a file) | *Generated* |
 | `AUTOLEDGER_DB_NAME` | `DB_NAME` | PostgreSQL database name | `autoledger` |
-| `AUTOLEDGER_ENCRYPTION_KEY`| `APP_ENCRYPTION_KEY` | 32-byte AES-256 key for sensitive credentials | *Generated* |
+| `AUTOLEDGER_ENCRYPTION_KEY`| `APP_ENCRYPTION_KEY` | Secret the AES-256 key of the stored credentials is derived from (Argon2id). Use a random value of at least 32 characters (`openssl rand -hex 32`); changing it makes the stored credentials unreadable until they are entered again | *Generated* |
 | `AUTOLEDGER_JWT_SECRET` | `JWT_SECRET` | Secret key for signing user sessions | *Generated* |
 | `AUTOLEDGER_STORAGE_DIR` | `STORAGE_DIR` | Filesystem path for document attachments | `/data/documents` |
 | `APP_TIMEZONE` | - | IANA timezone for reports and aggregations | `Europe/Paris` |

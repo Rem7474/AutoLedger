@@ -66,6 +66,20 @@ func TestInsecureDefaultsClearOnCustomSecrets(t *testing.T) {
 	}
 }
 
+func TestWeakEncryptionKeyWarnsOnlyOnAShortSecret(t *testing.T) {
+	for secret, warns := range map[string]bool{
+		"":                                 false, // generated at start-up, nothing to judge
+		"short-passphrase":                 true,
+		"0123456789abcdef0123456789abcde":  true, // 31 characters
+		"0123456789abcdef0123456789abcdef": false,
+	} {
+		got := (&config.Config{AppEncryptionKey: secret}).WeakEncryptionKey()
+		if (got != "") != warns {
+			t.Errorf("WeakEncryptionKey(%d characters) = %q, warns should be %v", len(secret), got, warns)
+		}
+	}
+}
+
 func TestNormalizeDatabaseURLWithUnescapedPassword(t *testing.T) {
 	raw := "postgres://teslacost:MyPasswordM&!@123@postgres:5432/teslacost?sslmode=disable"
 	normalized := config.NormalizeDatabaseURL(raw)

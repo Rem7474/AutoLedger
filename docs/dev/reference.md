@@ -18,6 +18,14 @@ TeslaMate sync (`internal/services/sync_*.go`): per-vehicle background jobs, res
 
 teslamateapi facts (verified in its source, its README has no field docs): drives/charges carry `battery_details{start_battery_level,end_battery_level}` and `outside_temp_avg` in `units.unit_of_temperature` (F is possible); `charge_energy_used` is `GREATEST(used, added)`, so used == added means "not measured" (DC); missing levels arrive as 0; `/battery-health` reports current capacity over the best capacity ever observed.
 
+## Stored secrets
+
+The TeslaMate credentials (`vehicle_data_sources.secret_encrypted`, `basic_secret_encrypted`) are the only values encrypted at rest (`internal/crypto`). A value is `v2:` followed by base64 of `salt (16 bytes) || nonce || AES-256-GCM(sealed)`. The AES key is derived from `AUTOLEDGER_ENCRYPTION_KEY` and the value's own random salt with Argon2id (2 passes, 19 MiB, one lane), after a purpose label (`autoledger/secrets-at-rest/v2`) prepended to the secret; the version and the label are authenticated as additional data. Derived keys are cached by salt, so a sync that decrypts the same credentials every cycle pays the derivation once.
+
+A value without the prefix is the earlier form: base64 of `nonce || sealed`, under the SHA-256 of the secret. `Decrypt` reads both forms, `Encrypt` writes only `v2:`. At every start `rotateStoredSecrets` (`cmd/server/main.go`) rewrites the earlier form through `Repository.RotateTeslaMateSecrets`: a row is updated only while it still holds the values that were read, a value that cannot be read with the current secret is left as it is and counted in the log (`unreadable_sources`), and a second pass finds nothing to do. Another stored secret goes through the same `Encryptor` and is added to that pass.
+
+The secret is not changed in place: a different `AUTOLEDGER_ENCRYPTION_KEY` makes the stored credentials unreadable until they are entered again. A secret under 32 characters logs a warning at start (`Config.WeakEncryptionKey`); it never blocks the start.
+
 ## Maintenance reminder webhooks
 
 `NotificationService.CheckAndNotify` evaluates one vehicle's reminders at a given odometer and posts the vehicle's webhook for each due one, at most once per 7 days unless the odometer moved by 500 km. It runs from two places: the TeslaMate sync, right after it recorded a higher odometer, and `runReminderChecks` (`cmd/server/workers.go`), which calls `CheckAllVehicles` at start-up and then every hour for every vehicle with an enabled webhook, at the odometer recorded for it. The scheduled run is what notifies a Home Assistant, manual or combustion vehicle, and a reminder that reaches its due date while the vehicle is parked.
