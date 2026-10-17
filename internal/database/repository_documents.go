@@ -26,15 +26,15 @@ func (r *Repository) SaveExpenseDocument(ctx context.Context, doc *models.Expens
 }
 
 // GetExpenseDocumentByID retrieves an expense document metadata, its storage path, and legacy binary data if present.
-// Access is verified via vehicles or vehicle_members.
+// Access is verified against the current vehicle membership.
 func (r *Repository) GetExpenseDocumentByID(ctx context.Context, id, vehicleID, userID string) (*models.ExpenseDocument, error) {
 	query := `
 		SELECT d.id, d.user_id, d.vehicle_id, d.filename, d.mime_type, d.file_size, d.storage_path, d.data, d.description, d.created_at, d.updated_at
 		FROM expense_documents d
 		JOIN vehicles v ON v.id = d.vehicle_id
-		WHERE d.id::text = $1 AND d.vehicle_id::text = $2 AND (v.user_id::text = $3 OR EXISTS (
+		WHERE d.id::text = $1 AND d.vehicle_id::text = $2 AND EXISTS (
 			SELECT 1 FROM vehicle_members vm WHERE vm.vehicle_id = v.id AND vm.user_id::text = $3
-		));
+		);
 	`
 	var doc models.ExpenseDocument
 	err := r.pool.QueryRow(ctx, query, id, vehicleID, userID).Scan(
@@ -62,9 +62,9 @@ func (r *Repository) ListExpenseDocuments(ctx context.Context, vehicleID, userID
 			d.created_at
 		FROM expense_documents d
 		JOIN vehicles v ON v.id = d.vehicle_id
-		WHERE d.vehicle_id::text = $1 AND (v.user_id::text = $2 OR EXISTS (
+		WHERE d.vehicle_id::text = $1 AND EXISTS (
 			SELECT 1 FROM vehicle_members vm WHERE vm.vehicle_id = v.id AND vm.user_id::text = $2
-		))
+		)
 		ORDER BY d.created_at DESC;
 	`
 	rows, err := r.pool.Query(ctx, query, vehicleID, userID)
@@ -92,9 +92,9 @@ func (r *Repository) DeleteExpenseDocument(ctx context.Context, id, vehicleID, u
 	query := `
 		DELETE FROM expense_documents d
 		USING vehicles v
-		WHERE d.vehicle_id = v.id AND d.id::text = $1 AND d.vehicle_id::text = $2 AND (v.user_id::text = $3 OR EXISTS (
+		WHERE d.vehicle_id = v.id AND d.id::text = $1 AND d.vehicle_id::text = $2 AND EXISTS (
 			SELECT 1 FROM vehicle_members vm WHERE vm.vehicle_id = v.id AND vm.user_id::text = $3 AND vm.role IN ('OWNER', 'EDITOR')
-		));
+		);
 	`
 	cmdTag, err := r.pool.Exec(ctx, query, id, vehicleID, userID)
 	if err != nil {
