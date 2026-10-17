@@ -323,7 +323,8 @@ func (h *ReminderHandler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *ReminderHandler) GetWebhook(w http.ResponseWriter, r *http.Request) {
 	vehicleID := chi.URLParam(r, "vehicleId")
 
-	if veh := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleViewer); veh == nil {
+	veh := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleViewer)
+	if veh == nil {
 		return
 	}
 
@@ -333,6 +334,10 @@ func (h *ReminderHandler) GetWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if webhook != nil && veh.Role == models.RoleViewer {
+		// A webhook URL can be a credential. Readers may see its status, not invoke it externally.
+		webhook.URL = ""
+	}
 	writeJSON(w, http.StatusOK, webhook)
 }
 
