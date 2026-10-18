@@ -45,10 +45,6 @@ func TestIntegrationTagBreakdownCostMatchesTheTaggedDriveList(t *testing.T) {
 	}
 
 	carpool := NewCarpoolService(db.Pool, repo)
-	rates, err := carpool.GetVehicleUnitRates(ctx, v.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	for _, tag := range []string{"Pro", "Perso"} {
 		drives, _, err := repo.ListDrives(ctx, v.ID, database.DriveFilter{Tag: tag}, 100, 0)
 		if err != nil {
@@ -57,6 +53,10 @@ func TestIntegrationTagBreakdownCostMatchesTheTaggedDriveList(t *testing.T) {
 		ids := make([]string, len(drives))
 		for i, d := range drives {
 			ids[i] = d.ID
+		}
+		rates, err := carpool.DriveRates(ctx, v.ID, drives)
+		if err != nil {
+			t.Fatal(err)
 		}
 		insurance, err := carpool.AllocateInsuranceCosts(ctx, v.ID, drives, rates)
 		if err != nil {
@@ -68,7 +68,7 @@ func TestIntegrationTagBreakdownCostMatchesTheTaggedDriveList(t *testing.T) {
 		}
 		var want money.Cents
 		for _, d := range drives {
-			want += ComputeDriveCost(rates, d, insurance[d.ID], tolls[d.ID]).TotalCost
+			want += ComputeDriveCost(rates[d.ID], d, insurance[d.ID], tolls[d.ID]).TotalCost
 		}
 		got := byTag[tag]
 		if want == 0 {

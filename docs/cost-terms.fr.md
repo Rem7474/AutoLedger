@@ -11,6 +11,7 @@ Le tableau de bord, la comparaison de flotte et le détail du mois emploient les
 | Consommation à la roue | Énergie utilisée en roulant, telle que mesurée par le véhicule (panneau énergie). |
 | Consommation à la prise | Énergie prélevée en charge, pertes comprises, rapportée à la distance parcourue (comparaison de flotte). |
 | Énergie estimée | Énergie valorisée pour la distance parcourue sans trajet enregistré, d'après la consommation et le prix moyens du véhicule. |
+| Coût d'un trajet | L'énergie, les pneus, l'entretien, la part d'assurance et les péages du trajet, valorisés aux tarifs en vigueur à la fin du trajet : prix du kWh des dernières charges qui le précèdent, coût au km des pneus et de l'entretien connu à cette date. La liste des trajets, le coût par étiquette et les segments d'un covoiturage donnent le même coût à un trajet. Un prix de charge saisi plus tard pour une charge datée avant le trajet met le trajet à jour ; une charge datée après le trajet ne le modifie pas. Un covoiturage conserve les montants enregistrés à son dernier recalcul. |
 
 ## Période des chiffres du tableau de bord
 
