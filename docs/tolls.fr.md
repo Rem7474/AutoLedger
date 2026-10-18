@@ -27,3 +27,7 @@ Quand la détection n'est pas active :
 - les points d'accès de détection et de péages en lot répondent `409` avec le code `toll.detection_disabled` ;
 - les trajets autoroutiers ne comptent pas dans le score de complétude du tableau de bord ;
 - les péages manuels, le filtre « Avec péage » et la ligne péages de la ventilation des coûts restent disponibles, et les péages déjà détectés sont conservés.
+
+## Historique
+
+L'onglet Péages s'ouvre sur l'historique de ce qui a été payé en péages, parkings et autres frais de déplacement : le total et la moyenne mensuelle d'une période (1, 3, 6 ou 12 mois, tout l'historique, ou une plage de jours), la moyenne sur 12 mois, et un graphique des montants payés par mois avec la moyenne sur 12 mois tracée par-dessus. Une plage de jours compte les mois qu'elle couvre entièrement. Les onglets Entretien et Coûts fixes affichent le même historique pour leurs propres dépenses ; une dépense récurrente compte une fois pour chaque mois d'échéance.

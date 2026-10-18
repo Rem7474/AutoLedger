@@ -70,6 +70,29 @@ func (h *TCOHandler) GetMonthlyContributions(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, out)
 }
 
+// GetCostHistory answers the monthly history of tolls, servicing or fixed costs, the figures a cost page shows next to its list.
+func (h *TCOHandler) GetCostHistory(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	vehicleID := chi.URLParam(r, "vehicleId")
+
+	if _, err := h.repo.GetVehicleByID(r.Context(), vehicleID, userID); err != nil {
+		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))
+		return
+	}
+
+	out, err := h.tcoService.CostHistory(r.Context(), vehicleID, r.URL.Query().Get("kind"))
+	switch {
+	case errors.Is(err, services.ErrUnsupportedCostHistoryKind):
+		writeAPIError(w, http.StatusBadRequest, apierror.New("tco.cost_history_unsupported_kind", "Unsupported cost family"))
+		return
+	case err != nil:
+		writeRepoError(w, r, err, "Failed to load the cost history")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, out)
+}
+
 // GetDataQuality lists odometer continuity issues of the vehicle drives.
 func (h *TCOHandler) GetDataQuality(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())

@@ -35,5 +35,9 @@
     "label": "Coût d'une charge complète",
     "definition": "Extrapolé des recharges dont le coût et le niveau de batterie sont connus."
   },
+  "smoothedMonthlyCost": {
+    "label": "Moyenne sur 12 mois",
+    "definition": "Ce qu'un mois coûte en moyenne sur les douze derniers mois, le mois en cours compris. Sur un historique plus court, la moyenne porte sur les mois existants."
+  },
   "about": "Définition de {term}"
 }

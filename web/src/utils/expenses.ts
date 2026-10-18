@@ -260,15 +260,6 @@ export const maintenanceStartPoint = (m: LinkableMaintenance): { date: string; o
   odometer: m.odometer != null ? Math.round(m.odometer) : '',
 })
 
-/** Sum of the expenses in the vehicle's currency; a foreign-currency amount is converted with its own rate. */
-export function maintenanceTotal(items: MaintenanceLike[], baseCurrency: string): number {
-  return items.reduce((sum, m) => {
-    const amount = Number(m.amount) || 0
-    if (!m.currency || m.currency === baseCurrency) return sum + amount
-    return sum + amount * (Number(m.fx_rate) || 0)
-  }, 0)
-}
-
 /** Only servicing (maintenance and repairs) can be spread over distance or time. */
 export const isSmoothable = (category: string): boolean => category === 'MAINTENANCE' || category === 'REPAIR'
 

@@ -35,5 +35,9 @@
     "label": "Cost of a full charge",
     "definition": "Extrapolated from the charges whose cost and battery level are known."
   },
+  "smoothedMonthlyCost": {
+    "label": "12-month average",
+    "definition": "What a month costs on average over the last twelve months, the current one included. Over a shorter history it averages the months there are."
+  },
   "about": "Definition of {term}"
 }

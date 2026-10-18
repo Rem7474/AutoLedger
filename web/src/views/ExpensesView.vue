@@ -318,7 +318,8 @@ function openUploadDocumentModal() {
 
     <!-- Content -->
     <TollsPanel
-      v-if="activeTab === 'TOLLS'"
+      v-if="activeTab === 'TOLLS' && vehicleStore.activeVehicle"
+      :vehicle-id="vehicleStore.activeVehicle.id"
       :drive-expenses="driveExpenses"
       :loading="loading"
       @add="openAddTollModal"
