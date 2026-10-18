@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
-import { MapPin, ChevronDown } from 'lucide-vue-next'
+import { MapPin, PiggyBank, ChevronDown } from 'lucide-vue-next'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import KpiCard from '@/components/KpiCard.vue'
 import { api } from '@/services/api'
@@ -217,7 +217,9 @@ onBeforeUnmount(() => {
         :value="savings && savings.state === 'ok'
           ? $t(`expenses.chargingInsights.savings.${savings.better ? 'better' : 'worse'}${savings.pct === null ? '' : 'Pct'}`, { amount: formatAmount(savings.amount, currency), pct: savings.pct === null ? '' : formatPercent(savings.pct, 0) })
           : null"
+        :icon="PiggyBank"
         :tone="savings && savings.state === 'ok' ? (savings.better ? 'success' : 'warning') : 'default'"
+        :tinted="savings?.state === 'ok'"
       >
         <template v-if="savings && savings.state === 'ok'">
           <p class="mt-1 text-xs text-slate-400">

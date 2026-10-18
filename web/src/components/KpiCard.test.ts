@@ -42,6 +42,25 @@ describe('KpiCard', () => {
     expect(html).toContain('text-xl')
   })
 
+  it('tints a status tile with its tone and keeps the plain tile otherwise', async () => {
+    const good = await render({ label: 'Saving', value: '5 €', tone: 'success', tinted: true, compact: true })
+    expect(good).toContain('border-success-500/30')
+    expect(good).toContain('bg-success-500/5')
+    expect(good).not.toContain('bg-slate-950/60')
+    const worse = await render({ label: 'Extra', value: '5 €', tone: 'warning', tinted: true })
+    expect(worse).toContain('border-warning-500/30')
+    // A tone alone colours the value without tinting the tile
+    const plain = await render({ label: 'Net', value: '5 €', tone: 'success' })
+    expect(plain).toContain('text-success-400')
+    expect(plain).not.toContain('bg-success-500/5')
+  })
+
+  it('shows the icon of a compact tile in front of its label', async () => {
+    const icon = { render: () => h('svg', { class: 'piggy' }) }
+    expect(await render({ label: 'Saving', value: '5 €', compact: true, icon })).toContain('class="piggy mr-1.5')
+    expect(await render({ label: 'Saving', value: '5 €', icon })).not.toContain('mr-1.5')
+  })
+
   it('adds the definition tip when a glossary term is given', async () => {
     setLocale('en')
     const html = await render({ label: 'Cash paid', value: '1 200 €', term: 'cashPaid' })
