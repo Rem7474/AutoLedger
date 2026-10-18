@@ -117,6 +117,12 @@ func (c *client) seed(ds demodata.Dataset, apiToken string) error {
 			return err
 		}
 	}
+	if err := c.seedPlaces(v.ID, ds.Places); err != nil {
+		return err
+	}
+	if err := c.seedDrivers(v.ID, ds.Drivers); err != nil {
+		return err
+	}
 	if cp := ds.Carpool; cp != nil {
 		if err := c.do("POST", "/api/vehicles/"+v.ID+"/carpools", carpoolPayload(cp), nil, ""); err != nil {
 			return err
@@ -173,6 +179,75 @@ func (c *client) seed(ds demodata.Dataset, apiToken string) error {
 		}
 	}
 	log.Printf("%s: %d events, %d tires, %d expenses, %d reminders", ds.Vehicle.Name, len(ds.Events), len(ds.Tires), len(ds.Expenses), len(ds.Reminders))
+	return nil
+}
+
+// seedPlaces creates the charging places and links the location texts the charges report to them.
+func (c *client) seedPlaces(vehicleID string, places []demodata.ChargingPlace) error {
+	for _, p := range places {
+		var created struct {
+			ID string `json:"id"`
+		}
+		if err := c.do("POST", "/api/vehicles/"+vehicleID+"/charging-places", map[string]any{"name": p.Name, "category": p.Category}, &created, ""); err != nil {
+			return err
+		}
+		for _, text := range p.Aliases {
+			if err := c.do("PUT", "/api/vehicles/"+vehicleID+"/charging-places/aliases", map[string]any{"text": text, "place_id": created.ID}, nil, ""); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// seedDrivers adds each driver to the vehicle and gives them every EveryNth drive, oldest first.
+func (c *client) seedDrivers(vehicleID string, drivers []demodata.Driver) error {
+	if len(drivers) == 0 {
+		return nil
+	}
+	var ids []string
+	for page := 1; ; page++ {
+		var res struct {
+			Drives []struct {
+				ID string `json:"id"`
+			} `json:"drives"`
+			Total int `json:"total"`
+		}
+		path := fmt.Sprintf("/api/vehicles/%s/drives?limit=200&page=%d", vehicleID, page)
+		if err := c.do("GET", path, nil, &res, ""); err != nil {
+			return err
+		}
+		for _, d := range res.Drives {
+			ids = append(ids, d.ID)
+		}
+		if len(res.Drives) == 0 || len(ids) >= res.Total {
+			break
+		}
+	}
+	// The list is newest first: reverse it so the share does not depend on when the seed runs
+	for i, j := 0, len(ids)-1; i < j; i, j = i+1, j-1 {
+		ids[i], ids[j] = ids[j], ids[i]
+	}
+	for _, drv := range drivers {
+		var person struct {
+			ID string `json:"id"`
+		}
+		if err := c.do("POST", "/api/vehicles/"+vehicleID+"/people", map[string]any{"name": drv.Name}, &person, ""); err != nil {
+			return err
+		}
+		var mine []string
+		for i, id := range ids {
+			if i%drv.EveryNth == 0 {
+				mine = append(mine, id)
+			}
+		}
+		for start := 0; start < len(mine); start += 500 {
+			end := min(start+500, len(mine))
+			if err := c.do("PUT", "/api/vehicles/"+vehicleID+"/drives/driver", map[string]any{"drive_ids": mine[start:end], "driver_id": person.ID}, nil, ""); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

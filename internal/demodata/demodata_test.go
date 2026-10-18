@@ -174,3 +174,42 @@ func TestLayoutDatasetStressesTheRendering(t *testing.T) {
 		t.Error("layout: expected drives, fuel and charges")
 	}
 }
+
+func TestEVDatasetClassifiesItsPlacesAndHasARecentFastCharge(t *testing.T) {
+	ds, _ := Build("ev", ref)
+	classified := map[string]string{}
+	for _, p := range ds.Places {
+		for _, a := range p.Aliases {
+			classified[a] = p.Category
+		}
+	}
+	if classified["Home"] != "HOME" || classified["Highway Supercharger"] != "PUBLIC" {
+		t.Fatalf("home and the supercharger must be classified, got %v", classified)
+	}
+	away := 0
+	for _, e := range ds.Events {
+		if e.Type != "charging_session_end" {
+			continue
+		}
+		loc := e.Data["location"].(string)
+		if _, ok := classified[loc]; !ok {
+			t.Errorf("%s: location %q is linked to no place", e.ID, loc)
+		}
+		if loc != "Home" && ref.Sub(e.At) < 30*24*time.Hour {
+			away++
+		}
+	}
+	if away == 0 {
+		t.Error("the last 30 days need a charge away from home to compare with the home price")
+	}
+}
+
+func TestEVDatasetHasASecondDriverSharingTheDrives(t *testing.T) {
+	ds, _ := Build("ev", ref)
+	if len(ds.Drivers) != 1 || ds.Drivers[0].Name == "" || ds.Drivers[0].EveryNth < 2 {
+		t.Fatalf("ev: expected a second driver with a share of the drives, got %+v", ds.Drivers)
+	}
+	if ice, _ := Build("ice", ref); len(ice.Drivers) != 0 || len(ice.Places) != 0 {
+		t.Error("ice: only the electric vehicle carries places and a second driver")
+	}
+}
