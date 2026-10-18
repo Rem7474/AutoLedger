@@ -40,6 +40,11 @@ describe('KpiCard', () => {
     const html = await render({ label: 'Consumption', value: '15,2', unit: ' kWh/100 km', compact: true })
     expect(html).toContain('bg-slate-950/60')
     expect(html).toContain('text-xl')
+    expect(html).not.toContain('uppercase')
+  })
+
+  it('keeps the uppercase label on the full-size card', async () => {
+    expect(await render({ label: 'Economic cost', value: '0,142' })).toContain('uppercase')
   })
 
   it('tints a status tile with its tone and keeps the plain tile otherwise', async () => {
