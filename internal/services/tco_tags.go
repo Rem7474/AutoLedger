@@ -30,10 +30,10 @@ func (s *TCOService) tagBreakdown(ctx context.Context, vehicleID string, totalDi
 		return nil, err
 	}
 
-	var rates *UnitRates
+	var rates map[string]*UnitRates
 	var insurance map[string]money.Cents
 	if anyTagged {
-		if rates, err = s.carpool.GetVehicleUnitRates(ctx, vehicleID); err != nil {
+		if rates, err = s.carpool.DriveRates(ctx, vehicleID, drives); err != nil {
 			return nil, err
 		}
 		if insurance, err = s.carpool.AllocateInsuranceCosts(ctx, vehicleID, drives, rates); err != nil {
@@ -49,7 +49,7 @@ func (s *TCOService) tagBreakdown(ctx context.Context, vehicleID string, totalDi
 		}
 		var cost money.Cents
 		if rates != nil {
-			cost = ComputeDriveCost(rates, d, insurance[d.ID], tolls[d.ID]).TotalCost
+			cost = ComputeDriveCost(rates[d.ID], d, insurance[d.ID], tolls[d.ID]).TotalCost
 		}
 		for _, tag := range tags {
 			tb := byTag[tag]

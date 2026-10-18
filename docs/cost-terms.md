@@ -11,6 +11,7 @@ The dashboard, the fleet comparison and the month detail use the same terms. Eac
 | Consumption at the wheel | Energy used while driving, as measured by the vehicle (energy panel). |
 | Consumption at the plug | Energy drawn when charging, losses included, over the distance driven (fleet comparison). |
 | Estimated energy | Energy priced for distance driven without drive data, from the vehicle's average consumption and price. |
+| Drive cost | The drive's energy, tires, maintenance, insurance share and tolls, priced at the rates in force when the drive ended: the price per kWh of the last charges before it, the tire and maintenance cost per km known by then. The drive list, the cost by tag and the carpool legs give a drive the same cost. A charge price entered later for a charge dated before the drive updates the drive; a charge dated after the drive does not. A carpool trip keeps the amounts saved when it was last recalculated. |
 
 ## Period of the dashboard figures
 

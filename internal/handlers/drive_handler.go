@@ -95,8 +95,9 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 		drives = []models.Drive{}
 	}
 
-	// Calculate unit rates for real cost breakdown
-	rates, err := h.carpoolService.GetVehicleUnitRates(r.Context(), vehicleID)
+	// Each drive is costed with the rates in force when it ended, the same ones the tag totals and the carpool
+	// estimate use, so the three always agree.
+	rates, err := h.carpoolService.DriveRates(r.Context(), vehicleID, drives)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to compute cost rates")
 		return
@@ -136,7 +137,8 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	enriched := make([]EnrichedDrive, len(drives))
 	for i, d := range drives {
-		cost := services.ComputeDriveCost(rates, d, insuranceCosts[d.ID], tollsMap[d.ID])
+		dr := rates[d.ID]
+		cost := services.ComputeDriveCost(dr, d, insuranceCosts[d.ID], tollsMap[d.ID])
 		kwh, energySource, hasEstimates := cost.ElectricityKwh, cost.EnergySource, cost.HasEstimates
 		elecCost, tiresCost, maintCost := cost.ElectricityCost, cost.TiresCost, cost.MaintenanceCost
 		insCost, tollsCost, totalCost := cost.InsuranceCost, cost.TollsCost, cost.TotalCost
@@ -144,7 +146,7 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 		costPerKm := 0.0
 		// The insurance rate actually applied to this drive, which may differ from the vehicle's
 		// flat rates.InsurancePerKm since insurance is allocated per day, not per km.
-		insRate := rates.InsurancePerKm
+		insRate := dr.InsurancePerKm
 		if d.DistanceKm > 0 {
 			costPerKm = math.Round((totalCost.Float()/d.DistanceKm)*1000) / 1000
 			insRate = math.Round((insCost.Float()/d.DistanceKm)*1000) / 1000
@@ -156,18 +158,18 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 			Costs: DriveCostBreakdown{
 				ElectricityCost:       elecCost,
 				ElectricityKwh:        math.Round(kwh*10) / 10,
-				ElectricityRate:       rates.ElectricityPerKwh,
+				ElectricityRate:       dr.ElectricityPerKwh,
 				EnergySource:          energySource,
-				ElectricityRateSource: rates.ElectricitySource,
+				ElectricityRateSource: dr.ElectricitySource,
 				TiresCost:             tiresCost,
-				TiresRate:             rates.TiresPerKm,
-				TiresRateSource:       rates.TiresSource,
+				TiresRate:             dr.TiresPerKm,
+				TiresRateSource:       dr.TiresSource,
 				MaintenanceCost:       maintCost,
-				MaintenanceRate:       rates.MaintenancePerKm,
-				MaintenanceRateSource: rates.MaintenanceSource,
+				MaintenanceRate:       dr.MaintenancePerKm,
+				MaintenanceRateSource: dr.MaintenanceSource,
 				InsuranceCost:         insCost,
 				InsuranceRate:         insRate,
-				InsuranceSource:       rates.InsuranceSource,
+				InsuranceSource:       dr.InsuranceSource,
 				TollsCost:             tollsCost,
 				TotalCost:             totalCost,
 				CostPerKm:             costPerKm,

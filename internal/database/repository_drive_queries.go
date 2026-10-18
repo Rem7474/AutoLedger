@@ -371,7 +371,7 @@ func (r *Repository) DismissTripSuggestion(ctx context.Context, vehicleID string
 // tags), without the addresses and the other columns of the list.
 func (r *Repository) ListDriveCostInputs(ctx context.Context, vehicleID string) ([]models.Drive, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT id, start_time, distance_km, energy_consumed_kwh, consumption_kwh_100km, tags
+		SELECT id, start_time, end_time, distance_km, energy_consumed_kwh, consumption_kwh_100km, tags
 		FROM drives
 		WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL
 		ORDER BY start_time;
@@ -384,7 +384,7 @@ func (r *Repository) ListDriveCostInputs(ctx context.Context, vehicleID string) 
 	var list []models.Drive
 	for rows.Next() {
 		var d models.Drive
-		if err := rows.Scan(&d.ID, &d.StartTime, &d.DistanceKm, &d.EnergyConsumedKwh, &d.ConsumptionKwh100km, &d.Tags); err != nil {
+		if err := rows.Scan(&d.ID, &d.StartTime, &d.EndTime, &d.DistanceKm, &d.EnergyConsumedKwh, &d.ConsumptionKwh100km, &d.Tags); err != nil {
 			return nil, err
 		}
 		d.VehicleID = vehicleID
