@@ -27,5 +27,9 @@
     "label": "Énergie estimée",
     "definition": "Énergie valorisée pour la distance parcourue sans trajet enregistré, d'après la consommation et le prix moyens du véhicule."
   },
+  "smoothedMonthlyCost": {
+    "label": "Moyenne sur 12 mois",
+    "definition": "Ce qu'un mois coûte en moyenne sur les douze derniers mois, le mois en cours compris. Sur un historique plus court, la moyenne porte sur les mois existants."
+  },
   "about": "Définition de {term}"
 }

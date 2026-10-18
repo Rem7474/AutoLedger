@@ -194,7 +194,6 @@
     "allCategories": "All categories",
     "yearFilter": "Filter by year",
     "allYears": "All years",
-    "total": "Total",
     "count": "{n} expense | {n} expenses",
     "noMatch": "No expense matches these filters.",
     "noMaintenanceExpense": "No maintenance expense recorded",
@@ -356,8 +355,7 @@
     "noTollOrParkingRecorded": "No toll or parking recorded",
     "emptyHint": "Tolls and parking fees show up here, and the ones recorded on a drive are listed with it. Add one by hand for a trip you did not record.",
     "addFirst": "Add a toll or parking fee",
-    "count": "{count} expense | {count} expenses",
-    "total": "Total"
+    "count": "{count} expense | {count} expenses"
   },
   "uploadDocumentModal": {
     "eGServiceInvoiceAugust": "e.g. Service invoice, August 2026 tolls...",
@@ -504,5 +502,20 @@
     "estimatedPart": "of which {kwh} kWh estimated over {distance} driven before tracking",
     "estimatedCost": "of which {amount} estimated before tracking",
     "emptyPeriod": "No charge in this period."
+  },
+  "costHistory": {
+    "title": "{label} history",
+    "tolls": "Tolls and parking",
+    "service": "Maintenance and repairs",
+    "fixed": "Fixed costs",
+    "period": "Period",
+    "total": "Total paid",
+    "average": "Monthly average",
+    "smoothedAverage": "12-month average",
+    "perMonth": "/month",
+    "months": "{count} month | {count} months",
+    "smoothed": "12-month average",
+    "monthly": "Paid per month ({cur})",
+    "noFullMonth": "This range covers no full month. Pick a range that spans at least one."
   }
 }

@@ -27,3 +27,7 @@ When the detection is not active:
 - the detection and bulk toll endpoints answer `409` with the code `toll.detection_disabled`;
 - the motorway drives are not counted in the completeness score of the dashboard;
 - manual tolls, the "With toll" filter and the toll line of the cost breakdown stay available, and the tolls already detected are kept.
+
+## History
+
+The Tolls tab opens on the history of what was paid for tolls, parking and other travel expenses: the total and the monthly average of a period (1, 3, 6 or 12 months, the whole history, or a range of days), the 12-month average, and a chart of the amount paid per month with the 12-month average drawn over it. A range of days counts the months it covers entirely. The Maintenance and Fixed costs tabs show the same history for their own expenses; a recurring expense counts once for each month it was due.

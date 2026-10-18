@@ -371,7 +371,8 @@
   },
   "tco": {
     "contributions_invalid_month": "Month must be formatted as YYYY-MM",
-    "contributions_unsupported_category": "This cost category has no breakdown"
+    "contributions_unsupported_category": "This cost category has no breakdown",
+    "cost_history_unsupported_kind": "The cost family is not supported"
   },
   "charging_place": {
     "name_invalid": "Invalid place name (1 to 100 characters)",
