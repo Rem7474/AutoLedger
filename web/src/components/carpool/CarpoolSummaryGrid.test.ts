@@ -49,4 +49,14 @@ describe('carpool summary grid', () => {
     expect(many).toMatch(/12<[^>]*>\s*trips</)
     expect(many).toMatch(/20<[^>]*>\s*people</)
   })
+
+  it('names the period of the totals and reads an unknown cost per distance as a dash', async () => {
+    setLocale('en')
+    const html = await render({})
+    expect((html.match(/All trips/g) ?? []).length).toBe(5)
+    expect(html).toContain('€0.05')
+    const none = await render({ total_distance_km: 0, net_cost_per_km: 0 })
+    expect(none).not.toContain('€0.0')
+    expect(none).toMatch(/Driver&#39;s net cost[\s\S]*?—/)
+  })
 })

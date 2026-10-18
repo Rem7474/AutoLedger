@@ -5,6 +5,7 @@ import { Users, TrendingUp, CreditCard, Receipt } from 'lucide-vue-next'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { formatPercentOrUnknown } from '@/utils/numbers'
+import { t } from '@/i18n'
 import { distanceUnit, formatDistanceValue, perDistance } from '@/units'
 
 // Totals of all the carpool trips of the vehicle
@@ -17,12 +18,21 @@ const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 const coverageRate = computed(() => (props.summary.coverage_rate_pct == null ? null : formatPercentOrUnknown(props.summary.coverage_rate_pct)))
 // Revenue at least equal to the passengers' fair share
 const covered = computed(() => props.summary.total_revenue >= props.summary.total_passengers_share)
+// The totals cover every trip of the vehicle, whatever the list below shows
+const period = computed(() => t('carpool.carpoolSummaryGrid.allTrips'))
+// No distance shared yet: the cost per km is unknown, not free
+const netCostPerDistance = computed(() =>
+  Number(props.summary.total_distance_km) > 0
+    ? formatAmount(perDistance(Number(props.summary.net_cost_per_km || 0)), vehicleStore.currency, 3)
+    : null,
+)
 </script>
 
 <template>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
     <KpiCard
       :label="$t('carpool.carpoolSummaryGrid.carpooledTrips')"
+      :period="period"
       :icon="Users"
       :value="String(summary.total_trips)"
       :unit="` ${$t('carpool.carpoolSummaryGrid.trips', {}, summary.total_trips)}`"
@@ -32,6 +42,7 @@ const covered = computed(() => props.summary.total_revenue >= props.summary.tota
 
     <KpiCard
       :label="$t('carpool.carpoolSummaryGrid.passengersCarried')"
+      :period="period"
       :icon="Users"
       :value="String(summary.total_passengers)"
       :unit="` ${$t('carpool.carpoolSummaryGrid.people', {}, summary.total_passengers)}`"
@@ -39,20 +50,21 @@ const covered = computed(() => props.summary.total_revenue >= props.summary.tota
       <p class="mt-1 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.fairShareDue', { total_passengers_share: fmt(summary.total_passengers_share) }) }}</p>
     </KpiCard>
 
-    <KpiCard :label="$t('carpool.carpoolSummaryGrid.totalReceivedFromPassengers')" :icon="CreditCard" :value="fmt(summary.total_revenue)">
+    <KpiCard :label="$t('carpool.carpoolSummaryGrid.totalReceivedFromPassengers')" :period="period" :icon="CreditCard" :value="fmt(summary.total_revenue)">
       <p class="mt-1 text-xs" :class="covered ? 'text-success-400' : 'text-warning-400'">
         {{ covered ? $t('carpool.carpoolSummaryGrid.covered') : $t('carpool.carpoolSummaryGrid.below', { amount: fmt(summary.total_passengers_share - summary.total_revenue) }) }}
       </p>
     </KpiCard>
 
-    <KpiCard :label="$t('carpool.carpoolSummaryGrid.costRecoveryRate')" :icon="TrendingUp" :value="coverageRate">
+    <KpiCard :label="$t('carpool.carpoolSummaryGrid.costRecoveryRate')" :period="period" :icon="TrendingUp" :value="coverageRate">
       <p class="mt-1 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.ofTheTotalActualCost', { total_real_cost: fmt(summary.total_real_cost) }) }}</p>
     </KpiCard>
 
     <KpiCard
       :label="$t('carpool.carpoolSummaryGrid.driverSNetCost')"
+      :period="period"
       :icon="Receipt"
-      :value="formatAmount(perDistance(Number(summary.net_cost_per_km || 0)), vehicleStore.currency, 3)"
+      :value="netCostPerDistance"
       :unit="` / ${distanceUnit()}`"
     >
       <p class="mt-1 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.driverSFairShare', { total_driver_share: fmt(summary.total_driver_share) }) }}</p>
