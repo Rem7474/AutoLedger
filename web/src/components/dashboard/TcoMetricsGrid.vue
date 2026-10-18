@@ -43,6 +43,9 @@ const energyLabel = computed(() => {
 const windowLabel = computed(() => (rolling.value ? t('dashboard.tcoMetricsGrid.windowMonths', { months: rolling.value.months }, rolling.value.months) : undefined))
 // Estimated energy inside the figure the card shows: the window's own, or the since-purchase total without one
 const estimatedEnergy = computed(() => (rolling.value ? rolling.value.estimatedEnergy : props.tco?.estimated_energy_cost) || 0)
+// The energy card covers the same window as the cards beside it; the since-purchase total without monthly rows
+const energyCost = computed(() => (rolling.value ? rolling.value.energy : props.tco?.energy_cost) || 0)
+const energyPerKm = computed(() => (rolling.value ? rolling.value.energyPerKm : (props.tco?.energy_cost_per_km ?? null)))
 // Unknown (no distance yet) reads as a dash, not as 0,00
 const perUnit = (v: number | null | undefined) => formatAmountOrUnknown(v == null ? null : perDistance(v), vehicleStore.currency, 3)
 // Economic cost per km over the window; the since-purchase full cost when the monthly rows are missing
@@ -112,13 +115,14 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
       <!-- Energy -->
       <KpiCard
         :label="energyLabel"
+        :period="windowLabel"
         :icon="Zap"
         tone="sky"
-        :value="headline(tco?.energy_cost)"
+        :value="headline(energyCost)"
         :action-label="canCharge(tco?.powertrain) ? $t('dashboard.tcoMetricsGrid.energyPanelLink') : undefined"
         @action="showEnergyPanel"
       >
-        <p class="mt-2 text-xs text-slate-300">{{ perUnit(tco?.energy_cost_per_km) }}/{{ distanceUnit() }}</p>
+        <p class="mt-2 text-xs text-slate-300">{{ perUnit(energyPerKm) }}/{{ distanceUnit() }}</p>
       </KpiCard>
     </div>
 

@@ -194,6 +194,17 @@ onMounted(() => {
         summary
       />
 
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="openMonthDetail" />
+        <CostBreakdownDonut :tco="tco" />
+      </div>
+
+      <MileageCostChart :monthly-costs="monthlyCosts" @open-month="openMonthDetail" />
+
+      <!-- Shows itself only once a drive carries a tag -->
+      <TagBreakdown v-if="prefs.proPersoEnabled" :tco="tco" />
+
+      <!-- Condition and value of the vehicle: slower-moving than the cost figures above, so they come last -->
       <LeaseContractCard :tco="tco" />
 
       <!-- Two unrelated questions, so two cards: how healthy the battery is, and what the vehicle is worth -->
@@ -209,16 +220,6 @@ onMounted(() => {
           :refresh-key="resaleRefresh"
         />
       </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="openMonthDetail" />
-        <CostBreakdownDonut :tco="tco" />
-      </div>
-
-      <MileageCostChart :monthly-costs="monthlyCosts" @open-month="openMonthDetail" />
-
-      <!-- Shows itself only once a drive carries a tag -->
-      <TagBreakdown v-if="prefs.proPersoEnabled" :tco="tco" />
     </div>
 
     <MonthDetailModal v-model:month="selectedMonth" :monthly-costs="tco?.monthly_costs || []" />
