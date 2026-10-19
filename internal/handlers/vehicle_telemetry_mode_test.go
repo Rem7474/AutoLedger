@@ -58,7 +58,7 @@ func TestVehicleTelemetryModeIsDerivedAndMakeIsFreeText(t *testing.T) {
 	}
 
 	// A mode sent by the client is ignored, and no make is invented.
-	v := send(http.MethodPost, "/vehicles", `{"name":"EV","telemetry_mode":"CONNECTED"}`)
+	v := send(http.MethodPost, "/vehicles", `{"name":"EV","currency":"EUR","telemetry_mode":"CONNECTED"}`)
 	check("created without TeslaMate", v, models.TelemetryManual, "", "")
 
 	path := "/vehicles/" + v.ID

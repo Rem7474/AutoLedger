@@ -379,5 +379,8 @@
     "category_invalid": "Catégorie de lieu inconnue",
     "name_taken": "Un lieu de ce nom existe déjà",
     "text_invalid": "Le texte du lieu est vide"
+  },
+  "currency": {
+    "required": "Choisissez une devise"
   }
 }

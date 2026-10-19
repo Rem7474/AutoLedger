@@ -128,7 +128,7 @@ export function vehicleFormFrom(v: any): VehicleForm {
     powertrain: v.powertrain || 'EV',
     make: v.make || '',
     model: v.model || '',
-    currency: v.currency || 'EUR',
+    currency: v.currency,
     vin: v.vin || '',
     current_odometer: v.current_odometer ? Math.round(v.current_odometer) : 0,
     teslamate_car_id: v.teslamate_car_id || 1,
@@ -209,7 +209,7 @@ export function leasePreview(f: OwnershipForm) {
   return { total, perMonth: total / n, totalKm: (allowance * n) / 12 }
 }
 
-export function ownershipSummary(o: any, currency = 'EUR') {
+export function ownershipSummary(o: any, currency: string) {
   if (!o) return null
   const fmt = (v: number) => formatAmount(Number(v), currency, 0)
   if (o.acquisition_type === 'CASH' || o.acquisition_type === 'LOAN') {

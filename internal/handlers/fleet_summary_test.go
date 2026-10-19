@@ -233,3 +233,19 @@ func TestFleetSummaryTotalsPerCurrency(t *testing.T) {
 		t.Fatalf("fleet month %d adds currencies: %s total is %d", summary.CurrentMonthCost, summary.Currency, byCurrency[summary.Currency])
 	}
 }
+
+func TestFleetSummaryWithoutVehicleNamesNoCurrency(t *testing.T) {
+	repo := authTestRepo(t)
+	ctx := context.Background()
+	u, err := repo.CreateUser(ctx, "fleet-no-vehicle@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	summary, err := repo.GetFleetSummary(ctx, u.ID, "UTC")
+	if err != nil {
+		t.Fatalf("GetFleetSummary failed: %v", err)
+	}
+	if summary.Currency != "" || len(summary.Totals) != 0 {
+		t.Fatalf("a household without vehicle has no currency to report, got %q and %v", summary.Currency, summary.Totals)
+	}
+}

@@ -103,13 +103,14 @@ func normalizeGrafanaURL(raw *string) (*string, error) {
 	return &out, nil
 }
 
-// normalizeVehicleCurrency validates and uppercases a vehicle's base currency, defaulting to EUR.
+// normalizeVehicleCurrency validates and uppercases a currency that is chosen, never assumed: a vehicle's base
+// currency, a tariff plan's or a charging preset's. An empty value is refused, there is no default currency.
 // Unlike normalizeCurrency (an individual expense's currency, checked against the vehicle's own),
 // this is the vehicle's own currency: fixed at creation, never read again on update.
 func normalizeVehicleCurrency(raw string) (string, error) {
 	cur := strings.ToUpper(strings.TrimSpace(raw))
 	if cur == "" {
-		cur = "EUR"
+		return "", apierror.New("currency.required", "Choose a currency")
 	}
 	if !currencyPattern.MatchString(cur) {
 		return "", apierror.Newf("vehicle.currency_invalid", "Invalid currency: %q", raw)

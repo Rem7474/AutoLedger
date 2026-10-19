@@ -379,7 +379,7 @@ export function rollingWindowStats(monthlyCosts: any[] | undefined, months = ROL
 }
 
 /** Cost items of one month, in the economic view (smoothed) or the cash view (what was paid), with their share and cost per km. */
-export function buildMonthBreakdown(m: any, mode: MonthDetailMode, currency = 'EUR') {
+export function buildMonthBreakdown(m: any, mode: MonthDetailMode, currency = '') {
   const money = (v: number) => formatAmount(v, currency)
   const dist = m.distance_km || 0
 

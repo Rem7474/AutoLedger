@@ -13,7 +13,7 @@ import { currencySymbol, formatAmount } from '@/currency'
 import { buildExpensePayload, isQueued, toLocalDateTimeInput, type ExpenseType } from '@/utils/quickAdd'
 
 const props = defineProps<{ vehicle: any }>()
-const currency: string = props.vehicle.currency || 'EUR'
+const currency: string = props.vehicle.currency
 const emit = defineEmits<{ saved: [result: { queued: boolean; message: string }] }>()
 
 const types: { value: ExpenseType; label: string }[] = [

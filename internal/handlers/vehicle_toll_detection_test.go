@@ -9,15 +9,15 @@ import (
 func TestVehicleTollDetectionModeIsValidatedStoredAndReported(t *testing.T) {
 	a := newVehicleAPI(t, "toll-mode")
 
-	for _, body := range []string{`{"name":"x","toll_detection":"always"}`, `{"name":"x","toll_detection":""}`} {
+	for _, body := range []string{`{"name":"x","currency":"EUR","toll_detection":"always"}`, `{"name":"x","currency":"EUR","toll_detection":""}`} {
 		a.do(a.other, http.StatusBadRequest, "POST", "/", body)
 	}
 
-	created := decodeObj(t, a.do(a.other, http.StatusCreated, "POST", "/", `{"name":"Zoe"}`))
+	created := decodeObj(t, a.do(a.other, http.StatusCreated, "POST", "/", `{"name":"Zoe","currency":"EUR"}`))
 	if created["toll_detection"] != "auto" || created["toll_detection_active"] != false {
 		t.Fatalf("a new vehicle should be on auto and inactive for an English owner: %v", created)
 	}
-	forced := decodeObj(t, a.do(a.other, http.StatusCreated, "POST", "/", `{"name":"Kangoo","toll_detection":"on"}`))
+	forced := decodeObj(t, a.do(a.other, http.StatusCreated, "POST", "/", `{"name":"Kangoo","currency":"EUR","toll_detection":"on"}`))
 	if forced["toll_detection"] != "on" || forced["toll_detection_active"] != true {
 		t.Fatalf("an explicit on should be active: %v", forced)
 	}

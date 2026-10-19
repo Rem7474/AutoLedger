@@ -13,7 +13,7 @@ import { buildFuelPayload, checkOdometer, isQueued, toLocalDateInput, toNumber, 
 import { formatDistance, volumeUnitLabel } from '@/units'
 
 const props = defineProps<{ vehicle: any }>()
-const currency: string = props.vehicle.currency || 'EUR'
+const currency: string = props.vehicle.currency
 const emit = defineEmits<{ saved: [result: { queued: boolean; message: string }] }>()
 
 const form = reactive({

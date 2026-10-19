@@ -3,14 +3,19 @@ import { createSSRApp } from 'vue'
 import { createPinia } from 'pinia'
 import { renderToString } from '@vue/server-renderer'
 import { i18n, setLocale } from '@/i18n'
+import { useVehicleStore } from '@/stores/vehicle'
 import CarpoolSummaryGrid from './CarpoolSummaryGrid.vue'
 
 const summary = {
   total_trips: 12, total_passengers: 20, total_distance_km: 480, total_revenue: 50, total_passengers_share: 80,
   total_real_cost: 100, total_driver_share: 20, net_cost_per_km: 0.05, coverage_rate_pct: 64.1,
 }
-const render = (value: Record<string, unknown>) =>
-  renderToString(createSSRApp(CarpoolSummaryGrid, { summary: { ...summary, ...value } }).use(createPinia()).use(i18n))
+const render = (value: Record<string, unknown>) => {
+  const pinia = createPinia()
+  const app = createSSRApp(CarpoolSummaryGrid, { summary: { ...summary, ...value } }).use(pinia).use(i18n)
+  useVehicleStore(pinia).vehicles = [{ id: 'v1', currency: 'EUR' }]
+  return renderToString(app)
+}
 
 beforeEach(() => {
   vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => undefined })

@@ -50,7 +50,8 @@ describe('vehicle selection', () => {
     const store = await freshStore()
     expect(store.activeVehicle).toBeNull()
     expect(store.userRole).toBe('OWNER')
-    expect(store.currency).toBe('EUR')
+    // No vehicle, no currency: never a guessed euro
+    expect(store.currency).toBe('')
 
     api.getVehicles.mockResolvedValue([tesla, { id: 'v2' }])
     await store.fetchVehicles()

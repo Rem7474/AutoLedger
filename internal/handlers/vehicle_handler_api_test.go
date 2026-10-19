@@ -93,13 +93,14 @@ func TestVehicleCreateValidation(t *testing.T) {
 	cases := map[string]string{
 		"bad json":         `{`,
 		"no name":          `{"name":""}`,
-		"bad powertrain":   `{"name":"x","powertrain":"STEAM"}`,
-		"ice teslamate":    `{"name":"x","powertrain":"ICE","teslamate_api_url":"http://tm"}`,
+		"bad powertrain":   `{"name":"x","currency":"EUR","powertrain":"STEAM"}`,
+		"ice teslamate":    `{"name":"x","currency":"EUR","powertrain":"ICE","teslamate_api_url":"http://tm"}`,
 		"bad currency":     `{"name":"x","currency":"EU1"}`,
-		"grafana invalid":  `{"name":"x","teslamate_grafana_url":"ftp://g"}`,
-		"grafana creds":    `{"name":"x","teslamate_grafana_url":"http://u:p@g"}`,
-		"grafana query":    `{"name":"x","teslamate_grafana_url":"http://g/?a=1"}`,
-		"grafana too long": `{"name":"x","teslamate_grafana_url":"http://` + strings.Repeat("a", 300) + `"}`,
+		"no currency":      `{"name":"x"}`,
+		"grafana invalid":  `{"name":"x","currency":"EUR","teslamate_grafana_url":"ftp://g"}`,
+		"grafana creds":    `{"name":"x","currency":"EUR","teslamate_grafana_url":"http://u:p@g"}`,
+		"grafana query":    `{"name":"x","currency":"EUR","teslamate_grafana_url":"http://g/?a=1"}`,
+		"grafana too long": `{"name":"x","currency":"EUR","teslamate_grafana_url":"http://` + strings.Repeat("a", 300) + `"}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) { a.do(a.ownerID, http.StatusBadRequest, "POST", "/", body) })
@@ -121,7 +122,7 @@ func TestVehicleLifecycle(t *testing.T) {
 	id := created["id"].(string)
 
 	ice := decodeObj(t, a.do(a.other, http.StatusCreated, "POST", "/",
-		`{"name":"Clio","powertrain":"ICE","teslamate_car_id":3,"teslamate_api_key":"k","teslamate_auth_type":"API_KEY"}`))
+		`{"name":"Clio","currency":"EUR","powertrain":"ICE","teslamate_car_id":3,"teslamate_api_key":"k","teslamate_auth_type":"API_KEY"}`))
 	if ice["teslamate_car_id"] != nil || ice["teslamate_auth_type"] != string(models.AuthModeNone) {
 		t.Fatalf("an ICE vehicle must not keep TeslaMate settings: %v", ice)
 	}
@@ -143,7 +144,7 @@ func TestVehicleLifecycle(t *testing.T) {
 	a.do(a.editor, http.StatusForbidden, "PUT", "/"+a.vid, `{"name":"x"}`)
 	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{`)
 	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","powertrain":"WAT"}`)
-	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","teslamate_grafana_url":"nope"}`)
+	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","currency":"EUR","teslamate_grafana_url":"nope"}`)
 	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","default_driver_id":"00000000-0000-0000-0000-000000000000"}`)
 
 	updated := decodeObj(t, a.do(a.other, http.StatusOK, "PUT", "/"+id,

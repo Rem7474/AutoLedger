@@ -27,7 +27,7 @@ import { useSubmit } from '@/composables/useSubmit'
 // contract (null when there is none); saving reports the stored contract, deleting reports deleted.
 const props = defineProps<{ vehicle: any | null; ownership: any | null }>()
 const emit = defineEmits<{ saved: [ownership: any]; deleted: [] }>()
-const currency = computed(() => props.vehicle?.currency || 'EUR')
+const currency = computed(() => props.vehicle?.currency ?? '')
 const open = defineModel<boolean>('open', { required: true })
 const { showConfirm, showAlert } = useConfirm()
 

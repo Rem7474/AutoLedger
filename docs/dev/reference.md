@@ -62,6 +62,22 @@ Distances are always stored, computed and sent to the API in kilometers; `web/sr
 
 Each vehicle has its own `Currency` (ISO 4217, `vehicles.currency`, migration `000034_vehicle_currency`), fixed at creation and never edited afterward — `UpdateVehicle`'s SQL simply has no `currency` column in its `SET`, so a value sent on update is silently ignored; existing (pre-migration) vehicles keep `EUR`. A stored money amount in another currency needs an `fx_rate` to the vehicle's own currency, same mechanism as before but relative to the vehicle instead of hard-coded to the euro (`normalizeCurrency(currency, baseCurrency, fxRate)` in `internal/handlers/validation.go`; SQL sites compare `currency = (SELECT currency FROM vehicles WHERE id = ...)` or join `vehicles v` and compare `v.currency`, never a literal `'EUR'` — `amountInVehicleCurrencyExpr` in `internal/database/repository_currency.go` is the shared helper). The toll dataset (French autoroutes, OpenTollData) is the one amount that stays euro-denominated regardless of the vehicle's currency. On the frontend, `web/src/currency.ts`'s `formatMoney(cents, currency)` / `formatAmount(amount, currency)` use `Intl.NumberFormat` (`currencySymbol(currency)` for a bare symbol, e.g. a chart axis); pass the vehicle's own `currency` (`vehicleStore.currency` for the active vehicle), never assume EUR. Catalog strings carry no currency sign: an amount placeholder receives an already formatted amount (`"Fair share due: {amount}"`, called with `formatAmount(...)`), and a field label takes the symbol through `{cur}` (`"Amount ({cur})"`, called with `currencySymbol(...)`), so the sign lands where the locale puts it (`12,00 €` vs `US$12.00`). A manual expense form's own currency field defaults to the vehicle's currency (never `'EUR'`) and calls `currencyPayload(form, baseCurrency)` from `web/src/utils/expenses.ts` to decide whether `fx_rate` is required — the same `baseCurrency` the backend validates against.
 
+### Where an amount gets its currency
+
+An amount never has an assumed currency. A write either carries its currency, takes the one of its vehicle, or is refused; the guards are `internal/currencyguard` (Go sources) and `web/src/currencyLiterals.test.ts` (frontend sources), which fail on a new `"EUR"` literal outside their short lists of reasons.
+
+| Where | Currency | Rule |
+|---|---|---|
+| `POST /vehicles` | `vehicles.currency` | Required, ISO 4217 code, fixed at creation. No default. |
+| Tariff plans, public charging presets | own `currency` column | Required and validated on create; validated when changed on a plan update. No default. |
+| Comparison scenario in projection mode | `comparison_scenarios.currency` | Required. A retrospective scenario takes the currency of its vehicle. |
+| Charges and expenses entered by hand | `charge_logs.currency`, `drive_expenses.currency`, `maintenance_expenses.currency` | Optional on the request: the vehicle's currency when absent. Another currency needs an `fx_rate` to the vehicle's. |
+| Fuel logs, tires, ownership (purchase, loan, lease), carpool trips, legs and payments | none: the vehicle's | These tables hold amounts in the currency of their vehicle, never another. |
+| Automatic toll estimate | `drive_expenses.currency = 'EUR'` | The toll dataset is priced in euros. On a vehicle in another currency the expense has no `fx_rate`, so the vehicle-currency sums leave it out. |
+| `users.fleet_monthly_budget` | none | Read in the currency of the first vehicle of the household (see the fleet summary below). |
+| Fleet summary without a vehicle | empty | `currency` is empty rather than a default. |
+| Frontend formatting | `formatAmount(amount, currency)` | An empty currency (the vehicle is not loaded yet) formats as a plain number, never as euros. |
+
 ## Reporting months
 
 Months are calendar months of the reporting timezone (`APP_TIMEZONE`) everywhere: the TCO monthly costs, the fleet summary, the instalments due later in the month and the current-month figures. The TCO and the fleet summary carry `current_month` (`YYYY-MM`), which the client uses instead of its own clock. `monthly_costs` is continuous: every month from the first record to the current one is present, a month without a record as an empty row with an unknown cost per kilometre, so a range of N months is N calendar months. `GetFleetSummary` takes the timezone name.

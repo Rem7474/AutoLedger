@@ -141,9 +141,10 @@ func (h *TariffHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currency := strings.ToUpper(strings.TrimSpace(req.Currency))
-	if currency == "" {
-		currency = "EUR"
+	currency, err := normalizeVehicleCurrency(req.Currency)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err)
+		return
 	}
 
 	plan := &models.TariffPlan{
@@ -197,7 +198,12 @@ func (h *TariffHandler) Update(w http.ResponseWriter, r *http.Request) {
 		existing.PlanType = req.PlanType
 	}
 	if req.Currency != "" {
-		existing.Currency = strings.ToUpper(strings.TrimSpace(req.Currency))
+		currency, err := normalizeVehicleCurrency(req.Currency)
+		if err != nil {
+			writeErr(w, http.StatusBadRequest, err)
+			return
+		}
+		existing.Currency = currency
 	}
 	existing.FlatRateCents = req.FlatRateCents
 	existing.PeakRateCents = req.PeakRateCents
@@ -329,9 +335,12 @@ func (h *TariffHandler) CreatePublicPreset(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	preset.UserID = userID
-	if preset.Currency == "" {
-		preset.Currency = "EUR"
+	currency, err := normalizeVehicleCurrency(preset.Currency)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err)
+		return
 	}
+	preset.Currency = currency
 
 	if err := h.repo.CreatePublicChargingPreset(r.Context(), &preset); err != nil {
 		writeRepoError(w, r, err, "Failed to save public charging preset")

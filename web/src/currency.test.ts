@@ -18,6 +18,16 @@ describe('formatAmount', () => {
   })
 })
 
+describe('unknown currency', () => {
+  // Until the vehicle that owns an amount is loaded there is no currency: the figure is a plain number, never a guessed euro.
+  it('formats an amount without a symbol instead of assuming a currency', () => {
+    expect(formatAmount(1540, '')).toBe(new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(1540))
+    expect(formatMoney(154000, '')).not.toMatch(/[€$]/)
+    expect(formatAxisAmount(400000, '')).not.toMatch(/[€$]/)
+    expect(currencySymbol('')).toBe('')
+  })
+})
+
 describe('currencySymbol', () => {
   it('extracts just the symbol for a chart label', () => {
     expect(currencySymbol('EUR')).toBe('€')
