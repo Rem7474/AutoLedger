@@ -115,7 +115,7 @@ func TestIntegrationDataGapsAreCappedAndCarryNoDriveIdentity(t *testing.T) {
 	}
 	comp := services.TCOCompleteness{ChargesWithoutCost: 3, UnqualifiedDrives: 2, UntrackedDistanceKm: 410, InsuranceMissing: true}
 
-	got := buildIntegrationDataGaps("v1", "EUR", issues, 31, 640, 4, comp)
+	got := buildIntegrationDataGaps("v1", "EUR", issues, 31, 640, 4, comp, nil)
 
 	if len(got.Issues) != integrationReadIssues || !got.Truncated {
 		t.Errorf("%d issues, truncated %v: want %d and true", len(got.Issues), got.Truncated, integrationReadIssues)
@@ -134,7 +134,7 @@ func TestIntegrationDataGapsAreCappedAndCarryNoDriveIdentity(t *testing.T) {
 		t.Errorf("completeness gaps: %+v", got)
 	}
 
-	if few := buildIntegrationDataGaps("v1", "EUR", issues[:2], 2, 1, 0, comp); few.Truncated || len(few.Issues) != 2 {
+	if few := buildIntegrationDataGaps("v1", "EUR", issues[:2], 2, 1, 0, comp, nil); few.Truncated || len(few.Issues) != 2 {
 		t.Errorf("a short list is not truncated: %+v", few)
 	}
 }
@@ -153,7 +153,7 @@ func TestIntegrationDataGapsRankWhatToCompleteWithItsWorthAndUnit(t *testing.T) 
 		Dimensions: []services.CompletenessDimension{{Key: "energy", Label: "Energy", ScorePct: 80, Weight: 0.4, Applicable: true}},
 	}
 
-	got := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, comp)
+	got := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, comp, nil)
 
 	kinds := make([]string, len(got.Missing))
 	for i, m := range got.Missing {
@@ -180,7 +180,7 @@ func TestIntegrationDataGapsRankWhatToCompleteWithItsWorthAndUnit(t *testing.T) 
 		t.Errorf("the other completeness details: %+v", got)
 	}
 
-	empty := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, services.TCOCompleteness{})
+	empty := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, services.TCOCompleteness{}, nil)
 	body, _ := json.Marshal(empty)
 	for _, want := range []string{`"missing":[]`, `"score_dimensions":[]`, `"acquisition_missing_fields":[]`} {
 		if !strings.Contains(string(body), want) {
@@ -254,5 +254,24 @@ func TestIntegrationReadRoutesServeOnlyTheAccountsVehiclesWithoutIdentifiers(t *
 	}
 	if costs.Currency != "GBP" || costs.SincePurchase.Costs.Total.Currency != "GBP" || costs.Last12Months.Costs.Energy.Currency != "GBP" {
 		t.Errorf("every amount carries the vehicle's currency: %+v", costs)
+	}
+}
+
+func TestIntegrationDataGapsReportEntriesThatLookMistyped(t *testing.T) {
+	day := time.Date(2026, 10, 3, 9, 0, 0, 0, time.UTC)
+	alerts := []services.DataAlert{
+		{Kind: services.AlertAmountOutlier, Category: "TOLL", Date: day, Amount: 8500, Median: 650},
+		{Kind: services.AlertPriceOutlier, Category: "CHARGE", Date: day, UnitPrice: 2.4, Low: 0.1, High: 0.45},
+	}
+	got := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, services.TCOCompleteness{}, alerts).SuspiciousEntries
+
+	if len(got) != 2 || got[0].Category != "toll" || got[0].Date != "2026-10-03" || got[0].Amount.Amount != "85.00" || got[0].UsualAmount.Amount != "6.50" || got[0].UnitPrice != nil {
+		t.Errorf("an expense far above the usual: %+v", got)
+	}
+	if got[1].Category != "charge" || got[1].UnitPrice.Amount != "2.400" || got[1].LowPrice.Amount != "0.100" || got[1].HighPrice.Amount != "0.450" || got[1].Amount != nil || got[1].UnitPrice.Currency != "CHF" {
+		t.Errorf("a price far outside the range: %+v", got[1])
+	}
+	if none := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, services.TCOCompleteness{}, nil); none.SuspiciousEntries == nil || len(none.SuspiciousEntries) != 0 {
+		t.Errorf("no suspicious entry is an empty list: %+v", none.SuspiciousEntries)
 	}
 }

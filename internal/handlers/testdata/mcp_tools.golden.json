@@ -2393,7 +2393,7 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
-    "description": "What is missing from a vehicle's records: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition. \"missing\" ranks what to complete by what it is worth, the biggest first. Use it to say how far the costs can be trusted.",
+    "description": "What is missing from a vehicle's records: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition, and recent entries that look mistyped (suspicious_entries). \"missing\" ranks what to complete by what it is worth, the biggest first. Use it to say how far the costs can be trusted.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -2621,6 +2621,151 @@
           "description": "true when the odometer at the start of ownership is not entered, so the distance before the first reading is not counted",
           "type": "boolean"
         },
+        "suspicious_entries": {
+          "description": "recent entries that look mistyped: an expense far above the usual of its category, or an energy price far outside the vehicle's own range; at most one of each kind, the most deviant; ask the owner before relying on them",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "additionalProperties": false,
+                "description": "for an amount outlier, what the entry cost",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "category": {
+                "description": "toll, parking or travel_other for an amount outlier; charge or fuel for a price outlier",
+                "type": "string"
+              },
+              "date": {
+                "description": "day of the entry, YYYY-MM-DD",
+                "type": "string"
+              },
+              "highest_other_price": {
+                "additionalProperties": false,
+                "description": "for a price outlier, the highest price among the vehicle's other entries",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "kind": {
+                "description": "amount_outlier (an expense far above the usual of its category) or price_outlier (a price per kWh or per litre far outside the vehicle's own range)",
+                "type": "string"
+              },
+              "lowest_other_price": {
+                "additionalProperties": false,
+                "description": "for a price outlier, the lowest price among the vehicle's other entries",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "unit_price": {
+                "additionalProperties": false,
+                "description": "for a price outlier, the price per kWh or per litre of the entry",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "usual_amount": {
+                "additionalProperties": false,
+                "description": "for an amount outlier, the median of the category, what an entry usually costs",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "category",
+              "date",
+              "amount",
+              "usual_amount",
+              "unit_price",
+              "lowest_other_price",
+              "highest_other_price"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
         "truncated": {
           "description": "true when more issues exist than the ones listed",
           "type": "boolean"
@@ -2672,6 +2817,7 @@
         "acquisition_missing_fields",
         "start_odometer_missing",
         "unconverted_expenses",
+        "suspicious_entries",
         "missing",
         "score_dimensions"
       ],
