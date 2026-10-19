@@ -181,11 +181,13 @@ type IntegrationCostBreakdown struct {
 // that fall due later in it. CostPerKm is null while the distance is unknown.
 type IntegrationCostPeriod struct {
 	// From and To are the first and last month (YYYY-MM) the period covers; null for the whole ownership.
-	From      *string                  `json:"from" jsonschema:"first month covered, YYYY-MM; null for the whole ownership"`
-	To        *string                  `json:"to" jsonschema:"last month covered, YYYY-MM; null for the whole ownership"`
-	Costs     IntegrationCostBreakdown `json:"costs" jsonschema:"what was spent over the period, by category"`
-	Distance  IntegrationDistance      `json:"distance" jsonschema:"distance driven over the period, tracked plus estimated for the untracked part"`
-	CostPerKm *IntegrationAmount       `json:"cost_per_km" jsonschema:"total cost divided by the distance, per kilometre; null while the distance is unknown"`
+	From *string `json:"from" jsonschema:"first month covered, YYYY-MM; null for the whole ownership"`
+	To   *string `json:"to" jsonschema:"last month covered, YYYY-MM; null for the whole ownership"`
+	// MonthsCovered is how many calendar months the figures span, so a period shorter than its name is visible.
+	MonthsCovered int                      `json:"months_covered" jsonschema:"number of calendar months the figures span, the month in progress included; below 12 for last_12_months when the history is shorter, which makes the total smaller than a full year"`
+	Costs         IntegrationCostBreakdown `json:"costs" jsonschema:"what was spent over the period, by category"`
+	Distance      IntegrationDistance      `json:"distance" jsonschema:"distance driven over the period, tracked plus estimated for the untracked part"`
+	CostPerKm     *IntegrationAmount       `json:"cost_per_km" jsonschema:"total cost divided by the distance, per kilometre; null while the distance is unknown"`
 }
 
 // IntegrationCompleteness says how much of the figures rests on recorded data.
@@ -258,8 +260,9 @@ func buildIntegrationCosts(vehicle *models.Vehicle, sum *services.TCOSummary) In
 		km += m.DistanceKm
 	}
 	last12 := IntegrationCostPeriod{
-		Costs:    breakdown(cur, energy, tolls, maintenance, insurance, financing, tires, other, total),
-		Distance: kilometres(km),
+		MonthsCovered: len(months),
+		Costs:         breakdown(cur, energy, tolls, maintenance, insurance, financing, tires, other, total),
+		Distance:      kilometres(km),
 	}
 	if len(months) > 0 {
 		from, to := months[0].Month, months[len(months)-1].Month
@@ -271,6 +274,7 @@ func buildIntegrationCosts(vehicle *models.Vehicle, sum *services.TCOSummary) In
 	}
 
 	since := IntegrationCostPeriod{
+		MonthsCovered: len(sum.MonthlyCosts),
 		Costs: breakdown(cur, sum.EnergyCost, sum.TollsCost, sum.MaintenanceCost+sum.RepairCost, sum.InsuranceCost,
 			sum.FinancingCost, sum.TiresCost, sum.SubscriptionCost+sum.TaxCost+sum.OtherCost, sum.TotalCost),
 		Distance:  kilometres(sum.DistanceBasisKm),
