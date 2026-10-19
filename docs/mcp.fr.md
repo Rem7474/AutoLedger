@@ -20,6 +20,18 @@ Authentifiez-vous ensuite depuis le client (`/mcp` dans Claude Code). Un client 
 
 L'accès figure dans les jetons d'API de la page du compte, et le supprimer à cet endroit coupe l'assistant immédiatement.
 
+## Vérifier le point d'accès
+
+Un client qui ne peut pas vérifier le serveur n'atteint généralement pas l'une de ces adresses. Depuis une machine extérieure à votre réseau :
+
+```
+curl -i -X POST https://ledger.example/mcp
+curl https://ledger.example/.well-known/oauth-protected-resource/mcp
+curl https://ledger.example/.well-known/oauth-authorization-server
+```
+
+La première doit répondre `401` avec un en-tête `WWW-Authenticate: Bearer resource_metadata="..."`, et les deux autres un document JSON dont les adresses commencent par votre URL publique. Une page HTML, un `404` ou une adresse comme `http://localhost:8080` signifie que `AUTOLEDGER_MCP_ENABLED` n'est pas défini, que le proxy ne transmet pas la requête, ou que `AUTOLEDGER_BASE_URL` n'est pas l'adresse publique. Un client qui s'exécute dans un service en ligne (un connecteur web, par exemple) ne peut joindre qu'une adresse accessible depuis Internet.
+
 ## Outils
 
 | Outil | Retourne |

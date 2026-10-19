@@ -137,5 +137,8 @@ func registerAPIRoutes(r chi.Router, jwtSecret string, tokens appMiddleware.APIT
 
 // registerSPA serves the embedded Vue frontend for every path no other route claims.
 func registerSPA(r chi.Router) {
+	// A discovery document that does not exist (OpenID configuration, a metadata file of another standard) is a 404:
+	// a client that is handed the app's HTML page for it cannot tell the server does not support it.
+	r.HandleFunc("/.well-known/*", http.NotFound)
 	r.Handle("/*", handlers.NewSPAServer(web.GetDistFS()))
 }
