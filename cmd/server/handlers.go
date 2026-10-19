@@ -29,31 +29,32 @@ type appServices struct {
 
 // apiHandlers is every HTTP handler the router mounts. The routes_*.go files register them by domain.
 type apiHandlers struct {
-	auth           *handlers.AuthHandler
-	vehicle        *handlers.VehicleHandler
-	drive          *handlers.DriveHandler
-	tire           *handlers.TireHandler
-	expense        *handlers.ExpenseHandler
-	chargingPlace  *handlers.ChargingPlaceHandler
-	tco            *handlers.TCOHandler
-	energy         *handlers.EnergyHandler
-	comparison     *handlers.ComparisonHandler
-	carpool        *handlers.CarpoolHandler
-	checkpoint     *handlers.CheckpointHandler
-	fuel           *handlers.FuelHandler
-	reminder       *handlers.ReminderHandler
-	vehicleMember  *handlers.VehicleMemberHandler
-	csvImport      *handlers.ImportHandler
-	importProfile  *handlers.ImportProfileHandler
-	mileage        *handlers.MileageHandler
-	residual       *handlers.ResidualHandler
-	serviceBook    *handlers.ServiceBookHandler
-	export         *handlers.ExportHandler
-	token          *handlers.TokenHandler
-	tariff         *handlers.TariffHandler
-	pendingCharges *handlers.PendingChargesHandler
-	fleet          *handlers.FleetHandler
-	ha             *handlers.HomeAssistantHandler
+	auth            *handlers.AuthHandler
+	vehicle         *handlers.VehicleHandler
+	drive           *handlers.DriveHandler
+	tire            *handlers.TireHandler
+	expense         *handlers.ExpenseHandler
+	chargingPlace   *handlers.ChargingPlaceHandler
+	tco             *handlers.TCOHandler
+	energy          *handlers.EnergyHandler
+	comparison      *handlers.ComparisonHandler
+	carpool         *handlers.CarpoolHandler
+	checkpoint      *handlers.CheckpointHandler
+	fuel            *handlers.FuelHandler
+	reminder        *handlers.ReminderHandler
+	vehicleMember   *handlers.VehicleMemberHandler
+	csvImport       *handlers.ImportHandler
+	importProfile   *handlers.ImportProfileHandler
+	mileage         *handlers.MileageHandler
+	residual        *handlers.ResidualHandler
+	serviceBook     *handlers.ServiceBookHandler
+	export          *handlers.ExportHandler
+	token           *handlers.TokenHandler
+	tariff          *handlers.TariffHandler
+	pendingCharges  *handlers.PendingChargesHandler
+	fleet           *handlers.FleetHandler
+	ha              *handlers.HomeAssistantHandler
+	integrationRead *handlers.IntegrationReadHandler
 }
 
 // newOIDCService returns the OIDC service when SSO is configured, nil otherwise.
@@ -95,31 +96,32 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 	tariffService := services.NewTariffServiceIn(cfg.ReportingTimezone)
 
 	h := &apiHandlers{
-		auth:           handlers.NewAuthHandler(repo, cfg, oidcService),
-		vehicle:        handlers.NewVehicleHandler(repo, encryptor, svc.sync),
-		drive:          handlers.NewDriveHandler(repo, svc.carpool, tollDetectionService),
-		tire:           handlers.NewTireHandler(repo, svc.tireWear),
-		expense:        handlers.NewExpenseHandler(repo, storageService),
-		chargingPlace:  handlers.NewChargingPlaceHandler(repo),
-		tco:            handlers.NewTCOHandler(repo, svc.tco),
-		energy:         handlers.NewEnergyHandler(repo, svc.energyStats, svc.tco, reportingLocation),
-		comparison:     handlers.NewComparisonHandler(repo, svc.comparison),
-		carpool:        handlers.NewCarpoolHandler(repo, svc.carpool),
-		checkpoint:     handlers.NewCheckpointHandler(repo),
-		fuel:           handlers.NewFuelHandler(repo),
-		reminder:       handlers.NewReminderHandler(repo, svc.notification),
-		vehicleMember:  handlers.NewVehicleMemberHandler(repo),
-		csvImport:      handlers.NewImportHandler(repo, services.NewCSVImportService(repo, cfg.ReportingTimezone)),
-		importProfile:  handlers.NewImportProfileHandler(repo),
-		mileage:        handlers.NewMileageHandler(repo, mileageService),
-		residual:       handlers.NewResidualHandler(repo, services.NewResidualService(repo, svc.energyStats)),
-		serviceBook:    handlers.NewServiceBookHandler(repo, services.NewServiceBookService(repo, storageService.Read)),
-		export:         handlers.NewExportHandler(repo, services.NewExportService(repo).WithMileage(mileageService)),
-		token:          handlers.NewTokenHandler(repo),
-		tariff:         handlers.NewTariffHandler(repo, tariffService),
-		pendingCharges: handlers.NewPendingChargesHandler(repo, tariffService),
-		fleet:          handlers.NewFleetHandler(services.NewFleetService(repo, svc.tco)),
-		ha:             handlers.NewHomeAssistantHandler(repo, tariffService),
+		auth:            handlers.NewAuthHandler(repo, cfg, oidcService),
+		vehicle:         handlers.NewVehicleHandler(repo, encryptor, svc.sync),
+		drive:           handlers.NewDriveHandler(repo, svc.carpool, tollDetectionService),
+		tire:            handlers.NewTireHandler(repo, svc.tireWear),
+		expense:         handlers.NewExpenseHandler(repo, storageService),
+		chargingPlace:   handlers.NewChargingPlaceHandler(repo),
+		tco:             handlers.NewTCOHandler(repo, svc.tco),
+		energy:          handlers.NewEnergyHandler(repo, svc.energyStats, svc.tco, reportingLocation),
+		comparison:      handlers.NewComparisonHandler(repo, svc.comparison),
+		carpool:         handlers.NewCarpoolHandler(repo, svc.carpool),
+		checkpoint:      handlers.NewCheckpointHandler(repo),
+		fuel:            handlers.NewFuelHandler(repo),
+		reminder:        handlers.NewReminderHandler(repo, svc.notification),
+		vehicleMember:   handlers.NewVehicleMemberHandler(repo),
+		csvImport:       handlers.NewImportHandler(repo, services.NewCSVImportService(repo, cfg.ReportingTimezone)),
+		importProfile:   handlers.NewImportProfileHandler(repo),
+		mileage:         handlers.NewMileageHandler(repo, mileageService),
+		residual:        handlers.NewResidualHandler(repo, services.NewResidualService(repo, svc.energyStats)),
+		serviceBook:     handlers.NewServiceBookHandler(repo, services.NewServiceBookService(repo, storageService.Read)),
+		export:          handlers.NewExportHandler(repo, services.NewExportService(repo).WithMileage(mileageService)),
+		token:           handlers.NewTokenHandler(repo),
+		tariff:          handlers.NewTariffHandler(repo, tariffService),
+		pendingCharges:  handlers.NewPendingChargesHandler(repo, tariffService),
+		fleet:           handlers.NewFleetHandler(services.NewFleetService(repo, svc.tco)),
+		ha:              handlers.NewHomeAssistantHandler(repo, tariffService),
+		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco),
 	}
 	h.ha.SetTimezone(cfg.ReportingTimezone)
 	h.fuel.SetTimezone(cfg.ReportingTimezone)
