@@ -4,6 +4,7 @@ import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch, onMounted } from 'vue'
 import { Fuel, Gauge, Edit2, Trash2 } from 'lucide-vue-next'
 import EmptyState from '@/components/EmptyState.vue'
+import KpiCard from '@/components/KpiCard.vue'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -25,6 +26,12 @@ const readings = ref<any[]>([])
 const fuelLogs = ref<any[]>([])
 // The readings plus the fill-ups that carry a mileage: both feed the monthly smoothing and the estimates
 const history = computed(() => mergeOdometerHistory(readings.value, fuelLogs.value))
+// The latest mileage of the history, and what the vehicle has driven since: the figures the page opens on
+const lastReading = computed(() => history.value.reduce<(typeof history.value)[number] | null>((best, r) => (!best || r.date >= best.date ? r : best), null))
+const sinceLastReading = computed(() => {
+  const current = Number(props.vehicle?.current_odometer)
+  return lastReading.value && Number.isFinite(current) && current >= lastReading.value.odometer ? current - lastReading.value.odometer : null
+})
 const loading = ref(false)
 const editingId = ref<string | null>(null)
 const form = ref({
@@ -130,6 +137,29 @@ onMounted(() => {
     <p class="text-xs text-slate-400">
       {{ $t('manual.odometerReadingsPanel.odometerReadingsSpreadTheUntracked') }}
     </p>
+
+    <div v-if="!loading" class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+      <KpiCard
+        compact
+        :label="$t('manual.odometerReadingsPanel.currentReading')"
+        :value="vehicle?.current_odometer ? formatDistanceValue(vehicle.current_odometer) : null"
+        :unit="` ${distanceUnit()}`"
+      />
+      <KpiCard
+        compact
+        :label="$t('manual.odometerReadingsPanel.lastReading')"
+        :value="lastReading ? formatDistanceValue(lastReading.odometer) : null"
+        :unit="` ${distanceUnit()}`"
+      >
+        <p v-if="lastReading" class="mt-1 text-xs text-slate-400">{{ new Date(lastReading.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }}</p>
+      </KpiCard>
+      <KpiCard
+        compact
+        :label="$t('manual.odometerReadingsPanel.sinceLastReading')"
+        :value="sinceLastReading === null ? null : formatDistanceValue(sinceLastReading)"
+        :unit="` ${distanceUnit()}`"
+      />
+    </div>
 
     <form v-if="canEdit" class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-4" @submit.prevent="save">
       <div class="flex items-center justify-between">

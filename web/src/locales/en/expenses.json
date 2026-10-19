@@ -125,10 +125,11 @@
     "viewTheFile": "View the file",
     "uploadAFirstDocument": "Upload a first document",
     "noReceiptOrInvoiceUploaded": "No receipt or invoice uploaded",
-    "documentS": "{length} document(s)",
+    "documentS": "{count} document | {count} documents",
     "receiptsInvoicesTicketsWorkshopReports": "Receipts (invoices, tickets, workshop reports) are stored on the server. Several expenses can be attached to the same file.",
     "linkedExpenses": "{count} linked expense(s)",
-    "notLinked": "Not linked"
+    "notLinked": "Not linked",
+    "linked": "Linked"
   },
   "maintenanceModal": {
     "dropTheInvoiceHereOr": "Drop the invoice here or click to browse",
@@ -194,7 +195,7 @@
     "yearFilter": "Filter by year",
     "allYears": "All years",
     "total": "Total",
-    "count": "{n} expense(s)",
+    "count": "{n} expense | {n} expenses",
     "noMatch": "No expense matches these filters.",
     "noMaintenanceExpense": "No maintenance expense recorded",
     "noFixedExpense": "No fixed cost recorded",
@@ -269,7 +270,7 @@
     "upToDate": "Up to date",
     "settings": "Settings",
     "summary": "Reminder summary",
-    "totalCount": "{count} reminder(s)",
+    "totalCount": "{count} reminder | {count} reminders",
     "homelabWebhook": "Homelab webhook",
     "active": "Active ({type})",
     "notConfigured": "Not configured",
@@ -354,7 +355,9 @@
     "viewTheReceipt": "View the receipt",
     "noTollOrParkingRecorded": "No toll or parking recorded",
     "emptyHint": "Tolls and parking fees show up here, and the ones recorded on a drive are listed with it. Add one by hand for a trip you did not record.",
-    "addFirst": "Add a toll or parking fee"
+    "addFirst": "Add a toll or parking fee",
+    "count": "{count} expense | {count} expenses",
+    "total": "Total"
   },
   "uploadDocumentModal": {
     "eGServiceInvoiceAugust": "e.g. Service invoice, August 2026 tolls...",

@@ -93,6 +93,9 @@
     "pointS": "{length} point(s)",
     "fromFillUp": "Plein",
     "fromFillUpHint": "Kilométrage saisi sur un plein. Il se modifie depuis la liste des pleins.",
-    "seeFillUps": "Voir les pleins"
+    "seeFillUps": "Voir les pleins",
+    "currentReading": "Kilométrage actuel",
+    "lastReading": "Dernier relevé",
+    "sinceLastReading": "Depuis le dernier relevé"
   }
 }

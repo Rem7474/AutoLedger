@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import ListSummary from '@/components/ListSummary.vue'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { computed, ref } from 'vue'
@@ -78,12 +79,10 @@ const total = computed(() => maintenanceTotal(visible.value, vehicleStore.curren
           <option value="">{{ $t('expenses.maintenancePanel.allYears') }}</option>
           <option v-for="y in years" :key="y" :value="String(y)">{{ y }}</option>
         </select>
-        <p class="col-span-2 text-sm text-slate-400 sm:ml-auto">
-          {{ $t('expenses.maintenancePanel.total') }}
-          <span class="font-extrabold text-white">{{ formatAmount(total, vehicleStore.currency) }}</span>
-          <span class="text-xs"> · {{ $t('expenses.maintenancePanel.count', { n: visible.length }) }}</span>
-        </p>
       </div>
+      <ListSummary :chips="[{ label: $t('expenses.maintenancePanel.total'), value: formatAmount(total, vehicleStore.currency), tone: 'sky' }]">
+        {{ $t('expenses.maintenancePanel.count', { n: visible.length }, visible.length) }}
+      </ListSummary>
       <div v-if="kind === 'service'" class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">
         <button
           type="button"

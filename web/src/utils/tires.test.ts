@@ -10,6 +10,7 @@ import {
   isMountedPosition,
   lastUsedDay,
   positionLabel,
+  summarizeFittedTires,
   positionOnTire,
   sessionFormFromCopy,
   sessionFormFromSession,
@@ -249,5 +250,30 @@ describe('isForecastDue', () => {
     expect(isForecastDue('2026-10-10', now)).toBe(true)
     expect(isForecastDue('2026-01-01', now)).toBe(true)
     expect(isForecastDue('2027-04-01', now)).toBe(false)
+  })
+})
+
+describe('summarizeFittedTires', () => {
+  const stat = (pct: number, date?: string, brand = 'Michelin') => ({
+    tire: { brand, model: 'Pilot' },
+    life_progress_pct: pct,
+    replacement_forecast: date ? { replacement_date: date } : null,
+  })
+
+  it('counts the fitted wheels, picks the most worn tire and the first replacement', () => {
+    const s = summarizeFittedTires({
+      FL: stat(40, '2027-03-01'),
+      FR: stat(72, '2026-11-15', 'Nokian'),
+      RL: null,
+      RR: stat(55),
+    })
+    expect(s.fitted).toBe(3)
+    expect(s.mostWorn).toEqual({ pct: 72, position: 'FR', name: 'Nokian Pilot' })
+    expect(s.nextReplacement).toBe('2026-11-15')
+  })
+
+  it('leaves the figures unknown without a fitted tire or a forecast', () => {
+    expect(summarizeFittedTires({ FL: null, FR: null, RL: null, RR: null })).toEqual({ fitted: 0, mostWorn: null, nextReplacement: null })
+    expect(summarizeFittedTires({ FL: stat(10) }).nextReplacement).toBeNull()
   })
 })

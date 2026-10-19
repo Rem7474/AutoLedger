@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
+import KpiCard from '@/components/KpiCard.vue'
 import { formatNumber, formatPercent } from '@/utils/numbers'
 import { intlLocale } from '@/i18n'
 import { Disc } from 'lucide-vue-next'
@@ -49,14 +50,10 @@ const vehicleStore = useVehicleStore()
     </div>
 
     <!-- Metrics Row -->
-    <div class="grid grid-cols-2 gap-2 bg-slate-950/60 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-800/80 text-center">
-      <div>
-        <div class="text-xs text-slate-400 uppercase">{{ $t('tires.tireWheelCard.totalDriven') }}</div>
-        <div class="text-sm font-bold text-slate-200">{{ formatDistance(stat.total_distance_km) }}</div>
-      </div>
-      <div>
-        <div class="text-xs text-slate-400 uppercase">{{ $t('tires.tireWheelCard.costKm', { unit: distanceUnit() }) }}</div>
-        <div class="text-sm font-bold text-warning-400" :title="Number(stat.tire.purchase_price) > 0 ? undefined : $t('tires.costPerKmUnset')">{{ formatCostPerDistance(stat.cost_per_km, vehicleStore.currency, 4) }}</div>
+    <div class="grid grid-cols-2 gap-2">
+      <KpiCard compact :label="$t('tires.tireWheelCard.totalDriven')" :value="formatDistance(stat.total_distance_km)" />
+      <div :title="Number(stat.tire.purchase_price) > 0 ? undefined : $t('tires.costPerKmUnset')">
+        <KpiCard compact :label="$t('tires.tireWheelCard.costKm', { unit: distanceUnit() })" tone="warning" :value="formatCostPerDistance(stat.cost_per_km, vehicleStore.currency, 4)" />
       </div>
     </div>
 
