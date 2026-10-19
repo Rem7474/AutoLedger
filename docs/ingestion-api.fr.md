@@ -16,8 +16,8 @@ Un jeton a un accès, choisi à sa création et jamais modifié ensuite (génér
 
 | Accès | Permet |
 |---|---|
-| Envoi et lecture (`ingest`) | Envoyer des événements (`POST /api/integrations/homeassistant/event`) et lire les véhicules et leurs indicateurs. C'est ce dont Home Assistant a besoin. |
-| Lecture seule (`read`) | Lire les véhicules et leurs indicateurs. Un envoi est refusé avec `403`. |
+| Envoi et lecture (`ingest`) | Envoyer des événements (`POST /api/integrations/homeassistant/event`) et lire les véhicules et leurs indicateurs. C'est ce dont Home Assistant a besoin. L'API de lecture est refusée. |
+| Lecture seule (`read`) | Lire les véhicules et leurs indicateurs, et l'[API de lecture](#api-de-lecture). Un envoi est refusé avec `403`. |
 
 Utilisez un jeton en lecture seule pour tout ce qui ne fait que consulter les chiffres (un tableau de bord, un script, un assistant) : un jeton perdu ou détourné ne peut rien écrire dans le compte.
 
@@ -88,6 +88,26 @@ Renvoyer le même événement est sans danger. Un enregistrement est reconnu com
 2. sinon par tolérance : une charge débutant à 30 min près avec une énergie à 0,5 kWh près, un trajet débutant à 15 min près avec une distance à 1 km près, un plein à 30 min près pour le même montant (les pleins ne sont reconnus que de cette façon).
 
 Utilisez un `event_id` stable (identifiant de session, clé construite sur l'horodatage) dès que la source en fournit un.
+
+## API de lecture
+
+Un jeton en lecture seule (`read`) ouvre aussi une API de lecture restreinte sous `/api/integrations/v1`, pensée pour les assistants et les rapports. Un jeton `ingest` y est refusé : un jeton qui peut envoyer des événements ne peut pas aussi lire les coûts.
+
+| Route | Renvoie |
+|---|---|
+| `GET /api/integrations/v1/vehicles` | Les véhicules du compte : `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}` | Un véhicule, mêmes champs. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | Ce que le véhicule a coûté sur ses 12 derniers mois (`last_12_months`) et depuis son achat (`since_purchase`), par catégorie, avec le coût au km et un résumé `completeness`. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps` | Ce qui manque à l'historique : trous et anomalies de compteur (les 20 plus récents sont listés), charges sans coût, trajets non qualifiés, distance non suivie, assurance ou acquisition absentes. |
+
+Conventions :
+
+- Un montant est `{"amount": "12.34", "currency": "GBP"}` : une chaîne décimale, dans la devise du véhicule. Les montants ne sont jamais convertis d'une devise à l'autre.
+- Une distance est `{"value": 4200, "unit": "km"}`. L'unité est toujours le kilomètre.
+- Une valeur impossible à connaître (un coût au km sans distance, un score sans rien à évaluer) vaut `null`, jamais `0`.
+- Les coûts sont les sommes décaissées, achat du véhicule exclu. Le mois en cours compte les échéances qui tombent plus tard dans le mois.
+- Les réponses ne contiennent ni VIN, ni plaque, ni adresse, ni coordonnée, ni document, ni identifiant de trajet.
+- Un véhicule que le compte ne peut pas voir répond `404`.
 
 ## Exemples
 

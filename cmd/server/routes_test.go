@@ -112,6 +112,10 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		"GET /api/integrations/homeassistant/vehicles/{vehicleId}",
 		"GET /api/integrations/homeassistant/vehicles/{vehicleId}/metrics",
 		"POST /api/integrations/homeassistant/event",
+		"GET /api/integrations/v1/vehicles",
+		"GET /api/integrations/v1/vehicles/{vehicleId}",
+		"GET /api/integrations/v1/vehicles/{vehicleId}/costs",
+		"GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps",
 	}
 	assertSameRoutes(t, "public", public, wantPublic)
 	assertSameRoutes(t, "API token", integration, wantIntegration)
@@ -127,12 +131,14 @@ func TestRouteTableAuthTiers(t *testing.T) {
 }
 
 // TestReadTokenCannotPushEvents pins the scope of each integration route: a read token reads the Home Assistant
-// views and is refused on the route that writes, an ingest token keeps both.
+// views and the read API and is refused on the route that writes, an ingest token keeps the push and the Home
+// Assistant views but is refused on the read API.
 func TestReadTokenCannotPushEvents(t *testing.T) {
 	apiToken := auth.TokenPrefix + "route-table-test"
 	const scopeRefusal = "does not have the scope"
 	const push = "/api/integrations/homeassistant/event"
 	const read = "/api/integrations/homeassistant/vehicles"
+	const readAPI = "/api/integrations/v1/vehicles"
 
 	readOnly := newRouteTableFor(t, auth.ScopeRead)
 	if body := probe(readOnly, http.MethodPost, push, apiToken); !strings.Contains(body, scopeRefusal) {
@@ -142,7 +148,14 @@ func TestReadTokenCannotPushEvents(t *testing.T) {
 		t.Errorf("a read token must reach %s, got %q", read, body)
 	}
 
+	if body := probe(readOnly, http.MethodGet, readAPI, apiToken); strings.Contains(body, scopeRefusal) {
+		t.Errorf("a read token must reach %s, got %q", readAPI, body)
+	}
+
 	ingest := newRouteTableFor(t, auth.ScopeIngest)
+	if body := probe(ingest, http.MethodGet, readAPI, apiToken); !strings.Contains(body, scopeRefusal) {
+		t.Errorf("an ingest token must be refused on %s, got %q", readAPI, body)
+	}
 	for _, route := range []struct{ method, path string }{{http.MethodPost, push}, {http.MethodGet, read}} {
 		if body := probe(ingest, route.method, route.path, apiToken); strings.Contains(body, scopeRefusal) {
 			t.Errorf("an ingest token must reach %s %s, got %q", route.method, route.path, body)

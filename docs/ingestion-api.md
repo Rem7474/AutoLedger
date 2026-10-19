@@ -16,8 +16,8 @@ A token has a scope, chosen when it is created and never changed afterwards (gen
 
 | Scope | Can do |
 |---|---|
-| Send and read (`ingest`) | Push events (`POST /api/integrations/homeassistant/event`) and read the vehicles and their metrics. This is what Home Assistant needs. |
-| Read only (`read`) | Read the vehicles and their metrics. A push is refused with `403`. |
+| Send and read (`ingest`) | Push events (`POST /api/integrations/homeassistant/event`) and read the vehicles and their metrics. This is what Home Assistant needs. The read API is refused. |
+| Read only (`read`) | Read the vehicles and their metrics, and the [read API](#read-api). A push is refused with `403`. |
 
 Use a read-only token for anything that only looks at the figures (a dashboard, a script, an assistant): a leaked or misused token cannot write to the account.
 
@@ -88,6 +88,26 @@ Sending the same event again is safe. A record is recognised as already stored:
 2. otherwise by tolerance: a charge starting within 30 min with an energy within 0.5 kWh, a drive starting within 15 min with a distance within 1 km, a fill-up within 30 min with the same amount (fill-ups are only recognised this way).
 
 Use a stable `event_id` (a session id, a timestamp-based key) whenever the source has one.
+
+## Read API
+
+A read-only token (`read`) also opens a narrow read API under `/api/integrations/v1`, meant for assistants and reports. A token with the `ingest` scope is refused on it: a token that can push events cannot also read the costs.
+
+| Route | Returns |
+|---|---|
+| `GET /api/integrations/v1/vehicles` | The account's vehicles: `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}` | One vehicle, same fields. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | What the vehicle cost over its last 12 months (`last_12_months`) and since it was bought (`since_purchase`), by category, with the cost per km and a `completeness` summary. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps` | What the history is missing: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition. |
+
+Conventions:
+
+- An amount is `{"amount": "12.34", "currency": "GBP"}`: a decimal string, in the vehicle's currency. Amounts are never converted between currencies.
+- A distance is `{"value": 4200, "unit": "km"}`. The unit is always kilometres.
+- A figure that cannot be known (a cost per km with no distance, a score with nothing to score) is `null`, never `0`.
+- The costs are cash spent, the purchase of the vehicle excluded. The month in progress counts with the instalments that fall due later in it.
+- The responses carry no VIN, plate, address, coordinate, document or drive identifier.
+- A vehicle the account cannot see answers `404`.
 
 ## Examples
 
