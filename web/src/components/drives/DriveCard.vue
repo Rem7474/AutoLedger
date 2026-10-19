@@ -29,7 +29,7 @@ const formatDate = formatDayTime
 
 <template>
   <div
-    class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-4 rounded-2xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 group"
+    class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-3 sm:p-4 rounded-2xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-2 sm:gap-4 group"
     :class="{ 'border-rose-500/40 bg-slate-800/40 shadow-lg shadow-rose-950/20': selected }"
   >
     <CardOpenButton :label="$t('drives.driveCard.openBreakdown', { date: formatDate(d.start_time) })" @click="emit('open', d)" />
@@ -53,7 +53,7 @@ const formatDate = formatDayTime
 
       <!-- Drive Details -->
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2 flex-wrap mb-1.5">
+        <div class="flex items-center gap-x-2 gap-y-1 flex-wrap mb-1">
           <span class="text-xs font-semibold text-slate-400 shrink-0">{{ formatDate(d.start_time) }}</span>
           <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60 shrink-0">
             {{ formatDistance(d.distance_km, 1) }}
@@ -101,7 +101,7 @@ const formatDate = formatDayTime
     </div>
 
     <!-- Right Side: Cost Badge & Actions -->
-    <div class="relative z-10 flex items-center gap-2 sm:gap-2.5 self-start lg:self-auto flex-wrap justify-start lg:justify-end shrink-0">
+    <div class="relative z-10 flex items-center gap-1 sm:gap-2.5 lg:self-auto flex-wrap sm:justify-start lg:justify-end shrink-0">
       <!-- Toll qualification: 2 taps -->
       <QualifyActions
         v-if="vehicleStore.canEdit && needsTollQualification(d)"
@@ -115,7 +115,7 @@ const formatDate = formatDayTime
 
       <!-- Real Cost Badge -->
       <div
-        class="px-3 py-1.5 bg-slate-800/80 border border-slate-700/70 rounded-xl flex items-center gap-2 text-left shadow-sm"
+        class="mr-auto sm:mr-0 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-slate-800/80 border border-slate-700/70 rounded-xl flex items-center gap-2 text-left shadow-sm"
         :title="$t('drives.driveCard.actualCostPriceCalculatedFor')"
       >
         <Coins class="w-3.5 h-3.5 text-slate-400" />
