@@ -35,8 +35,8 @@ export const useVehicleStore = defineStore('vehicle', () => {
   // The GPS toll detection and the qualification of the motorway drives (French dataset), decided by the server
   const tollDetectionActive = computed(() => activeVehicle.value?.toll_detection_active !== false)
   const hasTeslaMate = computed(() => vehicleHasTeslaMate(activeVehicle.value))
-  // Every amount of a vehicle is stored and shown in the currency chosen at its creation
-  const currency = computed<string>(() => activeVehicle.value?.currency || 'EUR')
+  // Every amount of a vehicle is stored and shown in the currency chosen at its creation; empty until a vehicle is loaded
+  const currency = computed<string>(() => activeVehicle.value?.currency ?? '')
 
   async function fetchVehicles() {
     isLoading.value = true

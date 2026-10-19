@@ -18,7 +18,8 @@ func (r *Repository) GetFleetSummary(ctx context.Context, userID, timezone strin
 		return nil, fmt.Errorf("failed to fetch household vehicles: %w", err)
 	}
 
-	baseCurrency := "EUR"
+	// Without a vehicle there is no currency to name: the summary carries none rather than a guessed one.
+	baseCurrency := ""
 	if len(vehicles) > 0 {
 		baseCurrency = vehicles[0].Currency
 	}

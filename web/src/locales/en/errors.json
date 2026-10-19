@@ -379,5 +379,8 @@
     "category_invalid": "Unknown place category",
     "name_taken": "A place of that name already exists",
     "text_invalid": "The location text is empty"
+  },
+  "currency": {
+    "required": "Choose a currency"
   }
 }

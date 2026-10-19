@@ -116,7 +116,8 @@ const commonCurrency = computed(() => canCompareCurrencies(props.items.map(i => 
 
 // Never label or plot different currencies as if their amounts were interchangeable.
 function fmtMoney(v: number | null | undefined, currency: string, digits = 0): string {
-  return Number(v || 0).toLocaleString(intlLocale(), { style: 'currency', currency, minimumFractionDigits: digits, maximumFractionDigits: digits })
+  const fractions = { minimumFractionDigits: digits, maximumFractionDigits: digits }
+  return Number(v || 0).toLocaleString(intlLocale(), currency ? { style: 'currency', currency, ...fractions } : fractions)
 }
 
 function breakEven(r: any): string {
@@ -149,7 +150,7 @@ function gapOf(row: { id: string; result: any }) {
   return gapAgainst(reference.value.result, row.result)
 }
 function fmtSigned(v: number): string {
-  return `${v > 0 ? '+' : v < 0 ? '−' : ''}${fmtMoney(Math.abs(v), commonCurrency.value || 'EUR')}`
+  return `${v > 0 ? '+' : v < 0 ? '−' : ''}${fmtMoney(Math.abs(v), commonCurrency.value ?? '')}`
 }
 function fmtPct(v: number | null): string {
   return v === null ? '' : ` (${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toLocaleString(intlLocale(), { maximumFractionDigits: 0 })} %)`

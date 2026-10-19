@@ -19,7 +19,7 @@ const props = withDefaults(
     unit?: string
     currency?: string
   }>(),
-  { emptyLabel: '', showLegend: true, cutout: '68%', unit: '', currency: 'EUR' },
+  { emptyLabel: '', showLegend: true, cutout: '68%', unit: '', currency: '' },
 )
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)

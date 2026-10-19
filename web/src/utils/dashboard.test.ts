@@ -211,7 +211,7 @@ describe('buildMonthBreakdown', () => {
   })
 
   it('explains estimates, cash outlays and smoothing in the item notes', () => {
-    const eco = buildMonthBreakdown(month, 'economic')
+    const eco = buildMonthBreakdown(month, 'economic', 'EUR')
     expect(eco.items.find((i) => i.key === 'energy')!.note).toContain(`${formatAmount(5, 'EUR')} estimés`)
     expect(eco.items.find((i) => i.key === 'tires')!.note).toContain(`${formatAmount(400, 'EUR')} décaissés`)
     expect(eco.items.find((i) => i.key === 'financing')!.note).toContain(`Lissé : ${formatAmount(310, 'EUR')}`)

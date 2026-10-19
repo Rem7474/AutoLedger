@@ -9,7 +9,8 @@ func TestNormalizeVehicleCurrency(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"empty defaults to EUR", "", "EUR", false},
+		{"rejects empty, there is no default currency", "", "", true},
+		{"rejects blank", "  ", "", true},
 		{"uppercases and trims", " usd ", "USD", false},
 		{"already valid", "GBP", "GBP", false},
 		{"rejects too short", "US", "", true},

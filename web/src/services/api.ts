@@ -343,7 +343,7 @@ export const api = {
   // Expenses & Charges
   getDriveExpenses: (vehicleId: string) => request<any[]>(`/vehicles/${vehicleId}/expenses`),
   createDriveExpense: (vehicleId: string, data: any) =>
-    request<any>(`/vehicles/${vehicleId}/expenses`, { method: 'POST', body: JSON.stringify(data) }, t('shell.api.toll', { amount: formatAmount(Number(data.amount), data.currency || 'EUR') })),
+    request<any>(`/vehicles/${vehicleId}/expenses`, { method: 'POST', body: JSON.stringify(data) }, t('shell.api.toll', { amount: formatAmount(Number(data.amount), data.currency ?? '') })),
   updateDriveExpense: (vehicleId: string, expenseId: string, data: any) =>
     request<any>(`/vehicles/${vehicleId}/expenses/${expenseId}`, { method: 'PUT', body: JSON.stringify(data) }, t('shell.api.tollEdit')),
   deleteDriveExpense: (vehicleId: string, expenseId: string) =>

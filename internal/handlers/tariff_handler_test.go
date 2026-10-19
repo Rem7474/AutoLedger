@@ -66,9 +66,12 @@ func TestTariffPlanLifecycle(t *testing.T) {
 	a := newTariffAPI(t, "tariff-plan@example.com")
 
 	a.expect(http.StatusBadRequest, "POST", "/plans", `{`)
-	a.expect(http.StatusBadRequest, "POST", "/plans", `{"name":"  "}`)
+	a.expect(http.StatusBadRequest, "POST", "/plans", `{"name":"  ","currency":"EUR"}`)
+	// A plan is stored in the currency it was entered in: an absent or malformed one is refused, never defaulted.
+	a.expect(http.StatusBadRequest, "POST", "/plans", `{"name":"Home","flat_rate_cents":0.2}`)
+	a.expect(http.StatusBadRequest, "POST", "/plans", `{"name":"Home","currency":"EURO","flat_rate_cents":0.2}`)
 
-	plan := a.expect(http.StatusCreated, "POST", "/plans", `{"name":" Home ","plan_type":"bogus","flat_rate_cents":0.2,"is_default":true}`)
+	plan := a.expect(http.StatusCreated, "POST", "/plans", `{"name":" Home ","plan_type":"bogus","currency":"eur","flat_rate_cents":0.2,"is_default":true}`)
 	if plan["name"] != "Home" || plan["plan_type"] != models.TariffTypeTimeOfUse || plan["currency"] != "EUR" {
 		t.Fatalf("defaults not applied: %v", plan)
 	}
@@ -88,6 +91,7 @@ func TestTariffPlanLifecycle(t *testing.T) {
 	if upd["name"] != "Home 2" || upd["currency"] != "GBP" || upd["valid_from"] != "2026-01-01" {
 		t.Fatalf("update not applied: %v", upd)
 	}
+	a.expect(http.StatusBadRequest, "PUT", "/plans/"+id, `{"currency":"12"}`)
 	a.expect(http.StatusBadRequest, "PUT", "/plans/"+id, `{"valid_from":"nope"}`)
 	a.expect(http.StatusBadRequest, "PUT", "/plans/"+id, `{`)
 	a.expect(http.StatusNotFound, "PUT", "/plans/00000000-0000-0000-0000-000000000000", `{"name":"x"}`)
@@ -103,21 +107,21 @@ func TestTariffBandsValidation(t *testing.T) {
 	a := newTariffAPI(t, "tariff-bands@example.com")
 
 	cases := map[string]string{
-		"no bands":          `{"name":"B","plan_type":"BANDS"}`,
-		"blank band name":   `{"name":"B","plan_type":"BANDS","bands":[{"name":" ","rate_cents":0.1}]}`,
-		"duplicate band":    `{"name":"B","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1},{"name":"a","rate_cents":0.2}]}`,
-		"unknown default":   `{"name":"B","plan_type":"BANDS","default_band":"z","bands":[{"name":"a","rate_cents":0.1}]}`,
-		"unknown rule band": `{"name":"B","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"rules":[{"start":"00:00","end":"06:00","band":"z"}]}`,
-		"bad time":          `{"name":"B","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"rules":[{"start":"25:00","end":"06:00","band":"a"}]}`,
-		"bad day":           `{"name":"B","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"rules":[{"days":[7],"start":"00:00","end":"06:00","band":"a"}]}`,
-		"bad validity":      `{"name":"B","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"valid_from":"2026-05-01","valid_to":"2026-01-01"}`,
-		"invalid day":       `{"name":"B","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"valid_to":"31/12/2026"}`,
+		"no bands":          `{"name":"B","currency":"EUR","plan_type":"BANDS"}`,
+		"blank band name":   `{"name":"B","currency":"EUR","plan_type":"BANDS","bands":[{"name":" ","rate_cents":0.1}]}`,
+		"duplicate band":    `{"name":"B","currency":"EUR","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1},{"name":"a","rate_cents":0.2}]}`,
+		"unknown default":   `{"name":"B","currency":"EUR","plan_type":"BANDS","default_band":"z","bands":[{"name":"a","rate_cents":0.1}]}`,
+		"unknown rule band": `{"name":"B","currency":"EUR","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"rules":[{"start":"00:00","end":"06:00","band":"z"}]}`,
+		"bad time":          `{"name":"B","currency":"EUR","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"rules":[{"start":"25:00","end":"06:00","band":"a"}]}`,
+		"bad day":           `{"name":"B","currency":"EUR","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"rules":[{"days":[7],"start":"00:00","end":"06:00","band":"a"}]}`,
+		"bad validity":      `{"name":"B","currency":"EUR","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"valid_from":"2026-05-01","valid_to":"2026-01-01"}`,
+		"invalid day":       `{"name":"B","currency":"EUR","plan_type":"BANDS","bands":[{"name":"a","rate_cents":0.1}],"valid_to":"31/12/2026"}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) { a.expect(http.StatusBadRequest, "POST", "/plans", body) })
 	}
 
-	ok := `{"name":"Grid","plan_type":"BANDS","default_band":"peak","standing_charge_cents":0.5,` +
+	ok := `{"name":"Grid","currency":"EUR","plan_type":"BANDS","default_band":"peak","standing_charge_cents":0.5,` +
 		`"bands":[{"name":"peak","rate_cents":0.3},{"name":"night","rate_cents":0.1}],` +
 		`"rules":[{"days":[1,2],"start":"22:00","end":"24:00","band":"night"}],"valid_from":""}`
 	plan := a.expect(http.StatusCreated, "POST", "/plans", ok)
@@ -144,7 +148,7 @@ func TestTariffCalculateSession(t *testing.T) {
 		t.Fatalf("no default plan should leave plan null: %v", none)
 	}
 
-	plan := a.expect(http.StatusCreated, "POST", "/plans", `{"name":"Flat","plan_type":"FLAT","flat_rate_cents":0.2,"is_default":true}`)
+	plan := a.expect(http.StatusCreated, "POST", "/plans", `{"name":"Flat","plan_type":"FLAT","currency":"EUR","flat_rate_cents":0.2,"is_default":true}`)
 	byDefault := a.expect(http.StatusOK, "POST", "/calculate-session", `{`+window+`}`)
 	if byDefault["plan"] != "Flat" || byDefault["cost"].(float64) != 2.0 {
 		t.Fatalf("default plan: %v", byDefault)
@@ -165,11 +169,13 @@ func TestPublicChargingPresets(t *testing.T) {
 	a := newTariffAPI(t, "tariff-presets@example.com")
 
 	a.expect(http.StatusBadRequest, "POST", "/public-presets", `{`)
-	a.expect(http.StatusBadRequest, "POST", "/public-presets", `{"name":" "}`)
+	a.expect(http.StatusBadRequest, "POST", "/public-presets", `{"name":" ","currency":"EUR"}`)
+	a.expect(http.StatusBadRequest, "POST", "/public-presets", `{"name":"Ionity","price_per_kwh":0.69}`)
+	a.expect(http.StatusBadRequest, "POST", "/public-presets", `{"name":"Ionity","currency":"E1","price_per_kwh":0.69}`)
 
-	p := a.expect(http.StatusCreated, "POST", "/public-presets", `{"name":" Ionity ","price_per_kwh":0.69,"connection_fee":1}`)
+	p := a.expect(http.StatusCreated, "POST", "/public-presets", `{"name":" Ionity ","currency":"eur","price_per_kwh":0.69,"connection_fee":1}`)
 	if p["name"] != "Ionity" || p["currency"] != "EUR" {
-		t.Fatalf("preset defaults: %v", p)
+		t.Fatalf("preset not normalised: %v", p)
 	}
 	list := a.expect(http.StatusOK, "GET", "/public-presets", "")
 	if len(list["presets"].([]any)) != 1 {

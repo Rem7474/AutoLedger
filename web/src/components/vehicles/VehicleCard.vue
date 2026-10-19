@@ -108,7 +108,7 @@ function clearCardTestResult() {
         >
           <FileText v-if="ownership" class="w-3.5 h-3.5 text-sky-400 shrink-0" />
           <Plus v-else class="w-3.5 h-3.5 text-warning-400 shrink-0" />
-          <span>{{ ownership ? ownershipSummary(ownership, v.currency || 'EUR') : $t('vehicles.vehicleCard.enterContract') }}</span>
+          <span>{{ ownership ? ownershipSummary(ownership, v.currency) : $t('vehicles.vehicleCard.enterContract') }}</span>
           <Pencil v-if="ownership" class="w-3 h-3 text-sky-400 opacity-60 group-hover:opacity-100 shrink-0 ml-0.5" />
         </button>
       </div>
@@ -155,7 +155,7 @@ function clearCardTestResult() {
         <span class="text-slate-400">{{ $t('vehicles.vehicleCard.estimatedEnergy') }}</span>
         <p v-if="hasEnergyEstimate(v)" class="text-xs font-semibold text-info-400 flex items-center gap-1 mt-1">
           <Zap class="w-3.5 h-3.5 text-info-400" />
-          {{ $t('vehicles.vehicleCard.kwh100kmKwh', { unit: distanceUnit(), estimated_kwh_100km: formatPerDistanceValue(Number(v.estimated_kwh_100km)), price: `${formatAmount(v.estimated_price_per_kwh, v.currency || 'EUR', 3)}/kWh` }) }}
+          {{ $t('vehicles.vehicleCard.kwh100kmKwh', { unit: distanceUnit(), estimated_kwh_100km: formatPerDistanceValue(Number(v.estimated_kwh_100km)), price: `${formatAmount(v.estimated_price_per_kwh, v.currency, 3)}/kWh` }) }}
         </p>
         <p v-else class="text-xs text-slate-400 mt-1">{{ $t('vehicles.vehicleCard.notConfigured') }}</p>
       </div>
