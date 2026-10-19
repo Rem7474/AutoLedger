@@ -8,6 +8,7 @@ type APIToken struct {
 	UserID      string     `json:"user_id"`
 	Name        string     `json:"name"`
 	TokenPrefix string     `json:"token_prefix"`
+	Scope       string     `json:"scope"` // "ingest" or "read", fixed at creation
 	LastUsedAt  *time.Time `json:"last_used_at,omitempty"`
 	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
@@ -16,6 +17,7 @@ type APIToken struct {
 // CreateAPITokenRequest is sent when generating a new token.
 type CreateAPITokenRequest struct {
 	Name      string     `json:"name"`
+	Scope     string     `json:"scope"`
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 }
 

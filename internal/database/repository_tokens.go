@@ -12,19 +12,20 @@ import (
 )
 
 // CreateAPIToken stores a hashed API token.
-func (r *Repository) CreateAPIToken(ctx context.Context, userID, name, tokenHash, prefix string, expiresAt *time.Time) (*models.APIToken, error) {
+func (r *Repository) CreateAPIToken(ctx context.Context, userID, name, scope, tokenHash, prefix string, expiresAt *time.Time) (*models.APIToken, error) {
 	query := `
-		INSERT INTO api_tokens (user_id, name, token_hash, token_prefix, expires_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO api_tokens (user_id, name, scope, token_hash, token_prefix, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at;
 	`
 	tok := &models.APIToken{
 		UserID:      userID,
 		Name:        name,
 		TokenPrefix: prefix,
+		Scope:       scope,
 		ExpiresAt:   expiresAt,
 	}
-	err := r.pool.QueryRow(ctx, query, userID, name, tokenHash, prefix, expiresAt).Scan(&tok.ID, &tok.CreatedAt)
+	err := r.pool.QueryRow(ctx, query, userID, name, scope, tokenHash, prefix, expiresAt).Scan(&tok.ID, &tok.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create api token: %w", err)
 	}
@@ -34,7 +35,7 @@ func (r *Repository) CreateAPIToken(ctx context.Context, userID, name, tokenHash
 // ListAPITokens returns all tokens for a user.
 func (r *Repository) ListAPITokens(ctx context.Context, userID string) ([]models.APIToken, error) {
 	query := `
-		SELECT id, user_id, name, token_prefix, last_used_at, expires_at, created_at
+		SELECT id, user_id, name, token_prefix, scope, last_used_at, expires_at, created_at
 		FROM api_tokens
 		WHERE user_id = $1
 		ORDER BY created_at DESC;
@@ -49,7 +50,7 @@ func (r *Repository) ListAPITokens(ctx context.Context, userID string) ([]models
 	for rows.Next() {
 		var tok models.APIToken
 		if err := rows.Scan(
-			&tok.ID, &tok.UserID, &tok.Name, &tok.TokenPrefix,
+			&tok.ID, &tok.UserID, &tok.Name, &tok.TokenPrefix, &tok.Scope,
 			&tok.LastUsedAt, &tok.ExpiresAt, &tok.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -74,21 +75,20 @@ func (r *Repository) RevokeAPIToken(ctx context.Context, userID, tokenID string)
 	return nil
 }
 
-// ValidateAPIToken verifies a token hash and returns the associated user's ID and email.
-func (r *Repository) ValidateAPIToken(ctx context.Context, tokenHash string) (string, string, error) {
+// ValidateAPIToken verifies a token hash and returns the associated user's ID and email, and the token's scope.
+func (r *Repository) ValidateAPIToken(ctx context.Context, tokenHash string) (userID, email, scope string, err error) {
 	query := `
-		SELECT t.id, t.user_id, u.email
+		SELECT t.id, t.user_id, u.email, t.scope
 		FROM api_tokens t
 		JOIN users u ON u.id = t.user_id
 		WHERE t.token_hash = $1 AND (t.expires_at IS NULL OR t.expires_at > NOW());
 	`
-	var tokenID, userID, email string
-	err := r.pool.QueryRow(ctx, query, tokenHash).Scan(&tokenID, &userID, &email)
-	if err != nil {
+	var tokenID string
+	if err := r.pool.QueryRow(ctx, query, tokenHash).Scan(&tokenID, &userID, &email, &scope); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return "", "", ErrNotFound
+			return "", "", "", ErrNotFound
 		}
-		return "", "", err
+		return "", "", "", err
 	}
 
 	// Update last_used_at asynchronously
@@ -98,5 +98,5 @@ func (r *Repository) ValidateAPIToken(ctx context.Context, tokenHash string) (st
 		_, _ = r.pool.Exec(updateCtx, `UPDATE api_tokens SET last_used_at = NOW() WHERE id = $1;`, tokenID)
 	}()
 
-	return userID, email, nil
+	return userID, email, scope, nil
 }

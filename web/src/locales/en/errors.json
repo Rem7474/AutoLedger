@@ -261,7 +261,8 @@
   },
   "token": {
     "name_required": "Token name is required",
-    "name_too_long": "Token name must be at most 100 characters"
+    "name_too_long": "Token name must be at most 100 characters",
+    "scope_invalid": "Choose what the token may do: read data or push events"
   },
   "ownership": {
     "start_required": "The start date (purchase or contract) is required",

@@ -261,7 +261,8 @@
   },
   "token": {
     "name_required": "Le nom du jeton est requis",
-    "name_too_long": "Le nom du jeton ne doit pas dépasser 100 caractères"
+    "name_too_long": "Le nom du jeton ne doit pas dépasser 100 caractères",
+    "scope_invalid": "Choisissez ce que le jeton peut faire : lire les données ou envoyer des événements"
   },
   "ownership": {
     "start_required": "La date de début (achat ou contrat) est requise",

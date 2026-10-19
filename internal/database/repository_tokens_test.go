@@ -29,12 +29,12 @@ func TestAPITokens(t *testing.T) {
 		t.Fatalf("a user without token must get an empty, non-nil list: %+v, %v", list, err)
 	}
 
-	live, err := repo.CreateAPIToken(ctx, user.ID, "home assistant", "hash-live", "al_live", nil)
+	live, err := repo.CreateAPIToken(ctx, user.ID, "home assistant", "ingest", "hash-live", "al_live", nil)
 	if err != nil || live.ID == "" || live.CreatedAt.IsZero() {
 		t.Fatalf("create = %+v, %v", live, err)
 	}
 	past := time.Now().Add(-time.Hour)
-	expired, err := repo.CreateAPIToken(ctx, user.ID, "old", "hash-expired", "al_old", &past)
+	expired, err := repo.CreateAPIToken(ctx, user.ID, "old", "read", "hash-expired", "al_old", &past)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,16 +46,19 @@ func TestAPITokens(t *testing.T) {
 	if list[0].ID != expired.ID {
 		t.Fatalf("tokens must be listed newest first, got %s first", list[0].Name)
 	}
+	if list[0].Scope != "read" || list[1].Scope != "ingest" {
+		t.Fatalf("the scope is stored and listed with the token: %q, %q", list[0].Scope, list[1].Scope)
+	}
 
 	// Only a live token validates, and it resolves to its owner.
-	id, email, err := repo.ValidateAPIToken(ctx, "hash-live")
-	if err != nil || id != user.ID || email != "tokens-owner@example.com" {
-		t.Fatalf("validate = %q %q %v", id, email, err)
+	id, email, scope, err := repo.ValidateAPIToken(ctx, "hash-live")
+	if err != nil || id != user.ID || email != "tokens-owner@example.com" || scope != "ingest" {
+		t.Fatalf("validate = %q %q %q %v", id, email, scope, err)
 	}
-	if _, _, err := repo.ValidateAPIToken(ctx, "hash-expired"); !errors.Is(err, ErrNotFound) {
+	if _, _, _, err := repo.ValidateAPIToken(ctx, "hash-expired"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("expired token: err = %v, want ErrNotFound", err)
 	}
-	if _, _, err := repo.ValidateAPIToken(ctx, "hash-unknown"); !errors.Is(err, ErrNotFound) {
+	if _, _, _, err := repo.ValidateAPIToken(ctx, "hash-unknown"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("unknown token: err = %v, want ErrNotFound", err)
 	}
 
@@ -85,7 +88,7 @@ func TestAPITokens(t *testing.T) {
 	if err := repo.RevokeAPIToken(ctx, user.ID, live.ID); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := repo.ValidateAPIToken(ctx, "hash-live"); !errors.Is(err, ErrNotFound) {
+	if _, _, _, err := repo.ValidateAPIToken(ctx, "hash-live"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("revoked token: err = %v, want ErrNotFound", err)
 	}
 }

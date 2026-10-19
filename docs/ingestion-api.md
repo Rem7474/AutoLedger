@@ -10,6 +10,17 @@ Create an API token in the account page (`al_live_...`). It is account-level and
 Authorization: Bearer al_live_xxxxxxxx
 ```
 
+### Scope
+
+A token has a scope, chosen when it is created and never changed afterwards (generate another token instead):
+
+| Scope | Can do |
+|---|---|
+| Send and read (`ingest`) | Push events (`POST /api/integrations/homeassistant/event`) and read the vehicles and their metrics. This is what Home Assistant needs. |
+| Read only (`read`) | Read the vehicles and their metrics. A push is refused with `403`. |
+
+Use a read-only token for anything that only looks at the figures (a dashboard, a script, an assistant): a leaked or misused token cannot write to the account.
+
 ## Endpoint
 
 `POST /api/integrations/homeassistant/event` with a JSON body.

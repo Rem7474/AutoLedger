@@ -10,6 +10,18 @@ import (
 
 const TokenPrefix = "al_live_"
 
+// What an API token may do. Ingest is the original behaviour (push events and read the Home Assistant views);
+// Read only reads. A session is not scoped.
+const (
+	ScopeIngest = "ingest"
+	ScopeRead   = "read"
+)
+
+// ValidScope reports whether scope names an API token scope.
+func ValidScope(scope string) bool {
+	return scope == ScopeIngest || scope == ScopeRead
+}
+
 // GenerateAPIToken creates a cryptographically secure random token, its display prefix, and its SHA-256 hash.
 func GenerateAPIToken() (rawToken, prefix, tokenHash string, err error) {
 	bytes := make([]byte, 24)
