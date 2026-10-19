@@ -42,7 +42,7 @@
     "autoTollTitle": "Apply the automatic toll",
     "autoTollMessage": "Detect the tolls of {count} drive(s) and record the estimated fare? Tolls entered by hand are never changed.",
     "apply": "Apply",
-    "autoTollResult": "{created} created, {updated} updated, {skipped} skipped (manual: {manual}, trip: {trip}, no fare: {noPrice}, no GPS: {noGps})",
+    "autoTollResult": "{created} created, {updated} updated, {skipped} skipped (manual: {manual}, trip: {trip}, no fare: {noPrice}, no GPS: {noGps}, other currency: {currency})",
     "autoTollFailed": ", {failed} failed",
     "autoTollShort": "Automatic toll",
     "filters": "Filters"
@@ -292,6 +292,7 @@
     "skippedTripGroup": "This drive belongs to a trip with a toll: it is not changed.",
     "skippedNoPrice": "No estimated fare available for this drive.",
     "skippedNoGps": "No GPS track available for this drive.",
+    "skippedCurrency": "Fares are in euros: enter the toll by hand for a vehicle in another currency.",
     "failed": "The fare could not be applied."
   },
   "noDrive": "No drive",

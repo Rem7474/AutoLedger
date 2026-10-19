@@ -7,7 +7,7 @@ Tolls are recorded in two ways, and only one of them depends on the country.
 | Manual tolls and parking | Everywhere | Add a toll or a parking cost to a drive or a trip, or from the expenses page. It counts in the running cost like any other expense. |
 | Automatic detection | Where the toll detection is active | Matches the GPS trace of a TeslaMate drive against French motorway stations, estimates the fare and records it as an automatic toll. It also lists the motorway drives still to qualify (a toll entered, or "no toll"). |
 
-The reference data of the automatic detection is [OpenTollData](https://github.com/louis2038/OpenTollData) and covers French motorways only.
+The reference data of the automatic detection is [OpenTollData](https://github.com/louis2038/OpenTollData) and covers French motorways only. Its fares are in euros, so the automatic toll is only recorded for a vehicle whose currency is the euro: for any other vehicle, the drive is skipped and the toll is entered by hand, in its own currency or with an exchange rate.
 
 ## Toll detection setting
 

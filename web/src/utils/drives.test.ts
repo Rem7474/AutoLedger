@@ -63,6 +63,7 @@ describe('tollApplyStatusLabel', () => {
     expect(tollApplyStatusLabel('skipped_trip_group')).toContain('voyage')
     expect(tollApplyStatusLabel('skipped_no_price')).toContain('tarif')
     expect(tollApplyStatusLabel('skipped_no_gps')).toContain('GPS')
+    expect(tollApplyStatusLabel('skipped_currency')).toContain('devise')
     expect(tollApplyStatusLabel('whatever')).toContain('pas pu être appliqué')
   })
 })

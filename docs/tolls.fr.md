@@ -7,7 +7,7 @@ Les péages s'enregistrent de deux façons, dont une seule dépend du pays.
 | Péages et parkings manuels | Partout | Ajoute un péage ou un parking à un trajet ou à un voyage, ou depuis la page des dépenses. Il compte dans le coût d'usage comme toute autre dépense. |
 | Détection automatique | Là où la détection des péages est active | Compare la trace GPS d'un trajet TeslaMate aux gares de péage des autoroutes françaises, estime le tarif et l'enregistre comme péage automatique. Elle liste aussi les trajets autoroutiers restant à qualifier (un péage saisi, ou « pas de péage »). |
 
-Les données de référence de la détection automatique viennent d'[OpenTollData](https://github.com/louis2038/OpenTollData) et ne couvrent que les autoroutes françaises.
+Les données de référence de la détection automatique viennent d'[OpenTollData](https://github.com/louis2038/OpenTollData) et ne couvrent que les autoroutes françaises. Ses tarifs sont en euros : le péage automatique n'est donc enregistré que pour un véhicule dont la devise est l'euro. Pour tout autre véhicule, le trajet est ignoré et le péage se saisit à la main, dans sa propre devise ou avec un taux de change.
 
 ## Réglage de la détection des péages
 
