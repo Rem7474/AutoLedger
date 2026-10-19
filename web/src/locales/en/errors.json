@@ -30,7 +30,11 @@
     "origin_denied": "Request origin not allowed",
     "invalid_months": "months must be between 0 and 240",
     "invalid_date_range": "from and to must be two days (YYYY-MM-DD), from not after to",
-    "invalid_period": "The start of the period is after its end"
+    "invalid_period": "The start of the period is after its end",
+    "invalid_category": "Unknown category {p0}: use one of {p1}",
+    "invalid_cursor": "The cursor is not one returned by a previous call",
+    "invalid_amount": "The minimum amount must be a decimal number such as 12.50",
+    "invalid_sort": "Sort must be date or amount"
   },
   "member": {
     "invalid_role": "Invalid role: {p0}",
