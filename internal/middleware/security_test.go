@@ -118,3 +118,33 @@ func TestBodyLimit(t *testing.T) {
 		t.Errorf("multipart is left to its handler, got %d", up.Code)
 	}
 }
+
+func TestOpenEndpointsAnswerAnyOriginWhileTheRestKeepsTheOriginCheck(t *testing.T) {
+	h := OpenEndpoints("/mcp")(OriginCheck([]string{"https://ledger.example"})(ok))
+	do := func(method, path string, headers map[string]string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(method, "https://ledger.example"+path, nil)
+		req.Header.Set("Origin", "https://claude.ai")
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		return rec
+	}
+
+	if rec := do("POST", "/mcp", nil); rec.Code != http.StatusNoContent || rec.Header().Get("Access-Control-Allow-Origin") != "*" ||
+		!strings.Contains(rec.Header().Get("Access-Control-Expose-Headers"), "WWW-Authenticate") {
+		t.Errorf("a foreign origin reaches an open endpoint, which must expose its challenge: %d %v", rec.Code, rec.Header())
+	}
+	pre := do("OPTIONS", "/mcp", map[string]string{"Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization,content-type"})
+	if pre.Code != http.StatusNoContent || !strings.Contains(pre.Header().Get("Access-Control-Allow-Headers"), "Authorization") ||
+		!strings.Contains(pre.Header().Get("Access-Control-Allow-Methods"), "POST") {
+		t.Errorf("preflight: %d %v", pre.Code, pre.Header())
+	}
+	if rec := do("POST", "/api/auth/login", nil); rec.Code != http.StatusForbidden || rec.Header().Get("Access-Control-Allow-Origin") != "" {
+		t.Errorf("any other route keeps the origin check and gets no CORS grant: %d %v", rec.Code, rec.Header())
+	}
+	if rec := do("POST", "/mcp/other", nil); rec.Code != http.StatusForbidden {
+		t.Errorf("only the exact paths are open: %d", rec.Code)
+	}
+}

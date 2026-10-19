@@ -37,4 +37,4 @@ Règles appliquées par le serveur :
 - Si la requête porte un paramètre `resource` (RFC 8707), il doit être l'URL MCP de l'instance, `<URL de base>/mcp`.
 - La redirection porte un paramètre `iss` (RFC 9207) avec l'URL de l'instance.
 
-Une page web exécutée dans un navigateur ne peut pas appeler ces points d'accès depuis une autre origine : la liste CORS de l'instance ne les inclut pas.
+Les points d'accès de métadonnées, d'enregistrement, de jeton et de révocation, ainsi que le point d'accès MCP, répondent à une requête de n'importe quelle origine (`Access-Control-Allow-Origin: *`, sans identifiants), de sorte qu'un client exécuté dans un navigateur peut les utiliser. Ils ne lisent aucun cookie : le credential est le jeton porteur, ou le code d'autorisation avec son vérificateur PKCE. Le reste de l'API continue de refuser les requêtes d'une autre origine.

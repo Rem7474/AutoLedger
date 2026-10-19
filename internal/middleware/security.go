@@ -66,7 +66,7 @@ func OriginCheck(allowed []string) func(http.Handler) http.Handler {
 				return
 			}
 			origin := r.Header.Get("Origin")
-			if origin == "" || r.Header.Get("Authorization") != "" {
+			if origin == "" || r.Header.Get("Authorization") != "" || isOpenEndpoint(r) {
 				next.ServeHTTP(w, r)
 				return
 			}
