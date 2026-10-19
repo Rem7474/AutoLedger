@@ -1681,6 +1681,747 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "What owning a vehicle really costs once the purchase counts, which get_vehicle_costs leaves out: the full cost and its cost per kilometre (running costs with the tires amortized, plus the depreciation), the lease or loan with its mileage allowance used and the projected excess cost, and the estimated resale value today. Check depreciation_known before comparing the full cost of two vehicles: when false, the depreciation is missing and the full cost is understated.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_vehicle_ownership",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "acquisition_cost": {
+          "additionalProperties": false,
+          "description": "purchase price and fees net of incentives; 0 for a lease still running",
+          "properties": {
+            "amount": {
+              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        },
+        "acquisition_type": {
+          "description": "CASH (bought outright), LOAN, LOA (lease with a purchase option) or LLD (long-term rental); null when the acquisition is not entered",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "contract": {
+          "additionalProperties": false,
+          "description": "the lease or loan; null for a vehicle bought outright",
+          "properties": {
+            "down_payment": {
+              "additionalProperties": false,
+              "description": "first rent or down payment of a lease; null when none",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "duration_months": {
+              "description": "duration of the contract in months; null when not entered",
+              "type": [
+                "null",
+                "integer"
+              ]
+            },
+            "end": {
+              "description": "day the contract ends, YYYY-MM-DD; null when its duration is not entered",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "includes_insurance": {
+              "description": "true when the lease includes the insurance",
+              "type": "boolean"
+            },
+            "includes_maintenance": {
+              "description": "true when the lease pays for the maintenance, so it is not a cost to the owner",
+              "type": "boolean"
+            },
+            "includes_tires": {
+              "description": "true when the lease includes the tires",
+              "type": "boolean"
+            },
+            "mileage": {
+              "additionalProperties": false,
+              "description": "the mileage allowance and where the vehicle stands against it; null when the contract has no mileage allowance",
+              "properties": {
+                "allowance_per_year": {
+                  "additionalProperties": false,
+                  "description": "distance allowed per year; null when only a total is entered",
+                  "properties": {
+                    "unit": {
+                      "description": "always km",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "the distance",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "allowance_to_date": {
+                  "additionalProperties": false,
+                  "description": "the part of the allowance that has elapsed, pro rata of the time",
+                  "properties": {
+                    "unit": {
+                      "description": "always km",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "the distance",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "allowance_total": {
+                  "additionalProperties": false,
+                  "description": "distance allowed over the whole contract",
+                  "properties": {
+                    "unit": {
+                      "description": "always km",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "the distance",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "driven": {
+                  "additionalProperties": false,
+                  "description": "distance driven since the start of the contract",
+                  "properties": {
+                    "unit": {
+                      "description": "always km",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "the distance",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "excess_accrued": {
+                  "additionalProperties": false,
+                  "description": "cost of the kilometres above the pro-rata allowance so far",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "excess_price_per_km": {
+                  "additionalProperties": false,
+                  "description": "price charged per kilometre above the allowance; null when not entered",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "excess_projected": {
+                  "additionalProperties": false,
+                  "description": "cost of the excess expected at the end of the contract if the pace stays the same",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "allowance_per_year",
+                "allowance_total",
+                "allowance_to_date",
+                "driven",
+                "excess_price_per_km",
+                "excess_accrued",
+                "excess_projected"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "monthly_rent": {
+              "additionalProperties": false,
+              "description": "monthly instalment of a lease; null when not entered or not a lease",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "option_exercised_on": {
+              "description": "day the purchase option was exercised, YYYY-MM-DD; null when it was not",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "purchase_option": {
+              "additionalProperties": false,
+              "description": "price to buy the vehicle at the end of a LOA; null when none",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "start": {
+              "description": "day the contract started, YYYY-MM-DD",
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "start",
+            "end",
+            "duration_months",
+            "monthly_rent",
+            "down_payment",
+            "includes_maintenance",
+            "includes_insurance",
+            "includes_tires",
+            "purchase_option",
+            "option_exercised_on",
+            "mileage"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "currency": {
+          "description": "currency of every amount",
+          "type": "string"
+        },
+        "economic_cost": {
+          "additionalProperties": false,
+          "description": "what owning the vehicle costs, purchase included",
+          "properties": {
+            "carpool_revenue": {
+              "additionalProperties": false,
+              "description": "what passengers paid the driver for carpooling",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "depreciation": {
+              "additionalProperties": false,
+              "description": "value the vehicle lost: purchase price and fees, net of incentives, minus the resale value; 0 when it cannot be computed (see depreciation_known) and for a lease",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "depreciation_known": {
+              "description": "false when a bought vehicle lacks its purchase price, resale value or holding period: the depreciation is then 0 and the full cost is understated, so do not compare it with a complete one",
+              "type": "boolean"
+            },
+            "depreciation_per_km": {
+              "additionalProperties": false,
+              "description": "depreciation per kilometre; null while the distance is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "distance": {
+              "additionalProperties": false,
+              "description": "distance the per-km figures divide by: the largest of the tracked drives, their odometer span and the distance since acquisition",
+              "properties": {
+                "unit": {
+                  "description": "always km",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "the distance",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
+            },
+            "full_cost": {
+              "additionalProperties": false,
+              "description": "economic cost of ownership: running costs with the tires amortized per km, plus the depreciation (or the financing as a whole for a lease); unlike the cash costs of get_vehicle_costs it accounts for the purchase",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "full_cost_net": {
+              "additionalProperties": false,
+              "description": "full cost minus the carpool revenue",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "full_cost_net_per_km": {
+              "additionalProperties": false,
+              "description": "net full cost per kilometre; null while the distance is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "full_cost_per_km": {
+              "additionalProperties": false,
+              "description": "full cost per kilometre; null while the distance is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "tires_amortized": {
+              "additionalProperties": false,
+              "description": "the tires' cost spread over the distance they were used",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "tires_paid": {
+              "additionalProperties": false,
+              "description": "what the tires cost in cash, at purchase; the full cost counts tires_amortized instead",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "full_cost",
+            "full_cost_per_km",
+            "depreciation",
+            "depreciation_known",
+            "depreciation_per_km",
+            "distance",
+            "tires_paid",
+            "tires_amortized",
+            "carpool_revenue",
+            "full_cost_net",
+            "full_cost_net_per_km"
+          ],
+          "type": "object"
+        },
+        "resale": {
+          "additionalProperties": false,
+          "description": "the estimated value of the vehicle today; null when it cannot be estimated, see resale_unavailable",
+          "properties": {
+            "age_months": {
+              "description": "months since the start of the ownership",
+              "type": "number"
+            },
+            "assumptions": {
+              "description": "how the estimate is made",
+              "type": "string"
+            },
+            "battery_health_percent": {
+              "description": "battery state of health used in the estimate; null when unknown",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "current_value": {
+              "additionalProperties": false,
+              "description": "estimated value today, from the owner's purchase price and expected resale value, adjusted for age, distance and battery health",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "depreciation_to_date": {
+              "additionalProperties": false,
+              "description": "start value minus the current value",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "expected_value": {
+              "additionalProperties": false,
+              "description": "value expected at the end of the holding period (or of the lease contract)",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "holding_months": {
+              "description": "planned holding period in months",
+              "type": "integer"
+            },
+            "progress": {
+              "description": "share of the planned depreciation already consumed: 0 is new, 1 is the planned resale date",
+              "type": "number"
+            },
+            "purchase_option_margin": {
+              "additionalProperties": false,
+              "description": "for a LOA, the expected value at the end of the contract minus the purchase option price: positive when buying is worth it; null otherwise",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "start_value": {
+              "additionalProperties": false,
+              "description": "value at the start of the ownership (or of the lease contract)",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "under_lease": {
+              "description": "true while a LOA is running: the values are then those of the vehicle itself, not what the owner paid",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "current_value",
+            "start_value",
+            "expected_value",
+            "holding_months",
+            "age_months",
+            "progress",
+            "battery_health_percent",
+            "depreciation_to_date",
+            "under_lease",
+            "purchase_option_margin",
+            "assumptions"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "resale_unavailable": {
+          "description": "why there is no resale estimate; null when there is one",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "vehicle_id": {
+          "description": "the vehicle these figures belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "currency",
+        "acquisition_type",
+        "acquisition_cost",
+        "economic_cost",
+        "contract",
+        "resale",
+        "resale_unavailable"
+      ],
+      "type": "object"
+    },
+    "title": "Vehicle ownership cost"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "The trips of a vehicle, most recent first: when, from and to (the addresses the owner recorded, null when unknown), distance, duration, energy, and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\") and a period. Only the first trips are listed: matching says how many fit.",
     "inputSchema": {
       "additionalProperties": false,

@@ -31,6 +31,7 @@ const (
 type IntegrationReadHandler struct {
 	repo       *database.Repository
 	tcoService *services.TCOService
+	residual   *services.ResidualService // optional: without it the ownership view has no resale estimate
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {
