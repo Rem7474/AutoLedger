@@ -58,7 +58,20 @@
     "gapLargest": "plus gros poste",
     "gapAmount": "≈ {amount}",
     "gapsHint": "Le plus gros écart en premier. Les montants sont des ordres de grandeur issus de vos propres prix, pas des valeurs saisies.",
-    "enterTheExchangeRate": "Saisir le taux de change"
+    "enterTheExchangeRate": "Saisir le taux de change",
+    "alerts": {
+      "perKwh": "/kWh",
+      "perLiter": "/L",
+      "amountOutlier": "{category} de {amount} le {date} : {times} fois votre montant habituel ({median}).",
+      "priceOutlier": "Prix de {price} le {date}, hors de votre fourchette habituelle de {low} à {high}.",
+      "categories": {
+        "TOLL": "Péage",
+        "PARKING": "Stationnement",
+        "TRAVEL_OTHER": "Frais de déplacement"
+      }
+    },
+    "alertsTitle": "Saisies à vérifier",
+    "alertCheck": "Vérifier"
   },
   "energyBatterySection": {
     "teslamateGrafana": "Grafana TeslaMate",

@@ -121,3 +121,22 @@ func (h *TCOHandler) GetDataQuality(w http.ResponseWriter, r *http.Request) {
 		"odometer_anomalies": anomalies,
 	})
 }
+
+// GetDataAlerts reports the entries of the vehicle that look mistyped (an expense far above the usual, an energy price
+// far outside the usual range). Nothing is stored: the alerts follow the records.
+func (h *TCOHandler) GetDataAlerts(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	vehicleID := chi.URLParam(r, "vehicleId")
+
+	if _, err := h.repo.GetVehicleByID(r.Context(), vehicleID, userID); err != nil {
+		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))
+		return
+	}
+
+	alerts, err := h.tcoService.DataAlerts(r.Context(), vehicleID)
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to check the data")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"alerts": alerts})
+}

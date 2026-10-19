@@ -169,6 +169,7 @@ export const api = {
   getOdometerEstimate: (vehicleId: string, date: string) =>
     request<{ odometer: number | null; source: string }>(`/vehicles/${vehicleId}/odometer-estimate?date=${encodeURIComponent(date)}`),
   getDataQuality: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/data-quality`),
+  getDataAlerts: (vehicleId: string) => request<{ alerts: any[] }>(`/vehicles/${vehicleId}/data-alerts`),
 
   // Vehicle Members
   getVehicleMembers: (vehicleId: string) => request<any[]>(`/vehicles/${vehicleId}/members`),
