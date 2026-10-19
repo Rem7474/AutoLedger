@@ -6,8 +6,8 @@ An assistant or any other application that speaks OAuth 2.1 can ask for read-onl
 
 The application sends the browser to `/oauth/authorize` on the instance. After signing in, the user reads what the application asks for and approves or denies it:
 
-- It can see the vehicles (name, make, model, powertrain, currency, odometer), what each one costs over the last 12 months and since purchase, and what is missing from the records.
-- It cannot change, add or delete anything, and it never sees VINs, plates, addresses, positions or documents.
+- It can see the vehicles (name, make, model, powertrain, currency, odometer), what each one costs over the last 12 months and since purchase, and what is missing from the records. It also sees the names and places recorded: trip addresses, charging places, drivers and carpool passengers, tags and notes.
+- It cannot change, add or delete anything, and it never sees VINs, plates, GPS positions or documents.
 
 The application name is given by the application itself and is not verified: approve only an application you just started. The page shows where the user is sent back to.
 

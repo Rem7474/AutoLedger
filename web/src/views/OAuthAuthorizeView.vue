@@ -87,6 +87,7 @@ async function decide(decision: 'approve' | 'deny') {
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canVehicles') }}</li>
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canCosts') }}</li>
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canGaps') }}</li>
+            <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canNames') }}</li>
           </ul>
         </div>
         <div>
