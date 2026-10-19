@@ -5,13 +5,13 @@
   "kpi": {
     "vehicles": "Vehicles",
     "activeVehicles": "Active in household",
-    "monthCost": "Cost · {month}",
     "currentMonthTotal": "Total monthly spending",
-    "monthDistance": "Distance · {month}",
     "fleetTravelled": "Total distance traveled",
-    "monthEnergy": "Energy · {month}",
     "energyDelivered": "Delivered charging energy",
-    "perCurrency": "One total per currency"
+    "perCurrency": "One total per currency",
+    "cost": "Cost",
+    "distance": "Distance",
+    "energy": "Energy"
   },
   "chart": {
     "monthlyCostHistory": "Fleet Monthly Cost History",
@@ -23,8 +23,7 @@
   },
   "drivers": {
     "title": "Driver Distance Distribution",
-    "subtitle": "Distance logged per household driver over the last 12 months",
-    "noData": "No drives logged with driver assignment yet."
+    "subtitle": "Distance logged per household driver over the last 12 months"
   },
   "budget": {
     "title": "Monthly budget",
@@ -56,6 +55,7 @@
     "footnote": "Cash paid covers energy, upkeep, insurance and financing, estimated energy included; full cost adds depreciation and amortized tires. Annual cost extrapolates the full cost over the observed history (three months minimum). Energy is charged energy at the plug. A vehicle under 60% completeness is shown but not ranked.",
     "energyCost": "Energy cost / 100 {unit}",
     "monthDistance": "Distance this month",
-    "monthCost": "Cost this month"
+    "monthCost": "Cost this month",
+    "moreFigures": "More figures"
   }
 }
