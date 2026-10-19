@@ -111,7 +111,7 @@ func TestHomeAssistantDriveEvent(t *testing.T) {
 		t.Fatalf("drives: %v, total %d", err, total)
 	}
 	d := drives[0]
-	if math.Abs(d.DistanceKm-16.09344) > 0.01 {
+	if math.Abs(d.Distance()-16.09344) > 0.01 {
 		t.Errorf("distance: got %v km, want 16.09344", d.DistanceKm)
 	}
 	if d.EndOdometer == nil || math.Abs(*d.EndOdometer-1100*1.609344) > 0.01 {
@@ -238,7 +238,7 @@ func TestHomeAssistantDriveEventWithoutDistance(t *testing.T) {
 	}
 
 	d := byStart["2026-05-01"]
-	if d.DistanceKm != 0 || d.EnergyConsumedKwh != nil || d.ConsumptionKwh100km != nil || d.EnergyEstimated {
+	if d.DistanceKm != nil || d.EnergyConsumedKwh != nil || d.ConsumptionKwh100km != nil || d.EnergyEstimated {
 		t.Errorf("positions only: distance %v, energy %v, consumption %v, estimated %v", d.DistanceKm, d.EnergyConsumedKwh, d.ConsumptionKwh100km, d.EnergyEstimated)
 	}
 	if d.DurationMin != 25 {
@@ -252,12 +252,12 @@ func TestHomeAssistantDriveEventWithoutDistance(t *testing.T) {
 	}
 
 	d = byStart["2026-05-02"]
-	if math.Abs(d.DistanceKm-31.5) > 0.001 || d.EnergyConsumedKwh == nil || !d.EnergyEstimated {
-		t.Errorf("odometer pair: distance %v, energy %v, estimated %v", d.DistanceKm, d.EnergyConsumedKwh, d.EnergyEstimated)
+	if math.Abs(d.Distance()-31.5) > 0.001 || d.EnergyConsumedKwh == nil || !d.EnergyEstimated {
+		t.Errorf("odometer pair: distance %v, energy %v, estimated %v", d.Distance(), d.EnergyConsumedKwh, d.EnergyEstimated)
 	}
 
 	d = byStart["2026-05-03"]
-	if d.DistanceKm != 0 || d.EndOdometer != nil {
+	if d.DistanceKm != nil || d.EndOdometer != nil {
 		t.Errorf("one odometer: distance %v, end odometer %v, want unknown", d.DistanceKm, d.EndOdometer)
 	}
 

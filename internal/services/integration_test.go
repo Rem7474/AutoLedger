@@ -85,7 +85,7 @@ func mustDrive(t *testing.T, repo *database.Repository, vehicleID string, tmID i
 	end := startOdo + km
 	speed := 100.0
 	d := &models.Drive{VehicleID: vehicleID, TeslaMateDriveID: &tmID, StartTime: start, EndTime: start.Add(time.Hour),
-		StartOdometer: &startOdo, EndOdometer: &end, DistanceKm: km, SpeedAvg: &speed, Tags: []string{}}
+		StartOdometer: &startOdo, EndOdometer: &end, DistanceKm: kmPtr(km), SpeedAvg: &speed, Tags: []string{}}
 	if _, err := repo.UpsertTeslaMateDrive(context.Background(), d); err != nil {
 		t.Fatal(err)
 	}
@@ -2150,7 +2150,7 @@ func TestIntegrationHighwayPredicateMatchesGoHeuristic(t *testing.T) {
 		tmID := i + 1
 		avg, max := sm.avg, sm.max
 		d := &models.Drive{VehicleID: v.ID, TeslaMateDriveID: &tmID, StartTime: start.Add(time.Duration(i) * time.Hour), EndTime: start.Add(time.Duration(i)*time.Hour + 30*time.Minute),
-			DistanceKm: sm.km, SpeedAvg: &avg, SpeedMax: &max, Tags: []string{}}
+			DistanceKm: kmPtr(sm.km), SpeedAvg: &avg, SpeedMax: &max, Tags: []string{}}
 		if _, err := repo.UpsertTeslaMateDrive(ctx, d); err != nil {
 			t.Fatal(err)
 		}
@@ -2171,7 +2171,7 @@ func TestIntegrationHighwayPredicateMatchesGoHeuristic(t *testing.T) {
 		}
 		d := ids[tmID]
 		if goSays := d.IsHighway(); goSays != sqlSays {
-			t.Errorf("drive %.1f km avg %.1f max %d: Go=%v SQL=%v", d.DistanceKm, *d.SpeedAvg, *d.SpeedMax, goSays, sqlSays)
+			t.Errorf("drive %.1f km avg %.1f max %d: Go=%v SQL=%v", d.Distance(), *d.SpeedAvg, *d.SpeedMax, goSays, sqlSays)
 		}
 		checked++
 	}
@@ -2182,7 +2182,7 @@ func TestIntegrationHighwayPredicateMatchesGoHeuristic(t *testing.T) {
 
 	// A short, slow-looking drive is highway as soon as its GPS detection found a toll segment; an empty detection is not.
 	slow := &models.Drive{VehicleID: v.ID, TeslaMateDriveID: intPtr(9001), StartTime: start.Add(1000 * time.Hour), EndTime: start.Add(1001 * time.Hour),
-		DistanceKm: 6, SpeedAvg: floatPtr(50), SpeedMax: intPtr(90), Tags: []string{}}
+		DistanceKm: kmPtr(6), SpeedAvg: floatPtr(50), SpeedMax: intPtr(90), Tags: []string{}}
 	if _, err := repo.UpsertTeslaMateDrive(ctx, slow); err != nil {
 		t.Fatal(err)
 	}
@@ -2301,7 +2301,7 @@ func TestIntegrationEstimatedEnergyStartsWithFirstManualCharge(t *testing.T) {
 	manualDrive := func(v *models.Vehicle, daysAgo int, startOdo, km float64) {
 		endOdo := startOdo + km
 		d := &models.Drive{VehicleID: v.ID, StartTime: at(daysAgo), EndTime: at(daysAgo).Add(3 * time.Hour),
-			StartOdometer: &startOdo, EndOdometer: &endOdo, DistanceKm: km, DurationMin: 180}
+			StartOdometer: &startOdo, EndOdometer: &endOdo, DistanceKm: kmPtr(km), DurationMin: 180}
 		if err := repo.CreateManualDrive(ctx, d); err != nil {
 			t.Fatal(err)
 		}

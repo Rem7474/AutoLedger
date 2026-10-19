@@ -81,7 +81,7 @@ func (r *Repository) GetTripGroupDrives(ctx context.Context, vehicleID, tripGrou
 // proportionally to their distance (equally when the group has no distance).
 var DriveTollAllocationCTE = `
 	WITH group_stats AS (
-		SELECT tgd.trip_group_id, SUM(d.distance_km) AS km, COUNT(*) AS n
+		SELECT tgd.trip_group_id, COALESCE(SUM(d.distance_km), 0) AS km, COUNT(*) AS n
 		FROM trip_group_drives tgd
 		JOIN trip_groups tg ON tg.id = tgd.trip_group_id AND tg.vehicle_id = $1
 		JOIN drives d ON d.id = tgd.drive_id AND d.deleted_upstream_at IS NULL
@@ -94,7 +94,7 @@ var DriveTollAllocationCTE = `
 		WHERE e.vehicle_id = $1
 		UNION ALL
 		SELECT e.id, tgd.drive_id,
-		       ` + amountInVehicleCurrencyExpr("e.vehicle_id") + ` * CASE WHEN gs.km > 0 THEN d.distance_km / gs.km ELSE 1.0 / gs.n END
+		       ` + amountInVehicleCurrencyExpr("e.vehicle_id") + ` * CASE WHEN gs.km > 0 THEN COALESCE(d.distance_km, 0) / gs.km ELSE 1.0 / gs.n END
 		FROM drive_expenses e
 		JOIN group_stats gs ON gs.trip_group_id = e.trip_group_id
 		JOIN trip_group_drives tgd ON tgd.trip_group_id = e.trip_group_id
@@ -308,7 +308,7 @@ const maxUpstreamDeletionShare = 0.2
 // with whether each already belongs to a trip group.
 func (r *Repository) ListTripCandidateDrives(ctx context.Context, vehicleID string, since time.Time) ([]models.TripCandidateDrive, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT d.id::text, d.start_time, COALESCE(d.end_time, d.start_time), d.distance_km, d.start_address, d.end_address,
+		SELECT d.id::text, d.start_time, COALESCE(d.end_time, d.start_time), COALESCE(d.distance_km, 0), d.start_address, d.end_address,
 		       EXISTS(SELECT 1 FROM trip_group_drives tgd WHERE tgd.drive_id = d.id)
 		FROM drives d
 		WHERE d.vehicle_id = $1 AND d.deleted_upstream_at IS NULL AND d.trip_reviewed_at IS NULL AND d.start_time >= $2

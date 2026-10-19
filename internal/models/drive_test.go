@@ -1,6 +1,10 @@
 package models
 
-import "testing"
+import (
+	"encoding/json"
+	"strings"
+	"testing"
+)
 
 func TestDriveIsHighway(t *testing.T) {
 	ptrFloat := func(v float64) *float64 { return &v }
@@ -109,7 +113,7 @@ func TestDriveIsHighway(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := Drive{
-				DistanceKm: tt.distanceKm,
+				DistanceKm: kmPtr(tt.distanceKm),
 				SpeedAvg:   tt.speedAvg,
 				SpeedMax:   tt.speedMax,
 			}
@@ -118,5 +122,23 @@ func TestDriveIsHighway(t *testing.T) {
 					got, tt.want, tt.distanceKm, tt.speedAvg, tt.speedMax)
 			}
 		})
+	}
+}
+
+func TestDriveWithoutDistanceIsNullInJSONAndZeroForCalculations(t *testing.T) {
+	d := Drive{}
+	raw, err := json.Marshal(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(raw), `"distance_km":null`) {
+		t.Errorf("an unknown distance is null, not 0: %s", raw)
+	}
+	if d.Distance() != 0 || d.IsHighway() {
+		t.Errorf("unknown distance: %v, highway %v", d.Distance(), d.IsHighway())
+	}
+	d.DistanceKm = kmPtr(42)
+	if d.Distance() != 42 {
+		t.Errorf("known distance: %v", d.Distance())
 	}
 }

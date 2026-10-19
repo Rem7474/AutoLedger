@@ -71,10 +71,10 @@ func TestMileageReportGroupsByTagAndAppliesTheScaleFromTheYearStart(t *testing.T
 	day := func(m time.Month, d int) time.Time { return time.Date(2026, m, d, 12, 0, 0, 0, time.UTC) }
 	store := &fakeMileageStore{
 		drives: []models.Drive{
-			{ID: "before", StartTime: day(1, 10), DistanceKm: 9000, Tags: []string{"work"}},
-			{ID: "a", StartTime: day(3, 5), DistanceKm: 2000, Tags: []string{"work"}},
-			{ID: "b", StartTime: day(3, 6), DistanceKm: 300},
-			{ID: "both", StartTime: day(3, 7), DistanceKm: 100, Tags: []string{"work", "club"}},
+			{ID: "before", StartTime: day(1, 10), DistanceKm: kmPtr(9000), Tags: []string{"work"}},
+			{ID: "a", StartTime: day(3, 5), DistanceKm: kmPtr(2000), Tags: []string{"work"}},
+			{ID: "b", StartTime: day(3, 6), DistanceKm: kmPtr(300)},
+			{ID: "both", StartTime: day(3, 7), DistanceKm: kmPtr(100), Tags: []string{"work", "club"}},
 		},
 		rates: []models.MileageRate{
 			{Label: "scale", Year: 2026, FromKm: 0, ToKm: &to10000, RatePerKm: 0.5},
@@ -117,8 +117,8 @@ func TestMileageReportGroupsByTagAndAppliesTheScaleFromTheYearStart(t *testing.T
 func TestMileageReportWithoutScaleOrWithTagFilter(t *testing.T) {
 	store := &fakeMileageStore{
 		drives: []models.Drive{
-			{ID: "a", StartTime: time.Date(2026, 3, 5, 12, 0, 0, 0, time.UTC), DistanceKm: 12.34, Tags: []string{"work"}},
-			{ID: "b", StartTime: time.Date(2026, 3, 6, 12, 0, 0, 0, time.UTC), DistanceKm: 50},
+			{ID: "a", StartTime: time.Date(2026, 3, 5, 12, 0, 0, 0, time.UTC), DistanceKm: kmPtr(12.34), Tags: []string{"work"}},
+			{ID: "b", StartTime: time.Date(2026, 3, 6, 12, 0, 0, 0, time.UTC), DistanceKm: kmPtr(50)},
 		},
 	}
 	report, err := NewMileageService(store, "UTC").Report(context.Background(), &models.Vehicle{ID: "v"}, "u", MileageOptions{Tag: "work"})

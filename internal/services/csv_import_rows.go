@@ -235,7 +235,7 @@ func parseDriveRow(rc *rowContext, row []string, line int) (*parsedRow, *apierro
 		VehicleID:           rc.vehicle.ID,
 		StartTime:           startTime,
 		EndTime:             timings.End,
-		DistanceKm:          dist,
+		DistanceKm:          ingest.KnownDistance(dist),
 		DurationMin:         timings.DurationMin,
 		StartAddress:        optionalText(rc.col(row, "start_address", "start_location", "origin")),
 		EndAddress:          optionalText(rc.col(row, "end_address", "end_location", "destination")),

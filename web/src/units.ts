@@ -32,13 +32,18 @@ export function displayDistanceToKm(value: number): number {
   return unit.value === 'mi' ? value * KM_PER_MILE : value
 }
 
+/** A distance that is not known (a drive reported without one) reads as a dash, never as a zero. */
+export const UNKNOWN_DISTANCE = '—'
+
 /** A stored km value in the account's unit, locale-formatted without the unit ("42 000", "26,097.3"). */
-export function formatDistanceValue(km: number, digits = 0): string {
+export function formatDistanceValue(km: number | null | undefined, digits = 0): string {
+  if (km === null || km === undefined || !Number.isFinite(km)) return UNKNOWN_DISTANCE
   return kmToDisplayDistance(km).toLocaleString(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
 
 /** Locale-formatted distance with its unit suffix, e.g. "42 000 km" / "26,097 mi". */
-export function formatDistance(km: number, digits = 0): string {
+export function formatDistance(km: number | null | undefined, digits = 0): string {
+  if (km === null || km === undefined || !Number.isFinite(km)) return UNKNOWN_DISTANCE
   return `${formatDistanceValue(km, digits)} ${unit.value}`
 }
 

@@ -123,12 +123,12 @@ func (s *MileageService) Report(ctx context.Context, vehicle *models.Vehicle, us
 				byTag[tag] = a
 			}
 			if !inPeriod(d.StartTime) {
-				a.before[year] += d.DistanceKm
+				a.before[year] += d.Distance()
 				continue
 			}
 			a.trips++
-			a.km += d.DistanceKm
-			a.within[year] += d.DistanceKm
+			a.km += d.Distance()
+			a.within[year] += d.Distance()
 			a.tollCents += tolls[d.ID]
 		}
 	}

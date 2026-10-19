@@ -34,7 +34,7 @@ func TestIntegrationEnergyStats(t *testing.T) {
 	deleted := drive(3, time.Date(2026, 2, 12, 9, 0, 0, 0, time.UTC), 300, kwh(60))
 	// A manual drive whose energy was derived from the average consumption: its distance counts, not its energy.
 	estimated := &models.Drive{VehicleID: v.ID, StartTime: time.Date(2026, 2, 14, 9, 0, 0, 0, time.UTC), EndTime: time.Date(2026, 2, 14, 10, 0, 0, 0, time.UTC),
-		DistanceKm: 50, DurationMin: 60, EnergyConsumedKwh: kwh(40), ConsumptionKwh100km: kwh(80), EnergyEstimated: true}
+		DistanceKm: kmPtr(50), DurationMin: 60, EnergyConsumedKwh: kwh(40), ConsumptionKwh100km: kwh(80), EnergyEstimated: true}
 	if err := repo.CreateManualDrive(ctx, estimated); err != nil {
 		t.Fatal(err)
 	}

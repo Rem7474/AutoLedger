@@ -197,7 +197,7 @@ func (s *ExportService) drives(ctx context.Context, v *models.Vehicle, o ExportO
 	for i := len(list) - 1; i >= 0; i-- {
 		d := list[i]
 		t.rows = append(t.rows, []any{
-			exportTime(d.StartTime), exportTime(d.EndTime), exportDistance(d.DistanceKm, o.Unit),
+			exportTime(d.StartTime), exportTime(d.EndTime), optFloat(d.DistanceKm, func(km float64) any { return exportDistance(km, o.Unit) }),
 			optFloat(d.EnergyConsumedKwh, func(f float64) any { return f }),
 			optString(d.StartAddress), optString(d.EndAddress), strings.Join(d.Tags, ";"),
 		})

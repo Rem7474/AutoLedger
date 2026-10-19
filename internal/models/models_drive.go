@@ -21,7 +21,7 @@ type Drive struct {
 	EndTime             time.Time `json:"end_time"`
 	StartOdometer       *float64  `json:"start_odometer,omitempty"`
 	EndOdometer         *float64  `json:"end_odometer,omitempty"`
-	DistanceKm          float64   `json:"distance_km"`
+	DistanceKm          *float64  `json:"distance_km"`
 	DurationMin         int       `json:"duration_min"`
 	SpeedAvg            *float64  `json:"speed_avg,omitempty"`
 	SpeedMax            *int      `json:"speed_max,omitempty"`
@@ -46,6 +46,15 @@ type Drive struct {
 	UpdatedAt       time.Time  `json:"updated_at"`
 }
 
+// Distance is the distance of the drive in km, 0 when it is unknown (DistanceKm is nil): a source with no odometer
+// reports a drive without distance, which is not a drive of zero kilometres.
+func (d Drive) Distance() float64 {
+	if d.DistanceKm == nil {
+		return 0
+	}
+	return *d.DistanceKm
+}
+
 // IsHighway returns true if the drive matches the highway detection heuristic. It favours recall:
 // a false positive only puts a drive in the toll review queue, a miss hides a toll cost.
 //   - long and reasonably fast: distance >= 40 km and speed_avg >= 70 km/h;
@@ -55,6 +64,7 @@ type Drive struct {
 //
 // The same rules exist in database.HighwayDrivePredicate and in the drives page (isHighwayDrive).
 func (d Drive) IsHighway() bool {
+	km := d.Distance()
 	speedAvg := 0.0
 	if d.SpeedAvg != nil {
 		speedAvg = *d.SpeedAvg
@@ -63,10 +73,10 @@ func (d Drive) IsHighway() bool {
 	if d.SpeedMax != nil {
 		speedMax = *d.SpeedMax
 	}
-	return (d.DistanceKm >= 40 && speedAvg >= 70) ||
-		(d.DistanceKm >= 20 && speedMax > 125) ||
-		(d.DistanceKm >= 20 && speedMax >= 110 && speedAvg >= 70) ||
-		(d.DistanceKm >= 8 && speedMax >= 105 && speedAvg >= 70)
+	return (km >= 40 && speedAvg >= 70) ||
+		(km >= 20 && speedMax > 125) ||
+		(km >= 20 && speedMax >= 110 && speedAvg >= 70) ||
+		(km >= 8 && speedMax >= 105 && speedAvg >= 70)
 }
 
 // TollSegment is a single toll crossing detected on a drive: either a closed-network
