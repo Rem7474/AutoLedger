@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/teslacost/teslacost/internal/auth"
+	"github.com/teslacost/teslacost/internal/config"
 	"github.com/teslacost/teslacost/internal/handlers"
 )
 
@@ -265,5 +266,42 @@ func TestUnknownDiscoveryDocumentIsNotTheWebApp(t *testing.T) {
 	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/.well-known/oauth-authorization-server", nil))
 	if rec.Code != http.StatusOK {
 		t.Errorf("the OAuth metadata must still be served: status %d", rec.Code)
+	}
+}
+
+// TestMCPEndpointAnswersABrowserClientsProbe covers a client that runs in a browser (the sign-in of a web connector):
+// its requests carry an Origin header, and it must still get the 401 challenge and a CORS grant, not a 403 from the
+// origin check, while the application's own routes keep refusing a foreign origin.
+func TestMCPEndpointAnswersABrowserClientsProbe(t *testing.T) {
+	cfg := &config.Config{AppBaseURL: "https://ledger.example", MCPEnabled: true}
+	r := newRouter(cfg, nil)
+	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{scope: auth.ScopeRead}, fakeSessionChecker{}, func(next http.Handler) http.Handler { return next },
+		&apiHandlers{oauth: handlers.NewOAuthHandler(nil, cfg.AppBaseURL), mcp: handlers.NewMCPHandler(nil, fakeTokenValidator{scope: auth.ScopeRead}, cfg.AppBaseURL, "test")})
+
+	send := func(method, path string, headers map[string]string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(method, "https://ledger.example"+path, nil)
+		req.Header.Set("Origin", "https://claude.ai")
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		return rec
+	}
+
+	rec := send(http.MethodPost, "/mcp", nil)
+	if rec.Code != http.StatusUnauthorized || !strings.Contains(rec.Header().Get("WWW-Authenticate"), "resource_metadata=") ||
+		rec.Header().Get("Access-Control-Allow-Origin") != "*" || !strings.Contains(rec.Header().Get("Access-Control-Expose-Headers"), "WWW-Authenticate") ||
+		rec.Header().Get("Access-Control-Allow-Credentials") != "" {
+		t.Errorf("POST /mcp from another origin (a wildcard grant never comes with credentials): status %d, headers %v", rec.Code, rec.Header())
+	}
+	if rec := send(http.MethodOptions, "/mcp", map[string]string{"Access-Control-Request-Method": "POST"}); rec.Code != http.StatusNoContent || rec.Header().Get("Access-Control-Allow-Origin") != "*" {
+		t.Errorf("preflight on /mcp: status %d, headers %v", rec.Code, rec.Header())
+	}
+	if rec := send(http.MethodGet, "/.well-known/oauth-authorization-server", nil); rec.Code != http.StatusOK || rec.Header().Get("Access-Control-Allow-Origin") != "*" {
+		t.Errorf("the authorization server metadata must be readable from a page: status %d, headers %v", rec.Code, rec.Header())
+	}
+	if rec := send(http.MethodPost, "/api/auth/login", nil); rec.Code != http.StatusForbidden {
+		t.Errorf("the application's own routes still refuse a foreign origin: status %d", rec.Code)
 	}
 }

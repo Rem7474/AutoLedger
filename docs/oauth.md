@@ -37,4 +37,4 @@ Rules enforced by the server:
 - When the request carries a `resource` parameter (RFC 8707), it must be the instance's MCP URL, `<base URL>/mcp`.
 - The redirect carries an `iss` parameter (RFC 9207) with the instance URL.
 
-A web page running in a browser cannot call these endpoints from another origin: the CORS list of the instance does not include them.
+The metadata, registration, token and revocation endpoints and the MCP endpoint answer a request from any origin (`Access-Control-Allow-Origin: *`, no credentials), so a client that runs in a browser can use them. They read no cookie: the credential is the bearer token or the authorization code with its PKCE verifier. The rest of the API keeps refusing requests from another origin.

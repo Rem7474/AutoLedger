@@ -52,16 +52,19 @@ func newRouter(cfg *config.Config, trustedProxies []netip.Prefix) *chi.Mux {
 	if cfg.Demo {
 		r.Use(appMiddleware.DemoReadOnly)
 	}
+	if cfg.MCPEnabled {
+		r.Use(appMiddleware.OpenEndpoints(appMiddleware.OpenEndpointPaths()...))
+	}
 	r.Use(appMiddleware.OriginCheck(append([]string{cfg.AppBaseURL}, cfg.AllowedOrigins...)))
 
-	r.Use(cors.Handler(cors.Options{
+	r.Use(appMiddleware.SkipOnOpenEndpoints(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Idempotency-Key"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
-	}))
+	})))
 	return r
 }
 
