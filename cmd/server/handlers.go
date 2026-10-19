@@ -56,6 +56,7 @@ type apiHandlers struct {
 	ha              *handlers.HomeAssistantHandler
 	integrationRead *handlers.IntegrationReadHandler
 	oauth           *handlers.OAuthHandler // nil unless the instance enables MCP
+	mcp             *handlers.MCPHandler   // nil unless the instance enables MCP
 }
 
 // newOIDCService returns the OIDC service when SSO is configured, nil otherwise.
@@ -126,6 +127,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 	}
 	if cfg.MCPEnabled {
 		h.oauth = handlers.NewOAuthHandler(repo, cfg.AppBaseURL)
+		h.mcp = handlers.NewMCPHandler(h.integrationRead, repo, cfg.AppBaseURL, AppVersion)
 	}
 	h.ha.SetTimezone(cfg.ReportingTimezone)
 	h.fuel.SetTimezone(cfg.ReportingTimezone)

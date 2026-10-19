@@ -32,7 +32,7 @@ type Config struct {
 	CookieSecure               bool
 	DisableRegistration        bool
 	Demo                       bool   // Read-only public demo: every write is refused
-	MCPEnabled                 bool   // Serves the OAuth authorization server that assistants (MCP clients) use to get a read-only token
+	MCPEnabled                 bool   // Serves the MCP endpoint and the OAuth authorization server its clients use to get a read-only token
 	DemoEmail                  string // Optional demo account shown on the sign-in page
 	DemoPassword               string
 	InitialAdminEmail          string

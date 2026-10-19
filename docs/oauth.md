@@ -1,6 +1,6 @@
 # Authorizing an assistant (OAuth)
 
-An assistant or any other application that speaks OAuth 2.1 can ask for read-only access to an account without the user copying a token around. The instance has to enable it with `AUTOLEDGER_MCP_ENABLED=true` (off by default). Français : [oauth.fr.md](oauth.fr.md).
+An assistant or any other application that speaks OAuth 2.1 can ask for read-only access to an account without the user copying a token around. The instance has to enable it with `AUTOLEDGER_MCP_ENABLED=true` (off by default). The assistant then calls the [MCP endpoint](mcp.md). Français : [oauth.fr.md](oauth.fr.md).
 
 ## What the user sees
 

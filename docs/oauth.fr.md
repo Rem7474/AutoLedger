@@ -1,6 +1,6 @@
 # Autoriser un assistant (OAuth)
 
-Un assistant, ou toute application qui parle OAuth 2.1, peut demander un accès en lecture seule à un compte sans que l'utilisateur ait à recopier un jeton. L'instance doit l'activer avec `AUTOLEDGER_MCP_ENABLED=true` (désactivé par défaut). English: [oauth.md](oauth.md).
+Un assistant, ou toute application qui parle OAuth 2.1, peut demander un accès en lecture seule à un compte sans que l'utilisateur ait à recopier un jeton. L'instance doit l'activer avec `AUTOLEDGER_MCP_ENABLED=true` (désactivé par défaut). L'assistant appelle ensuite le [point d'accès MCP](mcp.fr.md). English: [oauth.md](oauth.md).
 
 ## Ce que voit l'utilisateur
 

@@ -45,7 +45,10 @@ func newRouteTableFor(t *testing.T, scope string) chi.Router {
 	r := chi.NewRouter()
 	passThrough := func(next http.Handler) http.Handler { return next }
 	registerSystemRoutes(r, nil)
-	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{scope: scope}, fakeSessionChecker{}, passThrough, &apiHandlers{oauth: handlers.NewOAuthHandler(nil, "http://localhost")})
+	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{scope: scope}, fakeSessionChecker{}, passThrough, &apiHandlers{
+		oauth: handlers.NewOAuthHandler(nil, "http://localhost"),
+		mcp:   handlers.NewMCPHandler(nil, fakeTokenValidator{scope: scope}, "http://localhost", "test"),
+	})
 	return r
 }
 
@@ -105,10 +108,13 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		"GET /healthz",
 		"GET /.well-known/oauth-authorization-server",
 		"GET /.well-known/oauth-authorization-server/mcp",
+		"GET /.well-known/oauth-protected-resource",
+		"GET /.well-known/oauth-protected-resource/mcp",
 		"POST /api/auth/login",
 		"POST /api/auth/logout",
 		"POST /api/auth/refresh",
 		"POST /api/auth/register",
+		"POST /mcp", // checks its own bearer token (read scope) so that a refusal carries the WWW-Authenticate header
 		"POST /oauth/register",
 		"POST /oauth/revoke",
 		"POST /oauth/token",
