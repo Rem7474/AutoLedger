@@ -143,6 +143,7 @@ type mcpVehiclesOutput struct {
 func (h *MCPHandler) addTools() {
 	readOnly := &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: ptr(false)}
 	h.addMonthlyTools(readOnly)
+	h.addReminderTools(readOnly)
 
 	mcp.AddTool(h.server, &mcp.Tool{
 		Name:        "list_vehicles",

@@ -529,6 +529,298 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "The maintenance reminders of a vehicle (service, tires, inspection...) and where each stands against the odometer and the calendar: overdue, due soon or ok, with the distance and days left, the due date and the last service. Most urgent first. Use it to answer what is due on a vehicle or when a service is next needed.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "keep only the reminders in this state: overdue, due_soon or ok; all of them when omitted",
+          "type": "string"
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_reminders",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "description": "day the statuses were computed, YYYY-MM-DD",
+          "type": "string"
+        },
+        "due_soon": {
+          "description": "number of reminders, filtered or not, inside their warning window",
+          "type": "integer"
+        },
+        "odometer": {
+          "additionalProperties": false,
+          "description": "odometer reading the distances are measured against",
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "overdue": {
+          "description": "number of reminders, filtered or not, whose limit is passed",
+          "type": "integer"
+        },
+        "reminders": {
+          "description": "the reminders, overdue first, then due_soon, then ok; within a status the closest in distance first",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "category": {
+                "description": "one of maintenance, tires, inspection, other",
+                "type": "string"
+              },
+              "due_date": {
+                "description": "day the service is due, YYYY-MM-DD; null when the reminder has no date, or nothing is left to do for a one-off date already served",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "due_odometer": {
+                "additionalProperties": false,
+                "description": "odometer reading at which the service is due; null without a distance interval",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "id": {
+                "description": "identifier of the reminder",
+                "type": "string"
+              },
+              "interval_km": {
+                "additionalProperties": false,
+                "description": "distance between two services; null when the reminder does not follow the distance",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "interval_months": {
+                "description": "months between two services; null when the reminder does not follow a months interval",
+                "type": [
+                  "null",
+                  "integer"
+                ]
+              },
+              "last_maintenance": {
+                "description": "description of the maintenance record the reminder follows from; null when none is linked",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "last_service_date": {
+                "description": "day the service was last done, YYYY-MM-DD; null when never recorded, in which case the reminder counts from its creation",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "last_service_odometer": {
+                "additionalProperties": false,
+                "description": "odometer reading when the service was last done; null when never recorded, in which case the reminder counts from zero",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "observed_interval_km": {
+                "additionalProperties": false,
+                "description": "distance really driven between two services, averaged; null below two completions",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "observed_interval_months": {
+                "description": "months really elapsed between two services, averaged; null below two completions",
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "remaining_days": {
+                "description": "days left before the due date, negative once passed; null without a due date",
+                "type": [
+                  "null",
+                  "integer"
+                ]
+              },
+              "remaining_km": {
+                "additionalProperties": false,
+                "description": "distance left before the service is due, negative once passed; null without a distance interval",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "repeat_yearly": {
+                "description": "true when a reminder pinned to a date comes back every year",
+                "type": "boolean"
+              },
+              "scheduled_date": {
+                "description": "fixed calendar date the reminder is pinned to, YYYY-MM-DD; null when it follows an interval",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "status": {
+                "description": "overdue (the limit is passed), due_soon (inside the warning window) or ok",
+                "type": "string"
+              },
+              "title": {
+                "description": "what the reminder is for, as the owner wrote it",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "category",
+              "status",
+              "interval_km",
+              "interval_months",
+              "scheduled_date",
+              "repeat_yearly",
+              "due_odometer",
+              "remaining_km",
+              "due_date",
+              "remaining_days",
+              "last_service_date",
+              "last_service_odometer",
+              "observed_interval_km",
+              "observed_interval_months",
+              "last_maintenance"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "total": {
+          "description": "number of reminders the vehicle has, whatever the filter",
+          "type": "integer"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these reminders belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "as_of",
+        "odometer",
+        "overdue",
+        "due_soon",
+        "total",
+        "reminders"
+      ],
+      "type": "object"
+    },
+    "title": "Maintenance reminders"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "What a vehicle cost over its last 12 months and since it was bought, by category (energy, tolls, maintenance, insurance, financing, tires, other), with the cost per kilometre and a completeness score. Amounts are in the vehicle's currency and are the cash spent: the purchase and the depreciation are not in them.",
     "inputSchema": {
       "additionalProperties": false,

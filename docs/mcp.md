@@ -41,6 +41,7 @@ The first must answer `401` with a `WWW-Authenticate: Bearer resource_metadata="
 | `get_vehicle_data_gaps` | What is missing from the records: odometer gaps and anomalies, charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition, and what to complete ranked by what it is worth. Takes a `vehicle_id`. |
 | `list_vehicle_trips` | The trips of a vehicle, most recent first: start and end time, `from` and `to` addresses, distance, duration, energy, tolls and parking, tags. Takes a `vehicle_id` and optionally `search` (text in an address, to find "the trip to Lyon"), `from` and `to` (days, `YYYY-MM-DD`, UTC) and `limit` (20 by default, 50 at most); `matching` says how many trips fit. |
 | `get_monthly_costs` | What a vehicle cost month by month, oldest first: the cost of each month by category, its distance and its cost per km, with the listed months added up. Takes a `vehicle_id` and optionally `from` and `to` (months, `YYYY-MM`); without them, the last 12 months. The month in progress is flagged: its figures are not final. |
+| `get_reminders` | The maintenance reminders of a vehicle and where each stands: overdue, due soon or ok, with the distance and days left, the due date and the last service, most urgent first. Takes a `vehicle_id` and optionally a `status` (`overdue`, `due_soon`, `ok`) to keep only those. |
 
 Wherever a tool takes a `vehicle_id`, the name of the vehicle works too when no other vehicle has the same; otherwise the error lists the vehicles of the account.
 
