@@ -24,6 +24,8 @@ The TeslaMate credentials (`vehicle_data_sources.secret_encrypted`, `basic_secre
 
 A value without the prefix is the earlier form: base64 of `nonce || sealed`, under the SHA-256 of the secret. `Decrypt` reads both forms, `Encrypt` writes only `v2:`. At every start `rotateStoredSecrets` (`cmd/server/main.go`) rewrites the earlier form through `Repository.RotateTeslaMateSecrets`: a row is updated only while it still holds the values that were read, a value that cannot be read with the current secret is left as it is and counted in the log (`unreadable_sources`), and a second pass finds nothing to do. Another stored secret goes through the same `Encryptor` and is added to that pass.
 
+A release that predates the `v2:` form cannot read the rewritten values, so going back to it needs the credentials entered again.
+
 The secret is not changed in place: a different `AUTOLEDGER_ENCRYPTION_KEY` makes the stored credentials unreadable until they are entered again. A secret under 32 characters logs a warning at start (`Config.WeakEncryptionKey`); it never blocks the start.
 
 ## Maintenance reminder webhooks
