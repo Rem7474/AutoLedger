@@ -108,6 +108,7 @@ Un jeton en lecture seule (`read`) ouvre aussi une API de lecture restreinte sou
 | `GET /api/integrations/v1/fleet` | Les véhicules du compte côte à côte (coût du mois, coût d'usage et complet au km, coût annuel, consommation, rang de coût parmi les véhicules comparables d'une devise), les totaux du mois par devise, le budget mensuel et son utilisation, les 12 derniers mois de coûts du foyer dans la devise de la flotte, et la part de distance de chaque conducteur nommé. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/tags` | Les trajets d'un véhicule répartis par étiquette sur tout l'historique : distance, énergie, péages, coût alloué et coût au km de chaque étiquette et des trajets sans étiquette. Un trajet portant plusieurs étiquettes compte dans chacune. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/carpool` | Les totaux de covoiturage d'un véhicule et ses derniers trajets partagés (`limit`, 10 par défaut, 30 au plus) avec leurs arrêts, leurs coûts et les passagers nommés. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/trip-groups` | Les voyages d'un véhicule (`limit`, 20 par défaut, 50 au plus) : nom, période, trajets, distance, péages et parkings, trajets de covoiturage. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/charging-places` | La recharge d'un véhicule par lieu (`months`, 12 par défaut, `0` pour tout l'historique) : lieux nommés avec leurs adresses, sessions, énergie, coût et prix au kWh, comparaison avec le prix à domicile et emplacements les plus utilisés rattachés à aucun lieu. |
 
 Conventions :
@@ -117,7 +118,7 @@ Conventions :
 - Une valeur impossible à connaître (un coût au km sans distance, un score sans rien à évaluer) vaut `null`, jamais `0`.
 - `months_covered` indique combien de mois calendaires couvre une période : `last_12_months` d'un véhicule à l'historique plus court en couvre moins de 12.
 - Les coûts sont les sommes décaissées, achat du véhicule exclu. Le mois en cours compte les échéances qui tombent plus tard dans le mois.
-- Les réponses ne contiennent ni VIN, ni plaque, ni coordonnée, ni document, ni identifiant de trajet. Les trajets sont la seule vue avec des adresses (`from` et `to`) ; une adresse stockée uniquement sous forme de coordonnées vaut `null`.
+- Les réponses ne contiennent ni VIN, ni plaque, ni coordonnée, ni document, ni identifiant de trajet. Les adresses et les noms enregistrés sur le compte sont retournés (adresses des trajets, conducteurs, arrêts et passagers des covoiturages, lieux de recharge) ; une adresse stockée uniquement sous forme de coordonnées vaut `null`.
 - Un véhicule que le compte ne peut pas voir répond `404`.
 
 ## Exemples
