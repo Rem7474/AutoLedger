@@ -99,6 +99,7 @@ A read-only token (`read`) also opens a narrow read API under `/api/integrations
 | `GET /api/integrations/v1/vehicles/{vehicleId}` | One vehicle, same fields. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | What the vehicle cost over its last 12 months (`last_12_months`) and since it was bought (`since_purchase`), by category, with the cost per km and a `completeness` summary. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps` | What the history is missing: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/trips` | The drives, most recent first, with their `from` and `to` addresses, distance, duration, energy, `travel_expenses` (tolls, parking) and tags. Query: `search` (text in an address), `from` and `to` (days `YYYY-MM-DD` in UTC, or RFC 3339 instants), `limit` (20 by default, 50 at most). `matching` counts the drives that fit and `truncated` says more than the listed ones exist. |
 
 Conventions:
 
@@ -106,7 +107,7 @@ Conventions:
 - A distance is `{"value": 4200, "unit": "km"}`. The unit is always kilometres.
 - A figure that cannot be known (a cost per km with no distance, a score with nothing to score) is `null`, never `0`.
 - The costs are cash spent, the purchase of the vehicle excluded. The month in progress counts with the instalments that fall due later in it.
-- The responses carry no VIN, plate, address, coordinate, document or drive identifier.
+- The responses carry no VIN, plate, coordinate, document or drive identifier. The trips are the one view with addresses (`from` and `to`); an address stored only as coordinates is `null`.
 - A vehicle the account cannot see answers `404`.
 
 ## Examples

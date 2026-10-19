@@ -10,6 +10,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/modelcontextprotocol/go-sdk/oauthex"
 
+	"github.com/teslacost/teslacost/internal/apierror"
 	appAuth "github.com/teslacost/teslacost/internal/auth"
 	"github.com/teslacost/teslacost/internal/middleware"
 )
@@ -19,7 +20,8 @@ import (
 const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools only read.
 Amounts are decimal strings in the currency of their vehicle and are never converted between currencies: do not add amounts of different currencies together.
 Distances are in kilometres. A null value means the figure is unknown, not zero.
-Costs are the cash spent, the purchase of the vehicle excluded. Call get_vehicle_data_gaps before drawing conclusions from a vehicle's costs: it says what the records are missing.`
+Costs are the cash spent, the purchase of the vehicle excluded. Call get_vehicle_data_gaps before drawing conclusions from a vehicle's costs: it says what the records are missing.
+list_vehicle_trips returns the addresses the owner recorded for each trip: they are personal, so repeat them only as far as the question needs.`
 
 // MCPHandler serves the Model Context Protocol endpoint (Streamable HTTP, stateless) on top of the read API: the same
 // narrow views, so an assistant sees no more than a read token does through /api/integrations/v1. It is read-only.
@@ -95,6 +97,14 @@ type mcpVehicleInput struct {
 	VehicleID string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles"`
 }
 
+type mcpTripsInput struct {
+	VehicleID string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles"`
+	Search    string `json:"search,omitempty" jsonschema:"text to find in the departure or arrival address, for instance a city or a street"`
+	From      string `json:"from,omitempty" jsonschema:"first day to include, YYYY-MM-DD (UTC)"`
+	To        string `json:"to,omitempty" jsonschema:"last day to include, YYYY-MM-DD (UTC)"`
+	Limit     int    `json:"limit,omitempty" jsonschema:"how many trips to return, 20 by default and 50 at most"`
+}
+
 type mcpVehiclesOutput struct {
 	Vehicles []IntegrationVehicleV1 `json:"vehicles"`
 }
@@ -128,6 +138,19 @@ func (h *MCPHandler) addTools() {
 	})
 
 	mcp.AddTool(h.server, &mcp.Tool{
+		Name: "list_vehicle_trips",
+		Description: "The trips of a vehicle, most recent first: when, from and to (the addresses the owner recorded, null when unknown), distance, duration, energy, " +
+			"and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\") and a period. Only the first trips are listed: matching says how many fit.",
+		Annotations: readOnly,
+	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpTripsInput) (*mcp.CallToolResult, IntegrationTrips, error) {
+		trips, err := h.read.Trips(ctx, mcpUserID(req), in.VehicleID, IntegrationTripsQuery{Search: in.Search, From: in.From, To: in.To, Limit: in.Limit})
+		if err != nil {
+			return nil, IntegrationTrips{}, mcpFailure(ctx, "list_vehicle_trips", err, "Could not list the trips")
+		}
+		return nil, *trips, nil
+	})
+
+	mcp.AddTool(h.server, &mcp.Tool{
 		Name: "get_vehicle_data_gaps",
 		Description: "What is missing from a vehicle's records: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, " +
 			"unqualified drives, untracked distance, missing insurance or acquisition. Use it to say how far the costs can be trusted.",
@@ -156,6 +179,9 @@ func mcpUserID(req *mcp.CallToolRequest) string {
 func mcpFailure(ctx context.Context, tool string, err error, fallback string) error {
 	if errors.Is(err, errIntegrationVehicleNotFound) {
 		return errors.New("vehicle not found: use list_vehicles to get a valid vehicle_id")
+	}
+	if apiErr, ok := apierror.As(err); ok {
+		return errors.New(apiErr.Error())
 	}
 	slog.ErrorContext(ctx, fallback, "component", "mcp", "tool", tool, "error", err)
 	return errors.New(fallback)

@@ -99,6 +99,7 @@ Un jeton en lecture seule (`read`) ouvre aussi une API de lecture restreinte sou
 | `GET /api/integrations/v1/vehicles/{vehicleId}` | Un véhicule, mêmes champs. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | Ce que le véhicule a coûté sur ses 12 derniers mois (`last_12_months`) et depuis son achat (`since_purchase`), par catégorie, avec le coût au km et un résumé `completeness`. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps` | Ce qui manque à l'historique : trous et anomalies de compteur (les 20 plus récents sont listés), charges sans coût, trajets non qualifiés, distance non suivie, assurance ou acquisition absentes. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/trips` | Les trajets, du plus récent au plus ancien, avec leurs adresses `from` et `to`, distance, durée, énergie, `travel_expenses` (péages, parkings) et étiquettes. Paramètres : `search` (texte dans une adresse), `from` et `to` (jours `AAAA-MM-JJ` en UTC, ou instants RFC 3339), `limit` (20 par défaut, 50 au plus). `matching` compte les trajets qui correspondent et `truncated` indique qu'il en existe plus que ceux listés. |
 
 Conventions :
 
@@ -106,7 +107,7 @@ Conventions :
 - Une distance est `{"value": 4200, "unit": "km"}`. L'unité est toujours le kilomètre.
 - Une valeur impossible à connaître (un coût au km sans distance, un score sans rien à évaluer) vaut `null`, jamais `0`.
 - Les coûts sont les sommes décaissées, achat du véhicule exclu. Le mois en cours compte les échéances qui tombent plus tard dans le mois.
-- Les réponses ne contiennent ni VIN, ni plaque, ni adresse, ni coordonnée, ni document, ni identifiant de trajet.
+- Les réponses ne contiennent ni VIN, ni plaque, ni coordonnée, ni document, ni identifiant de trajet. Les trajets sont la seule vue avec des adresses (`from` et `to`) ; une adresse stockée uniquement sous forme de coordonnées vaut `null`.
 - Un véhicule que le compte ne peut pas voir répond `404`.
 
 ## Exemples
