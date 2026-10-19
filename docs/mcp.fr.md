@@ -58,6 +58,26 @@ Partout où un outil prend un `vehicle_id`, le nom du véhicule fonctionne aussi
 
 Les outils retournent les mêmes vues que l'[API de lecture](ingestion-api.fr.md#api-de-lecture), avec les mêmes conventions : un montant est une chaîne décimale dans la devise de son véhicule et n'est jamais converti, une distance est en kilomètres, une valeur inconnue est `null`. Les VIN, plaques, positions, documents et identifiants de trajet ne sont jamais retournés. Les noms et lieux enregistrés sur le compte sont retournés pour qu'un assistant puisse en parler : adresses de départ et d'arrivée des trajets (`list_vehicle_trips`), noms des conducteurs, arrêts et noms des passagers des covoiturages (`get_carpool`), noms et adresses des lieux de recharge (`get_charging_places`), étiquettes et notes. Une adresse stockée uniquement sous forme de coordonnées est retournée à `null`. Ces textes sont les mots du propriétaire et sont présentés comme des données dans la description des outils. Tout ce que vous autorisez un assistant à lire peut être repris dans ses réponses et conservé par son fournisseur : n'en autorisez pas un pour un compte dont vous ne partageriez pas les noms et les adresses. Un véhicule que le compte ne voit pas est signalé comme introuvable.
 
+## Ressources et prompts
+
+En plus des outils, le serveur propose ce qu'un client affiche dans ses propres menus.
+
+| Ressource | Contenu |
+|---|---|
+| `autoledger://glossary` | Les termes utilisés par les chiffres (coût d'usage, coût complet, coût au km, complétude...), en Markdown. |
+| `autoledger://account` | Les unités du compte (distance, volume), la langue, le fuseau de référence, le mois en cours et ses véhicules avec leur devise et leur rôle. |
+| `autoledger://vehicles/{vehicle_id}` | Un véhicule, tel que le renvoie `list_vehicles`. Un véhicule que le compte ne voit pas est introuvable. |
+
+| Prompt | Demande à l'assistant de |
+|---|---|
+| `monthly_review` | Expliquer ce qu'a coûté un mois (`month`, `AAAA-MM` ; le dernier mois complet par défaut), ce qui a changé par rapport aux précédents et ce qu'il faut compléter. |
+| `what_is_missing` | Lister ce qu'il faut compléter dans les données d'un véhicule, le plus utile en premier. |
+| `lease_check` | Vérifier la location ou le crédit : kilométrage utilisé, surcoût projeté, date de fin. |
+| `receipt_check` | Lister les dépenses d'une année (`year`) sans justificatif, par catégorie. |
+| `tax_year` | Préparer la répartition professionnel / personnel d'une année (`year` ; l'année précédente par défaut) à partir des étiquettes de trajet. |
+
+Chaque prompt accepte un `vehicle` facultatif (un nom ou un identifiant ; l'assistant demande lequel quand le compte en a plusieurs). Un prompt ne contient aucun chiffre : il indique à l'assistant quels outils appeler. Le client complète `vehicle` et `vehicle_id` avec les véhicules du compte.
+
 ## Remarques
 
 - Le point d'accès est sans état : chaque requête porte son propre jeton et rien n'est conservé entre deux requêtes.
