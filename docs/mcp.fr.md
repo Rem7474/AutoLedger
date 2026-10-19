@@ -48,5 +48,6 @@ Les outils retournent les mêmes vues que l'[API de lecture](ingestion-api.fr.md
 ## Remarques
 
 - Le point d'accès est sans état : chaque requête porte son propre jeton et rien n'est conservé entre deux requêtes.
-- Les requêtes sont limitées à 120 par minute et par adresse.
+- Les requêtes sont limitées à 120 par minute et par jeton d'accès, et à 600 par minute et par adresse.
+- Le journal du serveur contient une ligne par appel d'outil (outil, compte, résultat, durée) ; les arguments et les réponses n'y figurent pas.
 - Une instance de démonstration en lecture seule (`AUTOLEDGER_DEMO`) refuse les requêtes dont le point d'accès a besoin.
