@@ -281,6 +281,35 @@ type IntegrationDataGaps struct {
 	UntrackedDistance  IntegrationDistance `json:"untracked_distance" jsonschema:"distance driven that no drive record covers, estimated from the odometer"`
 	InsuranceMissing   bool                `json:"insurance_missing" jsonschema:"true when no insurance premium is recorded and the lease does not include it"`
 	AcquisitionMissing bool                `json:"acquisition_missing" jsonschema:"true when the acquisition (purchase, loan or lease) is not entered or lacks details, so depreciation and financing are not fully known"`
+	// AcquisitionMissingFields names what the acquisition still lacks; empty when the acquisition itself is missing.
+	AcquisitionMissingFields []string `json:"acquisition_missing_fields" jsonschema:"what the acquisition still lacks for the depreciation: purchase_price, resale_value and/or holding_period; empty when the acquisition itself is not entered"`
+	StartOdometerMissing     bool     `json:"start_odometer_missing" jsonschema:"true when the odometer at the start of ownership is not entered, so the distance before the first reading is not counted"`
+	UnconvertedExpenses      int      `json:"unconverted_expenses" jsonschema:"expenses in a foreign currency without a conversion rate, left out of the totals"`
+
+	// Missing is the same list the application shows under "what to complete", the most valuable first.
+	Missing []IntegrationMissing `json:"missing" jsonschema:"what to complete, ranked: the missing depreciation first, then the gaps with the largest estimated amount, then the ones that cannot be estimated"`
+	// ScoreDimensions are the weighted parts of the completeness score.
+	ScoreDimensions []IntegrationScoreDimension `json:"score_dimensions" jsonschema:"the weighted parts the completeness score is made of"`
+}
+
+// IntegrationMissing is one thing to complete and what it is worth. EstimatedAmount is an order of magnitude drawn
+// from the vehicle's own prices; it is null when it cannot be estimated, which is not the same as nothing at stake.
+type IntegrationMissing struct {
+	Kind            string             `json:"kind" jsonschema:"depreciation (resale value, holding period or price missing), unpriced_charges (charging sessions without a price), untracked_distance (distance no drive covers) or unconverted_expenses (foreign currency without a rate)"`
+	EstimatedAmount *IntegrationAmount `json:"estimated_amount" jsonschema:"rough cost left out of the totals, estimated from the vehicle's own prices; null when it cannot be estimated (the depreciation never is)"`
+	Count           int                `json:"count" jsonschema:"records behind the gap: charges or expenses; 0 when it does not apply"`
+	Quantity        *float64           `json:"quantity" jsonschema:"energy or distance without a cost, in quantity_unit; null when it does not apply"`
+	QuantityUnit    *string            `json:"quantity_unit" jsonschema:"kWh or km; null when there is no quantity"`
+	FixIn           *string            `json:"fix_in" jsonschema:"where the owner completes it in the application: charges or expenses; null when it is the ownership details or the drives"`
+}
+
+// IntegrationScoreDimension is one weighted part of the completeness score.
+type IntegrationScoreDimension struct {
+	Key        string  `json:"key" jsonschema:"stable identifier of the dimension"`
+	Label      string  `json:"label" jsonschema:"English name of the dimension"`
+	ScorePct   int     `json:"score_pct" jsonschema:"0 to 100, how complete this part is"`
+	Weight     float64 `json:"weight" jsonschema:"weight of this part in the overall score"`
+	Applicable bool    `json:"applicable" jsonschema:"false when there is nothing to evaluate for this vehicle; the part then carries no weight"`
 }
 
 // DataGaps says what a vehicle's history is missing, so a report can state how far its figures can be trusted.
@@ -301,7 +330,7 @@ func (h *IntegrationReadHandler) DataGaps(ctx context.Context, userID, vehicleID
 	if err != nil {
 		return nil, err
 	}
-	out := buildIntegrationDataGaps(vehicle.ID, issues, gaps, gapKm, anomalies, sum.Completeness)
+	out := buildIntegrationDataGaps(vehicle.ID, vehicle.Currency, issues, gaps, gapKm, anomalies, sum.Completeness)
 	return &out, nil
 }
 
@@ -315,7 +344,7 @@ func (h *IntegrationReadHandler) GetDataGaps(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, out)
 }
 
-func buildIntegrationDataGaps(vehicleID string, issues []models.DataQualityIssue, gaps int, gapKm float64, anomalies int, comp services.TCOCompleteness) IntegrationDataGaps {
+func buildIntegrationDataGaps(vehicleID, currency string, issues []models.DataQualityIssue, gaps int, gapKm float64, anomalies int, comp services.TCOCompleteness) IntegrationDataGaps {
 	truncated := len(issues) > integrationReadIssues
 	if truncated {
 		issues = issues[:integrationReadIssues]
@@ -330,5 +359,47 @@ func buildIntegrationDataGaps(vehicleID string, issues []models.DataQualityIssue
 		ChargesWithoutCost: comp.ChargesWithoutCost, UnqualifiedDrives: comp.UnqualifiedDrives,
 		UntrackedDistance: kilometres(comp.UntrackedDistanceKm),
 		InsuranceMissing:  comp.InsuranceMissing, AcquisitionMissing: comp.AcquisitionMissing,
+		AcquisitionMissingFields: nonNil(comp.AcquisitionMissingFields), StartOdometerMissing: comp.StartOdometerMissing,
+		UnconvertedExpenses: comp.UnconvertedExpenses,
+		Missing:             integrationMissing(comp.Gaps, currency), ScoreDimensions: integrationScoreDimensions(comp.Dimensions),
 	}
+}
+
+func nonNil(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
+}
+
+// gapQuantityUnit is the unit of the quantity a kind of gap carries.
+var gapQuantityUnit = map[string]string{"unpriced_charges": "kWh", "untracked_distance": "km"}
+
+func integrationMissing(gaps []services.CompletenessGap, currency string) []IntegrationMissing {
+	out := make([]IntegrationMissing, 0, len(gaps))
+	for _, g := range gaps {
+		m := IntegrationMissing{Kind: g.Key, Count: g.Count}
+		if g.Amount != nil {
+			a := amountOf(*g.Amount, currency)
+			m.EstimatedAmount = &a
+		}
+		if unit, ok := gapQuantityUnit[g.Key]; ok {
+			q := g.Quantity
+			m.Quantity, m.QuantityUnit = &q, &unit
+		}
+		if g.Target != "" {
+			target := g.Target
+			m.FixIn = &target
+		}
+		out = append(out, m)
+	}
+	return out
+}
+
+func integrationScoreDimensions(dims []services.CompletenessDimension) []IntegrationScoreDimension {
+	out := make([]IntegrationScoreDimension, 0, len(dims))
+	for _, d := range dims {
+		out = append(out, IntegrationScoreDimension{Key: d.Key, Label: d.Label, ScorePct: d.ScorePct, Weight: d.Weight, Applicable: d.Applicable})
+	}
+	return out
 }
