@@ -21,6 +21,7 @@
   "request": {
     "invalid_body": "Invalid request body",
     "invalid": "Invalid request",
+    "invalid_status": "Status must be overdue, due_soon or ok",
     "invalid_date": "Invalid date",
     "not_found": "Item not found",
     "invalid_reference": "Invalid reference: the drive, group or tire does not exist for this vehicle",
@@ -28,7 +29,8 @@
     "invalid_value": "Invalid value",
     "origin_denied": "Request origin not allowed",
     "invalid_months": "months must be between 0 and 240",
-    "invalid_date_range": "from and to must be two days (YYYY-MM-DD), from not after to"
+    "invalid_date_range": "from and to must be two days (YYYY-MM-DD), from not after to",
+    "invalid_period": "The start of the period is after its end"
   },
   "member": {
     "invalid_role": "Invalid role: {p0}",
