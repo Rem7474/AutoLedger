@@ -4,7 +4,7 @@ AutoLedger can serve a [Model Context Protocol](https://modelcontextprotocol.io)
 
 ## Enable it
 
-Set `AUTOLEDGER_MCP_ENABLED=true` and `AUTOLEDGER_BASE_URL` to the public address of the instance (the address the assistant will use, with `https`). The endpoint is `<base URL>/mcp`. Until the variable is set, the endpoint and the authorization pages do not exist.
+Set `AUTOLEDGER_MCP_ENABLED=true` (in `.env` with Docker Compose) and `AUTOLEDGER_BASE_URL` to the public address of the instance (the address the assistant will use, with `https`). The endpoint is `<base URL>/mcp`. Until the variable is set, the endpoint and the authorization pages do not exist.
 
 The reverse proxy must forward the `Authorization` header and the original `Host` header, as it does for the rest of the application.
 

@@ -120,3 +120,25 @@ func TestReadmeAnchorsResolve(t *testing.T) {
 		}
 	}
 }
+
+// TestComposeForwardsTheDocumentedSettings fails when a setting the README documents never reaches the container: the
+// Compose file lists the environment explicitly, so a variable set in .env is ignored without a line for it, and the
+// feature it switches silently stays off.
+func TestComposeForwardsTheDocumentedSettings(t *testing.T) {
+	compose := read(t, "docker-compose.yml")
+	// Not forwarded on purpose: the database host and port are fixed by the Compose network, and the OIDC block is
+	// opt-in text to uncomment.
+	notForwarded := map[string]bool{"AUTOLEDGER_DB_HOST": true, "AUTOLEDGER_DB_PORT": true, "OIDC_SCOPES": true}
+	row := regexp.MustCompile("(?m)^\\| `([A-Z][A-Z0-9_]+)`(?: / `([A-Z][A-Z0-9_]+)`)? \\|")
+	rows := row.FindAllStringSubmatch(read(t, "README.md"), -1)
+	if len(rows) < 20 {
+		t.Fatalf("found %d settings in the README table, the pattern no longer matches it", len(rows))
+	}
+	for _, m := range rows {
+		for _, name := range m[1:] {
+			if name != "" && !notForwarded[name] && !strings.Contains(compose, name) {
+				t.Errorf("%s is documented in the README but docker-compose.yml does not pass it to the container", name)
+			}
+		}
+	}
+}
