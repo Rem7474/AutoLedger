@@ -108,6 +108,7 @@ func registerSystemRoutes(r chi.Router, ping func(context.Context) error) {
 func registerAPIRoutes(r chi.Router, jwtSecret string, tokens appMiddleware.APITokenValidator, sessions appMiddleware.SessionChecker, idempotency func(http.Handler) http.Handler, h *apiHandlers) {
 	h.registerPublicAuthRoutes(r)
 	h.registerOAuthPublicRoutes(r)
+	h.registerMCPRoutes(r)
 
 	// Integration routes: the only ones an API token opens (Home Assistant, scripts); a session works too.
 	r.Group(func(r chi.Router) {

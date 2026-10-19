@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/teslacost/teslacost/internal/apierror"
 	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
@@ -74,24 +77,55 @@ func integrationVehicleV1(v *models.Vehicle) IntegrationVehicleV1 {
 		Currency: v.Currency, Odometer: kilometres(v.CurrentOdometer)}
 }
 
-// ListVehicles lists the vehicles the token's account can see.
-func (h *IntegrationReadHandler) ListVehicles(w http.ResponseWriter, r *http.Request) {
-	vehicles, err := h.repo.ListVehiclesByUserID(r.Context(), middleware.GetUserID(r.Context()))
-	if err != nil {
-		writeRepoError(w, r, err, "Failed to list vehicles")
+// errIntegrationVehicleNotFound is a vehicle the account cannot see, whether it does not exist or belongs to someone else.
+var errIntegrationVehicleNotFound = errors.New("vehicle not found")
+
+// writeIntegrationError answers a failed read: a vehicle the account cannot see is a 404, anything else a logged 500.
+func writeIntegrationError(w http.ResponseWriter, r *http.Request, err error, fallback string) {
+	if errors.Is(err, errIntegrationVehicleNotFound) {
+		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))
 		return
+	}
+	writeRepoError(w, r, err, fallback)
+}
+
+// vehicleOf returns a vehicle of the user's account, or errIntegrationVehicleNotFound.
+func (h *IntegrationReadHandler) vehicleOf(ctx context.Context, userID, vehicleID string) (*models.Vehicle, error) {
+	v, err := h.repo.GetVehicleByID(ctx, vehicleID, userID)
+	if err != nil {
+		return nil, errIntegrationVehicleNotFound
+	}
+	return v, nil
+}
+
+// Vehicles lists the vehicles the account can see.
+func (h *IntegrationReadHandler) Vehicles(ctx context.Context, userID string) ([]IntegrationVehicleV1, error) {
+	vehicles, err := h.repo.ListVehiclesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
 	}
 	out := make([]IntegrationVehicleV1, 0, len(vehicles))
 	for i := range vehicles {
 		out = append(out, integrationVehicleV1(&vehicles[i]))
+	}
+	return out, nil
+}
+
+// ListVehicles lists the vehicles the token's account can see.
+func (h *IntegrationReadHandler) ListVehicles(w http.ResponseWriter, r *http.Request) {
+	out, err := h.Vehicles(r.Context(), middleware.GetUserID(r.Context()))
+	if err != nil {
+		writeIntegrationError(w, r, err, "Failed to list vehicles")
+		return
 	}
 	writeJSON(w, http.StatusOK, out)
 }
 
 // GetVehicle returns one vehicle.
 func (h *IntegrationReadHandler) GetVehicle(w http.ResponseWriter, r *http.Request) {
-	vehicle := requireVehicleAccess(w, r, h.repo, chi.URLParam(r, "vehicleId"), models.RoleViewer)
-	if vehicle == nil {
+	vehicle, err := h.vehicleOf(r.Context(), middleware.GetUserID(r.Context()), chi.URLParam(r, "vehicleId"))
+	if err != nil {
+		writeIntegrationError(w, r, err, "Failed to read the vehicle")
 		return
 	}
 	writeJSON(w, http.StatusOK, integrationVehicleV1(vehicle))
@@ -146,18 +180,28 @@ func breakdown(currency string, energy, tolls, maintenance, insurance, financing
 	}
 }
 
-// GetCosts summarizes what a vehicle cost over its last twelve months and since it was bought.
-func (h *IntegrationReadHandler) GetCosts(w http.ResponseWriter, r *http.Request) {
-	vehicle := requireVehicleAccess(w, r, h.repo, chi.URLParam(r, "vehicleId"), models.RoleViewer)
-	if vehicle == nil {
-		return
-	}
-	sum, err := h.tcoService.ComputeVehicleTCO(r.Context(), vehicle.ID)
+// Costs summarizes what a vehicle cost over its last twelve months and since it was bought.
+func (h *IntegrationReadHandler) Costs(ctx context.Context, userID, vehicleID string) (*IntegrationCosts, error) {
+	vehicle, err := h.vehicleOf(ctx, userID, vehicleID)
 	if err != nil {
-		writeRepoError(w, r, err, "Failed to compute the costs")
+		return nil, err
+	}
+	sum, err := h.tcoService.ComputeVehicleTCO(ctx, vehicle.ID)
+	if err != nil {
+		return nil, err
+	}
+	out := buildIntegrationCosts(vehicle, sum)
+	return &out, nil
+}
+
+// GetCosts serves Costs.
+func (h *IntegrationReadHandler) GetCosts(w http.ResponseWriter, r *http.Request) {
+	out, err := h.Costs(r.Context(), middleware.GetUserID(r.Context()), chi.URLParam(r, "vehicleId"))
+	if err != nil {
+		writeIntegrationError(w, r, err, "Failed to compute the costs")
 		return
 	}
-	writeJSON(w, http.StatusOK, buildIntegrationCosts(vehicle, sum))
+	writeJSON(w, http.StatusOK, out)
 }
 
 func buildIntegrationCosts(vehicle *models.Vehicle, sum *services.TCOSummary) IntegrationCosts {
@@ -238,28 +282,36 @@ type IntegrationDataGaps struct {
 	AcquisitionMissing bool                `json:"acquisition_missing"`
 }
 
-// GetDataGaps says what a vehicle's history is missing, so a report can state how far its figures can be trusted.
+// DataGaps says what a vehicle's history is missing, so a report can state how far its figures can be trusted.
+func (h *IntegrationReadHandler) DataGaps(ctx context.Context, userID, vehicleID string) (*IntegrationDataGaps, error) {
+	vehicle, err := h.vehicleOf(ctx, userID, vehicleID)
+	if err != nil {
+		return nil, err
+	}
+	issues, err := h.repo.ListDataQualityIssues(ctx, vehicle.ID, integrationReadIssues+1)
+	if err != nil {
+		return nil, err
+	}
+	gaps, gapKm, anomalies, err := h.repo.DataQualitySummary(ctx, vehicle.ID)
+	if err != nil {
+		return nil, err
+	}
+	sum, err := h.tcoService.ComputeVehicleTCO(ctx, vehicle.ID)
+	if err != nil {
+		return nil, err
+	}
+	out := buildIntegrationDataGaps(vehicle.ID, issues, gaps, gapKm, anomalies, sum.Completeness)
+	return &out, nil
+}
+
+// GetDataGaps serves DataGaps.
 func (h *IntegrationReadHandler) GetDataGaps(w http.ResponseWriter, r *http.Request) {
-	vehicle := requireVehicleAccess(w, r, h.repo, chi.URLParam(r, "vehicleId"), models.RoleViewer)
-	if vehicle == nil {
-		return
-	}
-	issues, err := h.repo.ListDataQualityIssues(r.Context(), vehicle.ID, integrationReadIssues+1)
+	out, err := h.DataGaps(r.Context(), middleware.GetUserID(r.Context()), chi.URLParam(r, "vehicleId"))
 	if err != nil {
-		writeRepoError(w, r, err, "Failed to check the data")
+		writeIntegrationError(w, r, err, "Failed to check the data")
 		return
 	}
-	gaps, gapKm, anomalies, err := h.repo.DataQualitySummary(r.Context(), vehicle.ID)
-	if err != nil {
-		writeRepoError(w, r, err, "Failed to check the data")
-		return
-	}
-	sum, err := h.tcoService.ComputeVehicleTCO(r.Context(), vehicle.ID)
-	if err != nil {
-		writeRepoError(w, r, err, "Failed to check the data")
-		return
-	}
-	writeJSON(w, http.StatusOK, buildIntegrationDataGaps(vehicle.ID, issues, gaps, gapKm, anomalies, sum.Completeness))
+	writeJSON(w, http.StatusOK, out)
 }
 
 func buildIntegrationDataGaps(vehicleID string, issues []models.DataQualityIssue, gaps int, gapKm float64, anomalies int, comp services.TCOCompleteness) IntegrationDataGaps {

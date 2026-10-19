@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { expectNoHorizontalScroll, login } from './helpers'
 
 // The server runs with AUTOLEDGER_MCP_ENABLED=true (see CLAUDE.md): an assistant registers, sends the user to the
-// consent page, and exchanges the code for a read-only token.
+// consent page, exchanges the code for a read-only token and calls the MCP endpoint with it.
 const CALLBACK = 'http://127.0.0.1:7777/callback'
 
 function pkce() {
@@ -70,6 +70,21 @@ test('an assistant gets a read-only token once the user approves, and the user c
   expect(costs.ok()).toBeTruthy()
   expect((await costs.json()).last_12_months.costs.total.currency).toBe(list[0].currency)
 
+  // The same token opens the MCP endpoint: tools see the same narrow views as the read API.
+  const mcp = (headers: Record<string, string>, body: object) =>
+    request.post('/mcp', { headers: { Accept: 'application/json, text/event-stream', ...headers }, data: body })
+  const unauthenticated = await mcp({}, { jsonrpc: '2.0', id: 1, method: 'tools/list' })
+  expect(unauthenticated.status()).toBe(401)
+  expect(unauthenticated.headers()['www-authenticate']).toContain('/.well-known/oauth-protected-resource/mcp')
+  const resource = await (await request.get('/.well-known/oauth-protected-resource/mcp')).json()
+  expect(resource.authorization_servers).toHaveLength(1)
+  const called = await mcp(bearer, { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'list_vehicles', arguments: {} } })
+  expect(called.ok()).toBeTruthy()
+  const result = (await called.json()).result
+  expect(result.isError).toBeFalsy()
+  expect(result.structuredContent.vehicles.map((v: { id: string }) => v.id)).toEqual(list.map((v: { id: string }) => v.id))
+  expect(JSON.stringify(result)).not.toMatch(/"vin"|"plate"/)
+
   const push = await request.post('/api/integrations/homeassistant/event', { headers: bearer, data: { event_type: 'odometer' } })
   expect(push.status(), 'a read grant cannot push events').toBe(403)
 
@@ -82,6 +97,7 @@ test('an assistant gets a read-only token once the user approves, and the user c
   await page.getByRole('dialog').getByRole('button', { name: 'Revoke' }).click()
   await expect(row).toHaveCount(0)
   expect((await request.get('/api/integrations/v1/vehicles', { headers: bearer })).status()).toBe(401)
+  expect((await mcp(bearer, { jsonrpc: '2.0', id: 3, method: 'tools/list' })).status()).toBe(401)
   const renewed = await request.post('/oauth/token', { form: { grant_type: 'refresh_token', client_id: clientId, refresh_token: refresh } })
   expect(renewed.status()).toBe(400)
 })
