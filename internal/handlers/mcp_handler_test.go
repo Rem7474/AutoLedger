@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_tag_breakdown,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -491,5 +491,28 @@ func TestMCPFleetSummaryListsOnlyTheAccountsOwnVehicles(t *testing.T) {
 	if out.VehicleCount != 1 || len(out.Vehicles) != 1 || out.Vehicles[0].VehicleID != f.mine.ID || out.FleetCurrency != "GBP" ||
 		strings.Contains(string(raw), f.theirs.ID) || strings.Contains(string(raw), f.vin) {
 		t.Errorf("only this account's vehicles: %s", raw)
+	}
+}
+
+func TestMCPTagBreakdownAnswersForAVehicleWithoutTaggedDrives(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_tag_breakdown", Arguments: map[string]any{"vehicle_id": f.mine.ID}})
+	if err != nil || res.IsError {
+		t.Fatalf("tag breakdown: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationTags
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Currency != "GBP" || out.Tags == nil || strings.Contains(string(raw), f.vin) {
+		t.Errorf("tag breakdown: %s", raw)
+	}
+
+	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_tag_breakdown", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
+	if err != nil || !other.IsError {
+		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
 	}
 }
