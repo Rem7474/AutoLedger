@@ -31,6 +31,8 @@ export function tollApplyStatusLabel(status: string) {
       return t('drives.toll.skippedNoPrice')
     case 'skipped_no_gps':
       return t('drives.toll.skippedNoGps')
+    case 'skipped_currency':
+      return t('drives.toll.skippedCurrency')
     default:
       return t('drives.toll.failed')
   }

@@ -42,7 +42,7 @@
     "autoTollTitle": "Appliquer le péage automatique",
     "autoTollMessage": "Détecter les péages de {count} trajet(s) et enregistrer le tarif estimé ? Les péages saisis manuellement ne sont jamais modifiés.",
     "apply": "Appliquer",
-    "autoTollResult": "{created} créé(s), {updated} mis à jour, {skipped} ignoré(s) (manuel: {manual}, voyage: {trip}, sans tarif: {noPrice}, sans GPS: {noGps})",
+    "autoTollResult": "{created} créé(s), {updated} mis à jour, {skipped} ignoré(s) (manuel: {manual}, voyage: {trip}, sans tarif: {noPrice}, sans GPS: {noGps}, autre devise: {currency})",
     "autoTollFailed": ", {failed} en erreur",
     "autoTollShort": "Péage automatique",
     "filters": "Filtres"
@@ -292,6 +292,7 @@
     "skippedTripGroup": "Ce trajet fait partie d'un voyage avec un péage : il n'est pas modifié.",
     "skippedNoPrice": "Aucun tarif estimé disponible pour ce trajet.",
     "skippedNoGps": "Pas de tracé GPS disponible pour ce trajet.",
+    "skippedCurrency": "Les tarifs sont en euros : saisissez le péage à la main pour un véhicule dans une autre devise.",
     "failed": "Le tarif n'a pas pu être appliqué."
   },
   "noDrive": "Aucun trajet",

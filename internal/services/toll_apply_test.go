@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -73,5 +74,21 @@ func TestAutoTollNotes(t *testing.T) {
 		if !strings.Contains(enNotes, want) {
 			t.Errorf("notes %q missing %q", enNotes, want)
 		}
+	}
+}
+
+func TestApplyTollEstimateLeavesVehiclesInAnotherCurrencyToTheirOwner(t *testing.T) {
+	// The currency check comes first, so a service without a repository proves nothing was read or written.
+	s := &TollDetectionService{}
+	for _, currency := range []string{"GBP", "CHF", ""} {
+		res, err := s.ApplyTollEstimate(context.Background(), &models.Vehicle{ID: "v", Currency: currency}, "d")
+		if err != nil || res.Status != ApplySkippedCurrency || res.Amount != nil {
+			t.Errorf("%q vehicle: %+v, %v", currency, res, err)
+		}
+	}
+
+	bulk := s.ApplyTollEstimatesBulk(context.Background(), &models.Vehicle{ID: "v", Currency: "GBP"}, []string{"d1", "d2"})
+	if bulk.SkippedCurrency != 2 || bulk.Created != 0 || bulk.Failed != 0 || len(bulk.Results) != 2 {
+		t.Errorf("bulk: %+v", bulk)
 	}
 }

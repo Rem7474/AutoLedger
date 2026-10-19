@@ -116,7 +116,7 @@ describe('useDriveBulkActions', () => {
   })
 
   it('applies toll estimates after confirmation and reloads', async () => {
-    api.applyTollEstimatesBulk.mockResolvedValue({ created: 1, updated: 0, skipped_manual: 0, skipped_trip_group: 0, skipped_no_price: 0, skipped_no_gps: 0, failed: 0 })
+    api.applyTollEstimatesBulk.mockResolvedValue({ created: 1, updated: 0, skipped_manual: 0, skipped_trip_group: 0, skipped_no_price: 0, skipped_no_gps: 0, skipped_currency: 0, failed: 0 })
     const { h, loadDrives } = setup()
     await h.handleBulkApplyToll()
     expect(api.applyTollEstimatesBulk).toHaveBeenCalledWith('v1', ['d1', 'd2'])
@@ -126,7 +126,7 @@ describe('useDriveBulkActions', () => {
   })
 
   it('warns when some estimates failed, and stops when the confirmation is declined', async () => {
-    api.applyTollEstimatesBulk.mockResolvedValue({ created: 0, updated: 0, skipped_manual: 1, skipped_trip_group: 0, skipped_no_price: 0, skipped_no_gps: 0, failed: 2 })
+    api.applyTollEstimatesBulk.mockResolvedValue({ created: 0, updated: 0, skipped_manual: 1, skipped_trip_group: 0, skipped_no_price: 0, skipped_no_gps: 0, skipped_currency: 0, failed: 2 })
     await setup().h.handleBulkApplyToll()
     expect(confirm.showAlert.mock.calls[0][2]).toBe('warning')
     api.applyTollEstimatesBulk.mockClear()

@@ -12,6 +12,11 @@ import (
 	"github.com/teslacost/teslacost/internal/servertext"
 )
 
+// TollDatasetCurrency is the currency the toll dataset (French autoroutes, OpenTollData) is priced in. An estimate is
+// only recorded for a vehicle that keeps its costs in that currency: there is no exchange rate to convert it with, and
+// an expense in another currency than its vehicle's without an fx_rate stays out of the cost ledger.
+const TollDatasetCurrency = "EUR"
+
 // MaxBulkTollDrives bounds a bulk application: each drive triggers a TeslaMateAPI call.
 const MaxBulkTollDrives = 100
 
@@ -25,7 +30,9 @@ const (
 	ApplySkippedGroup   ApplyStatus = "skipped_trip_group"
 	ApplySkippedNoPrice ApplyStatus = "skipped_no_price"
 	ApplySkippedNoGPS   ApplyStatus = "skipped_no_gps"
-	ApplyFailed         ApplyStatus = "failed"
+	// ApplySkippedCurrency is a vehicle whose currency is not the dataset's: its tolls are entered by hand.
+	ApplySkippedCurrency ApplyStatus = "skipped_currency"
+	ApplyFailed          ApplyStatus = "failed"
 )
 
 // ApplyResult reports what happened for one drive.
@@ -44,6 +51,7 @@ type BulkApplyResult struct {
 	SkippedTripGroup int           `json:"skipped_trip_group"`
 	SkippedNoPrice   int           `json:"skipped_no_price"`
 	SkippedNoGPS     int           `json:"skipped_no_gps"`
+	SkippedCurrency  int           `json:"skipped_currency"`
 	Failed           int           `json:"failed"`
 	Results          []ApplyResult `json:"results"`
 }
@@ -128,6 +136,10 @@ func (s *TollDetectionService) language(ctx context.Context, userID string) stri
 // AUTO_TOLL expense, without ever overwriting a manual or trip-group toll.
 func (s *TollDetectionService) ApplyTollEstimate(ctx context.Context, vehicle *models.Vehicle, driveID string) (ApplyResult, error) {
 	res := ApplyResult{DriveID: driveID}
+	if vehicle.Currency != TollDatasetCurrency {
+		res.Status = ApplySkippedCurrency
+		return res, nil
+	}
 
 	drive, err := s.repo.GetDriveByID(ctx, driveID, vehicle.ID)
 	if err != nil {
@@ -171,7 +183,7 @@ func (s *TollDetectionService) ApplyTollEstimate(ctx context.Context, vehicle *m
 		DriveID:   &drive.ID,
 		Type:      "TOLL",
 		Amount:    total,
-		Currency:  "EUR", // the toll dataset (French autoroutes, OpenTollData) is priced in euros regardless of the vehicle's own currency
+		Currency:  TollDatasetCurrency,
 		Date:      drive.StartTime,
 		Notes:     &notes,
 		Source:    models.ExpenseSourceAutoToll,
@@ -216,6 +228,8 @@ func (s *TollDetectionService) ApplyTollEstimatesBulk(ctx context.Context, vehic
 			out.SkippedNoPrice++
 		case ApplySkippedNoGPS:
 			out.SkippedNoGPS++
+		case ApplySkippedCurrency:
+			out.SkippedCurrency++
 		default:
 			out.Failed++
 		}
