@@ -205,7 +205,8 @@
     }
   },
   "fleet": {
-    "invalid_budget": "Le budget doit être un montant positif"
+    "invalid_budget": "Le budget doit être un montant positif",
+    "no_vehicle": "Ajoutez un véhicule avant de définir un budget : le budget est dans la devise du premier"
   },
   "toll": {
     "apply_failed": "Échec de l'application du tarif de péage",

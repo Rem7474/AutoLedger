@@ -39,7 +39,7 @@ func newImportAPI(t *testing.T, tag string) *importAPI {
 		return u
 	}
 	owner, viewer := mk("owner"), mk("viewer")
-	v := &models.Vehicle{UserID: owner.ID, Name: "Import car", Powertrain: models.PowertrainEV}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Import car", Powertrain: models.PowertrainEV}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

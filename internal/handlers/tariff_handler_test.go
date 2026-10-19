@@ -30,7 +30,7 @@ func newTariffAPI(t *testing.T, email string) *tariffAPI {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 1000}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 1000}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

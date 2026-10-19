@@ -24,7 +24,7 @@ func TestHomeAssistantChargingSessions(t *testing.T) {
 		return u
 	}
 	newVehicle := func(u *models.User, name, powertrain string) *models.Vehicle {
-		v := &models.Vehicle{UserID: u.ID, Name: name, Powertrain: powertrain, TeslaMateAuthType: models.AuthModeNone}
+		v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: name, Powertrain: powertrain, TeslaMateAuthType: models.AuthModeNone}
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
 		}

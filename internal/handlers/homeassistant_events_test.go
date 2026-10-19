@@ -49,7 +49,7 @@ func newHAEventEnv(t *testing.T, email string) (*haEventEnv, *models.User) {
 }
 
 func (e *haEventEnv) vehicle(userID, name, powertrain string, odometer float64) *models.Vehicle {
-	v := &models.Vehicle{UserID: userID, Name: name, Powertrain: powertrain, CurrentOdometer: odometer, TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: userID, Name: name, Powertrain: powertrain, CurrentOdometer: odometer, TeslaMateAuthType: models.AuthModeNone}
 	if err := e.repo.CreateVehicle(context.Background(), v); err != nil {
 		e.t.Fatal(err)
 	}

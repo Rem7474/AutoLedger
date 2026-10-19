@@ -30,7 +30,7 @@ func newTireAPI(t *testing.T, email string) *tireAPI {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 30000}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 30000}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

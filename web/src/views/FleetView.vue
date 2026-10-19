@@ -34,7 +34,9 @@ const { showAlert } = useConfirm()
 const editingBudget = ref(false)
 const budgetInput = ref('')
 const savingBudget = ref(false)
-const usage = computed(() => (summary.value?.monthly_budget ? budgetUsage(summary.value.current_month_cost, summary.value.monthly_budget) : null))
+// A budget is compared with the month's cost only in its own currency: it is not converted when the first vehicle changes
+const budgetInFleetCurrency = computed(() => !!summary.value?.monthly_budget && summary.value.budget_currency === summary.value.currency)
+const usage = computed(() => (summary.value?.monthly_budget && budgetInFleetCurrency.value ? budgetUsage(summary.value.current_month_cost, summary.value.monthly_budget) : null))
 
 function startEditBudget() {
   budgetInput.value = summary.value?.monthly_budget ? String(summary.value.monthly_budget) : ''
@@ -47,6 +49,7 @@ async function saveBudget(amount: number | null) {
   try {
     const res = await api.setFleetBudget(amount)
     summary.value.monthly_budget = res.monthly_budget
+    summary.value.budget_currency = res.budget_currency
     editingBudget.value = false
   } catch (err: any) {
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
@@ -280,7 +283,10 @@ onBeforeUnmount(() => {
         <button type="submit" :disabled="savingBudget" class="btn btn-lg btn-primary">{{ t('common.save') }}</button>
         <button type="button" @click="editingBudget = false" class="btn btn-lg btn-secondary">{{ t('common.cancel') }}</button>
       </form>
-      <template v-if="usage && summary.monthly_budget && !editingBudget">
+      <p v-if="summary.monthly_budget && !budgetInFleetCurrency && !editingBudget" class="text-xs text-slate-300 break-words" data-testid="fleet-budget-stale-currency">
+        {{ t('fleet.budget.staleCurrency', { budget: formatAmount(summary.monthly_budget, summary.budget_currency ?? ''), currency: summary.currency }) }}
+      </p>
+      <template v-else-if="usage && summary.monthly_budget && !editingBudget">
         <div class="h-2 rounded-full bg-slate-800 overflow-hidden" role="progressbar" :aria-valuenow="Math.round(usage.percent)" aria-valuemin="0" aria-valuemax="100" :aria-label="t('fleet.budget.title')">
           <div
             class="h-full rounded-full"

@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/teslacost/teslacost/internal/apierror"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
@@ -33,7 +34,7 @@ func (r *Repository) GetFleetSummary(ctx context.Context, userID, timezone strin
 		MemberKmShares: []models.MemberKmShare{},
 	}
 
-	if err := r.pool.QueryRow(ctx, `SELECT fleet_monthly_budget FROM users WHERE id = $1`, userID).Scan(&res.MonthlyBudget); err != nil {
+	if err := r.pool.QueryRow(ctx, `SELECT fleet_monthly_budget, fleet_monthly_budget_currency FROM users WHERE id = $1`, userID).Scan(&res.MonthlyBudget, &res.BudgetCurrency); err != nil {
 		return nil, fmt.Errorf("failed to read the fleet budget: %w", err)
 	}
 
@@ -283,14 +284,26 @@ func (r *Repository) GetFleetSummary(ctx context.Context, userID, timezone strin
 	return res, nil
 }
 
-// SetFleetMonthlyBudget stores the household monthly budget; nil removes it.
-func (r *Repository) SetFleetMonthlyBudget(ctx context.Context, userID string, budget *money.Cents) error {
-	tag, err := r.pool.Exec(ctx, `UPDATE users SET fleet_monthly_budget = $2, updated_at = NOW() WHERE id = $1`, userID, budget)
+// SetFleetMonthlyBudget stores the household monthly budget in the currency of the first vehicle and returns that
+// currency; nil removes the budget. A budget needs a vehicle to name its currency.
+func (r *Repository) SetFleetMonthlyBudget(ctx context.Context, userID string, budget *money.Cents) (*string, error) {
+	var currency *string
+	if budget != nil {
+		vehicles, err := r.ListVehiclesByUserID(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch household vehicles: %w", err)
+		}
+		if len(vehicles) == 0 {
+			return nil, apierror.New("fleet.no_vehicle", "Add a vehicle before setting a budget: the budget is in the currency of the first one")
+		}
+		currency = &vehicles[0].Currency
+	}
+	tag, err := r.pool.Exec(ctx, `UPDATE users SET fleet_monthly_budget = $2, fleet_monthly_budget_currency = $3, updated_at = NOW() WHERE id = $1`, userID, budget, currency)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if tag.RowsAffected() == 0 {
-		return ErrNotFound
+		return nil, ErrNotFound
 	}
-	return nil
+	return currency, nil
 }

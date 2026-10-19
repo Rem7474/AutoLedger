@@ -45,7 +45,7 @@ func newDocumentAPI(t *testing.T, tag string) *documentAPI {
 		return u
 	}
 	owner, viewer, outside := mk("owner"), mk("viewer"), mk("outside")
-	v := &models.Vehicle{UserID: owner.ID, Name: "Docs car", Powertrain: models.PowertrainEV}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Docs car", Powertrain: models.PowertrainEV}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

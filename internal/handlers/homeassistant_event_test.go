@@ -20,8 +20,8 @@ func TestHomeAssistantOdometerEventsNeedTheirVehicle(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The home charger's default vehicle gets the charging sessions sent without a vehicle, never the odometer readings.
-	homeDefault := &models.Vehicle{UserID: u.ID, Name: "Home default", CurrentOdometer: 1000, IsHomeChargerDefault: true, TeslaMateAuthType: models.AuthModeNone}
-	other := &models.Vehicle{UserID: u.ID, Name: "Other", CurrentOdometer: 5000, TeslaMateAuthType: models.AuthModeNone}
+	homeDefault := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Home default", CurrentOdometer: 1000, IsHomeChargerDefault: true, TeslaMateAuthType: models.AuthModeNone}
+	other := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Other", CurrentOdometer: 5000, TeslaMateAuthType: models.AuthModeNone}
 	for _, v := range []*models.Vehicle{homeDefault, other} {
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
@@ -77,7 +77,7 @@ func TestHomeAssistantOdometerReadingsKeepOnePointPerDay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "Car", CurrentOdometer: 1000, TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Car", CurrentOdometer: 1000, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

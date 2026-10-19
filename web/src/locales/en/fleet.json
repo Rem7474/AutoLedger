@@ -36,7 +36,8 @@
     "spent": "{spent} of {budget} ({percent}%)",
     "remaining": "{amount} left",
     "over": "{amount} over",
-    "otherCurrency": "{count} vehicle in another currency is not counted in this {currency} budget | {count} vehicles in other currencies are not counted in this {currency} budget"
+    "otherCurrency": "{count} vehicle in another currency is not counted in this {currency} budget | {count} vehicles in other currencies are not counted in this {currency} budget",
+    "staleCurrency": "The budget of {budget} is not in the currency of the first vehicle ({currency}) any more: set it again to follow this month."
   },
   "compare": {
     "title": "Vehicles side by side",

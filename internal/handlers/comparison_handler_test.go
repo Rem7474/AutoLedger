@@ -144,7 +144,7 @@ func TestCreateTrackedHybridComparisonAccess(t *testing.T) {
 	}
 	h := NewComparisonHandler(repo, services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC")))
 	for _, powertrain := range []string{models.PowertrainPHEV, models.PowertrainREEV, models.PowertrainICE} {
-		v := &models.Vehicle{UserID: owner.ID, Name: powertrain, Powertrain: powertrain, TeslaMateAuthType: models.AuthModeNone}
+		v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: powertrain, Powertrain: powertrain, TeslaMateAuthType: models.AuthModeNone}
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
 		}

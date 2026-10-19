@@ -35,7 +35,7 @@ func newCarpoolAPI(t *testing.T, tag string) *carpoolAPI {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: owner.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 1000}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 1000}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

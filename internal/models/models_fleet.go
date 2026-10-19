@@ -14,7 +14,10 @@ type FleetSummaryResponse struct {
 	CurrentMonth     string      `json:"current_month"`
 	CurrentMonthCost money.Cents `json:"current_month_cost"`
 	// MonthlyBudget is the household spending target for a month; nil when none is set.
-	MonthlyBudget          *money.Cents         `json:"monthly_budget"`
+	MonthlyBudget *money.Cents `json:"monthly_budget"`
+	// BudgetCurrency is the currency the budget was set in; nil when there is no budget. It is the fleet Currency
+	// unless the first vehicle has changed since.
+	BudgetCurrency         *string              `json:"budget_currency"`
 	CurrentMonthDistanceKm float64              `json:"current_month_distance_km"`
 	CurrentMonthEnergyKwh  float64              `json:"current_month_energy_kwh"`
 	MonthlyCosts           []FleetMonthlyCost   `json:"monthly_costs"`

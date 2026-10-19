@@ -27,9 +27,9 @@ func TestIntegrationVehicleRoutesExposeOnlyTheIntegrationView(t *testing.T) {
 		t.Fatal(err)
 	}
 	apiURL, apiKey := "http://teslamate:8080", "secret-ciphertext"
-	mine := &models.Vehicle{UserID: owner.ID, Name: "Shared EV", Make: "Some make", Model: "Some model", CurrentOdometer: 12345.6,
+	mine := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Shared EV", Make: "Some make", Model: "Some model", CurrentOdometer: 12345.6,
 		TeslaMateAPIURL: &apiURL, TeslaMateAPIKeyEncrypted: &apiKey, TeslaMateAuthType: models.AuthModeBearer}
-	theirs := &models.Vehicle{UserID: other.ID, Name: "Not mine", TeslaMateAuthType: models.AuthModeNone}
+	theirs := &models.Vehicle{Currency: "EUR", UserID: other.ID, Name: "Not mine", TeslaMateAuthType: models.AuthModeNone}
 	for _, v := range []*models.Vehicle{mine, theirs} {
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)

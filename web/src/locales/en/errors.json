@@ -205,7 +205,8 @@
     }
   },
   "fleet": {
-    "invalid_budget": "The budget must be a positive amount"
+    "invalid_budget": "The budget must be a positive amount",
+    "no_vehicle": "Add a vehicle before setting a budget: the budget is in the currency of the first one"
   },
   "toll": {
     "apply_failed": "Could not apply the toll fare",

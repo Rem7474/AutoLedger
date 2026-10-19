@@ -41,7 +41,7 @@ func newVehicleAPI(t *testing.T, tag string) *vehicleAPI {
 		return u.ID
 	}
 	owner, viewer, editor, other := mk("owner"), mk("viewer"), mk("editor"), mk("other")
-	v := &models.Vehicle{UserID: owner, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 1000}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 1000}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

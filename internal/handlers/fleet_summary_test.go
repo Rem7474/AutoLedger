@@ -21,7 +21,7 @@ func TestFleetSummaryComputesEnergyCostPer100Km(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -65,6 +65,9 @@ func TestFleetBudgetSetValidateAndClear(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := repo.CreateVehicle(ctx, &models.Vehicle{UserID: u.ID, Name: "Daily", Currency: "GBP", Powertrain: models.PowertrainEV}); err != nil {
+		t.Fatal(err)
+	}
 	h := NewFleetHandler(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC")))
 	put := func(body string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(http.MethodPut, "/api/fleet/budget", strings.NewReader(body))
@@ -85,11 +88,15 @@ func TestFleetBudgetSetValidateAndClear(t *testing.T) {
 		return &v
 	}
 
-	if rec := put(`{"amount": 250}`); rec.Code != http.StatusOK {
+	rec := put(`{"amount": 250}`)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"budget_currency":"GBP"`) {
 		t.Fatalf("set: %d %s", rec.Code, rec.Body)
 	}
 	if b := budget(); b == nil || *b != 25000 {
 		t.Fatalf("budget after set: %v", b)
+	}
+	if s, err := repo.GetFleetSummary(ctx, u.ID, "UTC"); err != nil || s.BudgetCurrency == nil || *s.BudgetCurrency != "GBP" {
+		t.Fatalf("the budget keeps the currency it was set in: %+v, %v", s.BudgetCurrency, err)
 	}
 	for _, bad := range []string{`{"amount": 0}`, `{"amount": -5}`, `{"amount": 99999999999}`, `not json`} {
 		if rec := put(bad); rec.Code != http.StatusBadRequest {
@@ -105,6 +112,29 @@ func TestFleetBudgetSetValidateAndClear(t *testing.T) {
 	if b := budget(); b != nil {
 		t.Fatalf("budget after clear: %v", *b)
 	}
+	if s, err := repo.GetFleetSummary(ctx, u.ID, "UTC"); err != nil || s.BudgetCurrency != nil {
+		t.Fatalf("a cleared budget has no currency: %+v, %v", s.BudgetCurrency, err)
+	}
+}
+
+func TestFleetBudgetNeedsAVehicleToNameItsCurrency(t *testing.T) {
+	repo := authTestRepo(t)
+	ctx := context.Background()
+	u, err := repo.CreateUser(ctx, "fleet-budget-empty@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := NewFleetHandler(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC")))
+	req := httptest.NewRequest(http.MethodPut, "/api/fleet/budget", strings.NewReader(`{"amount": 250}`))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, u.ID))
+	rec := httptest.NewRecorder()
+	h.SetBudget(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("a budget without a vehicle has no currency: got %d %s", rec.Code, rec.Body)
+	}
+	if s, err := repo.GetFleetSummary(ctx, u.ID, "UTC"); err != nil || s.MonthlyBudget != nil {
+		t.Fatalf("nothing is stored: %+v, %v", s.MonthlyBudget, err)
+	}
 }
 
 func TestFleetSummaryCarriesComparisonFigures(t *testing.T) {
@@ -114,7 +144,7 @@ func TestFleetSummaryCarriesComparisonFigures(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +191,7 @@ func TestFleetSummaryMonthsFollowTheReportingTimezone(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

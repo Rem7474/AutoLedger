@@ -27,7 +27,7 @@ func TestReminderTemplatesApplyAndObservedIntervals(t *testing.T) {
 		t.Fatal(err)
 	}
 	newVehicle := func(name string, odo float64) *models.Vehicle {
-		v := &models.Vehicle{UserID: u.ID, Name: name, Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: odo}
+		v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: name, Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: odo}
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
 		}
