@@ -58,7 +58,20 @@
     "gapLargest": "largest item",
     "gapAmount": "≈ {amount}",
     "gapsHint": "Largest gap first. Amounts are orders of magnitude from your own prices, not entered values.",
-    "enterTheExchangeRate": "Enter the exchange rate"
+    "enterTheExchangeRate": "Enter the exchange rate",
+    "alerts": {
+      "perKwh": "/kWh",
+      "perLiter": "/L",
+      "amountOutlier": "{category} of {amount} on {date}: {times} times your usual {median}.",
+      "priceOutlier": "Price of {price} on {date}, outside your usual {low} to {high}.",
+      "categories": {
+        "TOLL": "Toll",
+        "PARKING": "Parking fee",
+        "TRAVEL_OTHER": "Travel expense"
+      }
+    },
+    "alertsTitle": "Entries to check",
+    "alertCheck": "Check"
   },
   "energyBatterySection": {
     "teslamateGrafana": "TeslaMate Grafana",

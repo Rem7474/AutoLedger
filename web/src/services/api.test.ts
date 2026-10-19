@@ -281,6 +281,7 @@ describe('endpoint contract', () => {
     ['deleteOwnership', () => api.deleteOwnership('v1'), 'DELETE', '/vehicles/v1/ownership'],
     ['updateEstimatedEnergy', () => api.updateEstimatedEnergy('v1', { estimated_kwh_100km: 15 }), 'PUT', '/vehicles/v1/estimated-energy', { estimated_kwh_100km: 15 }],
     ['getDataQuality', () => api.getDataQuality('v1'), 'GET', '/vehicles/v1/data-quality'],
+    ['getDataAlerts', () => api.getDataAlerts('v1'), 'GET', '/vehicles/v1/data-alerts'],
     ['getVehicleMembers', () => api.getVehicleMembers('v1'), 'GET', '/vehicles/v1/members'],
     ['addVehicleMember', () => api.addVehicleMember('v1', { email: 'e', role: 'VIEWER' }), 'POST', '/vehicles/v1/members', { email: 'e', role: 'VIEWER' }],
     ['updateVehicleMemberRole', () => api.updateVehicleMemberRole('v1', 'm1', { role: 'EDITOR' }), 'PUT', '/vehicles/v1/members/m1', { role: 'EDITOR' }],

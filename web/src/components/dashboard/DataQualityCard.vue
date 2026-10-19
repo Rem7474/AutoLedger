@@ -2,16 +2,35 @@
 import { intlLocale, t } from '@/i18n'
 import { formatDistance } from '@/units'
 import { canRefuel, isElectricOnly } from '@/utils/vehicles'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { AlertTriangle, CheckCircle2, ChevronDown } from 'lucide-vue-next'
 import { formatAmount } from '@/currency'
 import { orderActionsByGap, type CompletenessGap } from '@/utils/completenessGaps'
+import { dataAlertLine, type DataAlert } from '@/utils/dataAlerts'
 
 // TCO completeness score with the reasons it is not 100 %, and the odometer inconsistencies on demand
 const props = defineProps<{ tco: any | null; vehicleId: string }>()
 const vehicleStore = useVehicleStore()
+
+// Entries that look mistyped: computed at each load, nothing is stored, so correcting the entry clears the line
+const dataAlerts = ref<DataAlert[]>([])
+watch(
+  () => props.vehicleId,
+  async (id) => {
+    dataAlerts.value = []
+    if (!id) return
+    try {
+      const res = await api.getDataAlerts(id)
+      if (id === props.vehicleId) dataAlerts.value = res.alerts ?? []
+    } catch (err) {
+      console.error('Failed to load data alerts', err)
+    }
+  },
+  { immediate: true },
+)
+const alertLines = computed(() => dataAlerts.value.map((a) => dataAlertLine(a, vehicleStore.currency)))
 
 const dataQuality = ref<any | null>(null)
 const showDataQuality = ref(false)
@@ -157,6 +176,12 @@ const showTodo = ref(false)
         <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': showTodo }" aria-hidden="true" />
       </button>
     </div>
+    <ul v-if="alertLines.length" class="space-y-1" :aria-label="$t('dashboard.dataQualityCard.alertsTitle')" data-testid="data-alerts">
+      <li v-for="line in alertLines" :key="line.key" class="flex items-center justify-between gap-3 text-xs text-warning-100/90 bg-slate-950/40 rounded-lg px-2.5 py-1.5">
+        <span class="min-w-0">{{ line.text }}</span>
+        <router-link :to="line.to" class="shrink-0 font-semibold text-sky-400 tap-text">{{ $t('dashboard.dataQualityCard.alertCheck') }}</router-link>
+      </li>
+    </ul>
     <p v-if="!scored" class="text-xs text-slate-400">{{ $t('dashboard.dataQualityCard.noScoreHint') }}</p>
     <p v-else-if="cappedByDepreciation" class="text-xs text-slate-400" data-testid="completeness-capped">{{ $t('dashboard.dataQualityCard.capped') }}</p>
     <div v-if="scored && dimensions.length" class="pt-1">

@@ -115,6 +115,7 @@ French captures sit next to the English ones (`*.fr.png`); `scripts/screenshots/
   - *Classic loan*: Amortization schedule tracking with principal/interest split, origination fees, and borrower insurance.
   - *Leasing (LOA / LLD)*: Down payment, monthly payments, security deposit, contract mileage allowance, and excess mileage provisions.
 - **Advanced Indicators**: Real cost per km (energy + tolls vs full TCO), net cost factoring carpooling revenues, and an adaptive TCO completeness score.
+- **Entries to Check**: The dashboard flags an expense far above the usual of its category and an energy price outside the vehicle's own range, computed on each load with nothing to dismiss ([details](docs/data-alerts.md), [FR](docs/data-alerts.fr.md)).
 - **Monthly Cost Drill-Down**: The energy and insurance amounts of a month list the recorded charges, fill-ups and payments they add up to, with the estimate for distance driven before tracking shown separately.
 - **Charging by Place**: Energy → Charges breaks the charging down by month and by place (home, work, public) with weighted prices, free and unknown costs kept apart, and what charging everything at home would have cost.
 - **Energy Analytics** (vehicles that charge): Real consumption in kWh/100 km, home vs AC vs DC charging efficiency, battery temperature correlation, and cold-weather impact.

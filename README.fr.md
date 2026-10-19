@@ -115,6 +115,7 @@ Les captures anglaises se trouvent à côté des françaises (`*.en.png`) ; `scr
   - *Crédit classique* : suivi du tableau d'amortissement avec la part de capital et d'intérêts, les frais de dossier et l'assurance emprunteur.
   - *Location (LOA / LLD)* : apport, mensualités, dépôt de garantie, kilométrage contractuel et provision pour les kilomètres excédentaires.
 - **Indicateurs avancés** : coût réel au km (énergie + péages ou coût total de possession complet), coût net tenant compte des revenus de covoiturage et score adaptatif de complétude du coût total.
+- **Saisies à vérifier** : le tableau de bord signale une dépense bien au-dessus de l'habituel de sa catégorie et un prix d'énergie hors de la fourchette du véhicule, recalculés à chaque chargement et sans rien à écarter ([détails](docs/data-alerts.fr.md), [EN](docs/data-alerts.md)).
 - **Détail des coûts mensuels** : les montants d'énergie et d'assurance d'un mois listent les recharges, pleins et paiements enregistrés qui les composent, l'estimation des kilomètres parcourus avant le suivi étant affichée à part.
 - **Recharges par lieu** : Énergie → Recharges répartit les recharges par mois et par lieu (domicile, travail, public) avec des prix pondérés, les coûts gratuits et inconnus tenus à part, et ce qu'aurait coûté une recharge intégrale à domicile.
 - **Analyse énergétique** (véhicules qui se rechargent) : consommation réelle en kWh/100 km, efficacité des recharges à domicile, AC et DC, corrélation avec la température de la batterie et impact du froid.

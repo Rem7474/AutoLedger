@@ -23,6 +23,7 @@ func (h *apiHandlers) registerVehicleRoutes(r chi.Router) {
 	r.Get("/{id}/odometer-estimate", h.vehicle.GetOdometerEstimate)
 	r.Get("/{id}/data-sources", h.vehicle.GetDataSources)
 	r.Get("/{vehicleId}/data-quality", h.tco.GetDataQuality)
+	r.Get("/{vehicleId}/data-alerts", h.tco.GetDataAlerts)
 
 	// Shared Vehicle Members
 	r.Get("/{id}/members", h.vehicleMember.ListMembers)
