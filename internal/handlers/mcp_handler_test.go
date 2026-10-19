@@ -64,7 +64,7 @@ func newMCPFixture(t *testing.T) *mcpFixture {
 	f.readTok = f.newToken(t, owner.ID, auth.ScopeRead)
 	f.otherTok = f.newToken(t, other.ID, auth.ScopeRead)
 
-	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithResidual(services.NewResidualService(repo, nil))
+	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil))
 	f.server = httptest.NewServer(NewMCPHandler(read, repo, "https://ledger.example/", "test").Endpoint())
 	t.Cleanup(f.server.Close)
 	return f
@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_energy_efficiency,get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -472,5 +472,24 @@ func TestMCPEnergyEfficiencyAnswersForAVehicleWithoutAnyCharge(t *testing.T) {
 	}
 	if out.VehicleID != f.mine.ID || out.Currency != "GBP" || out.Electric == nil || len(out.Electric.ChargeMix) != 0 || out.Electric.BatteryHealth != nil || strings.Contains(string(raw), f.vin) {
 		t.Errorf("energy efficiency: %s", raw)
+	}
+}
+
+func TestMCPFleetSummaryListsOnlyTheAccountsOwnVehicles(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_fleet_summary"})
+	if err != nil || res.IsError {
+		t.Fatalf("fleet summary: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationFleet
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleCount != 1 || len(out.Vehicles) != 1 || out.Vehicles[0].VehicleID != f.mine.ID || out.FleetCurrency != "GBP" ||
+		strings.Contains(string(raw), f.theirs.ID) || strings.Contains(string(raw), f.vin) {
+		t.Errorf("only this account's vehicles: %s", raw)
 	}
 }

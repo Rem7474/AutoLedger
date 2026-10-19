@@ -147,6 +147,7 @@ func (h *MCPHandler) addTools() {
 	h.addOwnershipTools(readOnly)
 	h.addEnergyTools(readOnly)
 	h.addExpenseTools(readOnly)
+	h.addFleetTools(readOnly)
 
 	mcp.AddTool(h.server, &mcp.Tool{
 		Name:        "list_vehicles",

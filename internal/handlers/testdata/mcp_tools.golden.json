@@ -469,6 +469,546 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "Every vehicle of the account side by side: what each cost this month, its running and full cost per kilometre, its annual cost, its consumption, which ones are cheapest to own among those that can be compared, the household's monthly budget and where the month stands against it, the last 12 months of household cost, and who drove how much. Amounts are never converted between currencies: totals are given per currency and the monthly series covers the vehicles in the fleet currency only. Do not rank a vehicle whose comparable flag is false.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "name": "get_fleet_summary",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "budget": {
+          "additionalProperties": false,
+          "description": "the monthly target; null when none is set or no vehicle uses its currency",
+          "properties": {
+            "monthly": {
+              "additionalProperties": false,
+              "description": "the monthly target the owner set",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "remaining": {
+              "additionalProperties": false,
+              "description": "target minus spent, negative once the target is exceeded",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "spent_this_month": {
+              "additionalProperties": false,
+              "description": "what the vehicles in the budget's currency cost so far this month",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "used_pct": {
+              "description": "spent as a percentage of the target",
+              "type": "number"
+            }
+          },
+          "required": [
+            "monthly",
+            "spent_this_month",
+            "remaining",
+            "used_pct"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "current_month": {
+          "description": "the month in progress, YYYY-MM",
+          "type": "string"
+        },
+        "current_month_totals": {
+          "description": "the month in progress, one line per currency",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "description": "currency of the vehicles counted",
+                "type": "string"
+              },
+              "current_month_cost": {
+                "additionalProperties": false,
+                "description": "what they cost so far in the month in progress",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "vehicles": {
+                "description": "number of vehicles in that currency",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "currency",
+              "vehicles",
+              "current_month_cost"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "drivers": {
+          "description": "who drove how much, by name; empty when no drive names its driver",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "distance": {
+                "additionalProperties": false,
+                "description": "distance this person drove",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "name": {
+                "description": "name of the driver as entered in the account",
+                "type": "string"
+              },
+              "percentage": {
+                "description": "share of the distance of the drives that name a driver",
+                "type": "number"
+              }
+            },
+            "required": [
+              "name",
+              "distance",
+              "percentage"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "fleet_currency": {
+          "description": "currency of monthly_costs: the one of the first vehicle; vehicles in another currency are left out of those sums",
+          "type": "string"
+        },
+        "monthly_costs": {
+          "description": "the last 12 months of the household cost, oldest first",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "distance": {
+                "additionalProperties": false,
+                "description": "distance driven by all the vehicles, whatever their currency",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "energy": {
+                "additionalProperties": false,
+                "description": "their energy cost",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "month": {
+                "description": "calendar month, YYYY-MM",
+                "type": "string"
+              },
+              "other": {
+                "additionalProperties": false,
+                "description": "everything else",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "total": {
+                "additionalProperties": false,
+                "description": "what the vehicles in the fleet currency cost",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "month",
+              "total",
+              "energy",
+              "other",
+              "distance"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "vehicle_count": {
+          "description": "number of vehicles in the account",
+          "type": "integer"
+        },
+        "vehicles": {
+          "description": "the vehicles with their comparison figures",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "annual_cost": {
+                "additionalProperties": false,
+                "description": "full cost extrapolated to twelve months from the observed history; null under three months of history",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "comparable": {
+                "description": "true when the vehicle can be ranked: enough distance, a known depreciation and enough complete records; otherwise do not use it to say which vehicle is cheapest",
+                "type": "boolean"
+              },
+              "completeness_pct": {
+                "description": "completeness score of the vehicle's records, from 0 to 100",
+                "type": "integer"
+              },
+              "currency": {
+                "description": "currency of the vehicle's amounts",
+                "type": "string"
+              },
+              "current_month_cost": {
+                "additionalProperties": false,
+                "description": "cost so far in the month in progress",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "current_month_distance": {
+                "additionalProperties": false,
+                "description": "distance driven so far in the month in progress",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "energy_cost_per_100km": {
+                "additionalProperties": false,
+                "description": "energy cost per 100 km; null when unknown, 0 is a known free energy",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "full_cost_per_km": {
+                "additionalProperties": false,
+                "description": "running cost plus depreciation and amortized tires, per kilometre; null while the distance is unknown",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "full_cost_rank": {
+                "description": "1 for the cheapest full cost per km among the comparable vehicles of the same currency; null when the vehicle is not comparable",
+                "type": [
+                  "null",
+                  "integer"
+                ]
+              },
+              "kwh_per_100km": {
+                "description": "electric consumption per 100 km; null when the vehicle used no electricity",
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "litres_per_100km": {
+                "description": "fuel consumption per 100 km; null when the vehicle used no fuel",
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "make": {
+                "description": "make as typed by the owner, may be empty",
+                "type": "string"
+              },
+              "model": {
+                "description": "model as typed by the owner, may be empty",
+                "type": "string"
+              },
+              "name": {
+                "description": "name of the vehicle",
+                "type": "string"
+              },
+              "odometer": {
+                "additionalProperties": false,
+                "description": "current odometer reading",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "powertrain": {
+                "description": "EV, ICE, PHEV or REEV",
+                "type": "string"
+              },
+              "running_cost_per_km": {
+                "additionalProperties": false,
+                "description": "what it costs to run per kilometre (energy, upkeep, insurance, financing); null while the distance is unknown",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "vehicle_id": {
+                "description": "identifier to pass to the other tools",
+                "type": "string"
+              }
+            },
+            "required": [
+              "vehicle_id",
+              "name",
+              "make",
+              "model",
+              "powertrain",
+              "currency",
+              "odometer",
+              "current_month_cost",
+              "current_month_distance",
+              "running_cost_per_km",
+              "full_cost_per_km",
+              "annual_cost",
+              "energy_cost_per_100km",
+              "kwh_per_100km",
+              "litres_per_100km",
+              "completeness_pct",
+              "comparable",
+              "full_cost_rank"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "vehicle_count",
+        "current_month",
+        "fleet_currency",
+        "current_month_totals",
+        "budget",
+        "vehicles",
+        "monthly_costs",
+        "drivers"
+      ],
+      "type": "object"
+    },
+    "title": "Fleet summary"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "What a vehicle cost month by month, oldest first: for each month the cost by category (energy, tolls, maintenance, insurance, financing, tires, other), the distance and the cost per kilometre, with the listed months added up. Use it to compare periods or to see which month was expensive and in which category. Without from and to it returns the last 12 months. A month in progress is flagged: its figures are not final.",
     "inputSchema": {
       "additionalProperties": false,
