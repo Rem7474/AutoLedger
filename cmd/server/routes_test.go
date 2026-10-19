@@ -115,6 +115,9 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		"POST /api/auth/refresh",
 		"POST /api/auth/register",
 		"POST /mcp", // checks its own bearer token (read scope) so that a refusal carries the WWW-Authenticate header
+		"GET /mcp",
+		"HEAD /mcp",
+		"DELETE /mcp",
 		"POST /oauth/register",
 		"POST /oauth/revoke",
 		"POST /oauth/token",
@@ -221,4 +224,46 @@ type fakeSessionChecker struct{}
 
 func (fakeSessionChecker) IsSessionActive(context.Context, string, string) (bool, error) {
 	return true, nil
+}
+
+// TestMCPEndpointNeverFallsThroughToTheWebApp pins what a client sees when it probes the endpoint with a method the
+// stateless server does not use: the authorization challenge without a token, a 405 with one, and never the
+// single-page app's HTML, from which it cannot tell how the server wants to be authorized.
+func TestMCPEndpointNeverFallsThroughToTheWebApp(t *testing.T) {
+	r := newRouteTableFor(t, auth.ScopeRead)
+	registerSPA(r)
+
+	for _, method := range []string{http.MethodPost, http.MethodGet, http.MethodHead, http.MethodDelete} {
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, httptest.NewRequest(method, "/mcp", nil))
+		if rec.Code != http.StatusUnauthorized || !strings.Contains(rec.Header().Get("WWW-Authenticate"), "/.well-known/oauth-protected-resource/mcp") {
+			t.Errorf("%s /mcp without a token: status %d, challenge %q", method, rec.Code, rec.Header().Get("WWW-Authenticate"))
+		}
+	}
+	for _, method := range []string{http.MethodGet, http.MethodDelete} {
+		req := httptest.NewRequest(method, "/mcp", nil)
+		req.Header.Set("Authorization", "Bearer "+auth.TokenPrefix+"route-table-test")
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		if rec.Code != http.StatusMethodNotAllowed || strings.Contains(rec.Body.String(), "<html") {
+			t.Errorf("%s /mcp with a token: status %d, want 405 from the endpoint", method, rec.Code)
+		}
+	}
+}
+
+func TestUnknownDiscoveryDocumentIsNotTheWebApp(t *testing.T) {
+	r := newRouteTable(t)
+	registerSPA(r)
+	for _, path := range []string{"/.well-known/openid-configuration", "/.well-known/anything-else"} {
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		if rec.Code != http.StatusNotFound || strings.Contains(rec.Body.String(), "<html") {
+			t.Errorf("%s: status %d, want a plain 404", path, rec.Code)
+		}
+	}
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/.well-known/oauth-authorization-server", nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("the OAuth metadata must still be served: status %d", rec.Code)
+	}
 }

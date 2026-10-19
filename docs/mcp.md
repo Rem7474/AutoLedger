@@ -20,6 +20,18 @@ Then authenticate from the client (`/mcp` in Claude Code). Clients that ask for 
 
 The access is listed in the API tokens of the account page, and deleting it there cuts the assistant off at once.
 
+## Check the endpoint
+
+A client that cannot verify the server usually cannot reach one of these addresses. From a machine outside your network:
+
+```
+curl -i -X POST https://ledger.example/mcp
+curl https://ledger.example/.well-known/oauth-protected-resource/mcp
+curl https://ledger.example/.well-known/oauth-authorization-server
+```
+
+The first must answer `401` with a `WWW-Authenticate: Bearer resource_metadata="..."` header, and the other two a JSON document whose addresses start with your public URL. An HTML page, a `404` or an address such as `http://localhost:8080` means `AUTOLEDGER_MCP_ENABLED` is not set, the proxy does not forward the request, or `AUTOLEDGER_BASE_URL` is not the public address. A client that runs in a cloud service (a web connector, for instance) can only reach an address that is reachable from the internet.
+
 ## Tools
 
 | Tool | Returns |
