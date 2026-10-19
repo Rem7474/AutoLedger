@@ -25,7 +25,8 @@ const (
 
 // IntegrationReadHandler serves the read-only API behind /api/integrations/v1, for tools that report on the data
 // (assistants, scripts) rather than push into it. Its views are narrower than the application's: no VIN, plate,
-// address, coordinate or document, amounts carry their currency, and an unknown figure is null rather than zero.
+// coordinate or document, and the trips are the only view with addresses; amounts carry their currency, and an
+// unknown figure is null rather than zero.
 type IntegrationReadHandler struct {
 	repo       *database.Repository
 	tcoService *services.TCOService

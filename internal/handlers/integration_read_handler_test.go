@@ -147,6 +147,7 @@ func TestIntegrationReadRoutesServeOnlyTheAccountsVehiclesWithoutIdentifiers(t *
 	router.Get("/vehicles/{vehicleId}", h.GetVehicle)
 	router.Get("/vehicles/{vehicleId}/costs", h.GetCosts)
 	router.Get("/vehicles/{vehicleId}/data-gaps", h.GetDataGaps)
+	router.Get("/vehicles/{vehicleId}/trips", h.GetTrips)
 	get := func(path string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, owner.ID))
@@ -155,7 +156,7 @@ func TestIntegrationReadRoutesServeOnlyTheAccountsVehiclesWithoutIdentifiers(t *
 		return rec
 	}
 
-	for _, path := range []string{"/vehicles", "/vehicles/" + mine.ID, "/vehicles/" + mine.ID + "/costs", "/vehicles/" + mine.ID + "/data-gaps"} {
+	for _, path := range []string{"/vehicles", "/vehicles/" + mine.ID, "/vehicles/" + mine.ID + "/costs", "/vehicles/" + mine.ID + "/data-gaps", "/vehicles/" + mine.ID + "/trips?search=lyon&limit=5"} {
 		rec := get(path)
 		if rec.Code != http.StatusOK {
 			t.Fatalf("%s: status %d, body %s", path, rec.Code, rec.Body.String())
@@ -164,9 +165,15 @@ func TestIntegrationReadRoutesServeOnlyTheAccountsVehiclesWithoutIdentifiers(t *
 			t.Errorf("%s leaked the VIN or another account's vehicle: %s", path, rec.Body.String())
 		}
 	}
-	for _, path := range []string{"/vehicles/" + theirs.ID, "/vehicles/" + theirs.ID + "/costs", "/vehicles/" + theirs.ID + "/data-gaps"} {
+	for _, path := range []string{"/vehicles/" + theirs.ID, "/vehicles/" + theirs.ID + "/costs", "/vehicles/" + theirs.ID + "/data-gaps", "/vehicles/" + theirs.ID + "/trips"} {
 		if rec := get(path); rec.Code != http.StatusNotFound {
 			t.Errorf("%s: another account's vehicle must be a 404, got %d", path, rec.Code)
+		}
+	}
+
+	for _, bad := range []string{"limit=0", "limit=abc", "from=yesterday"} {
+		if rec := get("/vehicles/" + mine.ID + "/trips?" + bad); rec.Code != http.StatusBadRequest {
+			t.Errorf("trips?%s: got %d, want 400", bad, rec.Code)
 		}
 	}
 
