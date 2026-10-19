@@ -2,6 +2,11 @@ package database
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha256"
+	"encoding/base64"
+	"errors"
 	"os"
 	"sort"
 	"strings"
@@ -11,6 +16,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/teslacost/teslacost/internal/crypto"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/migrations"
 )
@@ -295,5 +301,120 @@ func TestDropLegacyTeslaMateColumns(t *testing.T) {
 	var carID int
 	if err := pool.QueryRow(ctx, `SELECT teslamate_api_url, teslamate_car_id FROM vehicles WHERE id::text = $1`, basic).Scan(&apiURL, &carID); err != nil || apiURL != "http://tm3:8080" || carID != 3 {
 		t.Errorf("columns after the rollback: %q %d %v", apiURL, carID, err)
+	}
+}
+
+func TestRotateTeslaMateSecrets(t *testing.T) {
+	pool := sourcesTestPool(t)
+	ctx := context.Background()
+	if err := (&DB{Pool: pool}).Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(pool)
+
+	var userID string
+	if err := pool.QueryRow(ctx, `INSERT INTO users (email, password_hash) VALUES ('rot@example.com', 'x') RETURNING id::text`).Scan(&userID); err != nil {
+		t.Fatal(err)
+	}
+	source := func(name string, secret, basic *string) string {
+		t.Helper()
+		var vid string
+		if err := pool.QueryRow(ctx, `INSERT INTO vehicles (user_id, name) VALUES ($1, $2) RETURNING id::text`, userID, name).Scan(&vid); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := pool.Exec(ctx, `INSERT INTO vehicle_data_sources (vehicle_id, provider, config, secret_encrypted, basic_secret_encrypted)
+			VALUES ($1, 'TESLAMATE', '{}', $2, $3)`, vid, secret, basic); err != nil {
+			t.Fatal(err)
+		}
+		return vid
+	}
+	read := func(vid string) (secret, basic *string) {
+		t.Helper()
+		if err := pool.QueryRow(ctx, `SELECT secret_encrypted, basic_secret_encrypted FROM vehicle_data_sources WHERE vehicle_id = $1`, vid).Scan(&secret, &basic); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	str := func(s string) *string { return &s }
+	rotate := func(s string) (string, error) {
+		switch {
+		case s == "unreadable":
+			return "", errors.New("wrong key")
+		case strings.HasPrefix(s, "v2:"):
+			return s, nil
+		}
+		return "v2:" + s, nil
+	}
+
+	legacy := source("legacy", str("key"), str("pass"))
+	current := source("current", str("v2:key"), nil)
+	bad := source("bad", str("unreadable"), str("pass"))
+	blank := source("blank", str(""), nil)
+
+	rotated, failed, err := repo.RotateTeslaMateSecrets(ctx, rotate)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rotated != 2 || failed != 1 {
+		t.Errorf("rotated %d, failed %d; want 2 rewritten (legacy and the readable half of bad) and 1 unreadable", rotated, failed)
+	}
+	if s, b := read(legacy); *s != "v2:key" || *b != "v2:pass" {
+		t.Errorf("legacy row = %q, %q", *s, *b)
+	}
+	if s, b := read(current); *s != "v2:key" || b != nil {
+		t.Errorf("a row already rotated must stay as it is, got %q, %v", *s, b)
+	}
+	if s, b := read(bad); *s != "unreadable" || *b != "v2:pass" {
+		t.Errorf("an unreadable secret stays, the other one rotates: got %q, %q", *s, *b)
+	}
+	if s, _ := read(blank); *s != "" {
+		t.Errorf("a blank secret is left alone, got %q", *s)
+	}
+
+	// A second pass has nothing left to rewrite.
+	if rotated, _, err = repo.RotateTeslaMateSecrets(ctx, rotate); err != nil || rotated != 0 {
+		t.Errorf("second pass rewrote %d rows (%v), want 0", rotated, err)
+	}
+
+	// A credential saved while the pass is running is not overwritten by the older value that was read.
+	racy := source("racy", str("old"), nil)
+	rotated, _, err = repo.RotateTeslaMateSecrets(ctx, func(s string) (string, error) {
+		if s == "old" {
+			if _, err := pool.Exec(ctx, `UPDATE vehicle_data_sources SET secret_encrypted = 'saved-meanwhile' WHERE vehicle_id = $1`, racy); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return rotate(s)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s, _ := read(racy); *s != "saved-meanwhile" || rotated != 0 {
+		t.Errorf("the credential saved meanwhile was lost: %q, rotated %d", *s, rotated)
+	}
+
+	// With the real encryptor: a value stored the earlier way is readable before and after the rewrite.
+	enc, err := crypto.NewEncryptor("integration-secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := sha256.Sum256([]byte("integration-secret"))
+	block, _ := aes.NewCipher(key[:])
+	gcm, _ := cipher.NewGCM(block)
+	nonce := make([]byte, gcm.NonceSize())
+	oldValue := base64.StdEncoding.EncodeToString(gcm.Seal(nonce, nonce, []byte("tm-token"), nil))
+	if _, err := pool.Exec(ctx, `DELETE FROM vehicle_data_sources`); err != nil {
+		t.Fatal(err)
+	}
+	real := source("real", str(oldValue), nil)
+	if rotated, failed, err = repo.RotateTeslaMateSecrets(ctx, enc.Rotate); err != nil || rotated != 1 || failed != 0 {
+		t.Fatalf("real encryptor pass: rotated %d, failed %d, err %v; want 1 rewritten", rotated, failed, err)
+	}
+	stored, _ := read(real)
+	if crypto.IsLegacy(*stored) {
+		t.Fatalf("the value is still in the earlier form: %q", *stored)
+	}
+	if plain, err := enc.Decrypt(*stored); err != nil || plain != "tm-token" {
+		t.Errorf("Decrypt after the rewrite = %q, %v", plain, err)
 	}
 }

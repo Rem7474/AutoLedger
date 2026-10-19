@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log/slog"
 	"net"
 	"net/url"
@@ -256,6 +257,21 @@ func (c *Config) InsecureDefaults() []string {
 	}
 
 	return warnings
+}
+
+// minEncryptionKeyLength is the length under which the encryption secret is unlikely to be random: a generated
+// value (`openssl rand -hex 32`) has 64 characters.
+const minEncryptionKeyLength = 32
+
+// WeakEncryptionKey returns a warning when the encryption secret is short enough to be a guessable passphrase.
+// The key protecting the stored credentials is derived from it with a memory-hard function, which slows a guess
+// down but does not replace a long random value; the warning never blocks startup, since the secret cannot be
+// changed without re-entering the stored credentials.
+func (c *Config) WeakEncryptionKey() string {
+	if c.AppEncryptionKey == "" || len(c.AppEncryptionKey) >= minEncryptionKeyLength {
+		return ""
+	}
+	return fmt.Sprintf("AUTOLEDGER_ENCRYPTION_KEY has %d characters: a short value can be guessed from a database dump. Use a random value of at least %d characters (openssl rand -hex 32)", len(c.AppEncryptionKey), minEncryptionKeyLength)
 }
 
 // DefaultAllowedOrigins derives the CORS origins from the public base URL, since the embedded
