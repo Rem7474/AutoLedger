@@ -109,6 +109,7 @@ A read-only token (`read`) also opens a narrow read API under `/api/integrations
 | `GET /api/integrations/v1/vehicles/{vehicleId}/tags` | The drives of a vehicle split by tag over the whole history: distance, energy, tolls, allocated cost and cost per km of each tag and of the untagged drives. A drive with several tags counts in each. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/carpool` | The carpool totals of a vehicle and its most recent shared trips (`limit`, 10 by default, 30 at most) with their stops, costs and named passengers. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/trip-groups` | The journeys of a vehicle (`limit`, 20 by default, 50 at most): name, period, drives, distance, tolls and parking, carpool trips. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/tires` | The tires of a vehicle and their wear: position, distance, lifespan used, tread depth, condition, distance left, expected replacement day, cost per km. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/charging-places` | The charging of a vehicle by place (`months`, 12 by default, `0` for the whole history): named places with their addresses, sessions, energy, cost and price per kWh, the comparison with the home price and the most used locations linked to no place. |
 
 Conventions:

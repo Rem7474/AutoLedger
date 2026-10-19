@@ -34,6 +34,7 @@ type IntegrationReadHandler struct {
 	fleet      *services.FleetService       // optional: without it the fleet view is unavailable
 	energy     *services.EnergyStatsService // optional: without it the energy view has no electric side
 	residual   *services.ResidualService    // optional: without it the ownership view has no resale estimate
+	tireWear   *services.TireWearService    // optional: without it the tires view is unavailable
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {
