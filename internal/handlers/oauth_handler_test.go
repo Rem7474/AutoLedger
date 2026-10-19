@@ -305,7 +305,7 @@ func TestOAuthRegistrationRules(t *testing.T) {
 		t.Errorf("only the code grant: %d", rec.Code)
 	}
 
-	rec := register(`{"client_name":"  Evil\u0000 ‮` + strings.Repeat("n", 200) + `","redirect_uris":["https://a.example/cb"]}`)
+	rec := register(`{"client_name":"  Evil\u0000 \u202e` + strings.Repeat("n", 200) + `","redirect_uris":["https://a.example/cb"]}`)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("%d %s", rec.Code, rec.Body.String())
 	}
