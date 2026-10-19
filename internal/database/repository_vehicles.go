@@ -26,7 +26,7 @@ func (r *Repository) CreateVehicle(ctx context.Context, v *models.Vehicle) error
 		v.Powertrain = models.PowertrainEV
 	}
 	if v.Currency == "" {
-		v.Currency = "EUR"
+		return apierror.New("currency.required", "Choose a currency")
 	}
 	if !v.CanLinkTeslaMate() {
 		v.TeslaMateCarID = nil

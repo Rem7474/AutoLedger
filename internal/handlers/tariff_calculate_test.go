@@ -32,8 +32,8 @@ func TestCalculateSessionCostForVehicle(t *testing.T) {
 	if err := repo.CreateTariffPlan(ctx, plan); err != nil {
 		t.Fatal(err)
 	}
-	priced := &models.Vehicle{UserID: owner.ID, Name: "Priced", TeslaMateAuthType: models.AuthModeNone, TariffPlanID: &plan.ID}
-	bare := &models.Vehicle{UserID: stranger.ID, Name: "Bare", TeslaMateAuthType: models.AuthModeNone}
+	priced := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Priced", TeslaMateAuthType: models.AuthModeNone, TariffPlanID: &plan.ID}
+	bare := &models.Vehicle{Currency: "EUR", UserID: stranger.ID, Name: "Bare", TeslaMateAuthType: models.AuthModeNone}
 	for _, v := range []*models.Vehicle{priced, bare} {
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)

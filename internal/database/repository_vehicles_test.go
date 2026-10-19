@@ -24,7 +24,7 @@ func vehicleRepoFixture(t *testing.T, tag string) (*Repository, context.Context,
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: owner.ID, Name: "Fixture", Powertrain: models.PowertrainEV}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Fixture", Powertrain: models.PowertrainEV}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestVehicleLookupsAndWrites(t *testing.T) {
 		t.Fatalf("odometer = %v", got.CurrentOdometer)
 	}
 
-	missing := &models.Vehicle{ID: "00000000-0000-0000-0000-000000000000", Name: "x", Powertrain: models.PowertrainEV}
+	missing := &models.Vehicle{Currency: "EUR", ID: "00000000-0000-0000-0000-000000000000", Name: "x", Powertrain: models.PowertrainEV}
 	requireNotFound(t, repo.UpdateVehicle(ctx, missing))
 
 	requireNotFound(t, repo.DeleteVehicle(ctx, v.ID, guest.ID))
@@ -161,4 +161,16 @@ func TestVehicleLastOwnerGuards(t *testing.T) {
 	requireAPIError(t, repo.RemoveVehicleMember(ctx, v.ID, last.UserID), "member.last_owner_remove")
 
 	requireNotFound(t, repo.RemoveVehicleMember(ctx, v.ID, "00000000-0000-0000-0000-000000000000"))
+}
+
+func TestCreateVehicleRefusesAMissingCurrency(t *testing.T) {
+	repo, ctx, owner, _, _ := vehicleRepoFixture(t, "no-currency")
+	err := repo.CreateVehicle(ctx, &models.Vehicle{UserID: owner.ID, Name: "No currency", Powertrain: models.PowertrainEV})
+	if err == nil {
+		t.Fatal("a vehicle is created in a currency that is chosen, never assumed")
+	}
+	vehicles, err := repo.ListVehiclesByUserID(ctx, owner.ID)
+	if err != nil || len(vehicles) != 1 {
+		t.Fatalf("the refused vehicle must not be stored: %d, %v", len(vehicles), err)
+	}
 }

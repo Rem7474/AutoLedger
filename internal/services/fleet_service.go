@@ -21,7 +21,7 @@ const (
 // fleetStore is the slice of *database.Repository that FleetService uses.
 type fleetStore interface {
 	GetFleetSummary(ctx context.Context, userID, timezone string) (*models.FleetSummaryResponse, error)
-	SetFleetMonthlyBudget(ctx context.Context, userID string, budget *money.Cents) error
+	SetFleetMonthlyBudget(ctx context.Context, userID string, budget *money.Cents) (*string, error)
 }
 
 // vehicleTCO is the slice of *TCOService that FleetService uses.
@@ -194,7 +194,7 @@ func observedMonths(costs []MonthlyCost, now time.Time) int {
 	return (now.Year()-first.Year())*12 + int(now.Month()-first.Month()) + 1
 }
 
-// SetMonthlyBudget stores the household monthly budget; nil removes it.
-func (s *FleetService) SetMonthlyBudget(ctx context.Context, userID string, budget *money.Cents) error {
+// SetMonthlyBudget stores the household monthly budget and returns the currency it is in; nil removes it.
+func (s *FleetService) SetMonthlyBudget(ctx context.Context, userID string, budget *money.Cents) (*string, error) {
 	return s.repo.SetFleetMonthlyBudget(ctx, userID, budget)
 }

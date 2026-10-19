@@ -118,4 +118,3 @@ func TestNewUUID(t *testing.T) {
 		t.Fatalf("UUID collision detected: %s == %s", u1, u2)
 	}
 }
-

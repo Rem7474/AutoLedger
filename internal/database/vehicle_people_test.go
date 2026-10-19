@@ -41,7 +41,7 @@ func TestVehiclePeople(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: owner.ID, Name: "Family car", Powertrain: models.PowertrainEV}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Family car", Powertrain: models.PowertrainEV}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +154,7 @@ func TestFleetSharesGroupAccountAndGuestDrivers(t *testing.T) {
 	}
 	repo := NewRepository(pool)
 	owner, _ := repo.CreateUser(ctx, "owner-fleet-people@example.com", "x")
-	v := &models.Vehicle{UserID: owner.ID, Name: "Shared", Powertrain: models.PowertrainEV}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Shared", Powertrain: models.PowertrainEV}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

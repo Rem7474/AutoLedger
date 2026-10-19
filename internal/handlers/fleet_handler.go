@@ -43,9 +43,10 @@ func (h *FleetHandler) SetBudget(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusBadRequest, apierror.New("fleet.invalid_budget", "The budget must be a positive amount"))
 		return
 	}
-	if err := h.fleetService.SetMonthlyBudget(r.Context(), middleware.GetUserID(r.Context()), req.Amount); err != nil {
+	currency, err := h.fleetService.SetMonthlyBudget(r.Context(), middleware.GetUserID(r.Context()), req.Amount)
+	if err != nil {
 		writeRepoError(w, r, err, "Failed to save the fleet budget")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"monthly_budget": req.Amount})
+	writeJSON(w, http.StatusOK, map[string]any{"monthly_budget": req.Amount, "budget_currency": currency})
 }

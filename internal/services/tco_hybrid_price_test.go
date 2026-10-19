@@ -17,7 +17,7 @@ func TestIntegrationHybridPricesPerKwhIgnoreFuelAndUnpricedCharges(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "PHEV", Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 10000}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "PHEV", Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 10000}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

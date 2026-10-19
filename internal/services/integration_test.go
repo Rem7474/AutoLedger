@@ -67,6 +67,7 @@ func mustVehicle(t *testing.T, repo *database.Repository, email string) *models.
 	carID := 1
 	apiURL := "http://teslamate.invalid"
 	v := &models.Vehicle{
+		Currency:          "EUR",
 		UserID:            u.ID,
 		Name:              "Connected EV",
 		TeslaMateCarID:    &carID,
@@ -230,7 +231,7 @@ func TestIntegrationVehicleCurrencyIsFixedAtCreation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defaultVehicle := &models.Vehicle{UserID: defaultUser.ID, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone}
+	defaultVehicle := &models.Vehicle{Currency: "EUR", UserID: defaultUser.ID, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, defaultVehicle); err != nil {
 		t.Fatal(err)
 	}
@@ -1907,7 +1908,7 @@ func TestIntegrationICEVehicleFuelLogs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ice := &models.Vehicle{UserID: u.ID, Name: "Clio", Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 10000}
+	ice := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Clio", Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 10000}
 	if err := repo.CreateVehicle(ctx, ice); err != nil {
 		t.Fatal(err)
 	}
@@ -2025,11 +2026,11 @@ func TestIntegrationManualReadingsAndFillUpsAreIndependent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ice := &models.Vehicle{UserID: u.ID, Name: "Clio", Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone}
+	ice := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Clio", Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, ice); err != nil {
 		t.Fatal(err)
 	}
-	ev := &models.Vehicle{UserID: u.ID, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 20000}
+	ev := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 20000}
 	if err := repo.CreateVehicle(ctx, ev); err != nil {
 		t.Fatal(err)
 	}
@@ -2220,7 +2221,7 @@ func TestIntegrationVehicleGrafanaURL(t *testing.T) {
 		t.Fatal(err)
 	}
 	url := "http://192.168.1.50:3000"
-	v := &models.Vehicle{UserID: u.ID, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone, TeslaMateGrafanaURL: &url}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Model 3", TeslaMateAuthType: models.AuthModeNone, TeslaMateGrafanaURL: &url}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -2258,7 +2259,7 @@ func TestIntegrationEstimatedEnergyStartsWithFirstManualCharge(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 11000,
+		v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 11000,
 			EstimatedKwh100km: &kwh100, EstimatedPricePerKwh: &price}
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
@@ -2491,7 +2492,7 @@ func TestIntegrationHybridVehicleCombinesEnergies(t *testing.T) {
 		t.Fatal(err)
 	}
 	newHybrid := func(name string) *models.Vehicle {
-		v := &models.Vehicle{UserID: u.ID, Name: name, Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 10000}
+		v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: name, Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 10000}
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
 		}
@@ -2826,7 +2827,7 @@ func TestIntegrationEstimatedEnergyAtAFreePrice(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 11000,
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 11000,
 		EstimatedKwh100km: &kwh100, EstimatedPricePerKwh: &price}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)

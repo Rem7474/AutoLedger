@@ -18,7 +18,7 @@ func TestCSVImportIsAllOrNothingAndPreviewMatchesExecute(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestCSVImportBatchesListAndUndo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "Car", Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Car", Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func TestCSVImportBatchesListAndUndo(t *testing.T) {
 	if _, err := repo.UndoImportBatch(ctx, v.ID, charges.BatchID); !errors.Is(err, database.ErrNotFound) {
 		t.Fatalf("second undo: %v", err)
 	}
-	other := &models.Vehicle{UserID: u.ID, Name: "Other", TeslaMateAuthType: models.AuthModeNone}
+	other := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Other", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, other); err != nil {
 		t.Fatal(err)
 	}

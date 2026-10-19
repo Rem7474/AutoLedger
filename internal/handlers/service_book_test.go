@@ -26,7 +26,7 @@ func TestServiceBookDownload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	veh := &models.Vehicle{UserID: owner.ID, Name: "Book car", Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 30000}
+	veh := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Book car", Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 30000}
 	if err := repo.CreateVehicle(ctx, veh); err != nil {
 		t.Fatal(err)
 	}

@@ -21,9 +21,9 @@ func (f *fakeFleetStore) GetFleetSummary(context.Context, string, string) (*mode
 	return f.summary, f.err
 }
 
-func (f *fakeFleetStore) SetFleetMonthlyBudget(_ context.Context, _ string, budget *money.Cents) error {
+func (f *fakeFleetStore) SetFleetMonthlyBudget(_ context.Context, _ string, budget *money.Cents) (*string, error) {
 	f.budget, f.saved = budget, true
-	return f.err
+	return nil, f.err
 }
 
 type fakeVehicleTCO map[string]*TCOSummary
@@ -99,13 +99,13 @@ func TestFleetSummaryAndBudgetReportStoreErrors(t *testing.T) {
 	if _, err := svc.GetSummary(context.Background(), "u"); !errors.Is(err, boom) {
 		t.Errorf("summary error: got %v, want the store's", err)
 	}
-	if err := svc.SetMonthlyBudget(context.Background(), "u", nil); !errors.Is(err, boom) {
+	if _, err := svc.SetMonthlyBudget(context.Background(), "u", nil); !errors.Is(err, boom) {
 		t.Errorf("budget error: got %v, want the store's", err)
 	}
 
 	store := &fakeFleetStore{}
 	budget := money.Cents(25000)
-	if err := (&FleetService{repo: store}).SetMonthlyBudget(context.Background(), "u", &budget); err != nil || !store.saved || *store.budget != 25000 {
+	if _, err := (&FleetService{repo: store}).SetMonthlyBudget(context.Background(), "u", &budget); err != nil || !store.saved || *store.budget != 25000 {
 		t.Errorf("budget stored: err %v, saved %v", err, store.saved)
 	}
 }

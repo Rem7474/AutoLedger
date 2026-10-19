@@ -16,9 +16,9 @@ func TestListVehiclesWithActiveWebhook(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	disabled := &models.Vehicle{UserID: owner.ID, Name: "Disabled hook", Powertrain: models.PowertrainICE}
-	blank := &models.Vehicle{UserID: owner.ID, Name: "Blank URL", Powertrain: models.PowertrainICE}
-	none := &models.Vehicle{UserID: owner.ID, Name: "No hook", Powertrain: models.PowertrainICE}
+	disabled := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Disabled hook", Powertrain: models.PowertrainICE}
+	blank := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Blank URL", Powertrain: models.PowertrainICE}
+	none := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "No hook", Powertrain: models.PowertrainICE}
 	for _, v := range []*models.Vehicle{disabled, blank, none} {
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)

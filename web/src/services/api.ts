@@ -583,7 +583,7 @@ export const api = {
 
   // Household Fleet Summary
   getFleetSummary: () => request<FleetSummaryResponse>('/fleet/summary'),
-  setFleetBudget: (amount: number | null) => request<{ monthly_budget: number | null }>('/fleet/budget', { method: 'PUT', body: JSON.stringify({ amount }) }),
+  setFleetBudget: (amount: number | null) => request<{ monthly_budget: number | null; budget_currency: string | null }>('/fleet/budget', { method: 'PUT', body: JSON.stringify({ amount }) }),
 }
 
 export interface MaintenanceReminder {
@@ -837,6 +837,8 @@ export interface FleetSummaryResponse {
   current_month: string
   current_month_cost: number
   monthly_budget: number | null
+  /** Currency the budget was set in; null without a budget. */
+  budget_currency: string | null
   current_month_distance_km: number
   current_month_energy_kwh: number
   monthly_costs: FleetMonthlyCost[]

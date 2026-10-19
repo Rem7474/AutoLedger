@@ -22,11 +22,11 @@ func TestUpdateDrivesDriverAssignsAndClearsInOneCall(t *testing.T) {
 		t.Fatal(err)
 	}
 	kwh100 := 20.0
-	v := &models.Vehicle{UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV", TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
-	other := &models.Vehicle{UserID: u.ID, Name: "Other", TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
+	other := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Other", TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
 	if err := repo.CreateVehicle(ctx, other); err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestUpdateDrivesDriverAssignsAndClearsInOneCall(t *testing.T) {
 	}
 
 	// Drives of another vehicle are not touched even when their id is sent.
-	foreign := &models.Vehicle{UserID: u.ID, Name: "Foreign", TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
+	foreign := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Foreign", TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
 	if err := repo.CreateVehicle(ctx, foreign); err != nil {
 		t.Fatal(err)
 	}

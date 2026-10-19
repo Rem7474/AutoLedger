@@ -24,8 +24,8 @@ func TestPendingChargeAssignment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ev1 := &models.Vehicle{UserID: u.ID, Name: "EV 1", TeslaMateAuthType: models.AuthModeNone}
-	ev2 := &models.Vehicle{UserID: u.ID, Name: "EV 2", TeslaMateAuthType: models.AuthModeNone}
+	ev1 := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV 1", TeslaMateAuthType: models.AuthModeNone}
+	ev2 := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "EV 2", TeslaMateAuthType: models.AuthModeNone}
 	for _, v := range []*models.Vehicle{ev1, ev2} {
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)

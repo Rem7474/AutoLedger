@@ -37,7 +37,7 @@ func newReminderAPI(t *testing.T, tag string) *reminderAPI {
 		return u
 	}
 	owner, viewer := mk("owner"), mk("viewer")
-	v := &models.Vehicle{UserID: owner.ID, Name: "Reminder car", Powertrain: models.PowertrainICE, CurrentOdometer: 30000}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Reminder car", Powertrain: models.PowertrainICE, CurrentOdometer: 30000}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

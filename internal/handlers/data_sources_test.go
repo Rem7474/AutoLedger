@@ -25,7 +25,7 @@ func TestGetDataSourcesSummarisesOriginsAndHidesConnectionFromNonOwners(t *testi
 		t.Fatal(err)
 	}
 	url := "http://teslamate.local:8080"
-	v := &models.Vehicle{UserID: owner.ID, Name: "Car", TeslaMateAPIURL: &url, TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Car", TeslaMateAPIURL: &url, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

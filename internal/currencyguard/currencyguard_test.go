@@ -13,10 +13,9 @@ import (
 // allowed lists the sources that may name the euro, with the reason. Everywhere else an amount carries the
 // currency of its vehicle (or of the record that was entered), never an assumed one.
 var allowed = map[string]string{
-	"internal/services/toll_apply.go":          "the toll dataset (French autoroutes) is priced in euros; tolls are only applied to euro vehicles",
-	"internal/services/comparison_service.go":  "the built-in indicative prices are written for the euro only",
-	"internal/demodata/demodata.go":            "the demonstration vehicles are euro vehicles",
-	"internal/database/repository_vehicles.go": "a vehicle stored without a currency (test fixtures; the API requires one) keeps the column default",
+	"internal/services/toll_apply.go":         "the toll dataset (French autoroutes) is priced in euros; tolls are only applied to euro vehicles",
+	"internal/services/comparison_service.go": "the built-in indicative prices are written for the euro only",
+	"internal/demodata/demodata.go":           "the demonstration vehicles are euro vehicles",
 }
 
 func TestNoAssumedCurrencyInSources(t *testing.T) {

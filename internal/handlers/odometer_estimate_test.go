@@ -24,7 +24,7 @@ func TestOdometerEstimateInterpolatesBetweenReadings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: owner.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

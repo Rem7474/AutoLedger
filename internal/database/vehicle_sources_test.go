@@ -279,7 +279,7 @@ func TestDropLegacyTeslaMateColumns(t *testing.T) {
 	}
 
 	// A new vehicle gets the next free car id from the sources.
-	nv := &models.Vehicle{UserID: userID, Name: "Next", Powertrain: models.PowertrainEV}
+	nv := &models.Vehicle{Currency: "EUR", UserID: userID, Name: "Next", Powertrain: models.PowertrainEV}
 	url := "http://next:8080"
 	nv.TeslaMateAPIURL = &url
 	if err := repo.CreateVehicle(ctx, nv); err != nil {

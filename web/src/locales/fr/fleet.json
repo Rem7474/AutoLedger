@@ -36,7 +36,8 @@
     "spent": "{spent} sur {budget} ({percent} %)",
     "remaining": "{amount} restants",
     "over": "{amount} de dépassement",
-    "otherCurrency": "{count} véhicule dans une autre devise n'est pas compté dans ce budget en {currency} | {count} véhicules dans d'autres devises ne sont pas comptés dans ce budget en {currency}"
+    "otherCurrency": "{count} véhicule dans une autre devise n'est pas compté dans ce budget en {currency} | {count} véhicules dans d'autres devises ne sont pas comptés dans ce budget en {currency}",
+    "staleCurrency": "Le budget de {budget} n'est plus dans la devise du premier véhicule ({currency}) : redéfinissez-le pour suivre ce mois-ci."
   },
   "compare": {
     "title": "Véhicules côte à côte",

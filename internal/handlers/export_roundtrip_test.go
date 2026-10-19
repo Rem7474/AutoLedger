@@ -19,7 +19,7 @@ func TestExportRoundTripReproducesTheData(t *testing.T) {
 		t.Fatal(err)
 	}
 	newVehicle := func(name string) *models.Vehicle {
-		v := &models.Vehicle{UserID: u.ID, Name: name, Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone}
+		v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: name, Powertrain: models.PowertrainPHEV, TeslaMateAuthType: models.AuthModeNone}
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
 		}
@@ -78,7 +78,7 @@ func TestExportFiltersFormatAndSafety(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: u.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: "Car", TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

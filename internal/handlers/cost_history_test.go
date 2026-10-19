@@ -25,7 +25,7 @@ func TestCostHistoryIsScopedToTheVehicleOwnerAndValidatesTheKind(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := &models.Vehicle{UserID: owner.ID, Name: "EV", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "EV", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}

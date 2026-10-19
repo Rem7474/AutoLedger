@@ -27,11 +27,11 @@ func TestChargingPlaces(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ev := &models.Vehicle{UserID: owner.ID, Name: "EV", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone}
+	ev := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "EV", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, ev); err != nil {
 		t.Fatal(err)
 	}
-	own := &models.Vehicle{UserID: stranger.ID, Name: "Other EV", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone}
+	own := &models.Vehicle{Currency: "EUR", UserID: stranger.ID, Name: "Other EV", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone}
 	if err := repo.CreateVehicle(ctx, own); err != nil {
 		t.Fatal(err)
 	}

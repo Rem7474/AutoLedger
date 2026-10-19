@@ -23,7 +23,7 @@ func TestReminderLinkedToMaintenance(t *testing.T) {
 		t.Fatal(err)
 	}
 	newVehicle := func(name string) *models.Vehicle {
-		v := &models.Vehicle{UserID: u.ID, Name: name, Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 30000}
+		v := &models.Vehicle{Currency: "EUR", UserID: u.ID, Name: name, Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone, CurrentOdometer: 30000}
 		if err := repo.CreateVehicle(ctx, v); err != nil {
 			t.Fatal(err)
 		}

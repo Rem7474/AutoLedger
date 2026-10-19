@@ -50,7 +50,7 @@ func newDriveAPI(t *testing.T, tag string) *driveAPI {
 	}
 	owner, viewer := mk("owner"), mk("viewer")
 	kwh100 := 20.0
-	v := &models.Vehicle{UserID: owner.ID, Name: "Drive car", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
+	v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: "Drive car", Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone, EstimatedKwh100km: &kwh100}
 	if err := repo.CreateVehicle(ctx, v); err != nil {
 		t.Fatal(err)
 	}
