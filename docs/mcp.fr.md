@@ -4,7 +4,7 @@ AutoLedger peut servir un point d'accès [Model Context Protocol](https://modelc
 
 ## L'activer
 
-Définissez `AUTOLEDGER_MCP_ENABLED=true` et `AUTOLEDGER_BASE_URL` avec l'adresse publique de l'instance (celle qu'utilisera l'assistant, en `https`). Le point d'accès est `<URL de base>/mcp`. Tant que la variable n'est pas définie, le point d'accès et les pages d'autorisation n'existent pas.
+Définissez `AUTOLEDGER_MCP_ENABLED=true` (dans `.env` avec Docker Compose) et `AUTOLEDGER_BASE_URL` avec l'adresse publique de l'instance (celle qu'utilisera l'assistant, en `https`). Le point d'accès est `<URL de base>/mcp`. Tant que la variable n'est pas définie, le point d'accès et les pages d'autorisation n'existent pas.
 
 Le reverse proxy doit transmettre l'en-tête `Authorization` et l'en-tête `Host` d'origine, comme pour le reste de l'application.
 
