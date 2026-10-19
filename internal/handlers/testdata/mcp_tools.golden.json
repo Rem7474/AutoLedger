@@ -5,6 +5,530 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "What a vehicle cost month by month, oldest first: for each month the cost by category (energy, tolls, maintenance, insurance, financing, tires, other), the distance and the cost per kilometre, with the listed months added up. Use it to compare periods or to see which month was expensive and in which category. Without from and to it returns the last 12 months. A month in progress is flagged: its figures are not final.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "description": "first month to include, YYYY-MM; without from and to the last 12 months are returned",
+          "type": "string"
+        },
+        "to": {
+          "description": "last month to include, YYYY-MM; the month in progress when omitted",
+          "type": "string"
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_monthly_costs",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_per_km": {
+          "additionalProperties": false,
+          "description": "total cost of the listed months divided by their distance; null while the distance is unknown",
+          "properties": {
+            "amount": {
+              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "currency": {
+          "description": "currency of every amount",
+          "type": "string"
+        },
+        "distance": {
+          "additionalProperties": false,
+          "description": "distance of the listed months added up",
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "months": {
+          "description": "consecutive calendar months, oldest first; a month with no record is present with zero amounts",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "cost_per_km": {
+                "additionalProperties": false,
+                "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "costs": {
+                "additionalProperties": false,
+                "description": "what was spent in the month, by category; the month in progress counts the instalments that fall due later in it",
+                "properties": {
+                  "energy": {
+                    "additionalProperties": false,
+                    "description": "electricity charged and fuel bought",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "financing": {
+                    "additionalProperties": false,
+                    "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "insurance": {
+                    "additionalProperties": false,
+                    "description": "insurance premiums",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "maintenance": {
+                    "additionalProperties": false,
+                    "description": "servicing and unplanned repairs, insurance deductibles included",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "other": {
+                    "additionalProperties": false,
+                    "description": "subscriptions, taxes, accessories and anything else",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "tires": {
+                    "additionalProperties": false,
+                    "description": "tires, counted in full in the month they were bought",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "tolls": {
+                    "additionalProperties": false,
+                    "description": "tolls, parking and ferries",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "total": {
+                    "additionalProperties": false,
+                    "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "energy",
+                  "tolls",
+                  "maintenance",
+                  "insurance",
+                  "financing",
+                  "tires",
+                  "other",
+                  "total"
+                ],
+                "type": "object"
+              },
+              "distance": {
+                "additionalProperties": false,
+                "description": "distance driven in the month, tracked plus estimated for the untracked part",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "in_progress": {
+                "description": "true for the month in progress, whose figures are not final",
+                "type": "boolean"
+              },
+              "month": {
+                "description": "calendar month, YYYY-MM",
+                "type": "string"
+              },
+              "scheduled": {
+                "additionalProperties": false,
+                "description": "part of the total that falls due later in the month in progress (instalments dated after today); null when none or for a past month",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              }
+            },
+            "required": [
+              "month",
+              "in_progress",
+              "costs",
+              "scheduled",
+              "distance",
+              "cost_per_km"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "total": {
+          "additionalProperties": false,
+          "description": "the listed months added up, by category",
+          "properties": {
+            "energy": {
+              "additionalProperties": false,
+              "description": "electricity charged and fuel bought",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "financing": {
+              "additionalProperties": false,
+              "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "insurance": {
+              "additionalProperties": false,
+              "description": "insurance premiums",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "maintenance": {
+              "additionalProperties": false,
+              "description": "servicing and unplanned repairs, insurance deductibles included",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "other": {
+              "additionalProperties": false,
+              "description": "subscriptions, taxes, accessories and anything else",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "tires": {
+              "additionalProperties": false,
+              "description": "tires, counted in full in the month they were bought",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "tolls": {
+              "additionalProperties": false,
+              "description": "tolls, parking and ferries",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "total": {
+              "additionalProperties": false,
+              "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "energy",
+            "tolls",
+            "maintenance",
+            "insurance",
+            "financing",
+            "tires",
+            "other",
+            "total"
+          ],
+          "type": "object"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these figures belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "currency",
+        "months",
+        "total",
+        "distance",
+        "cost_per_km"
+      ],
+      "type": "object"
+    },
+    "title": "Monthly costs"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "What a vehicle cost over its last 12 months and since it was bought, by category (energy, tolls, maintenance, insurance, financing, tires, other), with the cost per kilometre and a completeness score. Amounts are in the vehicle's currency and are the cash spent: the purchase and the depreciation are not in them.",
     "inputSchema": {
       "additionalProperties": false,

@@ -370,3 +370,36 @@ func TestMCPToolCallsAreLoggedWithoutArgumentsOrResults(t *testing.T) {
 		t.Errorf("one line per tool call, not for the protocol's other methods:\n%s", out)
 	}
 }
+
+func TestMCPMonthlyCostsServeTheSeriesAndExplainABadMonth(t *testing.T) {
+	f := newMCPFixture(t)
+	ctx := context.Background()
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "get_monthly_costs", Arguments: map[string]any{"vehicle_id": "daily"}})
+	if err != nil || res.IsError {
+		t.Fatalf("a vehicle without any record still has a series: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var series IntegrationMonthlyCosts
+	if err := json.Unmarshal(raw, &series); err != nil {
+		t.Fatal(err)
+	}
+	if series.VehicleID != f.mine.ID || series.Currency != "GBP" || series.Total.Total.Currency != "GBP" || strings.Contains(string(raw), f.vin) {
+		t.Errorf("monthly costs: %s", raw)
+	}
+
+	for _, args := range []map[string]any{
+		{"vehicle_id": f.mine.ID, "from": "March 2026"},
+		{"vehicle_id": f.mine.ID, "from": "2026-05", "to": "2026-01"},
+	} {
+		res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "get_monthly_costs", Arguments: args})
+		if err != nil || !res.IsError {
+			t.Fatalf("%v must be an error the model can read: %v %+v", args, err, res)
+		}
+		body, _ := json.Marshal(res.Content)
+		if !strings.Contains(string(body), "YYYY-MM") && !strings.Contains(string(body), "after its end") {
+			t.Errorf("the error says what to fix: %s", body)
+		}
+	}
+}

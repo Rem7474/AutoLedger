@@ -40,6 +40,7 @@ La première doit répondre `401` avec un en-tête `WWW-Authenticate: Bearer res
 | `get_vehicle_costs` | Ce qu'un véhicule a coûté sur ses 12 derniers mois et depuis son achat, par catégorie, avec le coût au km et un score de complétude. Prend un `vehicle_id`. |
 | `get_vehicle_data_gaps` | Ce qui manque aux données : trous et anomalies de compteur, charges sans coût, trajets non qualifiés, distance non suivie, assurance ou acquisition manquante, et ce qu'il faut compléter classé par valeur. Prend un `vehicle_id`. |
 | `list_vehicle_trips` | Les trajets d'un véhicule, du plus récent au plus ancien : heures de départ et d'arrivée, adresses `from` et `to`, distance, durée, énergie, péages et parkings, étiquettes. Prend un `vehicle_id` et, en option, `search` (texte dans une adresse, pour retrouver « le trajet vers Lyon »), `from` et `to` (jours `AAAA-MM-JJ`, UTC) et `limit` (20 par défaut, 50 au plus) ; `matching` donne le nombre de trajets qui correspondent. |
+| `get_monthly_costs` | Ce qu'un véhicule a coûté mois par mois, du plus ancien au plus récent : le coût de chaque mois par catégorie, sa distance et son coût au km, avec les mois listés additionnés. Prend un `vehicle_id` et, en option, `from` et `to` (mois, `AAAA-MM`) ; sans eux, les 12 derniers mois. Le mois en cours est signalé : ses chiffres ne sont pas définitifs. |
 
 Partout où un outil prend un `vehicle_id`, le nom du véhicule fonctionne aussi tant qu'aucun autre véhicule ne le porte ; sinon l'erreur liste les véhicules du compte.
 
