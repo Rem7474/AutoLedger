@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"flag"
+	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -87,5 +89,37 @@ func TestEveryFieldOfEveryMCPToolIsDescribed(t *testing.T) {
 				t.Errorf("fields without a description:\n  %s", strings.Join(missing, "\n  "))
 			}
 		}
+	}
+}
+
+var updateMCPGolden = flag.Bool("update-mcp-golden", false, "rewrite testdata/mcp_tools.golden.json")
+
+// The tools and their schemas are a contract with every client: a rename, a removed field or a changed type breaks
+// an assistant's saved prompts. This test makes such a change a visible diff in review instead of a side effect.
+// Regenerate with: go test ./internal/handlers -run TestMCPToolListMatchesTheGoldenFile -update-mcp-golden
+func TestMCPToolListMatchesTheGoldenFile(t *testing.T) {
+	tools := listMCPTools(t)
+	sort.Slice(tools, func(i, j int) bool { return tools[i].Name < tools[j].Name })
+	got, err := json.MarshalIndent(tools, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got = append(got, '\n')
+
+	const path = "testdata/mcp_tools.golden.json"
+	if *updateMCPGolden {
+		if err := os.MkdirAll("testdata", 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, got, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	want, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("%v (generate it with -update-mcp-golden)", err)
+	}
+	if string(want) != string(got) {
+		t.Errorf("the advertised tools changed; review the diff and regenerate with -update-mcp-golden\n--- want\n%s\n--- got\n%s", want, got)
 	}
 }
