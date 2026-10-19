@@ -93,12 +93,9 @@
     "monthlyConsumptionInKwhPer": "Monthly consumption in kWh per 100 {unit}",
     "monthlyConsumption": "Monthly consumption",
     "completeThem": "Complete them",
-    "extrapolatedFromTheChargesWhose": "Extrapolated from the charges whose cost and battery level are known.",
     "fullCharge": "Full charge",
-    "energyStoredInTheBattery": "Energy stored in the battery over energy drawn from the grid.",
     "chargingEfficiency": "Charging efficiency",
     "energyCost": "Energy cost",
-    "energyUsedWhileDrivingMeasured": "Energy used while driving, as reported by the data source.",
     "actualConsumption": "Consumption at the wheel",
     "period": "Period",
     "whatTheCarUsesAnd": "What the car uses and what the energy really costs.",
@@ -127,7 +124,8 @@
     "placeShare": "{share} % of kWh ({kwh} kWh)",
     "placeUnknown": "{count} session(s) without a cost, not in the price",
     "placeLink": "All places and prices",
-    "noDataHint": "It appears once odometer readings and charges cover the same period."
+    "noDataHint": "It appears once odometer readings and charges cover the same period.",
+    "wholeHistory": "Whole history"
   },
   "energyTemperatureSection": {
     "drivesOfAtLeast5": "Drives of at least {min}, grouped by average outside temperature; bands under {band} are hidden.",

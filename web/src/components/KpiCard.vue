@@ -19,6 +19,9 @@ const props = withDefaults(defineProps<{
   term?: string
   icon?: Component
   tone?: 'default' | 'sky' | 'success' | 'warning'
+  // A status tile (good or worse than expected): the tone also tints the border and the background, and a compact
+  // tile shows its icon in front of the label.
+  tinted?: boolean
   // The dense tile of a panel inside a disclosure: no icon, smaller figure, a darker background.
   compact?: boolean
   delta?: KpiDelta
@@ -30,6 +33,8 @@ const emit = defineEmits<{ action: [] }>()
 const unknown = computed(() => props.value == null || props.value === UNKNOWN_AMOUNT)
 
 const valueTones = { default: 'text-white', sky: 'text-sky-400', success: 'text-success-400', warning: 'text-warning-400' }
+const tints = { success: 'border-success-500/30 bg-success-500/5', warning: 'border-warning-500/30 bg-warning-500/5' }
+const tintClass = computed(() => (props.tinted ? tints[props.tone as 'success' | 'warning'] : undefined))
 const deltaTones = { good: 'text-success-400', warning: 'text-warning-400', bad: 'text-danger-400', neutral: 'text-slate-300' }
 const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text-sky-400 underline after:absolute after:inset-0 after:content-['']"
 </script>
@@ -37,10 +42,14 @@ const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text
 <template>
   <div
     class="relative flex flex-col"
-    :class="compact ? 'rounded-xl border border-slate-800 bg-slate-950/60 p-3' : 'rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-sm transition-colors hover:border-slate-600'"
+    :class="[
+      compact ? 'rounded-xl border p-3' : 'rounded-2xl border p-4 shadow-sm transition-colors hover:border-slate-600',
+      tintClass ?? (compact ? 'border-slate-800 bg-slate-950/60' : 'border-slate-800 bg-slate-900'),
+    ]"
   >
     <div class="flex items-start justify-between gap-2" :class="compact ? '' : 'mb-2 min-h-8'">
-      <span class="text-xs font-semibold uppercase text-slate-400" :class="compact ? 'tracking-wide' : 'tracking-wider'">
+      <span class="text-xs" :class="[compact ? 'font-medium' : 'font-semibold uppercase tracking-wider', tinted ? valueTones[tone] : 'text-slate-400']">
+        <component :is="icon" v-if="icon && compact" class="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" aria-hidden="true" />
         {{ label }}
         <span v-if="term" class="relative z-10"><GlossaryTip :term="term" /></span>
         <span v-if="period" class="block font-medium normal-case tracking-normal text-slate-400">{{ period }}</span>

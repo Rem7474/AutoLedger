@@ -27,5 +27,13 @@
     "label": "Estimated energy",
     "definition": "Energy priced for distance driven without drive data, from the vehicle average consumption and price."
   },
+  "chargeEfficiency": {
+    "label": "Charging efficiency",
+    "definition": "Energy stored in the battery over energy drawn from the grid."
+  },
+  "fullChargeCost": {
+    "label": "Cost of a full charge",
+    "definition": "Extrapolated from the charges whose cost and battery level are known."
+  },
   "about": "Definition of {term}"
 }

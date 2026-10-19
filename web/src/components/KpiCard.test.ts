@@ -40,6 +40,30 @@ describe('KpiCard', () => {
     const html = await render({ label: 'Consumption', value: '15,2', unit: ' kWh/100 km', compact: true })
     expect(html).toContain('bg-slate-950/60')
     expect(html).toContain('text-xl')
+    expect(html).not.toContain('uppercase')
+  })
+
+  it('keeps the uppercase label on the full-size card', async () => {
+    expect(await render({ label: 'Economic cost', value: '0,142' })).toContain('uppercase')
+  })
+
+  it('tints a status tile with its tone and keeps the plain tile otherwise', async () => {
+    const good = await render({ label: 'Saving', value: '5 €', tone: 'success', tinted: true, compact: true })
+    expect(good).toContain('border-success-500/30')
+    expect(good).toContain('bg-success-500/5')
+    expect(good).not.toContain('bg-slate-950/60')
+    const worse = await render({ label: 'Extra', value: '5 €', tone: 'warning', tinted: true })
+    expect(worse).toContain('border-warning-500/30')
+    // A tone alone colours the value without tinting the tile
+    const plain = await render({ label: 'Net', value: '5 €', tone: 'success' })
+    expect(plain).toContain('text-success-400')
+    expect(plain).not.toContain('bg-success-500/5')
+  })
+
+  it('shows the icon of a compact tile in front of its label', async () => {
+    const icon = { render: () => h('svg', { class: 'piggy' }) }
+    expect(await render({ label: 'Saving', value: '5 €', compact: true, icon })).toContain('class="piggy mr-1.5')
+    expect(await render({ label: 'Saving', value: '5 €', icon })).not.toContain('mr-1.5')
   })
 
   it('adds the definition tip when a glossary term is given', async () => {

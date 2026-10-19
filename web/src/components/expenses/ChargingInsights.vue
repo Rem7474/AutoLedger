@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { MapPin, PiggyBank, ChevronDown } from 'lucide-vue-next'
 import CostDonut from '@/components/costs/CostDonut.vue'
+import KpiCard from '@/components/KpiCard.vue'
 import { api } from '@/services/api'
 import { currencySymbol, formatAmount } from '@/currency'
 import { intlLocale, t } from '@/i18n'
@@ -193,62 +194,58 @@ onBeforeUnmount(() => {
 
     <p v-if="empty" class="text-xs text-slate-400 py-6 text-center">{{ $t('expenses.chargingInsights.emptyPeriod') }}</p>
     <template v-else-if="stats">
-    <dl class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 items-start">
-      <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl">
-        <dt class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.energy') }}</dt>
-        <dd class="text-lg font-extrabold text-white">{{ $t('expenses.chargingInsights.kwh', { value: formatNumber(totals?.kwh ?? 0, 0) }) }}</dd>
-        <dd class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.sessionsCount', { count: stats.summary.sessions }, stats.summary.sessions) }}</dd>
-        <dd v-if="totals && totals.estimatedKwh > 0" class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.estimatedPart', { kwh: formatNumber(totals.estimatedKwh, 0), distance: formatDistance(totals.estimatedKm) }) }}</dd>
-      </div>
-      <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl">
-        <dt class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.spent') }}</dt>
-        <dd class="text-lg font-extrabold text-white">{{ formatAmount(totals?.cost ?? 0, currency) }}</dd>
-        <dd v-if="totals && totals.estimatedCost > 0" class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.estimatedCost', { amount: formatAmount(totals.estimatedCost, currency) }) }}</dd>
-        <dd v-if="stats.summary.unknown_sessions" class="text-xs text-warning-400">{{ $t('expenses.chargingInsights.unknownCost', { count: stats.summary.unknown_sessions, kwh: formatNumber(stats.summary.unknown_kwh, 0) }) }}</dd>
-      </div>
-      <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl">
-        <dt class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.price') }}</dt>
-        <dd class="text-lg font-extrabold text-white">
-          <template v-if="stats.summary.price_per_kwh !== null">{{ $t('expenses.chargingInsights.pricePerKwh', { price: formatAmount(stats.summary.price_per_kwh, currency, 3) }) }}</template>
-          <template v-else>—</template>
-        </dd>
-        <dd v-if="stats.summary.free_sessions" class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.free', { count: stats.summary.free_sessions }) }}</dd>
-      </div>
-      <div class="bg-success-500/5 border border-success-500/30 p-3 rounded-xl">
-        <dt class="text-xs font-medium text-success-400 flex items-center gap-1.5">
-          <PiggyBank class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-          {{ $t('expenses.chargingInsights.savings.title') }}
-        </dt>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 items-start">
+      <KpiCard compact :label="$t('expenses.chargingInsights.energy')" :value="formatNumber(totals?.kwh ?? 0, 0)" unit=" kWh">
+        <p class="mt-1 text-xs text-slate-400">{{ $t('expenses.chargingInsights.sessionsCount', { count: stats.summary.sessions }, stats.summary.sessions) }}</p>
+        <p v-if="totals && totals.estimatedKwh > 0" class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.estimatedPart', { kwh: formatNumber(totals.estimatedKwh, 0), distance: formatDistance(totals.estimatedKm) }) }}</p>
+      </KpiCard>
+      <KpiCard compact :label="$t('expenses.chargingInsights.spent')" :value="formatAmount(totals?.cost ?? 0, currency)">
+        <p v-if="totals && totals.estimatedCost > 0" class="mt-1 text-xs text-slate-400">{{ $t('expenses.chargingInsights.estimatedCost', { amount: formatAmount(totals.estimatedCost, currency) }) }}</p>
+        <p v-if="stats.summary.unknown_sessions" class="mt-1 text-xs text-warning-400">{{ $t('expenses.chargingInsights.unknownCost', { count: stats.summary.unknown_sessions, kwh: formatNumber(stats.summary.unknown_kwh, 0) }) }}</p>
+      </KpiCard>
+      <KpiCard
+        compact
+        :label="$t('expenses.chargingInsights.price')"
+        :value="stats.summary.price_per_kwh === null ? null : formatAmount(stats.summary.price_per_kwh, currency, 3)"
+        unit="/kWh"
+      >
+        <p v-if="stats.summary.free_sessions" class="mt-1 text-xs text-slate-400">{{ $t('expenses.chargingInsights.free', { count: stats.summary.free_sessions }) }}</p>
+      </KpiCard>
+      <KpiCard
+        compact
+        :label="$t('expenses.chargingInsights.savings.title')"
+        :value="savings && savings.state === 'ok'
+          ? $t(`expenses.chargingInsights.savings.${savings.better ? 'better' : 'worse'}${savings.pct === null ? '' : 'Pct'}`, { amount: formatAmount(savings.amount, currency), pct: savings.pct === null ? '' : formatPercent(savings.pct, 0) })
+          : null"
+        :icon="PiggyBank"
+        :tone="savings && savings.state === 'ok' ? (savings.better ? 'success' : 'warning') : 'default'"
+        :tinted="savings?.state === 'ok'"
+      >
         <template v-if="savings && savings.state === 'ok'">
-          <dd class="text-lg font-extrabold" :class="savings.better ? 'text-success-400' : 'text-warning-400'">
-            {{ $t(`expenses.chargingInsights.savings.${savings.better ? 'better' : 'worse'}${savings.pct === null ? '' : 'Pct'}`, { amount: formatAmount(savings.amount, currency), pct: savings.pct === null ? '' : formatPercent(savings.pct, 0) }) }}
-          </dd>
-          <dd class="text-xs text-slate-400">
+          <p class="mt-1 text-xs text-slate-400">
             {{ $t('expenses.chargingInsights.savings.short', { kwh: formatNumber(savings.awayKwh, 0), price: formatAmount(savings.homePrice, currency, 3) }) }}
-          </dd>
-          <dd>
-            <button
-              type="button"
-              class="mt-1 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
-              :aria-expanded="detailsOpen"
-              @click="detailsOpen = !detailsOpen"
-            >
-              {{ $t(detailsOpen ? 'expenses.chargingInsights.savings.hideDetails' : 'expenses.chargingInsights.savings.details') }}
-              <ChevronDown class="w-3 h-3 transition-transform" :class="detailsOpen ? 'rotate-180' : ''" />
-            </button>
-          </dd>
-          <dd v-if="detailsOpen" class="mt-2 border-t border-success-500/20 pt-2 text-xs text-slate-300">
+          </p>
+          <button
+            type="button"
+            class="mt-1 inline-flex items-center gap-1 self-start text-xs text-slate-400 hover:text-white"
+            :aria-expanded="detailsOpen"
+            @click="detailsOpen = !detailsOpen"
+          >
+            {{ $t(detailsOpen ? 'expenses.chargingInsights.savings.hideDetails' : 'expenses.chargingInsights.savings.details') }}
+            <ChevronDown class="w-3 h-3 transition-transform" :class="detailsOpen ? 'rotate-180' : ''" />
+          </button>
+          <p v-if="detailsOpen" class="mt-2 border-t border-slate-800 pt-2 text-xs text-slate-300">
             {{ $t(savings.better ? 'expenses.chargingInsights.savings.basis' : 'expenses.chargingInsights.savings.worseBasis', {
               kwh: formatNumber(savings.awayKwh, 0),
               cost: formatAmount(savings.awayCost, currency),
               home: formatAmount(savings.hypotheticalCost, currency),
               price: formatAmount(savings.homePrice, currency, 3),
             }) }}
-          </dd>
+          </p>
         </template>
-        <dd v-else-if="savings" class="text-xs text-slate-400 mt-1">{{ $t(savings.reasonKey) }}</dd>
-      </div>
-    </dl>
+        <p v-else-if="savings" class="mt-1 text-xs text-slate-400">{{ $t(savings.reasonKey) }}</p>
+      </KpiCard>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <figure class="space-y-1.5">
