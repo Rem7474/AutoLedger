@@ -134,7 +134,7 @@ func (r *Repository) FindIngestedDrive(ctx context.Context, vehicleID string, ev
 			SELECT id FROM drives
 			WHERE vehicle_id = $1
 			  AND ABS(EXTRACT(EPOCH FROM (start_time - $2))) <= $4
-			  AND ABS(distance_km - $3) <= $5
+			  AND ABS(COALESCE(distance_km, 0) - $3) <= $5
 			LIMIT 1;
 		`, vehicleID, start, distanceKm, ingest.DriveTimeWindow.Seconds(), ingest.DriveKmDelta).Scan(&id)
 	}

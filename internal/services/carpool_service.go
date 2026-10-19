@@ -130,8 +130,8 @@ type DriveCost struct {
 // ComputeDriveCost is the single definition of a drive's cost, shared by the drive list and the per-tag totals of
 // the TCO so a total by tag always adds up the drives the list shows for that tag.
 func ComputeDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.Cents) DriveCost {
-	kwh, source := DriveEnergyKwh(d.DistanceKm, d.EnergyConsumedKwh, d.ConsumptionKwh100km)
-	components := ComputeCostComponents(rates, d.DistanceKm, kwh)
+	kwh, source := DriveEnergyKwh(d.Distance(), d.EnergyConsumedKwh, d.ConsumptionKwh100km)
+	components := ComputeCostComponents(rates, d.Distance(), kwh)
 	return DriveCost{
 		ElectricityCost: components.ElectricityCost,
 		ElectricityKwh:  kwh,
@@ -231,11 +231,11 @@ func (s *CarpoolService) EstimateCosts(ctx context.Context, vehicleID string, dr
 			return nil, err
 		}
 		for _, d := range drives {
-			kwh, src := DriveEnergyKwh(d.DistanceKm, d.EnergyConsumedKwh, d.ConsumptionKwh100km)
+			kwh, src := DriveEnergyKwh(d.Distance(), d.EnergyConsumedKwh, d.ConsumptionKwh100km)
 			if src != EnergySourceMeasured {
 				energySource = src
 			}
-			leg := costLeg(driveRates[d.ID], d.DistanceKm, kwh)
+			leg := costLeg(driveRates[d.ID], d.Distance(), kwh)
 			driveID := d.ID
 			leg.DriveID = &driveID
 			leg.StartLabel = placeLabel(d.StartAddress)
@@ -321,7 +321,7 @@ func (s *CarpoolService) AllocateInsuranceCosts(ctx context.Context, vehicleID s
 	for _, d := range drives {
 		mStr := d.StartTime.UTC().Format("2006-01")
 		monthSet[mStr] = struct{}{}
-		drivesInMonthKm[mStr] += d.DistanceKm
+		drivesInMonthKm[mStr] += d.Distance()
 	}
 
 	months := make([]string, 0, len(monthSet))
@@ -341,15 +341,15 @@ func (s *CarpoolService) AllocateInsuranceCosts(ctx context.Context, vehicleID s
 		mStr := d.StartTime.UTC().Format("2006-01")
 		monthlyCost := insuranceMonthlyCost(r)
 		if monthlyCost <= 0 || mStr >= currentMonthKey {
-			costs[d.ID] = money.FromFloat(d.DistanceKm * r.InsurancePerKm)
+			costs[d.ID] = money.FromFloat(d.Distance() * r.InsurancePerKm)
 			continue
 		}
 		// Past completed month: consolidate on actual monthly kilometers
 		totalMonthKm := math.Max(monthlyKmMap[mStr], drivesInMonthKm[mStr])
 		if totalMonthKm >= 1.0 {
-			costs[d.ID] = money.FromFloat(monthlyCost.Float() * (d.DistanceKm / totalMonthKm))
+			costs[d.ID] = money.FromFloat(monthlyCost.Float() * (d.Distance() / totalMonthKm))
 		} else {
-			costs[d.ID] = money.FromFloat(d.DistanceKm * r.InsurancePerKm)
+			costs[d.ID] = money.FromFloat(d.Distance() * r.InsurancePerKm)
 		}
 	}
 	return costs, nil

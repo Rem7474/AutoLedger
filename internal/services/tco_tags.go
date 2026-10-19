@@ -57,7 +57,7 @@ func (s *TCOService) tagBreakdown(ctx context.Context, vehicleID string, totalDi
 				tb = &TagCostBreakdown{Tag: tag}
 				byTag[tag] = tb
 			}
-			tb.DistanceKm += d.DistanceKm
+			tb.DistanceKm += d.Distance()
 			if d.EnergyConsumedKwh != nil {
 				tb.EnergyKwh += *d.EnergyConsumedKwh
 			}

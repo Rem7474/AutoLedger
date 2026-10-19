@@ -123,7 +123,7 @@ func buildDrive(vehicleID string, td teslamate.Drive, units *teslamate.Units, st
 		EndTime:             endTime,
 		StartOdometer:       &startOdo,
 		EndOdometer:         &endOdo,
-		DistanceKm:          distKm,
+		DistanceKm:          &distKm,
 		DurationMin:         td.DurationMin,
 		SpeedAvg:            speedAvg,
 		SpeedMax:            speedMax,

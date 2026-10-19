@@ -149,3 +149,15 @@ func TestNormalizeDriveWithoutDistance(t *testing.T) {
 		t.Errorf("consumption must not divide by zero: %v", got.Kwh100km)
 	}
 }
+
+func TestKnownDistanceStoresNothingForAnUnknownDistance(t *testing.T) {
+	if got := KnownDistance(0); got != nil {
+		t.Errorf("0 is the placeholder of an unknown distance, got %v", *got)
+	}
+	if got := KnownDistance(-1); got != nil {
+		t.Errorf("a negative distance is not a distance, got %v", *got)
+	}
+	if got := KnownDistance(12.5); got == nil || *got != 12.5 {
+		t.Errorf("12.5 km: %v", got)
+	}
+}

@@ -65,6 +65,15 @@ describe('distance conversion', () => {
   })
 })
 
+describe('an unknown distance', () => {
+  it('reads as a dash, not as zero, with or without the unit', () => {
+    expect(formatDistance(null)).toBe('—')
+    expect(formatDistance(undefined, 1)).toBe('—')
+    expect(formatDistanceValue(null)).toBe('—')
+    expect(formatDistance(0)).toMatch(/^0 (km|mi)$/)
+  })
+})
+
 describe('formatDistance', () => {
   it('rounds and appends the unit in km', () => {
     setDistanceUnit('km')

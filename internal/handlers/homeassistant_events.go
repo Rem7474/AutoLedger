@@ -173,7 +173,7 @@ func (h *HomeAssistantHandler) recordDrive(w http.ResponseWriter, r *http.Reques
 		EndTime:         timings.End,
 		StartOdometer:   startOdo,
 		EndOdometer:     endOdo,
-		DistanceKm:      distance,
+		DistanceKm:      ingest.KnownDistance(distance),
 		DurationMin:     timings.DurationMin,
 		StartAddress:    driveAddress(req.Data.StartAddress, req.Data.StartLat, req.Data.StartLon),
 		EndAddress:      driveAddress(req.Data.EndAddress, req.Data.EndLat, req.Data.EndLon),

@@ -58,6 +58,15 @@ func DeriveDistance(reportedKm, startOdometerKm, endOdometerKm *float64) (km flo
 	return 0, true
 }
 
+// KnownDistance is the distance to store for a drive: nil when the source gave none (DeriveDistance reports 0),
+// so that an unknown distance is not stored as a drive of zero kilometres.
+func KnownDistance(km float64) *float64 {
+	if km <= 0 {
+		return nil
+	}
+	return &km
+}
+
 // NormalizeDrive completes a drive: end time (given end, then given duration, then the assumed average speed),
 // duration in minutes, and energy (given, or estimated from the vehicle's consumption). The distance must
 // already be valid, or 0 when unknown.

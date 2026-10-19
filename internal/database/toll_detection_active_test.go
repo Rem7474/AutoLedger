@@ -66,7 +66,7 @@ func TestTollDetectionActiveFollowsTheModeAndTheEvidence(t *testing.T) {
 	vid := v.ID
 	start, end := time.Date(2026, 9, 1, 8, 0, 0, 0, time.UTC), time.Date(2026, 9, 1, 9, 0, 0, 0, time.UTC)
 	elsewhere, home := "Berlin, Deutschland", "Lyon, France"
-	d := &models.Drive{VehicleID: vid, StartTime: start, EndTime: end, DistanceKm: 50, StartAddress: &elsewhere, EndAddress: &elsewhere}
+	d := &models.Drive{VehicleID: vid, StartTime: start, EndTime: end, DistanceKm: kmPtr(50), StartAddress: &elsewhere, EndAddress: &elsewhere}
 	if err := repo.CreateManualDrive(ctx, d); err != nil {
 		t.Fatal(err)
 	}

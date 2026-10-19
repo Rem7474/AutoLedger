@@ -46,11 +46,11 @@ func TestIntegrationProvenanceIsRecordedBySource(t *testing.T) {
 	}
 
 	odo := 20100.0
-	csvDrive := &models.Drive{VehicleID: v.ID, Origin: "CSV", StartTime: day.Add(time.Hour * 30), EndTime: day.Add(time.Hour * 31), StartOdometer: &odo, DistanceKm: 5, Tags: []string{}}
+	csvDrive := &models.Drive{VehicleID: v.ID, Origin: "CSV", StartTime: day.Add(time.Hour * 30), EndTime: day.Add(time.Hour * 31), StartOdometer: &odo, DistanceKm: kmPtr(5), Tags: []string{}}
 	if err := repo.CreateManualDrive(ctx, csvDrive); err != nil {
 		t.Fatal(err)
 	}
-	manualDrive := &models.Drive{VehicleID: v.ID, StartTime: day.Add(time.Hour * 40), EndTime: day.Add(time.Hour * 41), DistanceKm: 3, Tags: []string{}}
+	manualDrive := &models.Drive{VehicleID: v.ID, StartTime: day.Add(time.Hour * 40), EndTime: day.Add(time.Hour * 41), DistanceKm: kmPtr(3), Tags: []string{}}
 	if err := repo.CreateManualDrive(ctx, manualDrive); err != nil {
 		t.Fatal(err)
 	}

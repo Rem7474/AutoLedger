@@ -93,10 +93,10 @@ type DriveFilter struct {
 // HighwayDrivePredicate matches drives likely to have used toll roads. It mirrors models.Drive.IsHighway
 // (kept in sync by an integration test), and also matches any drive whose GPS toll detection found a toll segment:
 // the trace is the ground truth when the speed heuristic misses a short highway drive.
-const HighwayDrivePredicate = `((drives.distance_km >= 40 AND COALESCE(drives.speed_avg, 0) >= 70)
-	OR (drives.distance_km >= 20 AND COALESCE(drives.speed_max, 0) > 125)
-	OR (drives.distance_km >= 20 AND COALESCE(drives.speed_max, 0) >= 110 AND COALESCE(drives.speed_avg, 0) >= 70)
-	OR (drives.distance_km >= 8 AND COALESCE(drives.speed_max, 0) >= 105 AND COALESCE(drives.speed_avg, 0) >= 70)
+const HighwayDrivePredicate = `((COALESCE(drives.distance_km, 0) >= 40 AND COALESCE(drives.speed_avg, 0) >= 70)
+	OR (COALESCE(drives.distance_km, 0) >= 20 AND COALESCE(drives.speed_max, 0) > 125)
+	OR (COALESCE(drives.distance_km, 0) >= 20 AND COALESCE(drives.speed_max, 0) >= 110 AND COALESCE(drives.speed_avg, 0) >= 70)
+	OR (COALESCE(drives.distance_km, 0) >= 8 AND COALESCE(drives.speed_max, 0) >= 105 AND COALESCE(drives.speed_avg, 0) >= 70)
 	OR EXISTS (SELECT 1 FROM toll_detections td WHERE td.drive_id = drives.id
 	           AND CASE WHEN jsonb_typeof(td.segments) = 'array' THEN jsonb_array_length(td.segments) ELSE 0 END > 0))`
 

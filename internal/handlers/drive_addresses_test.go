@@ -34,7 +34,7 @@ func TestResolveAddressesBackfill(t *testing.T) {
 	} {
 		d := &models.Drive{
 			VehicleID: v.ID, Origin: "WEBHOOK", StartTime: time.Date(2026, 5, 1+i, 8, 0, 0, 0, time.UTC),
-			DistanceKm: 10, StartAddress: addrs[0], EndAddress: addrs[1], Tags: []string{}, IsManual: true,
+			DistanceKm: kmPtr(10), StartAddress: addrs[0], EndAddress: addrs[1], Tags: []string{}, IsManual: true,
 		}
 		if err := repo.CreateManualDrive(ctx, d); err != nil {
 			t.Fatal(err)

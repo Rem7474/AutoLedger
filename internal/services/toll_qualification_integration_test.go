@@ -16,9 +16,9 @@ func TestIntegrationDrivesNeedingTollQualification(t *testing.T) {
 	start := time.Date(2026, 9, 18, 18, 0, 0, 0, time.UTC)
 
 	slow := &models.Drive{VehicleID: v.ID, TeslaMateDriveID: intPtr(1), StartTime: start, EndTime: start.Add(30 * time.Minute),
-		DistanceKm: 20, SpeedAvg: floatPtr(40), SpeedMax: intPtr(90), Tags: []string{}}
+		DistanceKm: kmPtr(20), SpeedAvg: floatPtr(40), SpeedMax: intPtr(90), Tags: []string{}}
 	fast := &models.Drive{VehicleID: v.ID, TeslaMateDriveID: intPtr(2), StartTime: start.Add(2 * time.Hour), EndTime: start.Add(3 * time.Hour),
-		DistanceKm: 120, SpeedAvg: floatPtr(95), SpeedMax: intPtr(130), Tags: []string{}}
+		DistanceKm: kmPtr(120), SpeedAvg: floatPtr(95), SpeedMax: intPtr(130), Tags: []string{}}
 	for _, d := range []*models.Drive{slow, fast} {
 		if _, err := repo.UpsertTeslaMateDrive(ctx, d); err != nil {
 			t.Fatal(err)
@@ -68,7 +68,7 @@ func TestIntegrationResetTollDetections(t *testing.T) {
 	ctx := context.Background()
 	v := mustVehicle(t, repo, "reset@example.com")
 	start := time.Date(2026, 9, 18, 18, 0, 0, 0, time.UTC)
-	d := &models.Drive{VehicleID: v.ID, TeslaMateDriveID: intPtr(1), StartTime: start, EndTime: start.Add(time.Hour), DistanceKm: 50, Tags: []string{}}
+	d := &models.Drive{VehicleID: v.ID, TeslaMateDriveID: intPtr(1), StartTime: start, EndTime: start.Add(time.Hour), DistanceKm: kmPtr(50), Tags: []string{}}
 	if _, err := repo.UpsertTeslaMateDrive(ctx, d); err != nil {
 		t.Fatal(err)
 	}

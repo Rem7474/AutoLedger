@@ -147,9 +147,9 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 		// The insurance rate actually applied to this drive, which may differ from the vehicle's
 		// flat rates.InsurancePerKm since insurance is allocated per day, not per km.
 		insRate := dr.InsurancePerKm
-		if d.DistanceKm > 0 {
-			costPerKm = math.Round((totalCost.Float()/d.DistanceKm)*1000) / 1000
-			insRate = math.Round((insCost.Float()/d.DistanceKm)*1000) / 1000
+		if km := d.Distance(); km > 0 {
+			costPerKm = math.Round((totalCost.Float()/km)*1000) / 1000
+			insRate = math.Round((insCost.Float()/km)*1000) / 1000
 		}
 
 		enriched[i] = EnrichedDrive{

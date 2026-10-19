@@ -74,7 +74,7 @@ func (h *DriveHandler) Create(w http.ResponseWriter, r *http.Request) {
 		EndTime:             timings.End,
 		StartOdometer:       req.StartOdometer,
 		EndOdometer:         req.EndOdometer,
-		DistanceKm:          req.DistanceKm,
+		DistanceKm:          &req.DistanceKm,
 		DurationMin:         timings.DurationMin,
 		StartAddress:        req.StartAddress,
 		EndAddress:          req.EndAddress,
@@ -133,7 +133,7 @@ func (h *DriveHandler) Update(w http.ResponseWriter, r *http.Request) {
 			writeAPIError(w, http.StatusBadRequest, apierror.New("drive.invalid_distance", "Distance must be between 0.1 and 3000 km"))
 			return
 		}
-		existing.DistanceKm = req.DistanceKm
+		existing.DistanceKm = &req.DistanceKm
 	}
 
 	if req.EndTime != nil && req.EndTime.After(existing.StartTime) {
@@ -145,18 +145,18 @@ func (h *DriveHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	if req.EnergyConsumedKwh != nil && *req.EnergyConsumedKwh > 0 {
 		energy := *req.EnergyConsumedKwh
-		cons100 := ingest.Consumption100km(energy, existing.DistanceKm)
+		cons100 := ingest.Consumption100km(energy, existing.Distance())
 		existing.EnergyConsumedKwh = &energy
 		existing.ConsumptionKwh100km = &cons100
 		existing.EnergyEstimated = false
 	} else if existing.EnergyEstimated {
 		// Keep an estimated energy in line with the (possibly edited) distance and the vehicle's current estimate
-		energy, cons100 := ingest.EstimateDriveEnergy(vehicle.EstimatedKwh100km, existing.DistanceKm)
+		energy, cons100 := ingest.EstimateDriveEnergy(vehicle.EstimatedKwh100km, existing.Distance())
 		existing.EnergyConsumedKwh = &energy
 		existing.ConsumptionKwh100km = &cons100
 	} else if existing.EnergyConsumedKwh != nil && *existing.EnergyConsumedKwh > 0 {
 		// A typed energy stays, its consumption follows the distance
-		cons100 := ingest.Consumption100km(*existing.EnergyConsumedKwh, existing.DistanceKm)
+		cons100 := ingest.Consumption100km(*existing.EnergyConsumedKwh, existing.Distance())
 		existing.ConsumptionKwh100km = &cons100
 	}
 
