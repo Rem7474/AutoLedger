@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_carpool,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_tag_breakdown,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_tag_breakdown,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -535,6 +535,33 @@ func TestMCPCarpoolAnswersForAVehicleWithoutSharedTripsAndRefusesAnotherAccounts
 	}
 
 	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_carpool", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
+	if err != nil || !other.IsError {
+		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
+	}
+}
+
+func TestMCPChargingPlacesAnswersWithoutChargesAndRefusesAnInvalidPeriod(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_charging_places", Arguments: map[string]any{"vehicle_id": f.mine.ID}})
+	if err != nil || res.IsError {
+		t.Fatalf("charging places: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationChargingPlaces
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Currency != "GBP" || out.Months != 12 || out.Places == nil || out.Unplaced == nil || strings.Contains(string(raw), f.vin) {
+		t.Errorf("charging places: %s", raw)
+	}
+
+	bad, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_charging_places", Arguments: map[string]any{"vehicle_id": f.mine.ID, "months": 999}})
+	if err != nil || !bad.IsError {
+		t.Errorf("a period beyond the cap is refused: %v %+v", err, bad)
+	}
+	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_charging_places", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
 	if err != nil || !other.IsError {
 		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
 	}
