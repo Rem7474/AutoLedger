@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -606,6 +606,33 @@ func TestMCPTireStatusAnswersForAVehicleWithoutTiresAndRefusesAnotherAccountsOne
 		t.Errorf("tire status: %s", raw)
 	}
 	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_tire_status", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
+	if err != nil || !other.IsError {
+		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
+	}
+}
+
+func TestMCPOdometerEstimatesADayAndRefusesAnInvalidOne(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_odometer", Arguments: map[string]any{"vehicle_id": f.mine.ID, "date": "2026-01-15"}})
+	if err != nil || res.IsError {
+		t.Fatalf("odometer: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationOdometer
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || strings.Contains(string(raw), f.vin) {
+		t.Errorf("odometer: %s", raw)
+	}
+
+	bad, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_odometer", Arguments: map[string]any{"vehicle_id": f.mine.ID, "date": "yesterday"}})
+	if err != nil || !bad.IsError {
+		t.Errorf("an invalid day is refused: %v %+v", err, bad)
+	}
+	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_odometer", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
 	if err != nil || !other.IsError {
 		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
 	}

@@ -2353,6 +2353,130 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "The current odometer of a vehicle, how many dated readings the records hold and the period they cover. With a date it also gives the odometer on that day, and says whether it is a reading, spread between two readings or the nearest one.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "description": "a day, YYYY-MM-DD, to get the odometer on that day from the records (a reading, or spread between the readings around it)",
+          "type": "string"
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_odometer",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "current": {
+          "additionalProperties": false,
+          "description": "the odometer as last recorded",
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "estimate": {
+          "additionalProperties": false,
+          "description": "the odometer on the day asked for; null when no day was asked or the records hold no usable reading",
+          "properties": {
+            "date": {
+              "description": "the day asked, YYYY-MM-DD",
+              "type": "string"
+            },
+            "odometer": {
+              "additionalProperties": false,
+              "description": "the odometer reading on that day",
+              "properties": {
+                "unit": {
+                  "description": "always km",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "the distance",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
+            },
+            "source": {
+              "description": "exact (a reading of that day), interpolated (spread in time between the readings on either side) or bounded (the day is before the first or after the last reading, so the nearest reading is kept)",
+              "type": "string"
+            }
+          },
+          "required": [
+            "date",
+            "odometer",
+            "source"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "first_reading": {
+          "description": "day of the oldest reading, YYYY-MM-DD; null when there is none",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "last_reading": {
+          "description": "day of the most recent reading, YYYY-MM-DD; null when there is none",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "readings": {
+          "description": "dated odometer readings the records hold (drives, checkpoints, fill-ups, ownership start)",
+          "type": "integer"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these readings belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "current",
+        "readings",
+        "first_reading",
+        "last_reading",
+        "estimate"
+      ],
+      "type": "object"
+    },
+    "title": "Odometer"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "The maintenance reminders of a vehicle (service, tires, inspection...) and where each stands against the odometer and the calendar: overdue, due soon or ok, with the distance and days left, the due date and the last service. Most urgent first. Use it to answer what is due on a vehicle or when a service is next needed.",
     "inputSchema": {
       "additionalProperties": false,
