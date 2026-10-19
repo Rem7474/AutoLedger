@@ -21,6 +21,8 @@ type LedgerEntry struct {
 	Kwh           *float64
 	Liters        *float64
 	Recurring     bool
+	// HasDocument tells whether a receipt is attached; nil for the sources that cannot carry one.
+	HasDocument *bool
 }
 
 // LedgerFilter selects and orders the entries. Categories empty means every category except the acquisition,
@@ -80,7 +82,12 @@ func (r *Repository) ListLedgerEntries(ctx context.Context, vehicleID, ownerID s
 		            WHEN 'tires' THEN NULLIF(btrim(t.brand || ' ' || t.model), '')
 		       END,
 		       COALESCE(p.name, NULLIF(btrim(c.address), '')), p.category,
-		       c.kwh_added::float8, fl.liters::float8, COALESCE(m.is_recurring, false)
+		       c.kwh_added::float8, fl.liters::float8, COALESCE(m.is_recurring, false),
+		       CASE l.source_table
+		            WHEN 'maintenance_expenses' THEN m.document_id IS NOT NULL
+		            WHEN 'drive_expenses' THEN e.document_id IS NOT NULL
+		            WHEN 'charge_logs' THEN c.document_id IS NOT NULL
+		       END
 		FROM cost_ledger l
 		LEFT JOIN maintenance_expenses m ON l.source_table = 'maintenance_expenses' AND m.id = l.source_id
 		LEFT JOIN drive_expenses e ON l.source_table = 'drive_expenses' AND e.id = l.source_id
@@ -100,7 +107,7 @@ func (r *Repository) ListLedgerEntries(ctx context.Context, vehicleID, ownerID s
 	var entries []LedgerEntry
 	for rows.Next() {
 		var e LedgerEntry
-		if err := rows.Scan(&e.Date, &e.Category, &e.Source, &e.Amount, &e.Note, &e.Place, &e.PlaceCategory, &e.Kwh, &e.Liters, &e.Recurring); err != nil {
+		if err := rows.Scan(&e.Date, &e.Category, &e.Source, &e.Amount, &e.Note, &e.Place, &e.PlaceCategory, &e.Kwh, &e.Liters, &e.Recurring, &e.HasDocument); err != nil {
 			return nil, nil, err
 		}
 		entries = append(entries, e)
