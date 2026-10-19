@@ -25,6 +25,7 @@ func startWorkers(ctx context.Context, cfg *config.Config, repo *database.Reposi
 	// Every refresh adds a token row: the expired and revoked ones are purged once a day.
 	if repo != nil {
 		go purgeExpiredRefreshTokens(ctx, repo, 24*time.Hour)
+		go purgeOAuth(ctx, repo, 24*time.Hour)
 	}
 }
 
@@ -53,6 +54,34 @@ func runReminderChecks(ctx context.Context, notifications *services.Notification
 			return
 		case <-ticker.C:
 			check()
+		}
+	}
+}
+
+// purgeOAuth deletes the authorization codes, grants and unused clients of the OAuth server that can no longer be
+// used, at start-up and then every interval, until ctx ends.
+func purgeOAuth(ctx context.Context, repo *database.Repository, interval time.Duration) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("recovered panic in the OAuth purge", "component", "oauth", "error", r)
+		}
+	}()
+	purge := func() {
+		if n, err := repo.CleanupOAuth(ctx); err != nil {
+			slog.Warn("could not purge expired OAuth data", "component", "oauth", "error", err)
+		} else if n > 0 {
+			slog.Info("purged expired OAuth data", "component", "oauth", "count", n)
+		}
+	}
+	purge()
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			purge()
 		}
 	}
 }

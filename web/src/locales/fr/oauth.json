@@ -1,0 +1,22 @@
+{
+  "authorize": {
+    "title": "Autoriser une application",
+    "intro": "{name} demande à lire vos données AutoLedger.",
+    "canTitle": "Elle pourra",
+    "canVehicles": "Voir vos véhicules : nom, marque, modèle, motorisation, devise et compteur.",
+    "canCosts": "Lire ce que coûte chaque véhicule : les 12 derniers mois et depuis l'achat, par catégorie.",
+    "canGaps": "Voir ce qui manque à vos données (trous de compteur, charges sans coût).",
+    "cannotTitle": "Elle ne pourra pas",
+    "cannotWrite": "Modifier, ajouter ou supprimer quoi que ce soit.",
+    "cannotPrivate": "Voir les VIN, plaques, adresses, positions ni documents.",
+    "returnTo": "Après votre choix, vous revenez sur {host}.",
+    "unverified": "Le nom est donné par l'application et n'est pas vérifié : n'approuvez qu'une application que vous venez de lancer.",
+    "revokeHint": "Vous pouvez mettre fin à cet accès à tout moment depuis la page du compte, dans la liste des jetons d'API.",
+    "approve": "Autoriser",
+    "deny": "Refuser",
+    "approved": "Accès autorisé. Vous pouvez retourner dans l'application.",
+    "denied": "Accès refusé. Vous pouvez fermer cette page.",
+    "invalid": "Cette demande d'autorisation n'est pas valide.",
+    "failed": "La décision n'a pas pu être enregistrée. Réessayez."
+  }
+}

@@ -162,8 +162,11 @@ onMounted(() => {
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold text-white truncate">{{ tok.name }}</span>
-            <span class="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+            <span v-if="!tok.oauth" class="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
               {{ tok.token_prefix }}...
+            </span>
+            <span v-else class="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
+              {{ t('account.tokens.oauthBadge') }}
             </span>
             <span class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
               {{ tok.scope === 'read' ? t('account.tokens.scopeBadgeRead') : t('account.tokens.scopeBadgeIngest') }}
@@ -175,7 +178,7 @@ onMounted(() => {
               {{ t('account.tokens.lastUsed', { date: describeRelativeTime(tok.last_used_at) }) }}
             </span>
             <span v-else class="text-slate-400">{{ t('account.tokens.neverUsed') }}</span>
-            <span v-if="tok.expires_at" class="text-warning-400/80">
+            <span v-if="tok.expires_at" class="text-warning-400/80" :title="tok.oauth ? t('account.tokens.oauthHelp') : undefined">
               {{ t('account.tokens.expires', { date: describeRelativeTime(tok.expires_at) }) }}
             </span>
           </div>

@@ -540,6 +540,10 @@ export const api = {
   getAPITokens: () => request<{ tokens: APITokenInfo[] }>('/auth/tokens'),
   createAPIToken: (data: { name: string; scope: APITokenScope; expires_at?: string | null }) =>
     request<APITokenCreatedResponse>('/auth/tokens', { method: 'POST', body: JSON.stringify(data) }),
+  previewOAuthAuthorization: (params: OAuthAuthorizeParams) =>
+    request<OAuthAuthorizePreview>(`/oauth/authorize?${new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => typeof e[1] === 'string'))}`),
+  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny') =>
+    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision }) }),
   revokeAPIToken: (tokenId: string) =>
     request<{ success: boolean }>(`/auth/tokens/${tokenId}`, { method: 'DELETE' }),
 
@@ -630,11 +634,32 @@ export interface VehicleWebhook {
 /** What a token may do: push events and read the Home Assistant views, or only read. */
 export type APITokenScope = 'ingest' | 'read'
 
+/** What an assistant sends the user to the consent page with (RFC 6749 §4.1.1 and PKCE). */
+export interface OAuthAuthorizeParams {
+  client_id: string
+  redirect_uri: string
+  response_type: string
+  code_challenge: string
+  code_challenge_method: string
+  scope?: string
+  state?: string
+  resource?: string
+}
+
+export interface OAuthAuthorizePreview {
+  client_name: string
+  /** Where the approval sends the user back: a host, or the scheme of an application. */
+  redirect_host: string
+  scope: string
+}
+
 export interface APITokenInfo {
   id: string
   name: string
   token_prefix: string
   scope: APITokenScope
+  /** True for a grant an assistant obtained by OAuth; expires_at is then when it lapses unless renewed. */
+  oauth: boolean
   last_used_at: string | null
   expires_at: string | null
   created_at: string

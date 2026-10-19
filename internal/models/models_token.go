@@ -4,14 +4,17 @@ import "time"
 
 // APIToken represents a Personal Access Token used for API / Home Assistant access.
 type APIToken struct {
-	ID          string     `json:"id"`
-	UserID      string     `json:"user_id"`
-	Name        string     `json:"name"`
-	TokenPrefix string     `json:"token_prefix"`
-	Scope       string     `json:"scope"` // "ingest" or "read", fixed at creation
-	LastUsedAt  *time.Time `json:"last_used_at,omitempty"`
-	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
+	ID          string `json:"id"`
+	UserID      string `json:"user_id"`
+	Name        string `json:"name"`
+	TokenPrefix string `json:"token_prefix"`
+	Scope       string `json:"scope"` // "ingest" or "read", fixed at creation
+	// OAuth is true for a grant an assistant obtained through the authorization server; ExpiresAt is then when the
+	// grant lapses unless the application renews it.
+	OAuth      bool       `json:"oauth"`
+	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
+	ExpiresAt  *time.Time `json:"expires_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 // CreateAPITokenRequest is sent when generating a new token.

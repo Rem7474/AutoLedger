@@ -393,6 +393,8 @@ describe('endpoint contract', () => {
     ['getAPITokens', () => api.getAPITokens(), 'GET', '/auth/tokens'],
     ['createAPIToken', () => api.createAPIToken({ name: 'ha', scope: 'ingest' }), 'POST', '/auth/tokens', { name: 'ha', scope: 'ingest' }],
     ['revokeAPIToken', () => api.revokeAPIToken('k1'), 'DELETE', '/auth/tokens/k1'],
+    ['previewOAuthAuthorization', () => api.previewOAuthAuthorization({ client_id: 'c1', redirect_uri: 'http://127.0.0.1:1/cb', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', state: 'a b' }), 'GET', '/oauth/authorize?client_id=c1&redirect_uri=http%3A%2F%2F127.0.0.1%3A1%2Fcb&response_type=code&code_challenge=ch&code_challenge_method=S256&state=a+b'],
+    ['decideOAuthAuthorization', () => api.decideOAuthAuthorization({ client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256' }, 'deny'), 'POST', '/oauth/authorize', { client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', decision: 'deny' }],
     ['getMileageRates', () => api.getMileageRates(), 'GET', '/mileage-rates/'],
     ['createMileageRate', () => api.createMileageRate({ label: 'l', year: 2026, from_km: 0, to_km: null, rate_per_km: 0.5 }), 'POST', '/mileage-rates/', { label: 'l', year: 2026, from_km: 0, to_km: null, rate_per_km: 0.5 }],
     ['deleteMileageRate', () => api.deleteMileageRate('r1'), 'DELETE', '/mileage-rates/r1'],
