@@ -118,6 +118,21 @@ type Comparison struct {
 	TaxYearlyCents         int64
 }
 
+// ChargingPlace classifies the locations charges report, so the energy page can set the price paid away from home
+// against the home price.
+type ChargingPlace struct {
+	Name     string
+	Category string // HOME, WORK, PUBLIC or OTHER
+	Aliases  []string
+}
+
+// Driver is a second person who drives the vehicle: every EveryNth drive (counting from the first) is theirs, the
+// others stay with the owner.
+type Driver struct {
+	Name     string
+	EveryNth int
+}
+
 type Dataset struct {
 	Key       string
 	Vehicle   Vehicle
@@ -125,6 +140,10 @@ type Dataset struct {
 	Expenses  []Expense
 	Reminders []Reminder
 	Tires     []Tire
+	// Places are the charging places, with the location texts linked to each.
+	Places []ChargingPlace
+	// Drivers are the people besides the owner who drive the vehicle; none leaves every drive to the owner.
+	Drivers []Driver
 	// Ownership is the acquisition of the vehicle, which completes the TCO.
 	Ownership Ownership
 	// Carpool fills the carpooling page; nil leaves it empty.
@@ -235,10 +254,12 @@ func buildEV(today time.Time) Dataset {
 			odo += km
 			soc -= km * consumption / 100 / battery * 100
 		}
-		if soc < 28 {
+		// One fast charge on the road a few days before the end: the energy page compares it with the home price.
+		onTheRoad := i == Days-10 && soc < 70
+		if soc < 28 || onTheRoad {
 			target := 80.0
 			added := (target - soc) / 100 * battery
-			fast := len(trips) == 1 && trips[0] > 100
+			fast := onTheRoad || (len(trips) == 1 && trips[0] > 100)
 			price, place, start, hours := homePrice, "Home", day.Add(22*time.Hour), 4.0
 			if fast {
 				price, place, start, hours = dcPrice, "Highway Supercharger", day.Add(13*time.Hour), 0.6
@@ -271,6 +292,11 @@ func buildEV(today time.Time) Dataset {
 		})
 	}
 	ds.FinalOdometer = odo
+	ds.Places = []ChargingPlace{
+		{Name: "Home", Category: "HOME", Aliases: []string{"Home"}},
+		{Name: "Highway Supercharger", Category: "PUBLIC", Aliases: []string{"Highway Supercharger"}},
+	}
+	ds.Drivers = []Driver{{Name: "Camille", EveryNth: 3}}
 	at := func(d int) time.Time { return today.AddDate(0, 0, -d) }
 	ds.Ownership = Ownership{Date: at(Days + 30), Odometer: ds.Vehicle.StartOdometer - 400, PriceCents: 4290000, FeesCents: 38000,
 		// An option priced above the expected market value: the dashboard says returning the car is the better deal.
