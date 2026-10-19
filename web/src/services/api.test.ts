@@ -358,6 +358,7 @@ describe('endpoint contract', () => {
     ['setChargingPlaceAlias', () => api.setChargingPlaceAlias('v1', 'Maison', 'p1'), 'PUT', '/vehicles/v1/charging-places/aliases', { text: 'Maison', place_id: 'p1' }],
     ['getDriveExpensesForDrive', () => api.getDriveExpensesForDrive('v1', 'd1'), 'GET', '/vehicles/v1/drives/d1/expenses'],
     ['getTCO', () => api.getTCO('v1'), 'GET', '/vehicles/v1/tco'],
+    ['getCostHistory', () => api.getCostHistory('v1', 'tolls'), 'GET', '/vehicles/v1/cost-history?kind=tolls'],
     ['getMonthlyContributions', () => api.getMonthlyContributions('v1', '2026-03', 'ENERGY'), 'GET', '/vehicles/v1/tco/months/2026-03/contributions?category=ENERGY'],
     ['getBatteryHealth', () => api.getBatteryHealth('v1'), 'GET', '/vehicles/v1/battery-health'],
     ['saveBatteryReading', () => api.saveBatteryReading('v1', { date: 'd' }), 'POST', '/vehicles/v1/battery-health', { date: 'd' }],

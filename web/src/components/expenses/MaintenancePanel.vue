@@ -2,6 +2,7 @@
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ListSummary from '@/components/ListSummary.vue'
+import CostHistory from '@/components/costs/CostHistory.vue'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { computed, ref } from 'vue'
@@ -10,7 +11,7 @@ import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { saveBlob } from '@/utils/download'
 import { t } from '@/i18n'
-import { categoryLabel, categoryStyle, expensesOfKind, filterMaintenance, formatDate, maintenanceTotal, maintenanceYears } from '@/utils/expenses'
+import { categoryLabel, categoryStyle, expensesOfKind, filterMaintenance, formatDate, maintenanceYears } from '@/utils/expenses'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
 
@@ -49,7 +50,6 @@ const ofKind = computed(() => expensesOfKind(props.maintenanceExpenses, props.ki
 const categories = computed(() => [...new Set(ofKind.value.map((m) => m.category as string))])
 const years = computed(() => maintenanceYears(ofKind.value))
 const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
-const total = computed(() => maintenanceTotal(visible.value, vehicleStore.currency))
 </script>
 
 <template>
@@ -68,6 +68,7 @@ const total = computed(() => maintenanceTotal(visible.value, vehicleStore.curren
       </template>
     </EmptyState>
     <div v-else class="space-y-3">
+      <CostHistory :vehicle-id="vehicleId" :kind="kind" :currency="vehicleStore.currency" :sync-key="maintenanceExpenses" />
       <div class="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
         <label class="sr-only" for="maint-filter-category">{{ $t('expenses.maintenancePanel.categoryFilter') }}</label>
         <select id="maint-filter-category" v-model="filter.category" class="field !w-auto">
@@ -80,7 +81,7 @@ const total = computed(() => maintenanceTotal(visible.value, vehicleStore.curren
           <option v-for="y in years" :key="y" :value="String(y)">{{ y }}</option>
         </select>
       </div>
-      <ListSummary :chips="[{ label: $t('expenses.maintenancePanel.total'), value: formatAmount(total, vehicleStore.currency), tone: 'sky' }]">
+      <ListSummary :chips="[]">
         {{ $t('expenses.maintenancePanel.count', { n: visible.length }, visible.length) }}
       </ListSummary>
       <div v-if="kind === 'service'" class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">

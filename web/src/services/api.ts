@@ -370,6 +370,8 @@ export const api = {
     const q = new URLSearchParams('months' in period ? { months: String(period.months) } : { from: period.from, to: period.to })
     return request<any>(`/vehicles/${vehicleId}/charging-place-stats?${q.toString()}`)
   },
+  getCostHistory: (vehicleId: string, kind: 'tolls' | 'service' | 'fixed') =>
+    request<{ kind: string; current_month: string; months: { month: string; amount: number }[] }>(`/vehicles/${vehicleId}/cost-history?kind=${kind}`),
   getChargingPlaces: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/charging-places`),
   createChargingPlace: (vehicleId: string, data: { name: string; category: string }) =>
     request<any>(`/vehicles/${vehicleId}/charging-places`, { method: 'POST', body: JSON.stringify(data) }),

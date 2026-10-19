@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { Navigation, Layers, Users, Pencil, Trash2, Paperclip, Plus, Receipt } from 'lucide-vue-next'
 import ListSummary from '@/components/ListSummary.vue'
-import { formatDate, maintenanceTotal } from '@/utils/expenses'
+import CostHistory from '@/components/costs/CostHistory.vue'
+import { formatDate } from '@/utils/expenses'
 import { formatAmount } from '@/currency'
 import { t } from '@/i18n'
 
-const props = defineProps<{ driveExpenses: any[]; loading: boolean }>()
+defineProps<{ vehicleId: string; driveExpenses: any[]; loading: boolean }>()
 const emit = defineEmits<{
   add: []
   edit: [expense: any]
@@ -19,7 +19,6 @@ const emit = defineEmits<{
 }>()
 const router = useRouter()
 const vehicleStore = useVehicleStore()
-const total = computed(() => maintenanceTotal(props.driveExpenses, vehicleStore.currency))
 
 const TYPE_LABEL_KEYS: Record<string, string> = {
   TOLL: 'expenses.tollModal.toll',
@@ -42,7 +41,8 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       </template>
     </EmptyState>
     <div v-else class="space-y-3">
-      <ListSummary :chips="[{ label: $t('expenses.tollsPanel.total'), value: formatAmount(total, vehicleStore.currency), tone: 'sky' }]">
+      <CostHistory :vehicle-id="vehicleId" kind="tolls" :currency="vehicleStore.currency" :sync-key="driveExpenses" />
+      <ListSummary :chips="[]">
         {{ $t('expenses.tollsPanel.count', { count: driveExpenses.length }, driveExpenses.length) }}
       </ListSummary>
       <div

@@ -18,7 +18,6 @@ import {
   reminderDaysOver,
   formatCalendarDay,
   maintenanceStartPoint,
-  maintenanceTotal,
   maintenanceYears,
   sortMaintenanceByDate,
   toLocalDateTimeInput,
@@ -166,12 +165,6 @@ describe('maintenance list helpers', () => {
   it('lists the years present, latest first', () => {
     expect(maintenanceYears(items)).toEqual([2026, 2025])
     expect(maintenanceYears([])).toEqual([])
-  })
-
-  it('totals in the vehicle currency, converting foreign amounts with their rate', () => {
-    expect(maintenanceTotal(items, 'EUR')).toBeCloseTo(168.5)
-    expect(maintenanceTotal([{ category: 'OTHER', date: '2026-01-01', amount: 10, currency: 'USD', fx_rate: null }], 'EUR')).toBe(0)
-    expect(maintenanceTotal([], 'EUR')).toBe(0)
   })
 })
 

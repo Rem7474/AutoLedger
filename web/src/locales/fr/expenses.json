@@ -194,7 +194,6 @@
     "allCategories": "Toutes les catégories",
     "yearFilter": "Filtrer par année",
     "allYears": "Toutes les années",
-    "total": "Total",
     "count": "{n} dépense | {n} dépenses",
     "noMatch": "Aucune dépense ne correspond à ces filtres.",
     "noMaintenanceExpense": "Aucune dépense d'entretien enregistrée",
@@ -356,8 +355,7 @@
     "noTollOrParkingRecorded": "Aucun péage ou parking enregistré",
     "emptyHint": "Les péages et parkings apparaissent ici, ceux saisis sur un trajet y sont listés. Ajoutez-en un à la main pour un déplacement non enregistré.",
     "addFirst": "Ajouter un péage ou un parking",
-    "count": "{count} dépense | {count} dépenses",
-    "total": "Total"
+    "count": "{count} dépense | {count} dépenses"
   },
   "uploadDocumentModal": {
     "eGServiceInvoiceAugust": "ex: Facture révision, péages août 2026...",
@@ -504,5 +502,20 @@
     "estimatedPart": "dont {kwh} kWh estimés sur {distance} roulés avant le suivi",
     "estimatedCost": "dont {amount} estimés avant le suivi",
     "emptyPeriod": "Aucune recharge sur cette période."
+  },
+  "costHistory": {
+    "title": "Historique : {label}",
+    "tolls": "péages et parkings",
+    "service": "entretien et réparations",
+    "fixed": "coûts fixes",
+    "period": "Période",
+    "total": "Total payé",
+    "average": "Moyenne mensuelle",
+    "smoothedAverage": "Moyenne sur 12 mois",
+    "perMonth": "/mois",
+    "months": "{count} mois | {count} mois",
+    "smoothed": "Moyenne sur 12 mois",
+    "monthly": "Payé par mois ({cur})",
+    "noFullMonth": "Cette plage ne couvre aucun mois complet. Choisissez-en une qui en couvre au moins un."
   }
 }
