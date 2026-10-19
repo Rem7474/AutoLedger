@@ -95,7 +95,7 @@ A read-only token (`read`) also opens a narrow read API under `/api/integrations
 
 | Route | Returns |
 |---|---|
-| `GET /api/integrations/v1/vehicles` | The account's vehicles: `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`. |
+| `GET /api/integrations/v1/vehicles` | The account's vehicles: `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`, `role`, `tracking_mode` and, when the acquisition is entered, `acquisition_type` and `owned_since`. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}` | One vehicle, same fields. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | What the vehicle cost over its last 12 months (`last_12_months`) and since it was bought (`since_purchase`), by category, with the cost per km and a `completeness` summary. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps` | What the history is missing: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition, the details of what the acquisition lacks, and `missing`: what to complete, ranked as the application ranks it, each with a rough worth (`estimated_amount`, `null` when it cannot be estimated) and the `score_dimensions` of the completeness score. |

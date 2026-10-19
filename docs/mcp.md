@@ -36,10 +36,12 @@ The first must answer `401` with a `WWW-Authenticate: Bearer resource_metadata="
 
 | Tool | Returns |
 |---|---|
-| `list_vehicles` | The vehicles of the account: `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`. |
+| `list_vehicles` | The vehicles of the account: `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`, `role` (`owner`, or `editor` / `viewer` for a vehicle shared with the account), `tracking_mode` (`connected`, `semi_auto` or `manual`) and, when the acquisition is entered, `acquisition_type` and `owned_since`. |
 | `get_vehicle_costs` | What a vehicle cost over its last 12 months and since it was bought, by category, with the cost per km and a completeness score. Takes a `vehicle_id`. |
 | `get_vehicle_data_gaps` | What is missing from the records: odometer gaps and anomalies, charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition, and what to complete ranked by what it is worth. Takes a `vehicle_id`. |
 | `list_vehicle_trips` | The trips of a vehicle, most recent first: start and end time, `from` and `to` addresses, distance, duration, energy, tolls and parking, tags. Takes a `vehicle_id` and optionally `search` (text in an address, to find "the trip to Lyon"), `from` and `to` (days, `YYYY-MM-DD`, UTC) and `limit` (20 by default, 50 at most); `matching` says how many trips fit. |
+
+Wherever a tool takes a `vehicle_id`, the name of the vehicle works too when no other vehicle has the same; otherwise the error lists the vehicles of the account.
 
 The tools return the same views as the [read API](ingestion-api.md#read-api), with the same conventions: an amount is a decimal string in the currency of its vehicle and is never converted, a distance is in kilometres, an unknown figure is `null`. VINs, plates, positions, documents and drive identifiers are never returned. The one place a street address appears is `list_vehicle_trips`: it returns the departure and arrival addresses the account recorded, so an assistant can talk about a trip by its destination. An address stored only as coordinates is returned as `null`. Anything you authorize an assistant to read can be repeated in its answers and kept by its provider: do not authorize one for an account whose trip addresses you would not share. A vehicle the account cannot see is reported as not found.
 

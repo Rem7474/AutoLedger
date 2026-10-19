@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -262,5 +263,77 @@ func TestMCPResourceMetadataNamesTheAuthorizationServer(t *testing.T) {
 	if meta.Resource != "https://ledger.example/mcp" || len(meta.AuthorizationServers) != 1 || meta.AuthorizationServers[0] != "https://ledger.example" ||
 		len(meta.ScopesSupported) != 1 || meta.ScopesSupported[0] != "read" {
 		t.Errorf("metadata: %s", rec.Body.String())
+	}
+}
+
+func TestMCPVehicleCanBeNamedInsteadOfIdentifiedAndListSaysHowItIsOwned(t *testing.T) {
+	f := newMCPFixture(t)
+	ctx := context.Background()
+	start := time.Date(2025, 3, 14, 0, 0, 0, 0, time.UTC)
+	if err := f.repo.SaveVehicleOwnership(ctx, &models.VehicleOwnership{VehicleID: f.mine.ID, AcquisitionType: "LOA", StartDate: start}); err != nil {
+		t.Fatal(err)
+	}
+	twin := &models.Vehicle{UserID: f.owner.ID, Name: "daily", Currency: "GBP", TeslaMateAuthType: models.AuthModeNone}
+	spare := &models.Vehicle{UserID: f.owner.ID, Name: "Spare", Currency: "GBP", TeslaMateAuthType: models.AuthModeNone}
+	for _, v := range []*models.Vehicle{twin, spare} {
+		if err := f.repo.CreateVehicle(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+	session := f.connect(t, f.readTok)
+	call := func(name string, args map[string]any) (string, bool) {
+		res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: name, Arguments: args})
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		raw, _ := json.Marshal(res.StructuredContent)
+		if res.IsError {
+			raw, _ = json.Marshal(res.Content)
+		}
+		return string(raw), res.IsError
+	}
+
+	body, _ := call("list_vehicles", nil)
+	var listed mcpVehiclesOutput
+	if err := json.Unmarshal([]byte(body), &listed); err != nil {
+		t.Fatal(err)
+	}
+	var daily, other *IntegrationVehicleV1
+	for i := range listed.Vehicles {
+		switch listed.Vehicles[i].ID {
+		case f.mine.ID:
+			daily = &listed.Vehicles[i]
+		case spare.ID:
+			other = &listed.Vehicles[i]
+		}
+	}
+	if daily == nil || other == nil {
+		t.Fatalf("both own vehicles are listed: %+v", listed.Vehicles)
+	}
+	if daily.Role != "owner" || daily.TrackingMode != "manual" || daily.AcquisitionType == nil || *daily.AcquisitionType != "LOA" ||
+		daily.OwnedSince == nil || *daily.OwnedSince != "2025-03-14" {
+		t.Errorf("how the vehicle is owned: %+v", daily)
+	}
+	if other.AcquisitionType != nil || other.OwnedSince != nil {
+		t.Errorf("a vehicle without ownership details says null, not a default: %+v", other)
+	}
+
+	if body, failed := call("get_vehicle_costs", map[string]any{"vehicle_id": "SPARE"}); failed || !strings.Contains(body, spare.ID) {
+		t.Errorf("a name is accepted whatever its case: failed=%v %s", failed, body)
+	}
+	if body, failed := call("get_vehicle_costs", map[string]any{"vehicle_id": spare.ID}); failed || !strings.Contains(body, spare.ID) {
+		t.Errorf("an id is still accepted: failed=%v %s", failed, body)
+	}
+
+	body, failed := call("get_vehicle_costs", map[string]any{"vehicle_id": "Daily"})
+	if !failed || !strings.Contains(body, f.mine.ID) || !strings.Contains(body, twin.ID) || strings.Contains(body, spare.ID) {
+		t.Errorf("a name two vehicles share is refused and only those two are offered: failed=%v %s", failed, body)
+	}
+	body, failed = call("get_vehicle_data_gaps", map[string]any{"vehicle_id": "Nothing like it"})
+	if !failed || !strings.Contains(body, spare.ID) || strings.Contains(body, f.theirs.ID) {
+		t.Errorf("an unknown name lists the account's vehicles, not another account's: failed=%v %s", failed, body)
+	}
+	if _, failed := call("list_vehicle_trips", map[string]any{"vehicle_id": f.theirs.ID}); !failed {
+		t.Error("another account's vehicle id stays refused")
 	}
 }

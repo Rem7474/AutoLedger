@@ -95,7 +95,7 @@ Un jeton en lecture seule (`read`) ouvre aussi une API de lecture restreinte sou
 
 | Route | Renvoie |
 |---|---|
-| `GET /api/integrations/v1/vehicles` | Les véhicules du compte : `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`. |
+| `GET /api/integrations/v1/vehicles` | Les véhicules du compte : `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`, `role`, `tracking_mode` et, quand l'acquisition est saisie, `acquisition_type` et `owned_since`. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}` | Un véhicule, mêmes champs. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | Ce que le véhicule a coûté sur ses 12 derniers mois (`last_12_months`) et depuis son achat (`since_purchase`), par catégorie, avec le coût au km et un résumé `completeness`. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps` | Ce qui manque à l'historique : trous et anomalies de compteur (les 20 plus récents sont listés), charges sans coût, trajets non qualifiés, distance non suivie, assurance ou acquisition absentes, le détail de ce qui manque à l'acquisition, et `missing` : ce qu'il faut compléter, classé comme dans l'application, avec une valeur approximative (`estimated_amount`, `null` quand elle ne peut pas être estimée) et les `score_dimensions` du score de complétude. |

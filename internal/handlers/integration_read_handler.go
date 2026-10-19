@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -71,11 +72,33 @@ type IntegrationVehicleV1 struct {
 	Powertrain string              `json:"powertrain" jsonschema:"EV, ICE, PHEV or REEV"`
 	Currency   string              `json:"currency" jsonschema:"currency of every amount of this vehicle, fixed at creation"`
 	Odometer   IntegrationDistance `json:"odometer" jsonschema:"latest known odometer reading"`
+	// Role is what the account may do with the vehicle; the read API only ever reads.
+	Role string `json:"role" jsonschema:"owner when the vehicle is the account's own, editor or viewer when it is shared with it"`
+	// TrackingMode says how the records reach the application, which tells how fresh and complete they can be.
+	TrackingMode string `json:"tracking_mode" jsonschema:"connected (drives and charges synchronised from a telemetry source), semi_auto (pushed by an integration) or manual (entered by hand)"`
+	// AcquisitionType and OwnedSince come from the ownership details; null when they are not entered.
+	AcquisitionType *string `json:"acquisition_type" jsonschema:"CASH, LOAN, LOA (lease with a purchase option) or LLD (long-term lease); null when the acquisition is not entered"`
+	OwnedSince      *string `json:"owned_since" jsonschema:"day the ownership or the contract started, YYYY-MM-DD; null when the acquisition is not entered"`
 }
 
 func integrationVehicleV1(v *models.Vehicle) IntegrationVehicleV1 {
 	return IntegrationVehicleV1{ID: v.ID, Name: v.Name, Make: v.Make, Model: v.Model, Powertrain: v.Powertrain,
-		Currency: v.Currency, Odometer: kilometres(v.CurrentOdometer)}
+		Currency: v.Currency, Odometer: kilometres(v.CurrentOdometer),
+		Role: strings.ToLower(string(v.Role)), TrackingMode: strings.ToLower(string(v.TelemetryMode))}
+}
+
+// withOwnership adds the acquisition the owner entered, when there is one.
+func (h *IntegrationReadHandler) withOwnership(ctx context.Context, out *IntegrationVehicleV1) error {
+	o, err := h.repo.GetVehicleOwnership(ctx, out.ID)
+	if errors.Is(err, database.ErrNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	since := o.StartDate.Format("2006-01-02")
+	out.AcquisitionType, out.OwnedSince = &o.AcquisitionType, &since
+	return nil
 }
 
 // errIntegrationVehicleNotFound is a vehicle the account cannot see, whether it does not exist or belongs to someone else.
@@ -107,7 +130,11 @@ func (h *IntegrationReadHandler) Vehicles(ctx context.Context, userID string) ([
 	}
 	out := make([]IntegrationVehicleV1, 0, len(vehicles))
 	for i := range vehicles {
-		out = append(out, integrationVehicleV1(&vehicles[i]))
+		v := integrationVehicleV1(&vehicles[i])
+		if err := h.withOwnership(ctx, &v); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
 	}
 	return out, nil
 }
@@ -129,7 +156,12 @@ func (h *IntegrationReadHandler) GetVehicle(w http.ResponseWriter, r *http.Reque
 		writeIntegrationError(w, r, err, "Failed to read the vehicle")
 		return
 	}
-	writeJSON(w, http.StatusOK, integrationVehicleV1(vehicle))
+	out := integrationVehicleV1(vehicle)
+	if err := h.withOwnership(r.Context(), &out); err != nil {
+		writeIntegrationError(w, r, err, "Failed to read the vehicle")
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // IntegrationCostBreakdown is the money spent over a period, by category, in the vehicle's currency. The categories
