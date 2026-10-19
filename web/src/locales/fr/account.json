@@ -85,7 +85,14 @@
     "tokenGeneratedTitle": "Votre jeton d'API est prêt",
     "tokenWarning": "Copiez votre jeton immédiatement. Pour des raisons de sécurité, il ne pourra plus être réaffiché !",
     "copy": "Copier dans le presse-papiers",
-    "createFailed": "Échec de création du jeton"
+    "createFailed": "Échec de création du jeton",
+    "scopeLabel": "Accès",
+    "scopeIngest": "Envoyer et lire (Home Assistant, scripts)",
+    "scopeRead": "Lecture seule",
+    "scopeIngestHelp": "Peut envoyer des sessions de charge et lire les véhicules et leurs indicateurs.",
+    "scopeReadHelp": "Peut seulement lire. Il ne peut pas envoyer d'événements. L'accès ne se modifie pas ensuite : générez un autre jeton pour en changer.",
+    "scopeBadgeIngest": "Envoi et lecture",
+    "scopeBadgeRead": "Lecture seule"
   },
   "sso": {
     "link": "Lier {provider}",

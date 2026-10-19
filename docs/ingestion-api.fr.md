@@ -10,6 +10,17 @@ Créez un jeton d'API dans la page du compte (`al_live_...`). Il est lié au com
 Authorization: Bearer al_live_xxxxxxxx
 ```
 
+### Accès
+
+Un jeton a un accès, choisi à sa création et jamais modifié ensuite (générez un autre jeton pour en changer) :
+
+| Accès | Permet |
+|---|---|
+| Envoi et lecture (`ingest`) | Envoyer des événements (`POST /api/integrations/homeassistant/event`) et lire les véhicules et leurs indicateurs. C'est ce dont Home Assistant a besoin. |
+| Lecture seule (`read`) | Lire les véhicules et leurs indicateurs. Un envoi est refusé avec `403`. |
+
+Utilisez un jeton en lecture seule pour tout ce qui ne fait que consulter les chiffres (un tableau de bord, un script, un assistant) : un jeton perdu ou détourné ne peut rien écrire dans le compte.
+
 ## Point d'entrée
 
 `POST /api/integrations/homeassistant/event` avec un corps JSON.

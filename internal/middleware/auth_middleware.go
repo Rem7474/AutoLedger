@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/teslacost/teslacost/internal/auth"
@@ -17,6 +18,8 @@ const (
 	UserEmailKey contextKey = "userEmail"
 	// SessionIDKey holds the session an access token was issued for; absent for an API token or an older token.
 	SessionIDKey contextKey = "sessionID"
+	// TokenScopeKey holds the scope of the API token that authenticated the request; absent for a session.
+	TokenScopeKey contextKey = "tokenScope"
 )
 
 // accessTokenCookieName mirrors the constant of the same name in the handlers package
@@ -75,7 +78,7 @@ func RequireActiveSession(checker SessionChecker) func(http.Handler) http.Handle
 }
 
 type APITokenValidator interface {
-	ValidateAPIToken(ctx context.Context, tokenHash string) (string, string, error)
+	ValidateAPIToken(ctx context.Context, tokenHash string) (userID, email, scope string, err error)
 }
 
 // AuthenticateJWT returns a middleware that accepts a session access token only. An API token
@@ -107,13 +110,14 @@ func authenticate(jwtSecret string, tokenValidator APITokenValidator) func(http.
 					return
 				}
 				tokenHash := auth.HashAPIToken(tokenString)
-				userID, email, err := tokenValidator.ValidateAPIToken(r.Context(), tokenHash)
+				userID, email, scope, err := tokenValidator.ValidateAPIToken(r.Context(), tokenHash)
 				if err != nil {
 					sendJSONError(w, http.StatusUnauthorized, "Invalid or expired API token")
 					return
 				}
 				ctx := context.WithValue(r.Context(), UserIDKey, userID)
 				ctx = context.WithValue(ctx, UserEmailKey, email)
+				ctx = context.WithValue(ctx, TokenScopeKey, scope)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -129,6 +133,20 @@ func authenticate(jwtSecret string, tokenValidator APITokenValidator) func(http.
 			ctx = context.WithValue(ctx, SessionIDKey, claims.SessionID)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// RequireTokenScope lets a request through when it comes from a session, or from an API token whose scope is one of
+// scopes. A token of another scope gets a 403: it is valid, it is not allowed here. Run it after AuthenticateIntegration.
+func RequireTokenScope(scopes ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if scope, isToken := r.Context().Value(TokenScopeKey).(string); isToken && !slices.Contains(scopes, scope) {
+				sendJSONError(w, http.StatusForbidden, "This API token does not have the scope this route needs")
+				return
+			}
+			next.ServeHTTP(w, r)
 		})
 	}
 }

@@ -122,7 +122,7 @@ async function handleFinalSubmit() {
     const vehicle = await api.createVehicle(payload)
     if (useWebhook.value) {
       try {
-        const { token } = await api.createAPIToken({ name: 'Home Assistant' })
+        const { token } = await api.createAPIToken({ name: 'Home Assistant', scope: 'ingest' })
         webhook.value = { token, snippet: webhookSnippet(window.location.origin, token, vehicle.id) }
       } catch {
         webhookFailed.value = true

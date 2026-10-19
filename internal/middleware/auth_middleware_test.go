@@ -100,11 +100,64 @@ func TestAuthenticateJWTRejectsMissingCredentials(t *testing.T) {
 
 type fakeTokenValidator map[string]string // token hash -> user ID
 
-func (f fakeTokenValidator) ValidateAPIToken(_ context.Context, tokenHash string) (string, string, error) {
+func (f fakeTokenValidator) ValidateAPIToken(_ context.Context, tokenHash string) (string, string, string, error) {
 	if userID, ok := f[tokenHash]; ok {
-		return userID, userID + "@example.com", nil
+		return userID, userID + "@example.com", auth.ScopeIngest, nil
 	}
-	return "", "", errors.New("unknown token")
+	return "", "", "", errors.New("unknown token")
+}
+
+// scopedTokenValidator knows tokens by hash with the scope each was created with.
+type scopedTokenValidator map[string]string // token hash -> scope
+
+func (f scopedTokenValidator) ValidateAPIToken(_ context.Context, tokenHash string) (string, string, string, error) {
+	if scope, ok := f[tokenHash]; ok {
+		return "user-1", "user-1@example.com", scope, nil
+	}
+	return "", "", "", errors.New("unknown token")
+}
+
+func TestRequireTokenScope(t *testing.T) {
+	secret := "test-secret"
+	ingest := auth.TokenPrefix + "ingest-token-0123456789abcdef0123456789abcdef"
+	read := auth.TokenPrefix + "read-token-0123456789abcdef0123456789abcdef0123"
+	validator := scopedTokenValidator{auth.HashAPIToken(ingest): auth.ScopeIngest, auth.HashAPIToken(read): auth.ScopeRead}
+	session, err := auth.GenerateAccessToken("user-2", "user2@example.com", secret, 15)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	status := func(scopes []string, bearer string) int {
+		handler := AuthenticateIntegration(secret, validator)(RequireTokenScope(scopes...)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})))
+		req := httptest.NewRequest(http.MethodPost, "/", nil)
+		req.Header.Set("Authorization", "Bearer "+bearer)
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		return rec.Code
+	}
+
+	cases := []struct {
+		name   string
+		scopes []string
+		bearer string
+		want   int
+	}{
+		{"an ingest token pushes", []string{auth.ScopeIngest}, ingest, http.StatusOK},
+		{"a read token cannot push", []string{auth.ScopeIngest}, read, http.StatusForbidden},
+		{"a read token reads", []string{auth.ScopeIngest, auth.ScopeRead}, read, http.StatusOK},
+		{"an ingest token reads what it always read", []string{auth.ScopeIngest, auth.ScopeRead}, ingest, http.StatusOK},
+		{"an ingest token cannot reach a read-only route", []string{auth.ScopeRead}, ingest, http.StatusForbidden},
+		{"a session is not scoped", []string{auth.ScopeIngest}, session, http.StatusOK},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := status(tc.scopes, tc.bearer); got != tc.want {
+				t.Errorf("got %d, want %d", got, tc.want)
+			}
+		})
+	}
 }
 
 func TestAPITokensOnlyOpenIntegrationRoutes(t *testing.T) {

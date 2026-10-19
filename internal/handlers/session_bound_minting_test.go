@@ -69,7 +69,7 @@ func TestRevokedSessionCannotMintCredentials(t *testing.T) {
 	h := NewAuthHandler(repo, authTestConfig(), nil)
 	r := accountRouter(repo, h)
 	mint := func(jwt string) int {
-		return callWithBearer(r, http.MethodPost, "/api/auth/tokens", jwt, `{"name":"Audit credential"}`).Code
+		return callWithBearer(r, http.MethodPost, "/api/auth/tokens", jwt, `{"name":"Audit credential","scope":"read"}`).Code
 	}
 
 	stolen, device1 := signInToken(t, h, "mint@example.org", "Correct-Horse-9")
@@ -119,7 +119,7 @@ func TestRevokingOneSessionOnlyEndsThatSession(t *testing.T) {
 	if rec := callWithBearer(r, http.MethodDelete, "/api/auth/sessions/"+claims.SessionID, second, ""); rec.Code != http.StatusOK {
 		t.Fatalf("revoke the first session from the second: %d %s", rec.Code, rec.Body.String())
 	}
-	body := `{"name":"x"}`
+	body := `{"name":"x","scope":"read"}`
 	if rec := callWithBearer(r, http.MethodPost, "/api/auth/tokens", first, body); rec.Code != http.StatusUnauthorized {
 		t.Errorf("the revoked session must not mint: %d", rec.Code)
 	}
@@ -141,7 +141,7 @@ func TestATokenThatNamesNoSessionReadsButIsAskedToRenewBeforeMinting(t *testing.
 	if rec := callWithBearer(r, http.MethodGet, "/api/auth/me", legacy, ""); rec.Code != http.StatusOK {
 		t.Fatalf("a token issued before sessions were named keeps reading: %d", rec.Code)
 	}
-	if rec := callWithBearer(r, http.MethodPost, "/api/auth/tokens", legacy, `{"name":"x"}`); rec.Code != http.StatusUnauthorized {
+	if rec := callWithBearer(r, http.MethodPost, "/api/auth/tokens", legacy, `{"name":"x","scope":"read"}`); rec.Code != http.StatusUnauthorized {
 		t.Fatalf("it must be renewed before it creates a credential: %d", rec.Code)
 	}
 }
@@ -169,7 +169,7 @@ func TestARefreshedAccessTokenIsBoundToTheSameSession(t *testing.T) {
 	if err != nil || renewed.SessionID != firstClaims.SessionID {
 		t.Fatalf("a refresh keeps the session: %+v vs %+v (%v)", renewed, firstClaims, err)
 	}
-	if rec := callWithBearer(r, http.MethodPost, "/api/auth/tokens", body.Token, `{"name":"x"}`); rec.Code != http.StatusCreated {
+	if rec := callWithBearer(r, http.MethodPost, "/api/auth/tokens", body.Token, `{"name":"x","scope":"read"}`); rec.Code != http.StatusCreated {
 		t.Fatalf("the renewed token creates a token: %d", rec.Code)
 	}
 }

@@ -16,10 +16,15 @@ import (
 
 const testJWTSecret = "route-table-test-secret-0123456789abcdef"
 
-type fakeTokenValidator struct{}
+// fakeTokenValidator accepts any API token, with the scope it names (ingest when empty).
+type fakeTokenValidator struct{ scope string }
 
-func (fakeTokenValidator) ValidateAPIToken(_ context.Context, _ string) (string, string, error) {
-	return "user-1", "user@example.com", nil
+func (f fakeTokenValidator) ValidateAPIToken(_ context.Context, _ string) (string, string, string, error) {
+	scope := f.scope
+	if scope == "" {
+		scope = auth.ScopeIngest
+	}
+	return "user-1", "user@example.com", scope, nil
 }
 
 var routeParam = regexp.MustCompile(`\{[^}]+\}`)
@@ -31,12 +36,15 @@ const (
 	badSessionMessage    = "Invalid or expired token"
 )
 
-func newRouteTable(t *testing.T) chi.Router {
+func newRouteTable(t *testing.T) chi.Router { return newRouteTableFor(t, "") }
+
+// newRouteTableFor builds the route table with API tokens that carry the given scope.
+func newRouteTableFor(t *testing.T, scope string) chi.Router {
 	t.Helper()
 	r := chi.NewRouter()
 	passThrough := func(next http.Handler) http.Handler { return next }
 	registerSystemRoutes(r, nil)
-	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{}, fakeSessionChecker{}, passThrough, &apiHandlers{})
+	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{scope: scope}, fakeSessionChecker{}, passThrough, &apiHandlers{})
 	return r
 }
 
@@ -115,6 +123,54 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		if strings.Contains(label, "/api/integrations/") {
 			t.Errorf("%s needs a session although it is an integration route", label)
 		}
+	}
+}
+
+// TestReadTokenCannotPushEvents pins the scope of each integration route: a read token reads the Home Assistant
+// views and is refused on the route that writes, an ingest token keeps both.
+func TestReadTokenCannotPushEvents(t *testing.T) {
+	apiToken := auth.TokenPrefix + "route-table-test"
+	const scopeRefusal = "does not have the scope"
+	const push = "/api/integrations/homeassistant/event"
+	const read = "/api/integrations/homeassistant/vehicles"
+
+	readOnly := newRouteTableFor(t, auth.ScopeRead)
+	if body := probe(readOnly, http.MethodPost, push, apiToken); !strings.Contains(body, scopeRefusal) {
+		t.Errorf("a read token must be refused on %s, got %q", push, body)
+	}
+	if body := probe(readOnly, http.MethodGet, read, apiToken); strings.Contains(body, scopeRefusal) {
+		t.Errorf("a read token must reach %s, got %q", read, body)
+	}
+
+	ingest := newRouteTableFor(t, auth.ScopeIngest)
+	for _, route := range []struct{ method, path string }{{http.MethodPost, push}, {http.MethodGet, read}} {
+		if body := probe(ingest, route.method, route.path, apiToken); strings.Contains(body, scopeRefusal) {
+			t.Errorf("an ingest token must reach %s %s, got %q", route.method, route.path, body)
+		}
+	}
+}
+
+// TestEveryIntegrationRouteChecksTheTokenScope fails for an integration route that forgot RequireTokenScope: a token
+// whose scope the route does not list must be refused on every one of them.
+func TestEveryIntegrationRouteChecksTheTokenScope(t *testing.T) {
+	r := newRouteTableFor(t, "no-such-scope")
+	apiToken := auth.TokenPrefix + "route-table-test"
+	var checked int
+	err := chi.Walk(r, func(method, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		if !strings.HasPrefix(route, "/api/integrations/") {
+			return nil
+		}
+		checked++
+		if body := probe(r, method, route, apiToken); !strings.Contains(body, "does not have the scope") {
+			t.Errorf("%s %s accepts a token of any scope, wrap it in RequireTokenScope", method, route)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if checked == 0 {
+		t.Fatal("no integration route found")
 	}
 }
 

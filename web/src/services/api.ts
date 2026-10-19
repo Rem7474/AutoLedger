@@ -538,7 +538,7 @@ export const api = {
 
   // API Tokens (Home Assistant & Automations)
   getAPITokens: () => request<{ tokens: APITokenInfo[] }>('/auth/tokens'),
-  createAPIToken: (data: { name: string; expires_at?: string | null }) =>
+  createAPIToken: (data: { name: string; scope: APITokenScope; expires_at?: string | null }) =>
     request<APITokenCreatedResponse>('/auth/tokens', { method: 'POST', body: JSON.stringify(data) }),
   revokeAPIToken: (tokenId: string) =>
     request<{ success: boolean }>(`/auth/tokens/${tokenId}`, { method: 'DELETE' }),
@@ -627,10 +627,14 @@ export interface VehicleWebhook {
 }
 
 // API Tokens
+/** What a token may do: push events and read the Home Assistant views, or only read. */
+export type APITokenScope = 'ingest' | 'read'
+
 export interface APITokenInfo {
   id: string
   name: string
   token_prefix: string
+  scope: APITokenScope
   last_used_at: string | null
   expires_at: string | null
   created_at: string

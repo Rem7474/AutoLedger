@@ -51,13 +51,18 @@ func (h *TokenHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !auth.ValidScope(req.Scope) {
+		writeAPIError(w, http.StatusBadRequest, apierror.New("token.scope_invalid", "Choose what the token may do: read data or push events"))
+		return
+	}
+
 	rawToken, prefix, tokenHash, err := auth.GenerateAPIToken()
 	if err != nil {
 		writeAPIError(w, http.StatusInternalServerError, apierror.New("internal", "Failed to generate token"))
 		return
 	}
 
-	tokenInfo, err := h.repo.CreateAPIToken(r.Context(), userID, name, tokenHash, prefix, req.ExpiresAt)
+	tokenInfo, err := h.repo.CreateAPIToken(r.Context(), userID, name, req.Scope, tokenHash, prefix, req.ExpiresAt)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to store token")
 		return

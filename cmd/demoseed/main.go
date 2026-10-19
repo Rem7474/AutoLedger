@@ -269,7 +269,7 @@ func main() {
 	var tok struct {
 		Token string `json:"token"`
 	}
-	if err := c.do("POST", "/api/auth/tokens/", map[string]string{"name": "demo seed"}, &tok, ""); err != nil {
+	if err := c.do("POST", "/api/auth/tokens/", map[string]string{"name": "demo seed", "scope": "ingest"}, &tok, ""); err != nil {
 		log.Fatalf("api token: %v", err)
 	}
 	for _, key := range strings.Split(*sets, ",") {

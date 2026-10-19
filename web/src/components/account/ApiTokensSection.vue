@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import ModalShell from '@/components/ModalShell.vue'
 import { Key, Plus, Trash2, Copy, Check, ExternalLink, ShieldAlert, Sparkles } from 'lucide-vue-next'
-import { api, type APITokenInfo, type APITokenCreatedResponse } from '@/services/api'
+import { api, type APITokenInfo, type APITokenCreatedResponse, type APITokenScope } from '@/services/api'
 import { describeRelativeTime } from '@/utils/userAgent'
 import { useConfirm } from '@/composables/useConfirm'
 import { t } from '@/i18n'
@@ -17,6 +17,7 @@ const creating = ref(false)
 const showCreateModal = ref(false)
 const tokenName = ref('')
 const tokenExpiresDays = ref<number | null>(null)
+const tokenScope = ref<APITokenScope>('ingest')
 const createError = ref('')
 const createdTokenResponse = ref<APITokenCreatedResponse | null>(null)
 const copied = ref(false)
@@ -48,11 +49,13 @@ async function handleCreateToken() {
     }
     const res = await api.createAPIToken({
       name: tokenName.value.trim(),
+      scope: tokenScope.value,
       expires_at: expiresAt,
     })
     createdTokenResponse.value = res
     tokenName.value = ''
     tokenExpiresDays.value = null
+    tokenScope.value = 'ingest'
     await loadTokens()
   } catch (err: any) {
     createError.value = err?.message || t('account.tokens.createFailed')
@@ -162,6 +165,9 @@ onMounted(() => {
             <span class="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
               {{ tok.token_prefix }}...
             </span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+              {{ tok.scope === 'read' ? t('account.tokens.scopeBadgeRead') : t('account.tokens.scopeBadgeIngest') }}
+            </span>
           </div>
           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mt-1">
             <span>{{ t('account.tokens.created', { date: describeRelativeTime(tok.created_at) }) }}</span>
@@ -212,6 +218,19 @@ onMounted(() => {
               class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none"
             />
           </div>
+
+          <fieldset>
+            <legend class="block text-xs font-medium text-slate-300 mb-1">{{ t('account.tokens.scopeLabel') }}</legend>
+            <label class="flex items-start gap-2 text-sm text-slate-200 py-1">
+              <input v-model="tokenScope" type="radio" name="token-scope" value="ingest" class="mt-1" />
+              <span>{{ t('account.tokens.scopeIngest') }}</span>
+            </label>
+            <label class="flex items-start gap-2 text-sm text-slate-200 py-1">
+              <input v-model="tokenScope" type="radio" name="token-scope" value="read" class="mt-1" />
+              <span>{{ t('account.tokens.scopeRead') }}</span>
+            </label>
+            <p class="mt-1 text-xs text-slate-400">{{ tokenScope === 'read' ? t('account.tokens.scopeReadHelp') : t('account.tokens.scopeIngestHelp') }}</p>
+          </fieldset>
 
           <div>
             <label for="token-expiry-select" class="block text-xs font-medium text-slate-300 mb-1">
