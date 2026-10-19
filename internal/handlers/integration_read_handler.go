@@ -38,8 +38,8 @@ func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.T
 
 // IntegrationAmount is a monetary amount with its currency. Amount is a decimal string so no client rounds it.
 type IntegrationAmount struct {
-	Amount   string `json:"amount"`
-	Currency string `json:"currency"`
+	Amount   string `json:"amount" jsonschema:"decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure"`
+	Currency string `json:"currency" jsonschema:"ISO 4217 currency code of the vehicle the amount belongs to"`
 }
 
 func amountOf(c money.Cents, currency string) IntegrationAmount {
@@ -56,21 +56,21 @@ func ratePerKm(v *float64, currency string) *IntegrationAmount {
 
 // IntegrationDistance is a distance with its unit, always kilometres.
 type IntegrationDistance struct {
-	Value float64 `json:"value"`
-	Unit  string  `json:"unit"`
+	Value float64 `json:"value" jsonschema:"the distance"`
+	Unit  string  `json:"unit" jsonschema:"always km"`
 }
 
 func kilometres(v float64) IntegrationDistance { return IntegrationDistance{Value: v, Unit: "km"} }
 
 // IntegrationVehicleV1 is a vehicle of the read API. It is the integration view plus the unit of the odometer.
 type IntegrationVehicleV1 struct {
-	ID         string              `json:"id"`
-	Name       string              `json:"name"`
-	Make       string              `json:"make"`
-	Model      string              `json:"model"`
-	Powertrain string              `json:"powertrain"`
-	Currency   string              `json:"currency"`
-	Odometer   IntegrationDistance `json:"odometer"`
+	ID         string              `json:"id" jsonschema:"identifier to pass as vehicle_id to the other tools"`
+	Name       string              `json:"name" jsonschema:"name the owner gave the vehicle, written by the user"`
+	Make       string              `json:"make" jsonschema:"make, free text, empty when not given"`
+	Model      string              `json:"model" jsonschema:"model, free text, empty when not given"`
+	Powertrain string              `json:"powertrain" jsonschema:"EV, ICE, PHEV or REEV"`
+	Currency   string              `json:"currency" jsonschema:"currency of every amount of this vehicle, fixed at creation"`
+	Odometer   IntegrationDistance `json:"odometer" jsonschema:"latest known odometer reading"`
 }
 
 func integrationVehicleV1(v *models.Vehicle) IntegrationVehicleV1 {
@@ -135,42 +135,42 @@ func (h *IntegrationReadHandler) GetVehicle(w http.ResponseWriter, r *http.Reque
 // IntegrationCostBreakdown is the money spent over a period, by category, in the vehicle's currency. The categories
 // add up to Total (cash basis, the purchase of the vehicle excluded).
 type IntegrationCostBreakdown struct {
-	Energy      IntegrationAmount `json:"energy"`
-	Tolls       IntegrationAmount `json:"tolls"`
-	Maintenance IntegrationAmount `json:"maintenance"`
-	Insurance   IntegrationAmount `json:"insurance"`
-	Financing   IntegrationAmount `json:"financing"`
-	Tires       IntegrationAmount `json:"tires"`
-	Other       IntegrationAmount `json:"other"`
-	Total       IntegrationAmount `json:"total"`
+	Energy      IntegrationAmount `json:"energy" jsonschema:"electricity charged and fuel bought"`
+	Tolls       IntegrationAmount `json:"tolls" jsonschema:"tolls, parking and ferries"`
+	Maintenance IntegrationAmount `json:"maintenance" jsonschema:"servicing and unplanned repairs, insurance deductibles included"`
+	Insurance   IntegrationAmount `json:"insurance" jsonschema:"insurance premiums"`
+	Financing   IntegrationAmount `json:"financing" jsonschema:"cash paid for the loan or lease: rents, down payment, fees and loan interest"`
+	Tires       IntegrationAmount `json:"tires" jsonschema:"tires, counted in full in the month they were bought"`
+	Other       IntegrationAmount `json:"other" jsonschema:"subscriptions, taxes, accessories and anything else"`
+	Total       IntegrationAmount `json:"total" jsonschema:"sum of the seven categories above: the cash spent, the purchase of the vehicle excluded"`
 }
 
 // IntegrationCostPeriod is the costs and distance of a period; the month in progress counts with the instalments
 // that fall due later in it. CostPerKm is null while the distance is unknown.
 type IntegrationCostPeriod struct {
 	// From and To are the first and last month (YYYY-MM) the period covers; null for the whole ownership.
-	From      *string                  `json:"from"`
-	To        *string                  `json:"to"`
-	Costs     IntegrationCostBreakdown `json:"costs"`
-	Distance  IntegrationDistance      `json:"distance"`
-	CostPerKm *IntegrationAmount       `json:"cost_per_km"`
+	From      *string                  `json:"from" jsonschema:"first month covered, YYYY-MM; null for the whole ownership"`
+	To        *string                  `json:"to" jsonschema:"last month covered, YYYY-MM; null for the whole ownership"`
+	Costs     IntegrationCostBreakdown `json:"costs" jsonschema:"what was spent over the period, by category"`
+	Distance  IntegrationDistance      `json:"distance" jsonschema:"distance driven over the period, tracked plus estimated for the untracked part"`
+	CostPerKm *IntegrationAmount       `json:"cost_per_km" jsonschema:"total cost divided by the distance, per kilometre; null while the distance is unknown"`
 }
 
 // IntegrationCompleteness says how much of the figures rests on recorded data.
 type IntegrationCompleteness struct {
-	IsComplete     bool     `json:"is_complete"`
-	ScoreAvailable bool     `json:"score_available"`
-	ScorePct       *int     `json:"score_pct"`
-	Warnings       []string `json:"warnings"`
+	IsComplete     bool     `json:"is_complete" jsonschema:"true when nothing is known to be missing"`
+	ScoreAvailable bool     `json:"score_available" jsonschema:"false while the vehicle has no distance and no expense, so there is nothing to score"`
+	ScorePct       *int     `json:"score_pct" jsonschema:"0 to 100, how much of the figures rests on recorded data; null when no score is available"`
+	Warnings       []string `json:"warnings" jsonschema:"what makes the figures less reliable, as sentences; call get_vehicle_data_gaps for the detail"`
 }
 
 // IntegrationCosts is the cost summary of a vehicle.
 type IntegrationCosts struct {
-	VehicleID     string                  `json:"vehicle_id"`
-	Currency      string                  `json:"currency"`
-	Last12Months  IntegrationCostPeriod   `json:"last_12_months"`
-	SincePurchase IntegrationCostPeriod   `json:"since_purchase"`
-	Completeness  IntegrationCompleteness `json:"completeness"`
+	VehicleID     string                  `json:"vehicle_id" jsonschema:"the vehicle these figures belong to"`
+	Currency      string                  `json:"currency" jsonschema:"currency of every amount"`
+	Last12Months  IntegrationCostPeriod   `json:"last_12_months" jsonschema:"the last twelve calendar months, the month in progress included with the instalments that fall due later in it; fewer months for a vehicle with a shorter history"`
+	SincePurchase IntegrationCostPeriod   `json:"since_purchase" jsonschema:"the whole ownership, from the first record"`
+	Completeness  IntegrationCompleteness `json:"completeness" jsonschema:"how far these figures can be trusted"`
 }
 
 func breakdown(currency string, energy, tolls, maintenance, insurance, financing, tires, other, total money.Cents) IntegrationCostBreakdown {
@@ -260,27 +260,27 @@ func buildIntegrationCosts(vehicle *models.Vehicle, sum *services.TCOSummary) In
 // IntegrationDataGap is one place where the recorded history does not add up. It carries no drive identifier,
 // address or position: when it was found and the distance are what a report needs to say what is missing.
 type IntegrationDataGap struct {
-	Kind     string              `json:"kind"`
-	At       string              `json:"at"` // RFC 3339 instant
-	Distance IntegrationDistance `json:"distance"`
+	Kind     string              `json:"kind" jsonschema:"ODOMETER_GAP (odometer moved with no drive recorded), ODOMETER_REGRESSION (odometer went down) or DISTANCE_MISMATCH (drive distance differs from the odometer)"`
+	At       string              `json:"at" jsonschema:"RFC 3339 instant the problem was found"`
+	Distance IntegrationDistance `json:"distance" jsonschema:"distance involved"`
 }
 
 // IntegrationDataGaps lists what is missing from a vehicle's data.
 type IntegrationDataGaps struct {
-	VehicleID string `json:"vehicle_id"`
+	VehicleID string `json:"vehicle_id" jsonschema:"the vehicle these figures belong to"`
 	// OdometerGaps counts the stretches of odometer no drive covers, and OdometerGapDistance adds them up.
-	OdometerGaps        int                 `json:"odometer_gaps"`
-	OdometerGapDistance IntegrationDistance `json:"odometer_gap_distance"`
-	OdometerAnomalies   int                 `json:"odometer_anomalies"`
+	OdometerGaps        int                 `json:"odometer_gaps" jsonschema:"number of stretches of odometer that no recorded drive covers"`
+	OdometerGapDistance IntegrationDistance `json:"odometer_gap_distance" jsonschema:"total distance of those stretches"`
+	OdometerAnomalies   int                 `json:"odometer_anomalies" jsonschema:"number of odometer readings that go down or disagree with the drives"`
 	// Issues holds the first few, the most recent first; Truncated says more exist.
-	Issues    []IntegrationDataGap `json:"issues"`
-	Truncated bool                 `json:"truncated"`
+	Issues    []IntegrationDataGap `json:"issues" jsonschema:"the most recent gaps and anomalies, newest first, at most 20"`
+	Truncated bool                 `json:"truncated" jsonschema:"true when more issues exist than the ones listed"`
 
-	ChargesWithoutCost int                 `json:"charges_without_cost"`
-	UnqualifiedDrives  int                 `json:"unqualified_drives"`
-	UntrackedDistance  IntegrationDistance `json:"untracked_distance"`
-	InsuranceMissing   bool                `json:"insurance_missing"`
-	AcquisitionMissing bool                `json:"acquisition_missing"`
+	ChargesWithoutCost int                 `json:"charges_without_cost" jsonschema:"charging sessions recorded without a price, whose cost is left out of the totals"`
+	UnqualifiedDrives  int                 `json:"unqualified_drives" jsonschema:"drives not yet classed as professional or personal"`
+	UntrackedDistance  IntegrationDistance `json:"untracked_distance" jsonschema:"distance driven that no drive record covers, estimated from the odometer"`
+	InsuranceMissing   bool                `json:"insurance_missing" jsonschema:"true when no insurance premium is recorded and the lease does not include it"`
+	AcquisitionMissing bool                `json:"acquisition_missing" jsonschema:"true when the acquisition (purchase, loan or lease) is not entered or lacks details, so depreciation and financing are not fully known"`
 }
 
 // DataGaps says what a vehicle's history is missing, so a report can state how far its figures can be trusted.
