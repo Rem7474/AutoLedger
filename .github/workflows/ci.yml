@@ -217,6 +217,7 @@ jobs:
           DATABASE_URL: postgres://teslacost:test@localhost:5432/teslacost_e2e?sslmode=disable
           AUTOLEDGER_PORT: 8080
           AUTOLEDGER_STORAGE_DIR: ${{ runner.temp }}/documents
+          AUTOLEDGER_MCP_ENABLED: true
         run: |
           nohup ./autoledger-server > server.log 2>&1 &
           for _ in $(seq 1 60); do curl -sf "$BASE_URL/api/health" >/dev/null && break; sleep 1; done

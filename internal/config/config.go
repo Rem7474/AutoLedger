@@ -32,6 +32,7 @@ type Config struct {
 	CookieSecure               bool
 	DisableRegistration        bool
 	Demo                       bool   // Read-only public demo: every write is refused
+	MCPEnabled                 bool   // Serves the OAuth authorization server that assistants (MCP clients) use to get a read-only token
 	DemoEmail                  string // Optional demo account shown on the sign-in page
 	DemoPassword               string
 	InitialAdminEmail          string
@@ -199,6 +200,7 @@ func Load() *Config {
 		SyncIntervalMinutes:        syncIntervalMinutes,
 		ReportingTimezone:          reportingTimezone,
 		StorageDir:                 storageDir,
+		MCPEnabled:                 getEnvBool("AUTOLEDGER_MCP_ENABLED", false),
 		GeocodingEnabled:           getEnvBool("GEOCODING_ENABLED", false),
 		GeocodingURL:               strings.TrimSpace(getEnv("GEOCODING_URL", "")),
 		GeocodingUserAgent:         strings.TrimSpace(getEnv("GEOCODING_USER_AGENT", "")),

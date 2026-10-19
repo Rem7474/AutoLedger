@@ -1,0 +1,22 @@
+{
+  "authorize": {
+    "title": "Authorize an application",
+    "intro": "{name} asks to read your AutoLedger data.",
+    "canTitle": "It will be able to",
+    "canVehicles": "See your vehicles: name, make, model, powertrain, currency and odometer.",
+    "canCosts": "Read what each vehicle costs: the last 12 months and since purchase, by category.",
+    "canGaps": "See what is missing from your records (odometer gaps, charges without a cost).",
+    "cannotTitle": "It will not be able to",
+    "cannotWrite": "Change, add or delete anything.",
+    "cannotPrivate": "See VINs, plates, addresses, positions or documents.",
+    "returnTo": "After your choice you are sent back to {host}.",
+    "unverified": "The name is given by the application and is not verified: approve only an application you just started.",
+    "revokeHint": "You can end this access at any time from your account page, in the API tokens list.",
+    "approve": "Approve",
+    "deny": "Deny",
+    "approved": "Access approved. You can return to the application.",
+    "denied": "Access denied. You can close this page.",
+    "invalid": "This authorization request is not valid.",
+    "failed": "The decision could not be recorded. Try again."
+  }
+}

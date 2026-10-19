@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteComponent, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { rememberLoginRedirect, takeLoginRedirect } from '@/utils/loginRedirect'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
 // A page that needs a signed-in session.
@@ -14,6 +15,13 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     authRoute('/', 'dashboard', () => import('@/views/DashboardView.vue')),
+    {
+      // Where an assistant sends the user to approve its access. Signing in first brings the user back here.
+      path: '/oauth/authorize',
+      name: 'oauth-authorize',
+      component: () => import('@/views/OAuthAuthorizeView.vue'),
+      meta: { requiresAuth: true, resumeAfterLogin: true },
+    },
     authRoute('/fleet', 'fleet', () => import('@/views/FleetView.vue')),
     authRoute('/drives', 'drives', () => import('@/views/DrivesView.vue')),
     authRoute('/carpools', 'carpools', () => import('@/views/CarpoolView.vue')),
@@ -126,12 +134,18 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    if (to.meta.resumeAfterLogin) rememberLoginRedirect(to.fullPath)
     next({ name: 'login' })
   } else if (
     (to.name === 'login' || to.name === 'register' || to.name === 'onboarding') &&
     authStore.isAuthenticated
   ) {
     next({ name: 'dashboard' })
+  } else if (to.name === 'dashboard' && authStore.isAuthenticated) {
+    // Signing in lands on the dashboard: a page that was waiting for the sign-in comes first.
+    const resume = takeLoginRedirect()
+    if (resume) next(resume)
+    else next()
   } else {
     next()
   }

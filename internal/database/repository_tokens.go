@@ -35,7 +35,9 @@ func (r *Repository) CreateAPIToken(ctx context.Context, userID, name, scope, to
 // ListAPITokens returns all tokens for a user.
 func (r *Repository) ListAPITokens(ctx context.Context, userID string) ([]models.APIToken, error) {
 	query := `
-		SELECT id, user_id, name, token_prefix, scope, last_used_at, expires_at, created_at
+		SELECT id, user_id, name, token_prefix, scope, last_used_at,
+		       CASE WHEN oauth_client_id IS NULL THEN expires_at ELSE refresh_expires_at END,
+		       created_at, oauth_client_id IS NOT NULL
 		FROM api_tokens
 		WHERE user_id = $1
 		ORDER BY created_at DESC;
@@ -51,7 +53,7 @@ func (r *Repository) ListAPITokens(ctx context.Context, userID string) ([]models
 		var tok models.APIToken
 		if err := rows.Scan(
 			&tok.ID, &tok.UserID, &tok.Name, &tok.TokenPrefix, &tok.Scope,
-			&tok.LastUsedAt, &tok.ExpiresAt, &tok.CreatedAt,
+			&tok.LastUsedAt, &tok.ExpiresAt, &tok.CreatedAt, &tok.OAuth,
 		); err != nil {
 			return nil, err
 		}

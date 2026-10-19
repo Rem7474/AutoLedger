@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/teslacost/teslacost/internal/auth"
+	"github.com/teslacost/teslacost/internal/handlers"
 )
 
 const testJWTSecret = "route-table-test-secret-0123456789abcdef"
@@ -44,7 +45,7 @@ func newRouteTableFor(t *testing.T, scope string) chi.Router {
 	r := chi.NewRouter()
 	passThrough := func(next http.Handler) http.Handler { return next }
 	registerSystemRoutes(r, nil)
-	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{scope: scope}, fakeSessionChecker{}, passThrough, &apiHandlers{})
+	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{scope: scope}, fakeSessionChecker{}, passThrough, &apiHandlers{oauth: handlers.NewOAuthHandler(nil, "http://localhost")})
 	return r
 }
 
@@ -102,10 +103,15 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		"GET /api/health",
 		"GET /api/version",
 		"GET /healthz",
+		"GET /.well-known/oauth-authorization-server",
+		"GET /.well-known/oauth-authorization-server/mcp",
 		"POST /api/auth/login",
 		"POST /api/auth/logout",
 		"POST /api/auth/refresh",
 		"POST /api/auth/register",
+		"POST /oauth/register",
+		"POST /oauth/revoke",
+		"POST /oauth/token",
 	}
 	wantIntegration := []string{
 		"GET /api/integrations/homeassistant/vehicles",

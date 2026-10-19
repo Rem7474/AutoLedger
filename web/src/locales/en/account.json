@@ -92,7 +92,9 @@
     "scopeIngestHelp": "Can push charging events and read the vehicles and their metrics.",
     "scopeReadHelp": "Can only read. It cannot push events. The scope cannot be changed afterwards: generate another token to change it.",
     "scopeBadgeIngest": "Send and read",
-    "scopeBadgeRead": "Read only"
+    "scopeBadgeRead": "Read only",
+    "oauthBadge": "Connected app",
+    "oauthHelp": "Connected through OAuth. The access renews itself while the application is used; this is when it lapses otherwise."
   },
   "sso": {
     "link": "Link {provider}",

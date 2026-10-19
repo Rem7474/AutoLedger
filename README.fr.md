@@ -331,6 +331,7 @@ Pour revenir à l'état d'avant la mise à niveau, arrêter la pile, vider le vo
 | `DISABLE_REGISTRATION` | - | Définir à `true` pour désactiver l'inscription publique | `false` |
 | `AUTOLEDGER_DEMO` | - | Démo publique en lecture seule : toute écriture sauf la connexion est refusée, l'inscription est fermée | `false` |
 | `AUTOLEDGER_DEMO_EMAIL` / `AUTOLEDGER_DEMO_PASSWORD` | - | Compte de démo proposé par le bouton « Essayer la démo » de la page de connexion (public par conception) | - |
+| `AUTOLEDGER_MCP_ENABLED` | - | Permet à un assistant de demander un accès en lecture seule au compte depuis une page d'autorisation ([OAuth](docs/oauth.fr.md)). Désactivé par défaut | `false` |
 | `INITIAL_ADMIN_EMAIL` | - | E-mail de l'administrateur préconfiguré | *Facultatif* |
 | `INITIAL_ADMIN_PASSWORD` | - | Mot de passe de l'administrateur préconfiguré | *Facultatif* |
 | `CORS_ALLOWED_ORIGINS` | - | Origines, séparées par des virgules, autorisées à appeler l'API depuis un navigateur, en plus de l'URL publique | Dérivées de `AUTOLEDGER_BASE_URL` |
