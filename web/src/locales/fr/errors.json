@@ -21,6 +21,7 @@
   "request": {
     "invalid_body": "Corps de requête invalide",
     "invalid": "Requête invalide",
+    "invalid_status": "Le statut doit être overdue, due_soon ou ok",
     "invalid_date": "Date invalide",
     "not_found": "Élément introuvable",
     "invalid_reference": "Référence invalide : trajet, groupe ou pneu inexistant pour ce véhicule",
