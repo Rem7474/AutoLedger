@@ -64,7 +64,7 @@ func newMCPFixture(t *testing.T) *mcpFixture {
 	f.readTok = f.newToken(t, owner.ID, auth.ScopeRead)
 	f.otherTok = f.newToken(t, other.ID, auth.ScopeRead)
 
-	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo))
+	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo)).WithComparison(services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC")))
 	f.server = httptest.NewServer(NewMCPHandler(read, repo, "https://ledger.example/", "test").Endpoint())
 	t.Cleanup(f.server.Close)
 	return f
@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_data_sources,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_comparison,get_data_sources,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -657,5 +657,71 @@ func TestMCPDataSourcesAnswersForTheAccountsVehicleAndRefusesAnotherOne(t *testi
 	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_data_sources", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
 	if err != nil || !other.IsError {
 		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
+	}
+}
+
+func TestMCPComparisonListsTheAccountsScenariosAndEvaluatesOne(t *testing.T) {
+	f := newMCPFixture(t)
+	ctx := context.Background()
+	scenario := func(userID, name string) *models.ComparisonScenario {
+		return &models.ComparisonScenario{UserID: userID, Name: name, Currency: "GBP", Mode: models.ComparisonModeProjection, AnnualKm: 15000, Years: 5,
+			ICE:     models.ICEInputs{FuelType: "DIESEL", LPer100Km: 6, FuelPrice: 1.7, PurchasePrice: 2500000, ResaleValue: 1000000, MaintenanceYearly: 40000, InsuranceYearly: 60000, TaxYearly: 15000},
+			Tracked: &models.TrackedInputs{KwhPer100Km: 16, EurPerKwh: 0.25, PurchasePrice: 3500000, ResaleValue: 1800000, MaintenanceYearly: 20000, InsuranceYearly: 60000}}
+	}
+	mine, theirs := scenario(f.owner.ID, "Switch to electric"), scenario(f.theirs.UserID, "Not yours")
+	for _, sc := range []*models.ComparisonScenario{mine, theirs} {
+		if err := f.repo.CreateComparisonScenario(ctx, sc); err != nil {
+			t.Fatal(err)
+		}
+	}
+	session := f.connect(t, f.readTok)
+	call := func(args map[string]any) (*mcp.CallToolResult, IntegrationComparisons) {
+		t.Helper()
+		res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "get_comparison", Arguments: args})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var out IntegrationComparisons
+		if !res.IsError {
+			raw, _ := json.Marshal(res.StructuredContent)
+			if err := json.Unmarshal(raw, &out); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return res, out
+	}
+
+	res, list := call(map[string]any{})
+	if res.IsError || len(list.Scenarios) != 1 || list.Scenarios[0].ID != mine.ID || list.Scenarios[0].Vehicle != nil || list.Scenarios[0].Currency != "GBP" || list.Scenarios[0].AnnualKm.Value != 15000 || list.Result != nil {
+		t.Fatalf("the scenarios of this account only, without a result: %+v", list)
+	}
+	for _, ref := range []string{mine.ID, "switch TO electric"} {
+		res, out := call(map[string]any{"scenario": ref})
+		if res.IsError || out.Result == nil || out.Result.ScenarioID != mine.ID || out.Result.Savings == nil || out.Result.Savings.Currency != "GBP" ||
+			out.Result.Tracked.Total.Amount == "" || out.Result.Combustion.Total.Currency != "GBP" || len(out.Result.Assumptions) == 0 || len(out.Result.Sensitivity) == 0 || !out.Result.DepreciationKnown {
+			t.Fatalf("%q: %+v", ref, out)
+		}
+	}
+	tracked := scenario(f.owner.ID, "Daily against diesel")
+	tracked.Mode, tracked.VehicleID, tracked.Tracked = models.ComparisonModeRetrospective, &f.mine.ID, nil
+	if err := f.repo.CreateComparisonScenario(ctx, tracked); err != nil {
+		t.Fatal(err)
+	}
+	res, retro := call(map[string]any{"scenario": tracked.ID})
+	var named *IntegrationComparisonScenario
+	for i := range retro.Scenarios {
+		if retro.Scenarios[i].ID == tracked.ID {
+			named = &retro.Scenarios[i]
+		}
+	}
+	if res.IsError || named == nil || named.Vehicle == nil || *named.Vehicle != "Daily" || retro.Result == nil || retro.Result.ScenarioID != tracked.ID {
+		t.Fatalf("a scenario of a tracked vehicle names it and is evaluated from its records: %+v", retro)
+	}
+
+	for _, ref := range []string{theirs.ID, "Not yours", "unknown"} {
+		res, _ := call(map[string]any{"scenario": ref})
+		if !res.IsError {
+			t.Errorf("%q must be refused", ref)
+		}
 	}
 }

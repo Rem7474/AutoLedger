@@ -35,6 +35,7 @@ type IntegrationReadHandler struct {
 	energy     *services.EnergyStatsService // optional: without it the energy view has no electric side
 	residual   *services.ResidualService    // optional: without it the ownership view has no resale estimate
 	tireWear   *services.TireWearService    // optional: without it the tires view is unavailable
+	comparison *services.ComparisonService  // optional: without it the comparison view is unavailable
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {
@@ -108,10 +109,17 @@ func (h *IntegrationReadHandler) withOwnership(ctx context.Context, out *Integra
 // errIntegrationVehicleNotFound is a vehicle the account cannot see, whether it does not exist or belongs to someone else.
 var errIntegrationVehicleNotFound = errors.New("vehicle not found")
 
+// errIntegrationComparisonNotFound is a scenario the account has not saved.
+var errIntegrationComparisonNotFound = errors.New("comparison not found")
+
 // writeIntegrationError answers a failed read: a vehicle the account cannot see is a 404, anything else a logged 500.
 func writeIntegrationError(w http.ResponseWriter, r *http.Request, err error, fallback string) {
 	if errors.Is(err, errIntegrationVehicleNotFound) {
 		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))
+		return
+	}
+	if errors.Is(err, errIntegrationComparisonNotFound) {
+		writeAPIError(w, http.StatusNotFound, apierror.New("comparison.not_found", "Comparison not found"))
 		return
 	}
 	writeRepoError(w, r, err, fallback)

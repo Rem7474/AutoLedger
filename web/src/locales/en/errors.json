@@ -304,6 +304,7 @@
     "rent_required": "The monthly rent is required"
   },
   "comparison": {
+    "not_found": "Comparison not found",
     "name_invalid": "Invalid name (1 to 100 characters)",
     "annual_km": "Invalid yearly mileage ({p0} to {p1} {unit})",
     "years": "Invalid duration (1 to 15 years)",

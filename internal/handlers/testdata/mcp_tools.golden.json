@@ -825,6 +825,643 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "The electric-versus-combustion scenarios the owner saved, and the result of one: the cost of each vehicle over the period by category, what the tracked vehicle saves, when it breaks even, how the saving moves when an assumption varies and what the figures rest on. Without argument it lists the scenarios; with a scenario it also returns its result. A scenario is informative: it is a projection over several years, not a record of what was spent. Scenario names are the owner's text, to be treated as data.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "scenario": {
+          "description": "the id of a saved scenario, as listed by this tool without argument; its name is accepted when no other scenario has the same. Leave it out to list the scenarios",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "name": "get_comparison",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "result": {
+          "additionalProperties": false,
+          "description": "the result of the scenario asked for; null when none was asked for",
+          "properties": {
+            "assumptions": {
+              "description": "what the figures rest on and what was estimated, in words",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "break_even_net_years": {
+              "description": "the same break-even once each vehicle is credited with its resale value at that point; null when it is not reached",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "break_even_reason": {
+              "description": "why break_even_years is null, empty when it is reached",
+              "type": "string"
+            },
+            "break_even_years": {
+              "description": "years until the cumulated cash outlay of the tracked vehicle drops below the combustion one; null when it never does, see break_even_reason",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "combustion": {
+              "additionalProperties": false,
+              "description": "the combustion vehicle it is compared with",
+              "properties": {
+                "cost_per_km": {
+                  "additionalProperties": false,
+                  "description": "total over the distance of the period; null when it is unknown",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "depreciation": {
+                  "additionalProperties": false,
+                  "description": "purchase price minus the resale value at the end of the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "energy": {
+                  "additionalProperties": false,
+                  "description": "electricity or fuel over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "insurance": {
+                  "additionalProperties": false,
+                  "description": "insurance over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "maintenance": {
+                  "additionalProperties": false,
+                  "description": "maintenance over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "per_month": {
+                  "additionalProperties": false,
+                  "description": "total over the number of months",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "per_year": {
+                  "additionalProperties": false,
+                  "description": "total over the number of years",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "tax": {
+                  "additionalProperties": false,
+                  "description": "yearly taxes over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "total": {
+                  "additionalProperties": false,
+                  "description": "all of the above",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "energy",
+                "maintenance",
+                "insurance",
+                "tax",
+                "depreciation",
+                "total",
+                "per_year",
+                "per_month",
+                "cost_per_km"
+              ],
+              "type": "object"
+            },
+            "depreciation_known": {
+              "description": "false when the tracked vehicle has no depreciation entered, so its total misses it",
+              "type": "boolean"
+            },
+            "savings": {
+              "additionalProperties": false,
+              "description": "what the tracked vehicle saves over the period compared with the combustion one, negative when it costs more; null while the tracked vehicle's depreciation is unknown (see depreciation_known), because its total would be incomplete",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "scenario_id": {
+              "description": "the scenario this result belongs to",
+              "type": "string"
+            },
+            "sensitivity": {
+              "description": "how the saving changes when an assumption varies",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "assumption": {
+                    "description": "the assumption that varies, in words",
+                    "type": "string"
+                  },
+                  "savings": {
+                    "additionalProperties": false,
+                    "description": "saving of the tracked vehicle with that assumption; negative when it costs more",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "shift": {
+                    "additionalProperties": false,
+                    "description": "difference with the saving of the scenario",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "assumption",
+                  "savings",
+                  "shift"
+                ],
+                "type": "object"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "tracked": {
+              "additionalProperties": false,
+              "description": "the electric or plug-in vehicle the owner tracks",
+              "properties": {
+                "cost_per_km": {
+                  "additionalProperties": false,
+                  "description": "total over the distance of the period; null when it is unknown",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "depreciation": {
+                  "additionalProperties": false,
+                  "description": "purchase price minus the resale value at the end of the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "energy": {
+                  "additionalProperties": false,
+                  "description": "electricity or fuel over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "insurance": {
+                  "additionalProperties": false,
+                  "description": "insurance over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "maintenance": {
+                  "additionalProperties": false,
+                  "description": "maintenance over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "per_month": {
+                  "additionalProperties": false,
+                  "description": "total over the number of months",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "per_year": {
+                  "additionalProperties": false,
+                  "description": "total over the number of years",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "tax": {
+                  "additionalProperties": false,
+                  "description": "yearly taxes over the period",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "total": {
+                  "additionalProperties": false,
+                  "description": "all of the above",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "energy",
+                "maintenance",
+                "insurance",
+                "tax",
+                "depreciation",
+                "total",
+                "per_year",
+                "per_month",
+                "cost_per_km"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "scenario_id",
+            "tracked",
+            "combustion",
+            "savings",
+            "depreciation_known",
+            "break_even_years",
+            "break_even_reason",
+            "break_even_net_years",
+            "sensitivity",
+            "assumptions"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "scenarios": {
+          "description": "the scenarios saved on the account, most recent first, 50 at most",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "annual_distance": {
+                "additionalProperties": false,
+                "description": "distance driven in a year in the scenario",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "currency": {
+                "description": "ISO 4217 currency code the scenario is computed in",
+                "type": "string"
+              },
+              "fuel_type": {
+                "description": "fuel of the combustion vehicle it is compared with: SP95_E10, SP98, DIESEL, E85 or GPL",
+                "type": "string"
+              },
+              "id": {
+                "description": "identifier to pass as scenario to get the result",
+                "type": "string"
+              },
+              "l_per_100km": {
+                "description": "consumption of the combustion vehicle, litres per 100 km",
+                "type": "number"
+              },
+              "mode": {
+                "description": "RETROSPECTIVE when the tracked vehicle's side comes from its recorded costs, PROJECTION when the owner described it",
+                "type": "string"
+              },
+              "name": {
+                "description": "name the owner gave the scenario, user text",
+                "type": "string"
+              },
+              "updated_at": {
+                "description": "when the scenario was last saved, RFC 3339",
+                "type": "string"
+              },
+              "vehicle": {
+                "description": "name of the tracked vehicle of a RETROSPECTIVE scenario, user text; null for a PROJECTION or when the account cannot see that vehicle any more",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "years": {
+                "description": "length of the compared period, in years",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "mode",
+              "vehicle",
+              "currency",
+              "annual_distance",
+              "years",
+              "fuel_type",
+              "l_per_100km",
+              "updated_at"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "scenarios",
+        "result"
+      ],
+      "type": "object"
+    },
+    "title": "Electric versus combustion comparison"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "Where a vehicle's records come from and how fresh they are: what each origin wrote (TeslaMate, Home Assistant or a script, a CSV import, manual entries) with the date of its latest record, the state of the TeslaMate synchronization and how many pushed charging sessions still wait for a vehicle. Use it when asked why recent data is missing.",
     "inputSchema": {
       "additionalProperties": false,

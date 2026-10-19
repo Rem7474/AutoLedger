@@ -113,6 +113,7 @@ A read-only token (`read`) also opens a narrow read API under `/api/integrations
 | `GET /api/integrations/v1/vehicles/{vehicleId}/odometer` | The current odometer, the number of dated readings and the period they cover. Query: `date` (`YYYY-MM-DD`) adds the odometer that day and how it was obtained (`exact`, `interpolated` or `bounded`). |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/data-sources` | Where the records of a vehicle come from (per origin: drives, charges, odometer readings, latest record), the TeslaMate synchronization state and the number of pushed charges waiting for a vehicle. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/charging-places` | The charging of a vehicle by place (`months`, 12 by default, `0` for the whole history): named places with their addresses, sessions, energy, cost and price per kWh, the comparison with the home price and the most used locations linked to no place. |
+| `GET /api/integrations/v1/comparisons` | The saved electric-versus-combustion scenarios and, with `scenario` (an id), the result of that one: cost of each vehicle by category, savings, break-even, sensitivity and assumptions. |
 
 Conventions:
 
