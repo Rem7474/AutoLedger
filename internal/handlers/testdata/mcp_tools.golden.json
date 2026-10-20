@@ -1,0 +1,1150 @@
+[
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "What a vehicle cost over its last 12 months and since it was bought, by category (energy, tolls, maintenance, insurance, financing, tires, other), with the cost per kilometre and a completeness score. Amounts are in the vehicle's currency and are the cash spent: the purchase and the depreciation are not in them.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_vehicle_costs",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "completeness": {
+          "additionalProperties": false,
+          "description": "how far these figures can be trusted",
+          "properties": {
+            "is_complete": {
+              "description": "true when nothing is known to be missing",
+              "type": "boolean"
+            },
+            "score_available": {
+              "description": "false while the vehicle has no distance and no expense, so there is nothing to score",
+              "type": "boolean"
+            },
+            "score_pct": {
+              "description": "0 to 100, how much of the figures rests on recorded data; null when no score is available",
+              "type": [
+                "null",
+                "integer"
+              ]
+            },
+            "warnings": {
+              "description": "what makes the figures less reliable, as sentences; call get_vehicle_data_gaps for the detail",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            }
+          },
+          "required": [
+            "is_complete",
+            "score_available",
+            "score_pct",
+            "warnings"
+          ],
+          "type": "object"
+        },
+        "currency": {
+          "description": "currency of every amount",
+          "type": "string"
+        },
+        "last_12_months": {
+          "additionalProperties": false,
+          "description": "the last twelve calendar months, the month in progress included with the instalments that fall due later in it; fewer months for a vehicle with a shorter history",
+          "properties": {
+            "cost_per_km": {
+              "additionalProperties": false,
+              "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "costs": {
+              "additionalProperties": false,
+              "description": "what was spent over the period, by category",
+              "properties": {
+                "energy": {
+                  "additionalProperties": false,
+                  "description": "electricity charged and fuel bought",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "financing": {
+                  "additionalProperties": false,
+                  "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "insurance": {
+                  "additionalProperties": false,
+                  "description": "insurance premiums",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "maintenance": {
+                  "additionalProperties": false,
+                  "description": "servicing and unplanned repairs, insurance deductibles included",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "other": {
+                  "additionalProperties": false,
+                  "description": "subscriptions, taxes, accessories and anything else",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "tires": {
+                  "additionalProperties": false,
+                  "description": "tires, counted in full in the month they were bought",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "tolls": {
+                  "additionalProperties": false,
+                  "description": "tolls, parking and ferries",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "total": {
+                  "additionalProperties": false,
+                  "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "energy",
+                "tolls",
+                "maintenance",
+                "insurance",
+                "financing",
+                "tires",
+                "other",
+                "total"
+              ],
+              "type": "object"
+            },
+            "distance": {
+              "additionalProperties": false,
+              "description": "distance driven over the period, tracked plus estimated for the untracked part",
+              "properties": {
+                "unit": {
+                  "description": "always km",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "the distance",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
+            },
+            "from": {
+              "description": "first month covered, YYYY-MM; null for the whole ownership",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "months_covered": {
+              "description": "number of calendar months the figures span, the month in progress included; below 12 for last_12_months when the history is shorter, which makes the total smaller than a full year",
+              "type": "integer"
+            },
+            "to": {
+              "description": "last month covered, YYYY-MM; null for the whole ownership",
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "from",
+            "to",
+            "months_covered",
+            "costs",
+            "distance",
+            "cost_per_km"
+          ],
+          "type": "object"
+        },
+        "since_purchase": {
+          "additionalProperties": false,
+          "description": "the whole ownership, from the first record",
+          "properties": {
+            "cost_per_km": {
+              "additionalProperties": false,
+              "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "costs": {
+              "additionalProperties": false,
+              "description": "what was spent over the period, by category",
+              "properties": {
+                "energy": {
+                  "additionalProperties": false,
+                  "description": "electricity charged and fuel bought",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "financing": {
+                  "additionalProperties": false,
+                  "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "insurance": {
+                  "additionalProperties": false,
+                  "description": "insurance premiums",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "maintenance": {
+                  "additionalProperties": false,
+                  "description": "servicing and unplanned repairs, insurance deductibles included",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "other": {
+                  "additionalProperties": false,
+                  "description": "subscriptions, taxes, accessories and anything else",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "tires": {
+                  "additionalProperties": false,
+                  "description": "tires, counted in full in the month they were bought",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "tolls": {
+                  "additionalProperties": false,
+                  "description": "tolls, parking and ferries",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                },
+                "total": {
+                  "additionalProperties": false,
+                  "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "energy",
+                "tolls",
+                "maintenance",
+                "insurance",
+                "financing",
+                "tires",
+                "other",
+                "total"
+              ],
+              "type": "object"
+            },
+            "distance": {
+              "additionalProperties": false,
+              "description": "distance driven over the period, tracked plus estimated for the untracked part",
+              "properties": {
+                "unit": {
+                  "description": "always km",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "the distance",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
+            },
+            "from": {
+              "description": "first month covered, YYYY-MM; null for the whole ownership",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "months_covered": {
+              "description": "number of calendar months the figures span, the month in progress included; below 12 for last_12_months when the history is shorter, which makes the total smaller than a full year",
+              "type": "integer"
+            },
+            "to": {
+              "description": "last month covered, YYYY-MM; null for the whole ownership",
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "from",
+            "to",
+            "months_covered",
+            "costs",
+            "distance",
+            "cost_per_km"
+          ],
+          "type": "object"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these figures belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "currency",
+        "last_12_months",
+        "since_purchase",
+        "completeness"
+      ],
+      "type": "object"
+    },
+    "title": "Vehicle costs"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "What is missing from a vehicle's records: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, unqualified drives, untracked distance, missing insurance or acquisition. \"missing\" ranks what to complete by what it is worth, the biggest first. Use it to say how far the costs can be trusted.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_vehicle_data_gaps",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "acquisition_missing": {
+          "description": "true when the acquisition (purchase, loan or lease) is not entered or lacks details, so depreciation and financing are not fully known",
+          "type": "boolean"
+        },
+        "acquisition_missing_fields": {
+          "description": "what the acquisition still lacks for the depreciation: purchase_price, resale_value and/or holding_period; empty when the acquisition itself is not entered",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "charges_without_cost": {
+          "description": "charging sessions recorded without a price, whose cost is left out of the totals",
+          "type": "integer"
+        },
+        "insurance_missing": {
+          "description": "true when no insurance premium is recorded and the lease does not include it",
+          "type": "boolean"
+        },
+        "issues": {
+          "description": "the most recent gaps and anomalies, newest first, at most 20",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "description": "RFC 3339 instant the problem was found",
+                "type": "string"
+              },
+              "distance": {
+                "additionalProperties": false,
+                "description": "distance involved",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "kind": {
+                "description": "ODOMETER_GAP (odometer moved with no drive recorded), ODOMETER_REGRESSION (odometer went down) or DISTANCE_MISMATCH (drive distance differs from the odometer)",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "at",
+              "distance"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "missing": {
+          "description": "what to complete, ranked: the missing depreciation first, then the gaps with the largest estimated amount, then the ones that cannot be estimated",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "count": {
+                "description": "records behind the gap: charges or expenses; 0 when it does not apply",
+                "type": "integer"
+              },
+              "estimated_amount": {
+                "additionalProperties": false,
+                "description": "rough cost left out of the totals, estimated from the vehicle's own prices; null when it cannot be estimated (the depreciation never is)",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "fix_in": {
+                "description": "where the owner completes it in the application: charges or expenses; null when it is the ownership details or the drives",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "kind": {
+                "description": "depreciation (resale value, holding period or price missing), unpriced_charges (charging sessions without a price), untracked_distance (distance no drive covers) or unconverted_expenses (foreign currency without a rate)",
+                "type": "string"
+              },
+              "quantity": {
+                "description": "energy or distance without a cost, in quantity_unit; null when it does not apply",
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "quantity_unit": {
+                "description": "kWh or km; null when there is no quantity",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "estimated_amount",
+              "count",
+              "quantity",
+              "quantity_unit",
+              "fix_in"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "odometer_anomalies": {
+          "description": "number of odometer readings that go down or disagree with the drives",
+          "type": "integer"
+        },
+        "odometer_gap_distance": {
+          "additionalProperties": false,
+          "description": "total distance of those stretches",
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "odometer_gaps": {
+          "description": "number of stretches of odometer that no recorded drive covers",
+          "type": "integer"
+        },
+        "score_dimensions": {
+          "description": "the weighted parts the completeness score is made of",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "applicable": {
+                "description": "false when there is nothing to evaluate for this vehicle; the part then carries no weight",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "stable identifier of the dimension",
+                "type": "string"
+              },
+              "label": {
+                "description": "English name of the dimension",
+                "type": "string"
+              },
+              "score_pct": {
+                "description": "0 to 100, how complete this part is",
+                "type": "integer"
+              },
+              "weight": {
+                "description": "weight of this part in the overall score",
+                "type": "number"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "score_pct",
+              "weight",
+              "applicable"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "start_odometer_missing": {
+          "description": "true when the odometer at the start of ownership is not entered, so the distance before the first reading is not counted",
+          "type": "boolean"
+        },
+        "truncated": {
+          "description": "true when more issues exist than the ones listed",
+          "type": "boolean"
+        },
+        "unconverted_expenses": {
+          "description": "expenses in a foreign currency without a conversion rate, left out of the totals",
+          "type": "integer"
+        },
+        "unqualified_drives": {
+          "description": "drives not yet classed as professional or personal",
+          "type": "integer"
+        },
+        "untracked_distance": {
+          "additionalProperties": false,
+          "description": "distance driven that no drive record covers, estimated from the odometer",
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these figures belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "odometer_gaps",
+        "odometer_gap_distance",
+        "odometer_anomalies",
+        "issues",
+        "truncated",
+        "charges_without_cost",
+        "unqualified_drives",
+        "untracked_distance",
+        "insurance_missing",
+        "acquisition_missing",
+        "acquisition_missing_fields",
+        "start_odometer_missing",
+        "unconverted_expenses",
+        "missing",
+        "score_dimensions"
+      ],
+      "type": "object"
+    },
+    "title": "Vehicle data gaps"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "The trips of a vehicle, most recent first: when, from and to (the addresses the owner recorded, null when unknown), distance, duration, energy, and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\") and a period. Only the first trips are listed: matching says how many fit.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "description": "first day to include, YYYY-MM-DD (UTC)",
+          "type": "string"
+        },
+        "limit": {
+          "description": "how many trips to return, 20 by default and 50 at most",
+          "type": "integer"
+        },
+        "search": {
+          "description": "text to find in the departure or arrival address, for instance a city or a street",
+          "type": "string"
+        },
+        "to": {
+          "description": "last day to include, YYYY-MM-DD (UTC)",
+          "type": "string"
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "list_vehicle_trips",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "matching": {
+          "description": "how many trips fit the query, listed or not",
+          "type": "integer"
+        },
+        "trips": {
+          "description": "the trips that fit the query, most recent first",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "distance": {
+                "additionalProperties": false,
+                "description": "distance of the trip; null when it was not recorded",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "duration_min": {
+                "description": "duration in minutes",
+                "type": "integer"
+              },
+              "end_time": {
+                "description": "RFC 3339 instant the trip ended",
+                "type": "string"
+              },
+              "energy_kwh": {
+                "description": "energy consumed in kWh; null when unknown",
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "from": {
+                "description": "departure address as the owner wrote or looked it up, user text; null when unknown",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "start_time": {
+                "description": "RFC 3339 instant the trip began",
+                "type": "string"
+              },
+              "tags": {
+                "description": "tags the owner put on the trip, user text",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "to": {
+                "description": "arrival address as the owner wrote or looked it up, user text; null when unknown",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "travel_expenses": {
+                "additionalProperties": false,
+                "description": "cost of tolls, parking and ferries for this trip, null when none is recorded; a cost shared by a trip group is split between its drives by distance",
+                "properties": {
+                  "amount": {
+                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              }
+            },
+            "required": [
+              "start_time",
+              "end_time",
+              "from",
+              "to",
+              "distance",
+              "duration_min",
+              "energy_kwh",
+              "travel_expenses",
+              "tags"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "truncated": {
+          "description": "true when more trips fit than the ones listed",
+          "type": "boolean"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these trips belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "trips",
+        "matching",
+        "truncated"
+      ],
+      "type": "object"
+    },
+    "title": "Vehicle trips"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "List the vehicles of the account: id, name, make, model, powertrain, currency and odometer. Start here to get a vehicle id.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "name": "list_vehicles",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicles": {
+          "description": "the vehicles the account can see, its own and the ones shared with it",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "acquisition_type": {
+                "description": "CASH, LOAN, LOA (lease with a purchase option) or LLD (long-term lease); null when the acquisition is not entered",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "currency": {
+                "description": "currency of every amount of this vehicle, fixed at creation",
+                "type": "string"
+              },
+              "id": {
+                "description": "identifier to pass as vehicle_id to the other tools",
+                "type": "string"
+              },
+              "make": {
+                "description": "make, free text, empty when not given",
+                "type": "string"
+              },
+              "model": {
+                "description": "model, free text, empty when not given",
+                "type": "string"
+              },
+              "name": {
+                "description": "name the owner gave the vehicle, written by the user",
+                "type": "string"
+              },
+              "odometer": {
+                "additionalProperties": false,
+                "description": "latest known odometer reading",
+                "properties": {
+                  "unit": {
+                    "description": "always km",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "the distance",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "owned_since": {
+                "description": "day the ownership or the contract started, YYYY-MM-DD; null when the acquisition is not entered",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "powertrain": {
+                "description": "EV, ICE, PHEV or REEV",
+                "type": "string"
+              },
+              "role": {
+                "description": "owner when the vehicle is the account's own, editor or viewer when it is shared with it",
+                "type": "string"
+              },
+              "tracking_mode": {
+                "description": "connected (drives and charges synchronised from a telemetry source), semi_auto (pushed by an integration) or manual (entered by hand)",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "make",
+              "model",
+              "powertrain",
+              "currency",
+              "odometer",
+              "role",
+              "tracking_mode",
+              "acquisition_type",
+              "owned_since"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "vehicles"
+      ],
+      "type": "object"
+    },
+    "title": "List vehicles"
+  }
+]
