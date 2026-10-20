@@ -5,6 +5,470 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "How a vehicle uses and pays for its energy. Electric: consumption per 100 km, price per kWh, energy cost per 100 km, charging efficiency, cost of a full charge, the mix of slow, AC and DC charging with the price of each, the effect of cold weather, the usable capacity and the battery state of health. Fuel: litres per 100 km, price per litre, fuel cost per 100 km. The basis field says which electric figures are measured and which are derived.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_energy_efficiency",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "description": "currency of every amount",
+          "type": "string"
+        },
+        "electric": {
+          "additionalProperties": false,
+          "description": "the electric side; null for a vehicle that cannot be plugged in",
+          "properties": {
+            "basis": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "for each section (consumption, cost, charging, full_charge, temperature, battery), whether its figures are measured, derived from the odometer and the charges, or unavailable",
+              "type": "object"
+            },
+            "battery_health": {
+              "additionalProperties": false,
+              "description": "state of health of the battery; null when no reading exists",
+              "properties": {
+                "change_points_12m": {
+                  "description": "change in percentage points over the 12 months before the latest reading, negative when the battery lost capacity; null when the history does not reach back that far or holds a single reading",
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "current_capacity_kwh": {
+                  "description": "usable capacity at the latest reading, in kWh; null when not reported",
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "latest_date": {
+                  "description": "day of that reading, YYYY-MM-DD",
+                  "type": "string"
+                },
+                "latest_percent": {
+                  "description": "latest state of health, in percent of the capacity of the new battery",
+                  "type": "number"
+                },
+                "max_capacity_kwh": {
+                  "description": "capacity of the new battery, in kWh; null when not reported",
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "readings_recorded": {
+                  "description": "number of daily readings the history holds; only the latest and the change are returned",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "latest_percent",
+                "latest_date",
+                "change_points_12m",
+                "current_capacity_kwh",
+                "max_capacity_kwh",
+                "readings_recorded"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "charge_efficiency_pct": {
+              "description": "percentage of the energy drawn from the grid that reached the battery; null when not measured",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "charge_mix": {
+              "description": "charging by kind: slow, ac, dc; unknown for sessions that cannot be classed",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "charge_efficiency_pct": {
+                    "description": "percentage of the energy drawn from the grid that reached the battery; null when the grid energy was not measured",
+                    "type": [
+                      "null",
+                      "number"
+                    ]
+                  },
+                  "class": {
+                    "description": "slow (domestic socket), ac (wallbox or public AC post), dc (fast charging) or unknown (no usable duration, such as a manual entry); sessions are classed by their average power",
+                    "type": "string"
+                  },
+                  "cost_per_full_charge": {
+                    "additionalProperties": false,
+                    "description": "what charging from 0 to 100 percent costs with this kind of charging; null when the sessions do not allow the estimate",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": [
+                      "null",
+                      "object"
+                    ]
+                  },
+                  "energy_cost": {
+                    "additionalProperties": false,
+                    "description": "what these sessions cost; sessions without a price are not counted",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "kwh_added": {
+                    "description": "energy stored in the battery by these sessions",
+                    "type": "number"
+                  },
+                  "price_per_kwh": {
+                    "additionalProperties": false,
+                    "description": "average price paid per kWh over the priced sessions; null when none is priced",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": [
+                      "null",
+                      "object"
+                    ]
+                  },
+                  "sessions": {
+                    "description": "number of charging sessions of this class",
+                    "type": "integer"
+                  },
+                  "sessions_without_cost": {
+                    "description": "sessions left out of the price because no cost is recorded",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "class",
+                  "sessions",
+                  "kwh_added",
+                  "energy_cost",
+                  "price_per_kwh",
+                  "charge_efficiency_pct",
+                  "cost_per_full_charge",
+                  "sessions_without_cost"
+                ],
+                "type": "object"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "consumption_kwh_100km": {
+              "description": "energy used per 100 km; measured when the drives report their energy, otherwise derived from the charges and the odometer (see basis)",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "cost_per_100km": {
+              "additionalProperties": false,
+              "description": "energy cost per 100 km; null while the distance is too short to be meaningful",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "cost_per_full_charge": {
+              "additionalProperties": false,
+              "description": "what charging from 0 to 100 percent costs on average; null when the sessions do not allow the estimate",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "estimated_usable_capacity_kwh": {
+              "description": "usable battery capacity estimated from the latest charging sessions, in kWh; null without enough sessions",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "price_per_kwh": {
+              "additionalProperties": false,
+              "description": "average price paid per kWh over the priced charges",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "sessions_without_cost": {
+              "description": "charging sessions whose cost is not recorded, left out of the prices",
+              "type": "integer"
+            },
+            "temperature": {
+              "additionalProperties": false,
+              "description": "effect of cold weather on the consumption; null without drives that report their outside temperature",
+              "properties": {
+                "cold_consumption_kwh_100km": {
+                  "description": "consumption below 5 degrees Celsius, in kWh per 100 km; null without enough drives",
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "extra_cost_per_100km": {
+                  "additionalProperties": false,
+                  "description": "cost of that extra energy per 100 km at the average price paid per kWh; null when unknown",
+                  "properties": {
+                    "amount": {
+                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "type": "string"
+                    },
+                    "currency": {
+                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "extra_percent": {
+                  "description": "how much more energy the cold takes than mild weather, in percent; null when either side is unknown",
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "mild_consumption_kwh_100km": {
+                  "description": "consumption between 15 and 25 degrees Celsius, in kWh per 100 km; null without enough drives",
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                }
+              },
+              "required": [
+                "cold_consumption_kwh_100km",
+                "mild_consumption_kwh_100km",
+                "extra_percent",
+                "extra_cost_per_100km"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            }
+          },
+          "required": [
+            "consumption_kwh_100km",
+            "price_per_kwh",
+            "cost_per_100km",
+            "charge_efficiency_pct",
+            "cost_per_full_charge",
+            "estimated_usable_capacity_kwh",
+            "sessions_without_cost",
+            "charge_mix",
+            "temperature",
+            "battery_health",
+            "basis"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "fuel": {
+          "additionalProperties": false,
+          "description": "the fuel side; null for a vehicle that does not burn fuel",
+          "properties": {
+            "consumption_l_100km": {
+              "description": "consumption measured between full tanks, in litres per 100 km; null without two consecutive full tanks",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "cost_per_100km": {
+              "additionalProperties": false,
+              "description": "fuel cost per 100 km; null while the distance is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "fill_ups": {
+              "description": "number of recorded fill-ups",
+              "type": "integer"
+            },
+            "litres": {
+              "description": "fuel bought over the whole history, in litres",
+              "type": "number"
+            },
+            "price_per_litre": {
+              "additionalProperties": false,
+              "description": "average price paid per litre; null without a priced fill-up",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            }
+          },
+          "required": [
+            "fill_ups",
+            "litres",
+            "price_per_litre",
+            "consumption_l_100km",
+            "cost_per_100km"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "powertrain": {
+          "description": "EV, ICE, PHEV or REEV",
+          "type": "string"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these figures belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "currency",
+        "powertrain",
+        "electric",
+        "fuel"
+      ],
+      "type": "object"
+    },
+    "title": "Energy efficiency"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "What a vehicle cost month by month, oldest first: for each month the cost by category (energy, tolls, maintenance, insurance, financing, tires, other), the distance and the cost per kilometre, with the listed months added up. Use it to compare periods or to see which month was expensive and in which category. Without from and to it returns the last 12 months. A month in progress is flagged: its figures are not final.",
     "inputSchema": {
       "additionalProperties": false,

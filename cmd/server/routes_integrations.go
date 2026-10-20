@@ -28,5 +28,6 @@ func (h *apiHandlers) registerIntegrationRoutes(r chi.Router) {
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/monthly-costs", h.integrationRead.GetMonthlyCosts)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/reminders", h.integrationRead.GetReminders)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/ownership", h.integrationRead.GetOwnership)
+		r.Get("/api/integrations/v1/vehicles/{vehicleId}/energy-efficiency", h.integrationRead.GetEnergyEfficiency)
 	})
 }
