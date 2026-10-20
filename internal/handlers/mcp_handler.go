@@ -106,7 +106,7 @@ type mcpTripsInput struct {
 }
 
 type mcpVehiclesOutput struct {
-	Vehicles []IntegrationVehicleV1 `json:"vehicles"`
+	Vehicles []IntegrationVehicleV1 `json:"vehicles" jsonschema:"the vehicles the account can see, its own and the ones shared with it"`
 }
 
 func (h *MCPHandler) addTools() {
@@ -114,6 +114,7 @@ func (h *MCPHandler) addTools() {
 
 	mcp.AddTool(h.server, &mcp.Tool{
 		Name:        "list_vehicles",
+		Title:       "List vehicles",
 		Description: "List the vehicles of the account: id, name, make, model, powertrain, currency and odometer. Start here to get a vehicle id.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, _ mcpNoInput) (*mcp.CallToolResult, mcpVehiclesOutput, error) {
@@ -125,9 +126,10 @@ func (h *MCPHandler) addTools() {
 	})
 
 	mcp.AddTool(h.server, &mcp.Tool{
-		Name: "get_vehicle_costs",
+		Name:  "get_vehicle_costs",
+		Title: "Vehicle costs",
 		Description: "What a vehicle cost over its last 12 months and since it was bought, by category (energy, tolls, maintenance, insurance, financing, tires, other), " +
-			"with the cost per kilometre and a completeness score. Amounts are in the vehicle's currency.",
+			"with the cost per kilometre and a completeness score. Amounts are in the vehicle's currency and are the cash spent: the purchase and the depreciation are not in them.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpVehicleInput) (*mcp.CallToolResult, IntegrationCosts, error) {
 		costs, err := h.read.Costs(ctx, mcpUserID(req), in.VehicleID)
@@ -138,7 +140,8 @@ func (h *MCPHandler) addTools() {
 	})
 
 	mcp.AddTool(h.server, &mcp.Tool{
-		Name: "list_vehicle_trips",
+		Name:  "list_vehicle_trips",
+		Title: "Vehicle trips",
 		Description: "The trips of a vehicle, most recent first: when, from and to (the addresses the owner recorded, null when unknown), distance, duration, energy, " +
 			"and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\") and a period. Only the first trips are listed: matching says how many fit.",
 		Annotations: readOnly,
@@ -151,7 +154,8 @@ func (h *MCPHandler) addTools() {
 	})
 
 	mcp.AddTool(h.server, &mcp.Tool{
-		Name: "get_vehicle_data_gaps",
+		Name:  "get_vehicle_data_gaps",
+		Title: "Vehicle data gaps",
 		Description: "What is missing from a vehicle's records: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, " +
 			"unqualified drives, untracked distance, missing insurance or acquisition. Use it to say how far the costs can be trusted.",
 		Annotations: readOnly,

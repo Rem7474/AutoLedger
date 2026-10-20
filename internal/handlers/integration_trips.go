@@ -34,26 +34,26 @@ type IntegrationTripsQuery struct {
 // IntegrationTrip is one drive. It carries the addresses the account recorded, so an assistant can talk about "the
 // trip to Lyon", but no position and no identifier: an address stored as coordinates is reported as unknown.
 type IntegrationTrip struct {
-	StartTime   string               `json:"start_time"` // RFC 3339 instant
-	EndTime     string               `json:"end_time"`
-	From        *string              `json:"from"`
-	To          *string              `json:"to"`
-	Distance    *IntegrationDistance `json:"distance"`
-	DurationMin int                  `json:"duration_min"`
-	EnergyKwh   *float64             `json:"energy_kwh"`
+	StartTime   string               `json:"start_time" jsonschema:"RFC 3339 instant the trip began"`
+	EndTime     string               `json:"end_time" jsonschema:"RFC 3339 instant the trip ended"`
+	From        *string              `json:"from" jsonschema:"departure address as the owner wrote or looked it up, user text; null when unknown"`
+	To          *string              `json:"to" jsonschema:"arrival address as the owner wrote or looked it up, user text; null when unknown"`
+	Distance    *IntegrationDistance `json:"distance" jsonschema:"distance of the trip; null when it was not recorded"`
+	DurationMin int                  `json:"duration_min" jsonschema:"duration in minutes"`
+	EnergyKwh   *float64             `json:"energy_kwh" jsonschema:"energy consumed in kWh; null when unknown"`
 	// TravelExpenses is what tolls, parking and ferries cost for this drive, in the vehicle's currency; null when none
 	// is recorded. An expense shared by a trip group is split between its drives by distance.
-	TravelExpenses *IntegrationAmount `json:"travel_expenses"`
-	Tags           []string           `json:"tags"`
+	TravelExpenses *IntegrationAmount `json:"travel_expenses" jsonschema:"cost of tolls, parking and ferries for this trip, null when none is recorded; a cost shared by a trip group is split between its drives by distance"`
+	Tags           []string           `json:"tags" jsonschema:"tags the owner put on the trip, user text"`
 }
 
 // IntegrationTrips lists the trips of a vehicle, the most recent first.
 type IntegrationTrips struct {
-	VehicleID string            `json:"vehicle_id"`
-	Trips     []IntegrationTrip `json:"trips"`
+	VehicleID string            `json:"vehicle_id" jsonschema:"the vehicle these trips belong to"`
+	Trips     []IntegrationTrip `json:"trips" jsonschema:"the trips that fit the query, most recent first"`
 	// Matching counts the trips that fit the query; Truncated says more than the ones listed exist.
-	Matching  int  `json:"matching"`
-	Truncated bool `json:"truncated"`
+	Matching  int  `json:"matching" jsonschema:"how many trips fit the query, listed or not"`
+	Truncated bool `json:"truncated" jsonschema:"true when more trips fit than the ones listed"`
 }
 
 // tripBound reads a From or To bound. A day as upper bound runs to the end of that day.
