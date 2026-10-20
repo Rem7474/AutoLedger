@@ -123,7 +123,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		pendingCharges:  handlers.NewPendingChargesHandler(repo, tariffService),
 		fleet:           handlers.NewFleetHandler(services.NewFleetService(repo, svc.tco)),
 		ha:              handlers.NewHomeAssistantHandler(repo, tariffService),
-		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco),
+		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco).WithResidual(services.NewResidualService(repo, svc.energyStats)),
 	}
 	if cfg.MCPEnabled {
 		h.oauth = handlers.NewOAuthHandler(repo, cfg.AppBaseURL)

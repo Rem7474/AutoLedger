@@ -64,7 +64,7 @@ func newMCPFixture(t *testing.T) *mcpFixture {
 	f.readTok = f.newToken(t, owner.ID, auth.ScopeRead)
 	f.otherTok = f.newToken(t, other.ID, auth.ScopeRead)
 
-	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC"))
+	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithResidual(services.NewResidualService(repo, nil))
 	f.server = httptest.NewServer(NewMCPHandler(read, repo, "https://ledger.example/", "test").Endpoint())
 	t.Cleanup(f.server.Close)
 	return f
@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -435,5 +435,24 @@ func TestMCPRemindersListWhatIsDueAndRefuseAnUnknownStatus(t *testing.T) {
 	body, _ := json.Marshal(res.Content)
 	if !strings.Contains(string(body), "overdue") {
 		t.Errorf("the error lists the statuses: %s", body)
+	}
+}
+
+func TestMCPOwnershipServesTheEconomicCostAndSaysWhyThereIsNoResale(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_vehicle_ownership", Arguments: map[string]any{"vehicle_id": "daily"}})
+	if err != nil || res.IsError {
+		t.Fatalf("a vehicle without an acquisition still answers: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationOwnership
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Currency != "GBP" || out.Economic.FullCost.Currency != "GBP" || out.Contract != nil || out.Resale != nil ||
+		out.ResaleUnavailable == nil || strings.Contains(string(raw), f.vin) {
+		t.Errorf("ownership: %s", raw)
 	}
 }
