@@ -22,6 +22,7 @@ const props = defineProps<{
   editing: any | null
   createOptions: { driveIds?: string[]; tripGroupId?: string }
   openToken: number
+  recentNames?: string[]
 }>()
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -183,7 +184,7 @@ function resetForm() {
     legs: [],
     passengers: [],
   }
-  form.value.passengers.push({ ...newPassenger(0, form.value.legs.length), passenger_name: t('carpool.passenger', { n: 1 }) })
+  form.value.passengers.push(newPassenger(0, form.value.legs.length))
 }
 
 async function initCreate(options: { driveIds?: string[]; tripGroupId?: string }) {
@@ -410,6 +411,7 @@ async function handleModalRecalculate() {
         :stops="stops"
         :live="live"
         :currency="vehicleStore.currency"
+        :recent-names="recentNames"
       />
 
       <!-- Simulation -->

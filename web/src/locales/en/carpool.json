@@ -41,7 +41,10 @@
     "fairShare": "Fair share: {percent}%",
     "fairShareAmount": "Fair share {percent}% ({amount})",
     "onBoard": "{count} on board",
-    "perPerson": "{amount}/person"
+    "perPerson": "{amount}/person",
+    "copySummary": "Copy summary",
+    "copySummaryTitle": "Copy a recap of this share, ready to paste in a message",
+    "copied": "Copied"
   },
   "carpoolTripList": {
     "netSurplus": "Net surplus: +{net_cost}",
@@ -75,7 +78,6 @@
     "actualCostOfTheSection": "Actual cost of the section:",
     "notTravelled": "Not travelled",
     "removeThisPassenger": "Remove this passenger",
-    "applyTheFairShare": "Apply the fair share",
     "fairShare": "Fair share:",
     "paid": "Paid ({cur})",
     "seats": "Seats",
@@ -126,7 +128,10 @@
     "legRequired": "Select at least one drive or add a leg",
     "saveError": "Could not save: {message}",
     "reestimated": "The costs have been recalculated with the current rates and tolls.",
-    "reestimatedTitle": "Costs re-estimated"
+    "reestimatedTitle": "Costs re-estimated",
+    "exactAmount": "Exact amount",
+    "exactAmountTitle": "Fill in the fair share: {amount}",
+    "recentPassengers": "Recent"
   },
   "above": "+{amount} above",
   "below": "{amount} below their share",
@@ -144,5 +149,14 @@
   },
   "stop": "Stop {n}",
   "legCount": "{count} legs",
-  "csvHeaders": "ID,Date,Title,Distance_{unit},Passengers,Actual_Cost_{cur},Revenue_{cur},Net_Cost_{cur},Recovery_pct"
+  "csvHeaders": "ID,Date,Title,Distance_{unit},Passengers,Actual_Cost_{cur},Revenue_{cur},Net_Cost_{cur},Recovery_pct",
+  "summaryText": {
+    "header": "{title} · {date}",
+    "route": "Ride: {route}",
+    "totalCost": "Cost of the trip: {amount}",
+    "share": "Your share: {amount}",
+    "leg": "{from} → {to}: {cost} ÷ {people} = {amount}",
+    "legSeats": "{from} → {to}: {cost} ÷ {people} × {seats} seats = {amount}",
+    "received": "Received: {amount}"
+  }
 }

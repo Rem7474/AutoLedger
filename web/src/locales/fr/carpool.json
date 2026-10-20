@@ -41,7 +41,10 @@
     "fairShare": "Part équitable : {percent} %",
     "fairShareAmount": "Part équitable {percent} % ({amount})",
     "onBoard": "{count} à bord",
-    "perPerson": "{amount}/pers."
+    "perPerson": "{amount}/pers.",
+    "copySummary": "Copier le récap",
+    "copySummaryTitle": "Copier un récapitulatif de cette part, prêt à coller dans un message",
+    "copied": "Copié"
   },
   "carpoolTripList": {
     "netSurplus": "Excédent net : +{net_cost}",
@@ -75,7 +78,6 @@
     "actualCostOfTheSection": "Coût réel du tronçon :",
     "notTravelled": "Non emprunté",
     "removeThisPassenger": "Retirer ce passager",
-    "applyTheFairShare": "Appliquer la part équitable",
     "fairShare": "Part équitable :",
     "paid": "Payé ({cur})",
     "seats": "Places",
@@ -126,7 +128,10 @@
     "legRequired": "Sélectionnez au moins un trajet ou ajoutez une étape",
     "saveError": "Erreur lors de l'enregistrement : {message}",
     "reestimated": "Les coûts ont été recalculés selon les taux et péages actuels.",
-    "reestimatedTitle": "Coûts réestimés"
+    "reestimatedTitle": "Coûts réestimés",
+    "exactAmount": "Montant juste",
+    "exactAmountTitle": "Renseigner la part due : {amount}",
+    "recentPassengers": "Récents"
   },
   "above": "+{amount} au-dessus",
   "below": "{amount} sous sa part",
@@ -144,5 +149,14 @@
   },
   "stop": "Arrêt {n}",
   "legCount": "{count} étapes",
-  "csvHeaders": "ID,Date,Titre,Distance_{unit},Passagers,Cout_Reel_{cur},Revenus_{cur},Cout_Net_{cur},Amortissement_pct"
+  "csvHeaders": "ID,Date,Titre,Distance_{unit},Passagers,Cout_Reel_{cur},Revenus_{cur},Cout_Net_{cur},Amortissement_pct",
+  "summaryText": {
+    "header": "{title} · {date}",
+    "route": "Trajet : {route}",
+    "totalCost": "Coût du trajet : {amount}",
+    "share": "Votre part : {amount}",
+    "leg": "{from} → {to} : {cost} ÷ {people} = {amount}",
+    "legSeats": "{from} → {to} : {cost} ÷ {people} × {seats} places = {amount}",
+    "received": "Reçu : {amount}"
+  }
 }
