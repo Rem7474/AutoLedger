@@ -112,6 +112,12 @@ export function formatDriveClock(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
+/** The leg number of each selected drive, in the order they are driven (the oldest is leg 1). */
+export function driveSteps(drives: any[]): Map<string, number> {
+  const ordered = [...drives].sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)))
+  return new Map(ordered.map((d, i) => [d.id, i + 1]))
+}
+
 /** Whether two consecutive drives meet: the second starts where the first ended. */
 export function drivesChain(prev: any, next: any): boolean {
   return place(prev.end_address) !== '' && place(prev.end_address) === place(next.start_address)

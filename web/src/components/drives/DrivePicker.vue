@@ -4,8 +4,10 @@ import { formatDistance } from '@/units'
 import { ChevronLeft, ChevronRight, Link2, Check } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { api } from '@/services/api'
+import { useVehicleStore } from '@/stores/vehicle'
+import { formatAmount } from '@/currency'
 import { DRIVE_WINDOW_DAYS, driveWindow, formatDriveTime, pickerDrives, shiftDay, toDateInputString } from '@/utils/carpool'
-import { drivesChain, findDriveChain, formatDriveClock, formatDriveDay, groupDrivesByDay, splitShortDrives } from '@/utils/carpoolEditor'
+import { driveSteps, drivesChain, findDriveChain, formatDriveClock, formatDriveDay, groupDrivesByDay, splitShortDrives } from '@/utils/carpoolEditor'
 
 // The drives to tick to build a carpool or a trip. It lists the drives around `anchorDate` (the date of the record
 // being edited), or the latest ones without a date, with a date field and arrows to move the window. The selected
@@ -15,6 +17,7 @@ import { drivesChain, findDriveChain, formatDriveClock, formatDriveDay, groupDri
 const props = defineProps<{ vehicleId: string; selectedIds: string[]; anchorDate: string; rich?: boolean }>()
 const emit = defineEmits<{ toggle: [driveId: string]; select: [driveIds: string[]]; loaded: [drives: any[]] }>()
 
+const vehicleStore = useVehicleStore()
 const pickerDate = ref('')
 const windowDrives = ref<any[]>([])
 const drives = ref<any[]>([])
@@ -95,6 +98,10 @@ const groups = computed(() => groupDrivesByDay(listed.value))
 const chain = computed(() => findDriveChain(split.value.shown))
 const chainApplied = computed(() => chain.value.length > 0 && chain.value.every((d) => props.selectedIds.includes(d.id)))
 const selectedDrives = computed(() => drives.value.filter((d) => props.selectedIds.includes(d.id)))
+// The selected drives in the order they will be driven: the leg number of each one
+const stepOf = computed(() => driveSteps(selectedDrives.value))
+const selectedCost = computed(() => selectedDrives.value.reduce((sum, d) => sum + (Number(d.costs?.total_cost) || 0), 0))
+const money = (v: unknown) => formatAmount(Number(v) || 0, vehicleStore.currency)
 const selectedKm = computed(() => selectedDrives.value.reduce((sum, d) => sum + (Number(d.distance_km) || 0), 0))
 const place = (address?: string) => (address || '').split(',')[0]
 </script>
@@ -145,17 +152,23 @@ const place = (address?: string) => (address || '').split(',')[0]
                 <Link2 class="h-3 w-3" aria-hidden="true" /> {{ $t('drives.drivePicker.chained') }}
               </div>
               <label
-                class="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-lg border p-2 text-left text-xs transition-colors"
+                class="block min-h-11 w-full cursor-pointer rounded-lg border p-2 text-left text-xs transition-colors"
                 :class="selectedIds.includes(d.id) ? 'bg-rose-500/10 border-rose-500/40 text-rose-100' : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800'"
               >
-                <span class="flex min-w-0 items-center gap-2">
-                  <input type="checkbox" class="select-box" :checked="selectedIds.includes(d.id)" @change="emit('toggle', d.id)" />
-                  <span class="shrink-0 tabular-nums text-slate-400">{{ formatDriveClock(d.start_time) }}</span>
-                  <span class="truncate">{{ (d.start_address || $t('drives.driveCostModal.start')).split(',')[0] }} → {{ (d.end_address || $t('drives.driveCostModal.end')).split(',')[0] }}</span>
+                <span class="flex items-center justify-between gap-3">
+                  <span class="flex min-w-0 items-center gap-2">
+                    <input type="checkbox" class="select-box" :checked="selectedIds.includes(d.id)" @change="emit('toggle', d.id)" />
+                    <span class="shrink-0 tabular-nums text-slate-400">{{ formatDriveClock(d.start_time) }}</span>
+                    <span class="truncate">{{ (d.start_address || $t('drives.driveCostModal.start')).split(',')[0] }} → {{ (d.end_address || $t('drives.driveCostModal.end')).split(',')[0] }}</span>
+                  </span>
+                  <span class="flex shrink-0 items-center gap-2 font-mono">
+                    <span class="text-slate-400">{{ formatDistance(Number(d.distance_km)) }}</span>
+                    <span class="w-14 text-right font-semibold text-slate-200">{{ d.costs?.has_estimates ? '~' : '' }}{{ money(d.costs?.total_cost) }}</span>
+                  </span>
                 </span>
-                <span class="flex shrink-0 items-center gap-2">
+                <span v-if="stepOf.has(d.id) || d.carpools?.length" class="mt-1 flex flex-wrap items-center gap-1.5 pl-7">
+                  <span v-if="stepOf.has(d.id)" class="rounded-full border border-slate-600 px-1.5 py-0.5 text-[0.65rem] font-semibold text-slate-200">{{ $t('carpool.carpoolTripModal.leg', { i: stepOf.get(d.id) }) }}</span>
                   <span v-if="d.carpools?.length" class="rounded-full border border-sky-500/30 bg-sky-500/15 px-1.5 py-0.5 text-[0.65rem] font-semibold text-sky-300" :title="d.carpools.map((c: any) => c.title).join(', ')">{{ $t('drives.drivePicker.alreadyCarpooledIn', { title: d.carpools[0].title }) }}</span>
-                  <span class="font-mono text-xs text-slate-400">{{ formatDistance(Number(d.distance_km)) }}</span>
                 </span>
               </label>
             </template>
@@ -167,7 +180,10 @@ const place = (address?: string) => (address || '').split(',')[0]
       </button>
       <p v-if="selectedDrives.length" class="flex items-center justify-between border-t border-slate-800 pt-2 text-xs text-slate-300">
         <span>{{ $t('drives.drivePicker.selectedCount', { count: selectedDrives.length }) }}</span>
-        <strong class="tabular-nums text-white">{{ formatDistance(selectedKm, 1) }}</strong>
+        <span class="flex items-center gap-2">
+          <span class="tabular-nums text-slate-300">{{ formatDistance(selectedKm, 1) }}</span>
+          <strong class="tabular-nums text-white" :title="$t('drives.drivePicker.totalCost')">{{ money(selectedCost) }}</strong>
+        </span>
       </p>
     </template>
     <div v-else class="max-h-44 overflow-y-auto space-y-1 pr-1">
