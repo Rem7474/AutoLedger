@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import NumberInput from '@/components/NumberInput.vue'
+import CarpoolOverview from '@/components/carpool/CarpoolOverview.vue'
 import CarpoolRouteStrip from '@/components/carpool/CarpoolRouteStrip.vue'
 import CarpoolShareMath from '@/components/carpool/CarpoolShareMath.vue'
 import { Users, Plus, Trash2, Calculator, ChevronDown, ChevronUp, Minus } from 'lucide-vue-next'
@@ -73,7 +74,9 @@ function applyExactAmount() {
       <button type="button" class="btn btn-secondary" @click="emit('to-drives')">{{ $t('carpool.editor.toDrives') }}</button>
     </div>
 
-    <div v-else class="flex flex-wrap gap-2" role="tablist" :aria-label="$t('carpool.editor.passengers')">
+    <CarpoolOverview v-else :selected="index" @update:selected="selected = $event" :passengers="passengers" :stops="stops" :live="live" :currency="currency" />
+
+    <div v-if="legs.length" class="flex flex-wrap gap-2" role="tablist" :aria-label="$t('carpool.editor.passengers')">
       <button
         v-for="(q, i) in passengers"
         :key="i"
