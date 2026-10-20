@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { Users } from 'lucide-vue-next'
+import { Users, ChevronRight } from 'lucide-vue-next'
 import { formatAmount } from '@/currency'
 
-// The carpools shared on a trip or a drive; a click opens that carpool. A trip brings its full carpools, a drive the short
-// references of its list row (no legs, no net cost).
-defineProps<{ tripCarpools: any[]; vehicleCurrency: string; title: string }>()
+// The carpools shared on a trip or a drive, each with what it costs, what was received and what is left to the driver; a
+// click opens that carpool. A trip brings its full carpools, a drive the short references of its list row (no legs).
+const props = defineProps<{ tripCarpools: any[]; vehicleCurrency: string; title: string }>()
 const emit = defineEmits<{ open: [carpoolId: string] }>()
+const fmt = (v: unknown) => formatAmount(Number(v || 0), props.vehicleCurrency)
+const passengers = (c: any): number => c.passenger_count ?? c.passengers?.length ?? 0
+// Nothing left to the driver: what was received covers the cost
+const covered = (c: any) => Number(c.total_cost) > 0 && Number(c.net_cost) <= 0
 </script>
 
 <template>
@@ -19,19 +23,29 @@ const emit = defineEmits<{ open: [carpoolId: string] }>()
       :key="c.id"
       type="button"
       @click="emit('open', c.id)"
-      class="w-full text-left flex items-center justify-between gap-3 bg-slate-800/40 hover:bg-slate-800/70 border border-slate-700/60 rounded-xl px-3 py-2 transition-colors"
+      class="w-full text-left bg-slate-800/40 hover:bg-slate-800/70 border border-slate-700/60 rounded-xl px-3 py-2.5 transition-colors space-y-2"
     >
-      <div class="min-w-0">
-        <div class="text-xs font-semibold text-white truncate">{{ c.title }}</div>
-        <div class="text-xs text-slate-400">
-          <template v-if="c.legs">{{ $t('drives.driveCostModal.carpoolLegsPassengers', { legs: c.legs.length || 1, passengers: c.passengers?.length || 0 }) }}</template>
-          <template v-else>{{ $t('drives.driveCostModal.carpoolPassengers', { passengers: c.passenger_count || 0 }, c.passenger_count || 0) }}</template>
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-xs font-semibold text-white truncate">{{ c.title }}</div>
+          <div class="text-xs text-slate-400">{{ $t('drives.driveCostModal.carpoolPassengers', { passengers: passengers(c) }, passengers(c)) }}</div>
         </div>
+        <ChevronRight class="w-4 h-4 shrink-0 text-slate-400" aria-hidden="true" />
       </div>
-      <div class="text-right shrink-0">
-        <div class="text-xs font-mono font-bold text-success-400">+{{ formatAmount(Number(c.total_revenue || 0), vehicleCurrency) }}</div>
-        <div v-if="c.net_cost !== undefined" class="text-xs text-slate-400">{{ $t('drives.driveCostModal.carpoolNetCost', { amount: formatAmount(Number(c.net_cost || 0), vehicleCurrency) }) }}</div>
-      </div>
+      <dl v-if="c.total_cost !== undefined" class="grid grid-cols-3 gap-2 text-xs">
+        <div class="rounded-lg border border-slate-700/70 bg-slate-800/70 px-2 py-1.5">
+          <dt class="text-slate-400">{{ $t('carpool.carpoolTripModal.actualCost') }}</dt>
+          <dd class="font-bold tabular-nums text-white">{{ fmt(c.total_cost) }}</dd>
+        </div>
+        <div class="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2 py-1.5">
+          <dt class="text-slate-400">{{ $t('carpool.carpoolTripModal.received') }}</dt>
+          <dd class="font-bold tabular-nums text-emerald-300">{{ fmt(c.total_revenue) }}</dd>
+        </div>
+        <div class="rounded-lg border px-2 py-1.5" :class="covered(c) ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-slate-700/70 bg-slate-800/70'">
+          <dt class="text-slate-400">{{ covered(c) ? $t('carpool.carpoolTripModal.surplus') : $t('carpool.carpoolTripModal.leftToDriver') }}</dt>
+          <dd class="font-bold tabular-nums" :class="covered(c) ? 'text-emerald-300' : 'text-white'">{{ fmt(Math.abs(Number(c.net_cost || 0))) }}</dd>
+        </div>
+      </dl>
     </button>
   </div>
 </template>

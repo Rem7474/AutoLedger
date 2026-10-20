@@ -295,12 +295,12 @@ func (r *Repository) GetCarpoolsForDrives(ctx context.Context, vehicleID string,
 		return result, nil
 	}
 	rows, err := r.pool.Query(ctx, `
-		SELECT cl.drive_id::text, t.id::text, t.title, t.total_revenue,
+		SELECT cl.drive_id::text, t.id::text, t.title, t.total_revenue, t.total_cost, t.net_cost,
 		       (SELECT COUNT(*) FROM carpool_passengers p WHERE p.carpool_trip_id = t.id)
 		FROM carpool_legs cl
 		JOIN carpool_trips t ON t.id = cl.carpool_trip_id
 		WHERE t.vehicle_id = $1 AND cl.drive_id::text = ANY($2::text[])
-		GROUP BY cl.drive_id, t.id, t.title, t.total_revenue, t.date, t.created_at
+		GROUP BY cl.drive_id, t.id, t.title, t.total_revenue, t.total_cost, t.net_cost, t.date, t.created_at
 		ORDER BY t.date DESC, t.created_at DESC;
 	`, vehicleID, ids)
 	if err != nil {
@@ -310,7 +310,7 @@ func (r *Repository) GetCarpoolsForDrives(ctx context.Context, vehicleID string,
 	for rows.Next() {
 		var driveID string
 		var c models.DriveCarpoolRef
-		if err := rows.Scan(&driveID, &c.ID, &c.Title, &c.TotalRevenue, &c.PassengerCount); err != nil {
+		if err := rows.Scan(&driveID, &c.ID, &c.Title, &c.TotalRevenue, &c.TotalCost, &c.NetCost, &c.PassengerCount); err != nil {
 			return nil, err
 		}
 		result[driveID] = append(result[driveID], c)
