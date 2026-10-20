@@ -24,7 +24,7 @@ func (h *MCPHandler) addExpenseTools(readOnly *mcp.ToolAnnotations) {
 		Title: "List expenses",
 		Description: "The individual entries behind a vehicle's costs, one per charge, fuel fill-up, toll, maintenance or insurance expense, tire purchase or loan or lease instalment, " +
 			"with their date, category, amount and, for a charge, the place and the energy. Filter by period, category and minimum amount, sort by date or amount. " +
-			"The total and the per-category sums cover every matching entry, not only the page, so never add up the page yourself. The purchase of the vehicle is not an entry. " +
+			"has_receipt says whether a receipt is attached (the document itself is never returned). The total and the per-category sums cover every matching entry, not only the page, so never add up the page yourself. The purchase of the vehicle is not an entry. " +
 			"Use it to answer which expense was the largest, what was spent on a category in a period or where the vehicle was charged.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpExpensesInput) (*mcp.CallToolResult, IntegrationExpenses, error) {

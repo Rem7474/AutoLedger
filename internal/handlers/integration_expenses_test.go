@@ -42,7 +42,11 @@ func TestIntegrationExpensesListEntriesWithTheirPlaceAndTotalsOfEveryMatch(t *te
 	if err := repo.CreateManualCharge(ctx, charge); err != nil {
 		t.Fatal(err)
 	}
-	service := &models.MaintenanceExpense{VehicleID: v.ID, Category: "MAINTENANCE", Amount: 12000, Currency: "GBP", Date: time.Date(2026, 3, 10, 0, 0, 0, 0, time.UTC), Description: "Brake pads"}
+	receipt := &models.ExpenseDocument{UserID: owner.ID, VehicleID: v.ID, Filename: "invoice.pdf", MimeType: "application/pdf", FileSize: 10}
+	if err := repo.SaveExpenseDocument(ctx, receipt); err != nil {
+		t.Fatal(err)
+	}
+	service := &models.MaintenanceExpense{VehicleID: v.ID, Category: "MAINTENANCE", Amount: 12000, Currency: "GBP", Date: time.Date(2026, 3, 10, 0, 0, 0, 0, time.UTC), Description: "Brake pads", DocumentID: &receipt.ID}
 	insurance := &models.MaintenanceExpense{VehicleID: v.ID, Category: "INSURANCE", Amount: 45000, Currency: "GBP", Date: time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC), Description: "Yearly premium"}
 	foreign := &models.MaintenanceExpense{VehicleID: stranger.ID, Category: "MAINTENANCE", Amount: 99900, Currency: "GBP", Date: time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC), Description: "Not yours"}
 	for _, m := range []*models.MaintenanceExpense{service, insurance, foreign} {
@@ -70,6 +74,20 @@ func TestIntegrationExpensesListEntriesWithTheirPlaceAndTotalsOfEveryMatch(t *te
 	}
 	if charged == nil || charged.Place == nil || *charged.Place != "Home" || charged.PlaceCategory == nil || *charged.PlaceCategory != "home" || charged.Kwh == nil || *charged.Kwh != 40 || charged.Amount.Amount != "12.50" {
 		t.Errorf("a charge carries its named place and its energy: %+v", charged)
+	}
+
+	receipts := map[string]*bool{}
+	for _, e := range all.Expenses {
+		receipts[e.Kind+"/"+e.Category] = e.HasReceipt
+	}
+	if r := receipts["expense/maintenance"]; r == nil || !*r {
+		t.Errorf("an expense with an attached receipt says so: %v", r)
+	}
+	if r := receipts["expense/insurance"]; r == nil || *r {
+		t.Errorf("an expense without a receipt says so: %v", r)
+	}
+	if r := receipts["charge/energy"]; r == nil || *r {
+		t.Errorf("a charge without a receipt says so: %v", r)
 	}
 
 	page, err := h.Expenses(ctx, owner.ID, v.ID, IntegrationExpenseQuery{Sort: "amount", Limit: 2})

@@ -4895,7 +4895,7 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
-    "description": "The individual entries behind a vehicle's costs, one per charge, fuel fill-up, toll, maintenance or insurance expense, tire purchase or loan or lease instalment, with their date, category, amount and, for a charge, the place and the energy. Filter by period, category and minimum amount, sort by date or amount. The total and the per-category sums cover every matching entry, not only the page, so never add up the page yourself. The purchase of the vehicle is not an entry. Use it to answer which expense was the largest, what was spent on a category in a period or where the vehicle was charged.",
+    "description": "The individual entries behind a vehicle's costs, one per charge, fuel fill-up, toll, maintenance or insurance expense, tire purchase or loan or lease instalment, with their date, category, amount and, for a charge, the place and the energy. Filter by period, category and minimum amount, sort by date or amount. has_receipt says whether a receipt is attached (the document itself is never returned). The total and the per-category sums cover every matching entry, not only the page, so never add up the page yourself. The purchase of the vehicle is not an entry. Use it to answer which expense was the largest, what was spent on a category in a period or where the vehicle was charged.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -5036,6 +5036,13 @@
                 "description": "day of the entry, YYYY-MM-DD, in the account's reporting timezone",
                 "type": "string"
               },
+              "has_receipt": {
+                "description": "true when a receipt or invoice is attached to the entry, false when none is; null for the entries that cannot carry one (fuel fill-ups, tires, financing). The document itself is never returned",
+                "type": [
+                  "null",
+                  "boolean"
+                ]
+              },
               "kind": {
                 "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase or financing (a loan or lease instalment)",
                 "type": "string"
@@ -5090,7 +5097,8 @@
               "place_category",
               "kwh",
               "litres",
-              "recurring"
+              "recurring",
+              "has_receipt"
             ],
             "type": "object"
           },

@@ -56,6 +56,7 @@ type IntegrationExpense struct {
 	Kwh           *float64          `json:"kwh" jsonschema:"energy added by a charge, in kWh; null for the others"`
 	Litres        *float64          `json:"litres" jsonschema:"fuel bought by a fill-up, in litres; null when not recorded or for the others"`
 	Recurring     bool              `json:"recurring" jsonschema:"true for an occurrence of a recurring expense (a yearly insurance, a subscription)"`
+	HasReceipt    *bool             `json:"has_receipt" jsonschema:"true when a receipt or invoice is attached to the entry, false when none is; null for the entries that cannot carry one (fuel fill-ups, tires, financing). The document itself is never returned"`
 }
 
 // IntegrationExpenseCategory is the sum of the matching entries of one category.
@@ -182,7 +183,7 @@ func buildIntegrationExpenses(vehicleID, currency string, loc *time.Location, f 
 		}
 		out.Expenses = append(out.Expenses, IntegrationExpense{
 			Date: e.Date.In(loc).Format("2006-01-02"), Category: strings.ToLower(e.Category), Kind: kind, Amount: amountOf(e.Amount, currency),
-			Note: e.Note, Place: e.Place, PlaceCategory: placeCategory, Kwh: e.Kwh, Litres: e.Liters, Recurring: e.Recurring,
+			Note: e.Note, Place: e.Place, PlaceCategory: placeCategory, Kwh: e.Kwh, Litres: e.Liters, Recurring: e.Recurring, HasReceipt: e.HasDocument,
 		})
 	}
 	if next := f.Offset + len(entries); len(entries) == f.Limit && next < out.Count {
