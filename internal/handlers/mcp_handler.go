@@ -3,8 +3,10 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/auth"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -94,11 +96,11 @@ func (h *MCPHandler) verifyToken(ctx context.Context, token string, _ *http.Requ
 type mcpNoInput struct{}
 
 type mcpVehicleInput struct {
-	VehicleID string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles"`
+	VehicleID string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same"`
 }
 
 type mcpTripsInput struct {
-	VehicleID string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles"`
+	VehicleID string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same"`
 	Search    string `json:"search,omitempty" jsonschema:"text to find in the departure or arrival address, for instance a city or a street"`
 	From      string `json:"from,omitempty" jsonschema:"first day to include, YYYY-MM-DD (UTC)"`
 	To        string `json:"to,omitempty" jsonschema:"last day to include, YYYY-MM-DD (UTC)"`
@@ -132,7 +134,11 @@ func (h *MCPHandler) addTools() {
 			"with the cost per kilometre and a completeness score. Amounts are in the vehicle's currency and are the cash spent: the purchase and the depreciation are not in them.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpVehicleInput) (*mcp.CallToolResult, IntegrationCosts, error) {
-		costs, err := h.read.Costs(ctx, mcpUserID(req), in.VehicleID)
+		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
+		if err != nil {
+			return nil, IntegrationCosts{}, mcpFailure(ctx, "get_vehicle_costs", err, "Could not compute the costs")
+		}
+		costs, err := h.read.Costs(ctx, mcpUserID(req), vehicleID)
 		if err != nil {
 			return nil, IntegrationCosts{}, mcpFailure(ctx, "get_vehicle_costs", err, "Could not compute the costs")
 		}
@@ -146,7 +152,11 @@ func (h *MCPHandler) addTools() {
 			"and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\") and a period. Only the first trips are listed: matching says how many fit.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpTripsInput) (*mcp.CallToolResult, IntegrationTrips, error) {
-		trips, err := h.read.Trips(ctx, mcpUserID(req), in.VehicleID, IntegrationTripsQuery{Search: in.Search, From: in.From, To: in.To, Limit: in.Limit})
+		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
+		if err != nil {
+			return nil, IntegrationTrips{}, mcpFailure(ctx, "list_vehicle_trips", err, "Could not list the trips")
+		}
+		trips, err := h.read.Trips(ctx, mcpUserID(req), vehicleID, IntegrationTripsQuery{Search: in.Search, From: in.From, To: in.To, Limit: in.Limit})
 		if err != nil {
 			return nil, IntegrationTrips{}, mcpFailure(ctx, "list_vehicle_trips", err, "Could not list the trips")
 		}
@@ -160,7 +170,11 @@ func (h *MCPHandler) addTools() {
 			"unqualified drives, untracked distance, missing insurance or acquisition. \"missing\" ranks what to complete by what it is worth, the biggest first. Use it to say how far the costs can be trusted.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpVehicleInput) (*mcp.CallToolResult, IntegrationDataGaps, error) {
-		gaps, err := h.read.DataGaps(ctx, mcpUserID(req), in.VehicleID)
+		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
+		if err != nil {
+			return nil, IntegrationDataGaps{}, mcpFailure(ctx, "get_vehicle_data_gaps", err, "Could not check the data")
+		}
+		gaps, err := h.read.DataGaps(ctx, mcpUserID(req), vehicleID)
 		if err != nil {
 			return nil, IntegrationDataGaps{}, mcpFailure(ctx, "get_vehicle_data_gaps", err, "Could not check the data")
 		}
@@ -169,6 +183,49 @@ func (h *MCPHandler) addTools() {
 }
 
 func ptr[T any](v T) *T { return &v }
+
+// mcpUserError is a refusal worded for the model: it says what to do next, and nothing internal.
+type mcpUserError string
+
+func (e mcpUserError) Error() string { return string(e) }
+
+// resolveVehicle turns what a model passes as vehicle_id into the id of one of the account's vehicles. An id is
+// taken as is; a name is accepted when exactly one vehicle has it, so a model that holds "the daily car" does not have
+// to guess an identifier. Anything else says which vehicles exist.
+func (h *MCPHandler) resolveVehicle(ctx context.Context, userID, ref string) (string, error) {
+	ref = strings.TrimSpace(ref)
+	vehicles, err := h.read.Vehicles(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	var named []IntegrationVehicleV1
+	for _, v := range vehicles {
+		if v.ID == ref {
+			return v.ID, nil
+		}
+		if ref != "" && strings.EqualFold(v.Name, ref) {
+			named = append(named, v)
+		}
+	}
+	if len(named) == 1 {
+		return named[0].ID, nil
+	}
+	candidates := named
+	if len(candidates) == 0 {
+		candidates = vehicles
+	}
+	parts := make([]string, 0, len(candidates))
+	for _, v := range candidates {
+		parts = append(parts, fmt.Sprintf("%q (vehicle_id %s)", v.Name, v.ID))
+	}
+	if len(named) > 1 {
+		return "", mcpUserError("several vehicles are called that: pass the vehicle_id of one of " + strings.Join(parts, ", "))
+	}
+	if len(parts) == 0 {
+		return "", mcpUserError("this account has no vehicle")
+	}
+	return "", mcpUserError("vehicle not found: the vehicles of this account are " + strings.Join(parts, ", "))
+}
 
 // mcpUserID is the account the request's token belongs to. The endpoint refuses a request without one.
 func mcpUserID(req *mcp.CallToolRequest) string {
@@ -181,6 +238,10 @@ func mcpUserID(req *mcp.CallToolRequest) string {
 // mcpFailure turns a failed read into the error the model sees. A vehicle the account cannot see is reported as such;
 // anything else is logged and answered generically, so no internal detail reaches the assistant.
 func mcpFailure(ctx context.Context, tool string, err error, fallback string) error {
+	var userErr mcpUserError
+	if errors.As(err, &userErr) {
+		return userErr
+	}
 	if errors.Is(err, errIntegrationVehicleNotFound) {
 		return errors.New("vehicle not found: use list_vehicles to get a valid vehicle_id")
 	}
