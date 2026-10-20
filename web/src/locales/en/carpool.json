@@ -202,6 +202,8 @@
     "receivedLabel": "{received} of the cost received, fair shares {fair}",
     "fairTick": "Fair shares of the passengers",
     "fairTickHint": "The mark is where the fair shares end ({fair} of the cost).",
-    "copyFor": "Copy summary for {name}"
+    "copyFor": "Copy summary for {name}",
+    "splitTitle": "Split of the cost",
+    "receivedTitle": "Received / fair shares"
   }
 }
