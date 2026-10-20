@@ -4,7 +4,6 @@ import NumberInput from '@/components/NumberInput.vue'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { Navigation, Plus, Trash2, Calculator, RotateCw, Lock, Undo2, ChevronDown } from 'lucide-vue-next'
 import { COST_FIELDS, differsFromDrive, euros, type CostKey, type LegForm } from '@/utils/carpool'
-import { costSegments } from '@/utils/carpoolEditor'
 import { currencySymbol, formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
 
@@ -34,7 +33,6 @@ function toggle(i: number) {
   toggled.value = next
 }
 const adjusted = (leg: LegForm) => COST_FIELDS.some((f) => differsFromDrive(leg, f.key))
-const SHADES = ['bg-slate-200', 'bg-slate-500', 'bg-slate-300', 'bg-slate-600', 'bg-slate-400', 'bg-slate-700']
 // The amount of a category goes back to what its drive costs
 function restore(leg: LegForm, key: CostKey) {
   if (leg.drive_cost) leg[key] = leg.drive_cost[key] ?? 0
@@ -99,15 +97,6 @@ function restore(leg: LegForm, key: CostKey) {
         <span class="shrink-0 text-slate-400 tabular-nums">{{ formatDistanceValue(Number(leg.distance_km) || 0, 1) }} {{ distanceUnit() }}</span>
         <span class="shrink-0 font-semibold tabular-nums text-white">{{ fmt(euros(live.legDetails[i]?.total || 0)) }}</span>
         <ChevronDown class="h-4 w-4 shrink-0 text-slate-400 transition-transform" :class="isOpen(leg, i) ? 'rotate-180' : ''" aria-hidden="true" />
-        <span class="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-800" aria-hidden="true">
-          <span
-            v-for="(seg, k) in costSegments(leg)"
-            :key="seg.key"
-            :class="SHADES[k % SHADES.length]"
-            :style="{ width: `${seg.pct}%` }"
-            :title="`${$t(`carpool.costFields.${COST_FIELDS.find((f) => f.key === seg.key)?.label}`)}: ${fmt(seg.cents / 100)}`"
-          ></span>
-        </span>
         <span v-if="adjusted(leg)" class="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 font-semibold text-slate-300">{{ $t('carpool.linked.adjusted') }}</span>
       </button>
 

@@ -1,21 +1,8 @@
 import { intlLocale } from '@/i18n'
-import { COST_FIELDS, cents, toDateInputString, type CostKey } from '@/utils/carpool'
+import { toDateInputString } from '@/utils/carpool'
 
-// Pure helpers of the carpool editor: the cost bar of a leg, the stops a passenger rides between, the recap figures, and
+// Pure helpers of the carpool editor: the stops a passenger rides between, the recap figures, and
 // what the drive picker offers (chains of drives, short drives, days).
-
-export interface CostSegment {
-  key: CostKey
-  cents: number
-  pct: number
-}
-
-/** The categories of a leg with their share of its cost, for a stacked bar; empty when the leg costs nothing. */
-export function costSegments(leg: Record<string, any>): CostSegment[] {
-  const parts = COST_FIELDS.map((f) => ({ key: f.key, cents: cents(leg[f.key]) })).filter((p) => p.cents > 0)
-  const total = parts.reduce((s, p) => s + p.cents, 0)
-  return parts.map((p) => ({ ...p, pct: (p.cents / total) * 100 }))
-}
 
 // ---------- Stops ----------
 

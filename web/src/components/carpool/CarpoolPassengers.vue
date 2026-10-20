@@ -79,7 +79,7 @@ function applyExactAmount() {
         @click="selected = i"
       >
         <span class="max-w-28 truncate">{{ passengerLabel(q.passenger_name, i) }}</span>
-        <span class="tabular-nums text-slate-400">{{ fmt(euros(share(i))) }}</span>
+        <span class="tabular-nums" :class="i === index ? 'text-sky-300' : 'text-sky-400'">{{ fmt(euros(share(i))) }}</span>
       </button>
       <button type="button" class="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-slate-600 px-3 text-xs font-semibold text-slate-300 hover:bg-slate-800" @click="addPassenger">
         <Plus class="w-3.5 h-3.5" /> {{ $t('carpool.carpoolTripModal.addAPassenger') }}
@@ -136,7 +136,7 @@ function applyExactAmount() {
             :id="`passenger-paid-${index}`"
             v-model="p.amount_paid"
             min="0"
-            class="field font-bold"
+            class="field font-bold text-emerald-300"
           />
         </div>
         <button
@@ -148,7 +148,7 @@ function applyExactAmount() {
           {{ $t('carpool.carpoolTripModal.exactAmount') }}
         </button>
         <p class="pb-2 text-slate-400">
-          {{ $t('carpool.carpoolTripModal.fairShare') }} <strong class="text-slate-200 tabular-nums">{{ fmt(euros(share(index))) }}</strong>
+          {{ $t('carpool.carpoolTripModal.fairShare') }} <strong class="text-sky-300 tabular-nums">{{ fmt(euros(share(index))) }}</strong>
           <span v-if="cents(p.amount_paid) !== share(index)" class="ml-2">
             {{ cents(p.amount_paid) > share(index)
               ? $t('carpool.above', { amount: fmt(euros(cents(p.amount_paid) - share(index))) })
@@ -159,10 +159,10 @@ function applyExactAmount() {
 
       <div class="space-y-2">
         <ul class="flex flex-wrap gap-1.5 text-xs" :aria-label="$t('carpool.editor.shareByLeg')">
-          <li v-for="{ leg, i } in ridden" :key="i" class="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-slate-300">
+          <li v-for="{ leg, i } in ridden" :key="i" class="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-slate-300">
             {{ stops[i] }} → {{ stops[i + 1] }}
             <span v-if="Number(leg.distance_km)" class="text-slate-400">({{ formatDistance(Number(leg.distance_km), 1) }})</span>
-            <strong class="ml-1 tabular-nums text-slate-100">{{ fmt(euros((live.legDetails[i]?.perPerson || 0) * (Number(p.seats) || 1))) }}</strong>
+            <strong class="ml-1 tabular-nums text-sky-300">{{ fmt(euros((live.legDetails[i]?.perPerson || 0) * (Number(p.seats) || 1))) }}</strong>
           </li>
         </ul>
         <div class="flex flex-wrap items-center justify-between gap-2 text-xs">

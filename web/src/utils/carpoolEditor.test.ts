@@ -1,17 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { costSegments, findDriveChain, groupDrivesByDay, recapFigures, splitShortDrives, stopFromRatio, tapStop, withAlight, withBoard } from './carpoolEditor'
-
-describe('cost segments', () => {
-  it('shares the cost of a leg between its categories, skipping empty ones', () => {
-    const segs = costSegments({ electricity_cost: 3, tolls_cost: 1, tires_cost: 0 })
-    expect(segs.map((s) => s.key)).toEqual(['electricity_cost', 'tolls_cost'])
-    expect(segs.map((s) => s.pct)).toEqual([75, 25])
-  })
-
-  it('has no segment for a free leg', () => {
-    expect(costSegments({})).toEqual([])
-  })
-})
+import { findDriveChain, groupDrivesByDay, recapFigures, splitShortDrives, stopFromRatio, tapStop, withAlight, withBoard } from './carpoolEditor'
 
 describe('stops of a passenger', () => {
   it('turns a position along the route into a stop', () => {
