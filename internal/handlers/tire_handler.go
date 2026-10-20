@@ -58,7 +58,12 @@ func (h *TireHandler) List(w http.ResponseWriter, r *http.Request) {
 // attachForecasts predicts the replacement date of every tire from the vehicle's mileage and from the months
 // the tires of its season are on the car. A failure to read the mileage only leaves the forecasts out.
 func (h *TireHandler) attachForecasts(ctx context.Context, vehicleID string, stats []services.TireWearStats) {
-	stored, err := h.repo.ListOdometerAnchors(ctx, vehicleID)
+	attachTireForecasts(ctx, h.repo, vehicleID, stats)
+}
+
+// attachTireForecasts is attachForecasts for the callers that have no TireHandler (the integration read API).
+func attachTireForecasts(ctx context.Context, repo *database.Repository, vehicleID string, stats []services.TireWearStats) {
+	stored, err := repo.ListOdometerAnchors(ctx, vehicleID)
 	if err != nil {
 		slog.Warn("tire forecast: odometer history unavailable", "component", "tires", "vehicle_id", vehicleID, "error", err)
 		return

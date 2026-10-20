@@ -64,7 +64,7 @@ func newMCPFixture(t *testing.T) *mcpFixture {
 	f.readTok = f.newToken(t, owner.ID, auth.ScopeRead)
 	f.otherTok = f.newToken(t, other.ID, auth.ScopeRead)
 
-	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil))
+	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo))
 	f.server = httptest.NewServer(NewMCPHandler(read, repo, "https://ledger.example/", "test").Endpoint())
 	t.Cleanup(f.server.Close)
 	return f
@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_tag_breakdown,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -584,6 +584,28 @@ func TestMCPTripGroupsAnswersForAVehicleWithoutGroupsAndRefusesAnotherAccountsOn
 		t.Errorf("trip groups: %s", raw)
 	}
 	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "list_trip_groups", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
+	if err != nil || !other.IsError {
+		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
+	}
+}
+
+func TestMCPTireStatusAnswersForAVehicleWithoutTiresAndRefusesAnotherAccountsOne(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_tire_status", Arguments: map[string]any{"vehicle_id": f.mine.ID}})
+	if err != nil || res.IsError {
+		t.Fatalf("tire status: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationTires
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Tires == nil || len(out.Tires) != 0 || strings.Contains(string(raw), f.vin) {
+		t.Errorf("tire status: %s", raw)
+	}
+	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_tire_status", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
 	if err != nil || !other.IsError {
 		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
 	}
