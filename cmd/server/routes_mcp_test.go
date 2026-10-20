@@ -24,8 +24,10 @@ func TestMCPLimitIsPerAccessTokenSoOneSessionDoesNotStarveAnother(t *testing.T) 
 		return rec.Code
 	}
 
-	if call("al_live_a") != http.StatusOK || call("al_live_a") != http.StatusOK {
-		t.Fatal("a token may send its allowance")
+	for i := 0; i < 2; i++ {
+		if got := call("al_live_a"); got != http.StatusOK {
+			t.Fatalf("request %d of the allowance: status %d, want 200", i+1, got)
+		}
 	}
 	if got := call("al_live_a"); got != http.StatusTooManyRequests {
 		t.Errorf("a token over its allowance: status %d, want 429", got)
