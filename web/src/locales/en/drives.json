@@ -104,7 +104,16 @@
     "latestDrives": "Latest drives",
     "aroundTheDate": "± {days} days around this date",
     "noDriveInThisPeriod": "No drive in this period.",
-    "alreadyCarpooled": "Already in a carpool"
+    "alreadyCarpooled": "Already in a carpool",
+    "chainDetected": "Chained drives detected",
+    "chainHint": "{count} drives from {from} to {to}, each starting where the previous one ended.",
+    "applied": "Applied",
+    "useChain": "Use them",
+    "chained": "chained · same place",
+    "hideShort": "Hide the short drives",
+    "showShort": "Show {count} short drive(s)",
+    "selectedCount": "{count} drive(s) selected",
+    "alreadyCarpooledIn": "In {title}"
   },
   "tripSuggestions": {
     "title": "{count} trip(s) to qualify",

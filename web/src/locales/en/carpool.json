@@ -175,6 +175,33 @@
     "resyncTitle": "Follow the drives again?",
     "resyncMessage": "The amounts will be replaced by what the drives cost now: {amount} {direction} than today.",
     "resync": "Resync",
-    "error": "Could not update the carpool: {message}"
+    "error": "Could not update the carpool: {message}",
+    "adjusted": "Adjusted"
+  },
+  "editor": {
+    "recap": "Recap",
+    "steps": "Steps",
+    "step": {
+      "drives": "Drives",
+      "passengers": "Passengers",
+      "recap": "Recap"
+    },
+    "continue": "Continue",
+    "back": "Back",
+    "editDrives": "Edit the drives",
+    "drivesSummary": "{count} drive(s) · {distance}",
+    "passengers": "Passengers",
+    "fewerSeats": "Fewer seats",
+    "moreSeats": "More seats",
+    "rides": "Rides from {from} to {to}",
+    "shareByLeg": "Share by leg",
+    "boardingStop": "Boarding stop",
+    "alightingStop": "Alighting stop",
+    "receivedOf": "{received} received",
+    "splitLabel": "Passengers {passengers}, driver {driver}",
+    "receivedLabel": "{received} of the cost received, fair shares {fair}",
+    "fairTick": "Fair shares of the passengers",
+    "fairTickHint": "The mark is where the fair shares end ({fair} of the cost).",
+    "copyFor": "Copy summary for {name}"
   }
 }
