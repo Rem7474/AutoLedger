@@ -107,6 +107,7 @@ A read-only token (`read`) also opens a narrow read API under `/api/integrations
 | `GET /api/integrations/v1/vehicles/{vehicleId}/expenses` | The entries of the vehicle's cost ledger (charges, fuel, tolls, maintenance, insurance, tires, loan and lease instalments), newest first, with the total and the per-category sums of all the matching entries. Query: `from`, `to` (days, `YYYY-MM-DD`), `category` (repeatable or comma separated), `min_amount`, `sort` (`date` or `amount`), `order` (`asc`), `limit` (50, at most 200) and `cursor` (the `next_cursor` of the previous page). The purchase is not an entry. |
 | `GET /api/integrations/v1/fleet` | The vehicles of the account side by side (month cost, running and full cost per km, annual cost, consumption, cost rank among the comparable vehicles of a currency), the month's totals per currency, the monthly budget and its use, the last 12 months of household cost in the fleet currency, and the share of the distance each named driver drove. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/tags` | The drives of a vehicle split by tag over the whole history: distance, energy, tolls, allocated cost and cost per km of each tag and of the untagged drives. A drive with several tags counts in each. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/carpool` | The carpool totals of a vehicle and its most recent shared trips (`limit`, 10 by default, 30 at most) with their stops, costs and named passengers. |
 
 Conventions:
 
