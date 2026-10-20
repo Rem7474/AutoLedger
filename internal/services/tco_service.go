@@ -54,6 +54,9 @@ func (s *TCOService) location() *time.Location {
 	return loc
 }
 
+// Location is the reporting timezone, the one the days and months of every figure are cut in.
+func (s *TCOService) Location() *time.Location { return s.location() }
+
 // vehicleBasics are the columns of the vehicle row the TCO and its monthly timeline start from.
 type vehicleBasics struct {
 	currentOdometer             float64

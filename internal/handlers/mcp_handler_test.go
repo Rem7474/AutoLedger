@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_energy_efficiency,get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_energy_efficiency,get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
