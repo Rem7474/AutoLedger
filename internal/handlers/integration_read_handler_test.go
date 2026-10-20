@@ -102,7 +102,7 @@ func TestIntegrationDataGapsAreCappedAndCarryNoDriveIdentity(t *testing.T) {
 	}
 	comp := services.TCOCompleteness{ChargesWithoutCost: 3, UnqualifiedDrives: 2, UntrackedDistanceKm: 410, InsuranceMissing: true}
 
-	got := buildIntegrationDataGaps("v1", issues, 31, 640, 4, comp)
+	got := buildIntegrationDataGaps("v1", "EUR", issues, 31, 640, 4, comp)
 
 	if len(got.Issues) != integrationReadIssues || !got.Truncated {
 		t.Errorf("%d issues, truncated %v: want %d and true", len(got.Issues), got.Truncated, integrationReadIssues)
@@ -121,8 +121,58 @@ func TestIntegrationDataGapsAreCappedAndCarryNoDriveIdentity(t *testing.T) {
 		t.Errorf("completeness gaps: %+v", got)
 	}
 
-	if few := buildIntegrationDataGaps("v1", issues[:2], 2, 1, 0, comp); few.Truncated || len(few.Issues) != 2 {
+	if few := buildIntegrationDataGaps("v1", "EUR", issues[:2], 2, 1, 0, comp); few.Truncated || len(few.Issues) != 2 {
 		t.Errorf("a short list is not truncated: %+v", few)
+	}
+}
+
+func TestIntegrationDataGapsRankWhatToCompleteWithItsWorthAndUnit(t *testing.T) {
+	estimate := money.Cents(4200)
+	comp := services.TCOCompleteness{
+		StartOdometerMissing: true, UnconvertedExpenses: 2, AcquisitionMissing: true,
+		AcquisitionMissingFields: []string{"resale_value"},
+		Gaps: []services.CompletenessGap{
+			{Key: "depreciation"},
+			{Key: "unpriced_charges", Count: 3, Quantity: 120.5, Amount: &estimate},
+			{Key: "untracked_distance", Quantity: 410},
+			{Key: "unconverted_expenses", Count: 2, Target: "expenses"},
+		},
+		Dimensions: []services.CompletenessDimension{{Key: "energy", Label: "Energy", ScorePct: 80, Weight: 0.4, Applicable: true}},
+	}
+
+	got := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, comp)
+
+	kinds := make([]string, len(got.Missing))
+	for i, m := range got.Missing {
+		kinds[i] = m.Kind
+	}
+	if strings.Join(kinds, ",") != "depreciation,unpriced_charges,untracked_distance,unconverted_expenses" {
+		t.Errorf("the order of the application's list is kept: %v", kinds)
+	}
+	depreciation, charges, distance, unconverted := got.Missing[0], got.Missing[1], got.Missing[2], got.Missing[3]
+	if depreciation.EstimatedAmount != nil || depreciation.Quantity != nil {
+		t.Errorf("a depreciation is never estimated: %+v", depreciation)
+	}
+	if charges.EstimatedAmount == nil || *charges.EstimatedAmount != (IntegrationAmount{Amount: "42.00", Currency: "CHF"}) ||
+		charges.Count != 3 || charges.Quantity == nil || *charges.Quantity != 120.5 || *charges.QuantityUnit != "kWh" {
+		t.Errorf("unpriced charges carry their worth in the vehicle's currency and their energy: %+v", charges)
+	}
+	if distance.EstimatedAmount != nil || *distance.Quantity != 410 || *distance.QuantityUnit != "km" {
+		t.Errorf("an unestimated gap has a null amount, not zero: %+v", distance)
+	}
+	if unconverted.FixIn == nil || *unconverted.FixIn != "expenses" || unconverted.Quantity != nil {
+		t.Errorf("unconverted expenses say where they are fixed: %+v", unconverted)
+	}
+	if !got.StartOdometerMissing || got.UnconvertedExpenses != 2 || len(got.AcquisitionMissingFields) != 1 || len(got.ScoreDimensions) != 1 || !got.ScoreDimensions[0].Applicable {
+		t.Errorf("the other completeness details: %+v", got)
+	}
+
+	empty := buildIntegrationDataGaps("v1", "CHF", nil, 0, 0, 0, services.TCOCompleteness{})
+	body, _ := json.Marshal(empty)
+	for _, want := range []string{`"missing":[]`, `"score_dimensions":[]`, `"acquisition_missing_fields":[]`} {
+		if !strings.Contains(string(body), want) {
+			t.Errorf("an empty list is [], not null (%s): %s", want, body)
+		}
 	}
 }
 
