@@ -2,11 +2,11 @@
 import { formatNumber, formatPercent } from '@/utils/numbers'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Users, MapPin, Navigation, Pencil, RotateCw, CheckCircle2, Sparkles, ChevronRight, Zap, Disc, Wrench, Shield, Receipt, Copy, Check } from 'lucide-vue-next'
+import { Users, MapPin, Navigation, Pencil, RotateCw, Link2, Lock, LockOpen, CheckCircle2, Sparkles, ChevronRight, Zap, Disc, Wrench, Shield, Receipt, Copy, Check } from 'lucide-vue-next'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { buildCarpoolBreakdown } from '@/utils/costBreakdown'
-import { carpoolCoverage, carpoolShareSummary, formatDate, passengerLabel, stopNames } from '@/utils/carpool'
+import { carpoolCoverage, carpoolShareSummary, driveCostGapCents, formatDate, hasLinkedLegs, passengerLabel, stopNames } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import ModalShell from '@/components/ModalShell.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
@@ -17,7 +17,7 @@ import { distanceUnit, formatDistance } from '@/units'
 // total. A leg made from a drive opens the cost detail of that drive, like the legs of a trip. The form to change the
 // carpool is the edit modal, reached from the footer.
 const props = defineProps<{ trip: any | null; recalculating: boolean }>()
-const emit = defineEmits<{ edit: [trip: any]; recalculate: [trip: any]; 'open-drive': [driveId: string] }>()
+const emit = defineEmits<{ edit: [trip: any]; recalculate: [trip: any]; freeze: [trip: any]; unfreeze: [trip: any]; 'open-drive': [driveId: string] }>()
 const open = defineModel<boolean>('open', { required: true })
 const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
@@ -53,6 +53,10 @@ async function copySummary(index: number) {
   copiedTimer = setTimeout(() => (copiedIndex.value = null), 2000)
 }
 onBeforeUnmount(() => clearTimeout(copiedTimer))
+const linked = computed(() => hasLinkedLegs(props.trip))
+const frozen = computed(() => !!props.trip?.costs_frozen_at)
+// What the drives cost now minus what the frozen carpool shows, in the vehicle's currency
+const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
 </script>
 
 <template>
@@ -83,6 +87,19 @@ onBeforeUnmount(() => clearTimeout(copiedTimer))
             <span class="text-blue-400 font-semibold">{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
           </div>
           <p v-if="trip.notes" class="text-xs text-slate-400 pt-2 border-t border-slate-700/60">{{ trip.notes }}</p>
+        </div>
+
+        <!-- Where the amounts come from -->
+        <div v-if="linked" class="flex items-start gap-2.5 text-xs bg-slate-800/40 border border-slate-800 rounded-xl px-3 py-2.5">
+          <Lock v-if="frozen" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+          <Link2 v-else class="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+          <div class="min-w-0 space-y-0.5">
+            <p class="font-semibold text-slate-200">{{ frozen ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}</p>
+            <p class="text-slate-400">{{ frozen ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint') }}</p>
+            <p v-if="frozen && gap !== 0" class="text-slate-300">
+              {{ $t('carpool.linked.gap', { amount: fmt(Math.abs(gap)), direction: gap > 0 ? $t('carpool.linked.more') : $t('carpool.linked.less') }) }}
+            </p>
+          </div>
         </div>
 
         <!-- Legs, as rows -->
@@ -244,6 +261,18 @@ onBeforeUnmount(() => clearTimeout(copiedTimer))
         </button>
         <div v-if="vehicleStore.canEdit" class="flex items-center gap-2">
           <button
+            v-if="linked"
+            type="button"
+            @click="frozen ? emit('unfreeze', trip) : emit('freeze', trip)"
+            :disabled="recalculating"
+            class="btn btn-secondary"
+          >
+            <LockOpen v-if="frozen" class="w-3.5 h-3.5" />
+            <Lock v-else class="w-3.5 h-3.5" />
+            <span>{{ frozen ? $t('carpool.linked.reopen') : $t('carpool.linked.freeze') }}</span>
+          </button>
+          <button
+            v-else
             type="button"
             @click="emit('recalculate', trip)"
             :disabled="recalculating"

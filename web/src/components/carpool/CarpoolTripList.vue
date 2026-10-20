@@ -5,8 +5,8 @@ import { formatDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
-import { Users, Trash2, Edit2, Calendar, Navigation, RotateCw, Download, ChevronRight } from 'lucide-vue-next'
-import { formatDate } from '@/utils/carpool'
+import { Users, Trash2, Edit2, Calendar, Navigation, RotateCw, Download, ChevronRight, Link2, Lock } from 'lucide-vue-next'
+import { formatDate, hasLinkedLegs } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 
 // The carpool trips as compact cards (the legs, passengers and costs are in the detail, opened by a click), and the
@@ -27,6 +27,8 @@ const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
 const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 
+// A carpool made from drives follows their cost on its own: only the ones entered by distance are recalculated
+const recalculable = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id) && !hasLinkedLegs(tr)))
 const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTripIds.length === props.trips.length)
 </script>
 
@@ -40,6 +42,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
       @clear="emit('clear')"
     >
       <button
+        v-if="recalculable.length"
         type="button"
         @click="emit('batch-recalculate')"
         :disabled="recalculating"
@@ -47,7 +50,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf2')"
       >
         <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': recalculating }" />
-        <span>{{ $t('carpool.carpoolTripList.recalculateActualCosts', { length: selectedTripIds.length }) }}</span>
+        <span>{{ $t('carpool.carpoolTripList.recalculateActualCosts', { length: recalculable.length }) }}</span>
       </button>
 
       <button
@@ -104,6 +107,15 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
               <h3 class="text-base font-bold text-white truncate max-w-sm sm:max-w-md" :title="trip.title">{{ trip.title }}</h3>
               <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700/60 font-medium shrink-0">{{ formatDistance(trip.distance_km, 1) }}</span>
               <span
+                v-if="hasLinkedLegs(trip)"
+                class="inline-flex items-center gap-1 text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700/60 font-medium shrink-0"
+                :title="trip.costs_frozen_at ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint')"
+              >
+                <Lock v-if="trip.costs_frozen_at" class="w-3 h-3" />
+                <Link2 v-else class="w-3 h-3" />
+                {{ trip.costs_frozen_at ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}
+              </span>
+              <span
                 class="text-xs px-2.5 py-0.5 rounded-full font-semibold border shrink-0"
                 :class="trip.net_cost <= 0 ? 'bg-success-500/15 text-success-400 border-success-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'"
               >
@@ -119,6 +131,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         </div>
         <div v-if="vehicleStore.canEdit" class="relative z-10 flex items-center gap-1 sm:gap-2 shrink-0 self-end sm:self-auto">
           <button
+            v-if="!hasLinkedLegs(trip)"
             @click="emit('recalculate', trip)"
             :disabled="recalculating"
             class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"

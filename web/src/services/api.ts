@@ -433,6 +433,8 @@ export const api = {
     request<any>(`/vehicles/${vehicleId}/carpools/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteCarpool: (vehicleId: string, id: string) =>
     request<any>(`/vehicles/${vehicleId}/carpools/${id}`, { method: 'DELETE' }),
+  freezeCarpool: (vehicleId: string, id: string) => request<any>(`/vehicles/${vehicleId}/carpools/${id}/freeze`, { method: 'POST' }),
+  unfreezeCarpool: (vehicleId: string, id: string) => request<any>(`/vehicles/${vehicleId}/carpools/${id}/unfreeze`, { method: 'POST' }),
   recalculateCarpools: (vehicleId: string, tripIds?: string[]) =>
     request<{ updated_count: number; trips: any[] }>(`/vehicles/${vehicleId}/carpools/recalculate`, {
       method: 'POST',

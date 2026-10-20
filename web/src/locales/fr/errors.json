@@ -227,6 +227,7 @@
     "leg_error": "Étape {p0} : {p1}",
     "alight_after_board": "{p0} : l'arrêt de descente doit suivre l'arrêt de montée",
     "too_many_seats": "Plus de {p0} places occupées sur l'étape {p1}",
+    "invalid_override": "Catégorie de coût inconnue : {p0}",
     "needs_leg": "Un covoiturage doit comporter au moins une étape",
     "invalid_stops": "Arrêts de montée et de descente invalides pour {p0}",
     "title_required": "Le titre du covoiturage est requis"

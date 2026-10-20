@@ -158,5 +158,23 @@
     "leg": "{from} → {to}: {cost} ÷ {people} = {amount}",
     "legSeats": "{from} → {to}: {cost} ÷ {people} × {seats} seats = {amount}",
     "received": "Received: {amount}"
+  },
+  "linked": {
+    "linked": "Linked to the drives",
+    "frozen": "Amounts frozen",
+    "follow": "Follow the cost of the drives",
+    "followHint": "Each leg takes what its drive costs, and changes with it (tolls added later, new rates).",
+    "frozenHint": "The amounts stay as entered; they no longer change with the drives.",
+    "driveCost": "Drive: {amount}",
+    "restore": "Back to the drive's amount",
+    "freeze": "Freeze amounts",
+    "reopen": "Reopen and resync",
+    "gap": "The drives now cost {amount} {direction} than these amounts.",
+    "more": "more",
+    "less": "less",
+    "resyncTitle": "Follow the drives again?",
+    "resyncMessage": "The amounts will be replaced by what the drives cost now: {amount} {direction} than today.",
+    "resync": "Resync",
+    "error": "Could not update the carpool: {message}"
   }
 }

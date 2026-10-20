@@ -11,7 +11,11 @@ export interface LegForm {
   maintenance_cost: number
   insurance_cost: number
   other_cost: number
+  // Categories of a leg made from a drive whose amount differs from the drive's, and what the drive costs on its own
+  drive_cost: Partial<Record<CostKey, number>> | null
 }
+
+export type CostKey = 'electricity_cost' | 'tolls_cost' | 'tires_cost' | 'maintenance_cost' | 'insurance_cost' | 'other_cost'
 
 export interface PassengerForm {
   passenger_name: string
@@ -22,7 +26,7 @@ export interface PassengerForm {
   notes: string
 }
 
-export const COST_FIELDS: Array<{ key: keyof LegForm; label: string }> = [
+export const COST_FIELDS: Array<{ key: CostKey; label: string }> = [
   { key: 'electricity_cost', label: 'electricity' },
   { key: 'tolls_cost', label: 'tolls' },
   { key: 'tires_cost', label: 'tires' },
@@ -63,6 +67,7 @@ export function emptyLeg(): LegForm {
     maintenance_cost: 0,
     insurance_cost: 0,
     other_cost: 0,
+    drive_cost: null,
   }
 }
 
@@ -157,6 +162,7 @@ export function legsFromEstimate(est: any): LegForm[] {
     maintenance_cost: l.maintenance_cost,
     insurance_cost: l.insurance_cost,
     other_cost: l.other_cost || 0,
+    drive_cost: l.drive_id ? driveCostOf(l) : null,
   }))
 }
 
@@ -173,7 +179,53 @@ export function legsFromTrip(trip: any): LegForm[] {
     maintenance_cost: l.maintenance_cost,
     insurance_cost: l.insurance_cost,
     other_cost: l.other_cost,
+    drive_cost: l.drive_id ? l.drive_cost || null : null,
   }))
+}
+
+function driveCostOf(l: any): Partial<Record<CostKey, number>> {
+  return Object.fromEntries(COST_FIELDS.map((f) => [f.key, l[f.key] || 0]))
+}
+
+/** A trip with at least one leg made from a drive: its amounts follow the drives unless it is frozen. */
+export const hasLinkedLegs = (trip: any): boolean => (trip?.legs || []).some((l: any) => !!l.drive_id)
+
+/** The amount of a category differs from what the drive costs (the leg is adjusted, or its carpool is frozen). */
+export function differsFromDrive(leg: Pick<LegForm, 'drive_id' | 'drive_cost'> & Record<string, any>, key: CostKey): boolean {
+  return !!leg.drive_id && !!leg.drive_cost && cents(leg[key]) !== cents(leg.drive_cost[key] ?? 0)
+}
+
+/** The categories of a leg to send as overrides: those that differ from the drive's. */
+export function legOverrides(leg: LegForm): Partial<Record<CostKey, number>> {
+  const out: Partial<Record<CostKey, number>> = {}
+  for (const f of COST_FIELDS) if (differsFromDrive(leg, f.key)) out[f.key] = Number(leg[f.key]) || 0
+  return out
+}
+
+/** After the legs were re-estimated, puts back the adjusted amounts of the legs that were already there. */
+export function keepOverrides(previous: LegForm[], next: LegForm[]) {
+  const byDrive = new Map(previous.filter((l) => l.drive_id).map((l) => [l.drive_id, l]))
+  next.forEach((leg) => {
+    const before = leg.drive_id ? byDrive.get(leg.drive_id) : undefined
+    if (!before) return
+    for (const [key, value] of Object.entries(legOverrides(before))) (leg as any)[key] = value
+  })
+}
+
+/** Sets every leg made from a drive to what its drive costs. */
+export function followDrives(legs: LegForm[]) {
+  legs.forEach((leg) => {
+    if (!leg.drive_id || !leg.drive_cost) return
+    for (const f of COST_FIELDS) (leg as any)[f.key] = leg.drive_cost[f.key] ?? 0
+  })
+}
+
+/** What the drives cost minus what the legs made from them show, in cents (positive: the drives cost more). */
+export function driveCostGapCents(legs: Array<Record<string, any>>): number {
+  return legs.reduce((sum, l) => {
+    if (!l.drive_id || !l.drive_cost) return sum
+    return sum + COST_FIELDS.reduce((s, f) => s + cents(l.drive_cost[f.key] ?? 0) - cents(l[f.key] ?? 0), 0)
+  }, 0)
 }
 
 export function passengersFromTrip(trip: any, legCount: number): PassengerForm[] {

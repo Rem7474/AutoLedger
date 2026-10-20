@@ -21,6 +21,12 @@ const (
 	integrationCarpoolMax     = 30
 )
 
+// WithCarpool gives the carpool view the service that brings the legs made from drives up to date.
+func (h *IntegrationReadHandler) WithCarpool(s *services.CarpoolService) *IntegrationReadHandler {
+	h.carpool = s
+	return h
+}
+
 // IntegrationCarpoolSummary is what carpooling brought in over every trip of a vehicle.
 type IntegrationCarpoolSummary struct {
 	Trips           int                 `json:"trips" jsonschema:"number of carpool trips"`
@@ -156,6 +162,12 @@ func (h *IntegrationReadHandler) Carpool(ctx context.Context, userID, vehicleID 
 	trips, err := h.repo.ListCarpoolTrips(ctx, vehicle.ID)
 	if err != nil {
 		return nil, err
+	}
+	if h.carpool != nil {
+		// Before the summary, which sums the stored amounts
+		if err := h.carpool.RefreshLinkedCosts(ctx, vehicle.ID, trips); err != nil {
+			return nil, err
+		}
 	}
 	sum, err := h.repo.GetCarpoolSummary(ctx, vehicle.ID)
 	if err != nil {
