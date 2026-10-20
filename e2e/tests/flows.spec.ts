@@ -364,7 +364,8 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
   await dialog.locator('#leg-tolls_cost-0').fill('10')
 
   // 30 of actual cost shared between the driver and one passenger: the fair share is 15
-  await dialog.getByRole('button', { name: 'Apply the fair share' }).click()
+  await expect(dialog.locator('#passenger-name-0')).toHaveAttribute('placeholder', 'Passenger 1')
+  await dialog.getByRole('button', { name: 'Exact amount' }).click()
   await expect(dialog.locator('#passenger-paid-0')).toHaveValue('15')
   await dialog.getByRole('button', { name: 'Calculation detail' }).click()
   await expect(dialog.getByText('Hide the calculation')).toBeVisible()
