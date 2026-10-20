@@ -30,6 +30,7 @@ func (h *apiHandlers) registerIntegrationRoutes(r chi.Router) {
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/ownership", h.integrationRead.GetOwnership)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/energy-efficiency", h.integrationRead.GetEnergyEfficiency)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/expenses", h.integrationRead.GetExpenses)
+		r.Get("/api/integrations/v1/vehicles/{vehicleId}/tags", h.integrationRead.GetTags)
 		r.Get("/api/integrations/v1/fleet", h.integrationRead.GetFleetSummary)
 	})
 }
