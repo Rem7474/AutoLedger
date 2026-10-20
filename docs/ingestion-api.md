@@ -106,6 +106,7 @@ Conventions:
 - An amount is `{"amount": "12.34", "currency": "GBP"}`: a decimal string, in the vehicle's currency. Amounts are never converted between currencies.
 - A distance is `{"value": 4200, "unit": "km"}`. The unit is always kilometres.
 - A figure that cannot be known (a cost per km with no distance, a score with nothing to score) is `null`, never `0`.
+- `months_covered` says how many calendar months a period spans: `last_12_months` of a vehicle with a shorter history spans fewer than 12.
 - The costs are cash spent, the purchase of the vehicle excluded. The month in progress counts with the instalments that fall due later in it.
 - The responses carry no VIN, plate, coordinate, document or drive identifier. The trips are the one view with addresses (`from` and `to`); an address stored only as coordinates is `null`.
 - A vehicle the account cannot see answers `404`.

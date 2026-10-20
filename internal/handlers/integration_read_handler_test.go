@@ -56,6 +56,9 @@ func TestIntegrationCostsCoverTheLastTwelveMonthsAndSincePurchase(t *testing.T) 
 	if l12.CostPerKm == nil || l12.CostPerKm.Amount != "0.3700" {
 		t.Errorf("cost per km is the total over the distance, got %+v", l12.CostPerKm)
 	}
+	if l12.MonthsCovered != 12 || got.SincePurchase.MonthsCovered != 30 {
+		t.Errorf("months covered: last 12 months %d (want 12), since purchase %d (want 30)", l12.MonthsCovered, got.SincePurchase.MonthsCovered)
+	}
 	cats := l12.Costs
 	sumOfCategories := cats.Energy.Amount + "|" + cats.Tolls.Amount + "|" + cats.Maintenance.Amount + "|" + cats.Insurance.Amount + "|" +
 		cats.Financing.Amount + "|" + cats.Tires.Amount + "|" + cats.Other.Amount
@@ -75,6 +78,16 @@ func TestIntegrationCostsCoverTheLastTwelveMonthsAndSincePurchase(t *testing.T) 
 	}
 	if got.Completeness.ScorePct == nil || *got.Completeness.ScorePct != 82 || got.Completeness.Warnings == nil {
 		t.Errorf("completeness: %+v", got.Completeness)
+	}
+}
+
+func TestIntegrationLastTwelveMonthsOfAYoungVehicleSaysHowManyMonthsItCovers(t *testing.T) {
+	sum := &services.TCOSummary{MonthlyCosts: monthsUpTo(time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC), 5)}
+
+	got := buildIntegrationCosts(&models.Vehicle{ID: "v1", Currency: "EUR"}, sum)
+
+	if got.Last12Months.MonthsCovered != 5 || got.Last12Months.From == nil || *got.Last12Months.From != "2026-06" {
+		t.Errorf("a vehicle with five months of history has five months in its last 12: %+v", got.Last12Months)
 	}
 }
 

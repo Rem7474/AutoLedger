@@ -106,6 +106,7 @@ Conventions :
 - Un montant est `{"amount": "12.34", "currency": "GBP"}` : une chaîne décimale, dans la devise du véhicule. Les montants ne sont jamais convertis d'une devise à l'autre.
 - Une distance est `{"value": 4200, "unit": "km"}`. L'unité est toujours le kilomètre.
 - Une valeur impossible à connaître (un coût au km sans distance, un score sans rien à évaluer) vaut `null`, jamais `0`.
+- `months_covered` indique combien de mois calendaires couvre une période : `last_12_months` d'un véhicule à l'historique plus court en couvre moins de 12.
 - Les coûts sont les sommes décaissées, achat du véhicule exclu. Le mois en cours compte les échéances qui tombent plus tard dans le mois.
 - Les réponses ne contiennent ni VIN, ni plaque, ni coordonnée, ni document, ni identifiant de trajet. Les trajets sont la seule vue avec des adresses (`from` et `to`) ; une adresse stockée uniquement sous forme de coordonnées vaut `null`.
 - Un véhicule que le compte ne peut pas voir répond `404`.
