@@ -175,6 +175,33 @@
     "resyncTitle": "Suivre à nouveau les trajets ?",
     "resyncMessage": "Les montants seront remplacés par le coût actuel des trajets : {amount} de {direction} qu'aujourd'hui.",
     "resync": "Resynchroniser",
-    "error": "Impossible de mettre à jour le covoiturage : {message}"
+    "error": "Impossible de mettre à jour le covoiturage : {message}",
+    "adjusted": "Ajusté"
+  },
+  "editor": {
+    "recap": "Récapitulatif",
+    "steps": "Étapes",
+    "step": {
+      "drives": "Trajets",
+      "passengers": "Passagers",
+      "recap": "Récap"
+    },
+    "continue": "Continuer",
+    "back": "Retour",
+    "editDrives": "Modifier les trajets",
+    "drivesSummary": "{count} trajet(s) · {distance}",
+    "passengers": "Passagers",
+    "fewerSeats": "Moins de places",
+    "moreSeats": "Plus de places",
+    "rides": "Voyage de {from} à {to}",
+    "shareByLeg": "Part par tronçon",
+    "boardingStop": "Arrêt de montée",
+    "alightingStop": "Arrêt de descente",
+    "receivedOf": "{received} reçu",
+    "splitLabel": "Passagers {passengers}, conducteur {driver}",
+    "receivedLabel": "{received} du coût reçu, parts équitables {fair}",
+    "fairTick": "Parts équitables des passagers",
+    "fairTickHint": "Le repère marque la fin des parts équitables ({fair} du coût).",
+    "copyFor": "Copier le résumé pour {name}"
   }
 }

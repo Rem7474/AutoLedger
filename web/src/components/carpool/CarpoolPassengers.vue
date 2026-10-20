@@ -1,59 +1,94 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import NumberInput from '@/components/NumberInput.vue'
-import { Users, Plus, Trash2, Calculator, ChevronDown, ChevronUp } from 'lucide-vue-next'
+import CarpoolRouteStrip from '@/components/carpool/CarpoolRouteStrip.vue'
+import CarpoolShareMath from '@/components/carpool/CarpoolShareMath.vue'
+import { Users, Plus, Trash2, Calculator, ChevronDown, ChevronUp, Minus } from 'lucide-vue-next'
 import { cents, euros, newPassenger, passengerLabel, type LegForm, type PassengerForm } from '@/utils/carpool'
+import type { StopRange } from '@/utils/carpoolEditor'
 import { currencySymbol, formatAmount } from '@/currency'
 import { formatDistance } from '@/units'
 
-// The passengers of a carpool: where each boards and alights, the seats, what was paid against the fair share, and the
-// section by section calculation of that share on demand (expanded is the index of the passenger whose calculation is open).
+// The passengers of a carpool: one card for the selected passenger, with where they ride on the route, their seats, what
+// was received against the fair share and, on demand, the section by section calculation of that share. `selected` is the
+// index of the passenger on the card; `expanded` the index of the one whose calculation is open.
 const props = defineProps<{ legs: LegForm[]; stops: string[]; live: any; currency: string; recentNames?: string[] }>()
 const passengers = defineModel<PassengerForm[]>('passengers', { required: true })
 const expandedPassengerIndex = defineModel<number | null>('expanded', { required: true })
+const selected = defineModel<number>('selected', { default: 0 })
 const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
 
-function togglePassengerMath(index: number) {
-  expandedPassengerIndex.value = expandedPassengerIndex.value === index ? null : index
+const index = computed(() => Math.min(Math.max(selected.value, 0), passengers.value.length - 1))
+const p = computed(() => passengers.value[index.value])
+const share = (i: number) => props.live.shares[i] || 0
+const ridden = computed(() => props.legs.map((leg, i) => ({ leg, i })).filter(({ i }) => p.value.board_stop_index <= i && i < p.value.alight_stop_index))
+
+function togglePassengerMath() {
+  expandedPassengerIndex.value = expandedPassengerIndex.value === index.value ? null : index.value
 }
 
 function addPassenger() {
   passengers.value.push(newPassenger(passengers.value.length, props.legs.length))
+  selected.value = passengers.value.length - 1
 }
 
-function removePassenger(index: number) {
-  passengers.value.splice(index, 1)
+function removePassenger() {
+  passengers.value.splice(index.value, 1)
+  selected.value = Math.min(index.value, passengers.value.length - 1)
+  expandedPassengerIndex.value = null
 }
 
-function onBoardChange(p: PassengerForm) {
-  if (p.alight_stop_index <= p.board_stop_index) p.alight_stop_index = p.board_stop_index + 1
+function setRange(range: StopRange) {
+  p.value.board_stop_index = range.board
+  p.value.alight_stop_index = range.alight
+}
+
+function setSeats(seats: number) {
+  p.value.seats = Math.min(Math.max(seats, 1), 7)
 }
 
 // The recent names not already on this carpool
-function suggestedNames(index: number): string[] {
-  const used = new Set(passengers.value.map((p, i) => (i === index ? '' : p.passenger_name.trim().toLowerCase())))
+const suggestedNames = computed(() => {
+  const used = new Set(passengers.value.map((q, i) => (i === index.value ? '' : q.passenger_name.trim().toLowerCase())))
   return (props.recentNames || []).filter((n) => !used.has(n.toLowerCase())).slice(0, 6)
-}
+})
 
-function applyExactAmount(index: number) {
-  passengers.value[index].amount_paid = euros(props.live.shares[index])
+function applyExactAmount() {
+  p.value.amount_paid = euros(share(index.value))
 }
 </script>
 
 <template>
-  <div class="space-y-2">
-    <div class="flex items-center justify-between">
+  <div class="space-y-3">
+    <div class="flex items-center justify-between gap-2">
       <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
-        <Users class="w-4 h-4 text-blue-400" />
+        <Users class="w-4 h-4 text-slate-400" />
         {{ $t('carpool.carpoolTripModal.passengersBoardingAndAlighting') }}
       </h4>
-      <button type="button" @click="addPassenger" class="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1">
+    </div>
+
+    <div class="flex flex-wrap gap-2" role="tablist" :aria-label="$t('carpool.editor.passengers')">
+      <button
+        v-for="(q, i) in passengers"
+        :key="i"
+        type="button"
+        role="tab"
+        :aria-selected="i === index"
+        class="flex min-h-11 items-center gap-2 rounded-full border px-3 text-xs font-semibold"
+        :class="i === index ? 'border-rose-500/60 bg-rose-500/10 text-rose-100' : 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700'"
+        @click="selected = i"
+      >
+        <span class="max-w-28 truncate">{{ passengerLabel(q.passenger_name, i) }}</span>
+        <span class="tabular-nums text-slate-400">{{ fmt(euros(share(i))) }}</span>
+      </button>
+      <button type="button" class="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-slate-600 px-3 text-xs font-semibold text-slate-300 hover:bg-slate-800" @click="addPassenger">
         <Plus class="w-3.5 h-3.5" /> {{ $t('carpool.carpoolTripModal.addAPassenger') }}
       </button>
     </div>
 
-    <div v-for="(p, index) in passengers" :key="index" class="bg-slate-950/50 border border-slate-800 rounded-xl p-3 space-y-2">
-      <div class="grid grid-cols-2 sm:grid-cols-12 gap-2 items-start text-xs">
-        <div class="col-span-2 sm:col-span-3">
+    <div v-if="p" class="space-y-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+        <div>
           <label :for="`passenger-name-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.name') }}</label>
           <input
             :id="`passenger-name-${index}`"
@@ -62,10 +97,10 @@ function applyExactAmount(index: number) {
             autocomplete="off"
             class="field"
           />
-          <div v-if="!p.passenger_name.trim() && suggestedNames(index).length" class="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <div v-if="!p.passenger_name.trim() && suggestedNames.length" class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
             <span class="text-slate-400">{{ $t('carpool.carpoolTripModal.recentPassengers') }}</span>
             <button
-              v-for="name in suggestedNames(index)"
+              v-for="name in suggestedNames"
               :key="name"
               type="button"
               class="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 font-semibold text-slate-200 hover:bg-slate-700"
@@ -75,39 +110,25 @@ function applyExactAmount(index: number) {
             </button>
           </div>
         </div>
-        <div class="sm:col-span-3">
-          <label :for="`passenger-board-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.getsOnAt') }}</label>
-          <select
-            :id="`passenger-board-${index}`"
-            v-model.number="p.board_stop_index"
-            @change="onBoardChange(p)"
-            class="field"
-          >
-            <option v-for="(name, s) in stops.slice(0, -1)" :key="s" :value="s">{{ name }}</option>
-          </select>
-        </div>
-        <div class="sm:col-span-3">
-          <label :for="`passenger-alight-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.getsOffAt') }}</label>
-          <select
-            :id="`passenger-alight-${index}`"
-            v-model.number="p.alight_stop_index"
-            class="field"
-          >
-            <option v-for="(name, s) in stops" v-show="s > p.board_stop_index" :key="s" :value="s" :disabled="s <= p.board_stop_index">{{ name }}</option>
-          </select>
-        </div>
-        <div class="sm:col-span-3">
-          <label :for="`passenger-seats-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.seats') }}</label>
-          <input
-            :id="`passenger-seats-${index}`"
-            v-model.number="p.seats"
-            type="number"
-            min="1"
-            max="7"
-            class="field"
-          />
+        <div>
+          <span :id="`passenger-seats-label-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.seats') }}</span>
+          <div class="flex items-center gap-1" role="group" :aria-labelledby="`passenger-seats-label-${index}`">
+            <button type="button" class="btn btn-secondary tap" :disabled="p.seats <= 1" :aria-label="$t('carpool.editor.fewerSeats')" @click="setSeats(Number(p.seats) - 1)">
+              <Minus class="h-4 w-4" aria-hidden="true" />
+            </button>
+            <output :id="`passenger-seats-${index}`" class="w-8 text-center text-sm font-bold tabular-nums text-white">{{ p.seats }}</output>
+            <button type="button" class="btn btn-secondary tap" :disabled="p.seats >= 7" :aria-label="$t('carpool.editor.moreSeats')" @click="setSeats(Number(p.seats) + 1)">
+              <Plus class="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
+
+      <div>
+        <div class="mb-1 text-xs text-slate-400">{{ $t('carpool.editor.rides', { from: stops[p.board_stop_index], to: stops[p.alight_stop_index] }) }}</div>
+        <CarpoolRouteStrip :stops="stops" :board="p.board_stop_index" :alight="p.alight_stop_index" @change="setRange" />
+      </div>
+
       <div class="flex flex-wrap items-end gap-2 text-xs">
         <div class="w-36">
           <label :for="`passenger-paid-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.paid', { cur: currencySymbol(currency) }) }}</label>
@@ -115,32 +136,40 @@ function applyExactAmount(index: number) {
             :id="`passenger-paid-${index}`"
             v-model="p.amount_paid"
             min="0"
-            class="field font-bold text-success-400"
+            class="field font-bold"
           />
         </div>
         <button
           type="button"
           class="btn btn-secondary tap"
-          :title="$t('carpool.carpoolTripModal.exactAmountTitle', { amount: fmt(euros(live.shares[index] || 0)) })"
-          @click="applyExactAmount(index)"
+          :title="$t('carpool.carpoolTripModal.exactAmountTitle', { amount: fmt(euros(share(index))) })"
+          @click="applyExactAmount"
         >
           {{ $t('carpool.carpoolTripModal.exactAmount') }}
         </button>
-      </div>
-      <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <span class="text-slate-400">
-          {{ $t('carpool.carpoolTripModal.fairShare') }} <strong class="text-slate-200">{{ fmt(euros(live.shares[index] || 0)) }}</strong>
-          <span :class="cents(p.amount_paid) >= (live.shares[index] || 0) ? 'text-success-400' : 'text-warning-400'" class="ml-2">
-            {{ cents(p.amount_paid) >= (live.shares[index] || 0)
-              ? $t('carpool.above', { amount: fmt(euros(cents(p.amount_paid) - (live.shares[index] || 0))) })
-              : $t('carpool.below', { amount: fmt(euros((live.shares[index] || 0) - cents(p.amount_paid))) }) }}
+        <p class="pb-2 text-slate-400">
+          {{ $t('carpool.carpoolTripModal.fairShare') }} <strong class="text-slate-200 tabular-nums">{{ fmt(euros(share(index))) }}</strong>
+          <span v-if="cents(p.amount_paid) !== share(index)" class="ml-2">
+            {{ cents(p.amount_paid) > share(index)
+              ? $t('carpool.above', { amount: fmt(euros(cents(p.amount_paid) - share(index))) })
+              : $t('carpool.below', { amount: fmt(euros(share(index) - cents(p.amount_paid))) }) }}
           </span>
-        </span>
-        <span class="flex items-center gap-3">
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <ul class="flex flex-wrap gap-1.5 text-xs" :aria-label="$t('carpool.editor.shareByLeg')">
+          <li v-for="{ leg, i } in ridden" :key="i" class="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-slate-300">
+            {{ stops[i] }} → {{ stops[i + 1] }}
+            <span v-if="Number(leg.distance_km)" class="text-slate-400">({{ formatDistance(Number(leg.distance_km), 1) }})</span>
+            <strong class="ml-1 tabular-nums text-slate-100">{{ fmt(euros((live.legDetails[i]?.perPerson || 0) * (Number(p.seats) || 1))) }}</strong>
+          </li>
+        </ul>
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
           <button
             type="button"
-            @click="togglePassengerMath(index)"
-            class="text-sky-400 hover:text-sky-300 font-medium flex items-center gap-1 transition-colors"
+            @click="togglePassengerMath"
+            class="tap-text text-sky-400 hover:text-sky-300 font-medium flex items-center gap-1 transition-colors"
             :title="expandedPassengerIndex === index ? $t('carpool.carpoolTripModal.hideCalcDetail') : $t('carpool.carpoolTripModal.explainShare')"
           >
             <Calculator class="w-3.5 h-3.5" />
@@ -148,71 +177,11 @@ function applyExactAmount(index: number) {
             <ChevronUp v-if="expandedPassengerIndex === index" class="w-3.5 h-3.5" />
             <ChevronDown v-else class="w-3.5 h-3.5" />
           </button>
-          <button v-if="passengers.length > 1" type="button" @click="removePassenger(index)" class="text-slate-400 hover:text-danger-400" :title="$t('carpool.carpoolTripModal.removeThisPassenger')">
+          <button v-if="passengers.length > 1" type="button" @click="removePassenger" class="tap-text flex items-center gap-1 text-slate-400 hover:text-danger-400" :title="$t('carpool.carpoolTripModal.removeThisPassenger')" :aria-label="$t('carpool.carpoolTripModal.removeThisPassenger')">
             <Trash2 class="w-3.5 h-3.5" />
           </button>
-        </span>
-      </div>
-
-      <!-- Mathematical Breakdown Card -->
-      <div
-        v-if="expandedPassengerIndex === index"
-        class="mt-3 pt-3 border-t border-slate-800 space-y-2.5 bg-slate-950/70 p-3 rounded-xl"
-      >
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-bold text-slate-200 flex items-center gap-1.5">
-            <Calculator class="w-3.5 h-3.5 text-sky-400" />
-            {{ $t('carpool.carpoolTripModal.formulaPerSection', { name: passengerLabel(p.passenger_name, index) }) }}
-          </span>
-          <span class="text-xs text-slate-400 font-medium">
-            {{ $t('carpool.carpoolTripModal.seatsBooked', p.seats) }}
-          </span>
         </div>
-
-        <div class="space-y-2">
-          <div
-            v-for="(leg, legIdx) in legs"
-            :key="legIdx"
-            class="text-xs p-2.5 rounded-lg border transition-colors"
-            :class="p.board_stop_index <= legIdx && legIdx < p.alight_stop_index
-              ? 'bg-slate-900/90 border-sky-500/30 text-slate-200'
-              : 'bg-slate-900/30 border-slate-800/50 text-slate-400 opacity-60'"
-          >
-            <div class="flex items-center justify-between font-semibold">
-              <span class="flex items-center gap-1.5">
-                <span class="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-xs font-mono text-slate-300">
-                  {{ legIdx + 1 }}
-                </span>
-                <span>{{ stops[legIdx] }} → {{ stops[legIdx + 1] }}</span>
-                <span v-if="Number(leg.distance_km)" class="text-slate-400 font-normal">({{ formatDistance(Number(leg.distance_km), 1) }})</span>
-              </span>
-              <span v-if="p.board_stop_index <= legIdx && legIdx < p.alight_stop_index" class="text-sky-300 font-bold">
-                {{ fmt(euros((live.legDetails[legIdx]?.perPerson || 0) * (Number(p.seats) || 1))) }}
-              </span>
-              <span v-else class="text-slate-400 italic text-xs">
-                {{ $t('carpool.carpoolTripModal.notTravelled') }}
-              </span>
-            </div>
-
-            <div v-if="p.board_stop_index <= legIdx && legIdx < p.alight_stop_index" class="mt-1.5 pl-5.5 text-xs text-slate-400 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-              <span>{{ $t('carpool.carpoolTripModal.actualCostOfTheSection') }} <strong class="text-slate-200">{{ fmt(euros(live.legDetails[legIdx]?.total || 0)) }}</strong></span>
-              <span>•</span>
-              <span>{{ $t('carpool.carpoolTripModal.occupants') }} <strong class="text-slate-200">{{ $t('carpool.carpoolTripModal.oneDriverPlusPassengers', { legDetails: live.legDetails[legIdx]?.seats || 0, legDetails2: 1 + (live.legDetails[legIdx]?.seats || 0) }) }}</strong></span>
-              <span>•</span>
-              <span class="text-sky-300/90">
-                {{ $t('carpool.carpoolTripModal.calcFormula', { total: fmt(euros(live.legDetails[legIdx]?.total || 0)), people: 1 + (live.legDetails[legIdx]?.seats || 0) }) }}{{ p.seats > 1 ? $t('carpool.carpoolTripModal.calcSeats', { seats: p.seats }) : '' }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-          <span class="text-slate-400">{{ $t('carpool.carpoolTripModal.totalFairShareDue') }}</span>
-          <div class="text-right">
-            <span class="font-bold text-success-400 text-sm">{{ fmt(euros(live.shares[index] || 0)) }}</span>
-            <span class="text-xs text-slate-400 block">{{ $t('carpool.carpoolTripModal.exactSumOfTheSections') }}</span>
-          </div>
-        </div>
+        <CarpoolShareMath v-if="expandedPassengerIndex === index" :passenger="p" :index="index" :legs="legs" :stops="stops" :live="live" :currency="currency" />
       </div>
     </div>
   </div>

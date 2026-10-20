@@ -104,7 +104,16 @@
     "latestDrives": "Derniers trajets",
     "aroundTheDate": "± {days} jours autour de cette date",
     "noDriveInThisPeriod": "Aucun trajet sur cette période.",
-    "alreadyCarpooled": "Déjà dans un covoiturage"
+    "alreadyCarpooled": "Déjà dans un covoiturage",
+    "chainDetected": "Trajets enchaînés détectés",
+    "chainHint": "{count} trajets de {from} à {to}, chacun partant d'où le précédent s'est arrêté.",
+    "applied": "Appliqué",
+    "useChain": "Les utiliser",
+    "chained": "enchaînés · même lieu",
+    "hideShort": "Masquer les trajets courts",
+    "showShort": "Afficher {count} trajet(s) court(s)",
+    "selectedCount": "{count} trajet(s) sélectionné(s)",
+    "alreadyCarpooledIn": "Dans {title}"
   },
   "tripSuggestions": {
     "title": "{count} voyage(s) à qualifier",

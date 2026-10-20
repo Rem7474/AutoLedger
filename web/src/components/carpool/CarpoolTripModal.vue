@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Users, Lock } from 'lucide-vue-next'
+import { Users, Lock, ChevronLeft, ChevronRight, Pencil } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import DrivePicker from '@/components/drives/DrivePicker.vue'
-import { COST_FIELDS, allocate, cents, clampPassengerStops as clampStops, driveCostGapCents, earliestSelectedDriveDate, emptyLeg, estimateTitle, followDrives as followLegsToDrives, keepOverrides, legOverrides, legsFromEstimate, legsFromTrip, newPassenger, passengersFromTrip, remapPassengerStops, stopNames, toDateInputString, type LegForm, type PassengerForm } from '@/utils/carpool'
+import { COST_FIELDS, allocate, carpoolShareSummary, cents, clampPassengerStops as clampStops, driveCostGapCents, earliestSelectedDriveDate, emptyLeg, estimateTitle, followDrives as followLegsToDrives, keepOverrides, legOverrides, legsFromEstimate, legsFromTrip, newPassenger, passengerLabel, passengersFromTrip, remapPassengerStops, stopNames, toDateInputString, type LegForm, type PassengerForm } from '@/utils/carpool'
 import ModalShell from '@/components/ModalShell.vue'
 import { formatAmount } from '@/currency'
+import { formatDistance } from '@/units'
+import { useIsMobile } from '@/composables/useIsMobile'
 
 import CarpoolLegs from '@/components/carpool/CarpoolLegs.vue'
 import CarpoolPassengers from '@/components/carpool/CarpoolPassengers.vue'
-import CarpoolSimulation from '@/components/carpool/CarpoolSimulation.vue'
+import CarpoolRecap from '@/components/carpool/CarpoolRecap.vue'
 
 // Creates a carpool trip, or edits `editing`. A new trip can start from drives or a trip group (createOptions).
+// The editor goes by phases: the drives (or the typed legs), then the passengers, then the costs and the recap. A phone shows
+// one phase at a time; a wide screen shows the drives first, then everything else side by side with the recap.
 // openToken changes every time the page asks to open the modal, so the form is initialised again even if it is already open.
 const props = defineProps<{
   vehicleId: string
@@ -45,6 +49,18 @@ const selectedDriveIds = ref<string[]>([])
 const titleTouched = ref(false)
 const currentRates = ref<any>(null)
 const expandedPassengerIndex = ref<number | null>(null)
+const selectedPassenger = ref(0)
+const isMobile = useIsMobile()
+type Phase = 'drives' | 'passengers' | 'recap'
+const PHASES: Phase[] = ['drives', 'passengers', 'recap']
+const phase = ref<Phase>('drives')
+const main = computed(() => phase.value !== 'drives')
+const showPassengers = computed(() => (isMobile.value ? phase.value === 'passengers' : main.value))
+const showSummary = computed(() => (isMobile.value ? phase.value === 'recap' : main.value))
+// Typed legs are edited where the drives would be picked on a phone, with everything else on a wide screen
+const showLegs = computed(() => (sourceMode.value === 'MANUAL' ? (isMobile.value ? phase.value === 'drives' : true) : showSummary.value))
+const showRecapColumn = computed(() => !isMobile.value && main.value)
+const showRecapBar = computed(() => isMobile.value && main.value)
 
 const isDateDisabled = computed(() => sourceMode.value === 'DRIVES')
 
@@ -64,8 +80,32 @@ const stops = computed(() => stopNames(form.value.legs))
 const live = computed(() => allocate(form.value.legs, form.value.passengers))
 const liveDistance = computed(() => form.value.legs.reduce((s, l) => s + (Number(l.distance_km) || 0), 0))
 const liveRevenue = computed(() => form.value.passengers.reduce((s, p) => s + cents(p.amount_paid), 0))
-const liveNet = computed(() => live.value.total - liveRevenue.value)
-const liveCoverage = computed(() => (live.value.total > 0 ? Math.min(100, Math.round((liveRevenue.value / live.value.total) * 1000) / 10) : 0))
+const canContinue = computed(() => form.value.legs.length > 0 && !estimating.value)
+
+function goTo(next: Phase) {
+  if (next !== 'drives' && !canContinue.value) return
+  phase.value = next
+}
+function step(delta: number) {
+  goTo(PHASES[Math.min(Math.max(PHASES.indexOf(phase.value) + delta, 0), PHASES.length - 1)])
+}
+
+// The recap of the selected passenger's share goes to the clipboard, ready to paste into a message
+const copied = ref(false)
+let copiedTimer: ReturnType<typeof setTimeout> | undefined
+const selectedName = computed(() => passengerLabel(form.value.passengers[selectedPassenger.value]?.passenger_name || '', selectedPassenger.value))
+async function copySummary() {
+  const trip = { title: form.value.title, date: form.value.date, legs: form.value.legs, passengers: form.value.passengers }
+  try {
+    await navigator.clipboard.writeText(carpoolShareSummary(trip, selectedPassenger.value, fmt))
+  } catch {
+    return
+  }
+  copied.value = true
+  clearTimeout(copiedTimer)
+  copiedTimer = setTimeout(() => (copied.value = false), 2000)
+}
+onBeforeUnmount(() => clearTimeout(copiedTimer))
 
 // After the drives are chosen (from a trip group or the drives page), the picker moves to their date
 function anchorPickerOnSelection() {
@@ -124,6 +164,11 @@ async function toggleDrive(driveId: string) {
   await estimateFromDrives()
 }
 
+async function selectDrives(ids: string[]) {
+  for (const id of ids) if (!selectedDriveIds.value.includes(id)) selectedDriveIds.value.push(id)
+  await estimateFromDrives()
+}
+
 async function estimateManualLeg(index: number) {
   const leg = form.value.legs[index]
   if (!props.vehicleId || !(Number(leg.distance_km) > 0)) {
@@ -168,6 +213,7 @@ function switchSource(mode: 'DRIVES' | 'MANUAL') {
     selectedDriveIds.value = []
     form.value.legs = form.value.legs.map((l) => ({ ...l, drive_id: null }))
     if (!form.value.legs.length) addManualLeg()
+    if (!isMobile.value) phase.value = 'passengers'
   }
 }
 
@@ -176,6 +222,8 @@ function resetForm() {
   titleTouched.value = false
   currentRates.value = null
   expandedPassengerIndex.value = null
+  selectedPassenger.value = 0
+  copied.value = false
   selectedDriveIds.value = []
   pickerAnchor.value = ''
   sourceMode.value = defaultSourceMode()
@@ -193,6 +241,8 @@ function resetForm() {
 
 async function initCreate(options: { driveIds?: string[]; tripGroupId?: string }) {
   resetForm()
+  const preselected = !!(options.tripGroupId || options.driveIds?.length)
+  phase.value = preselected || (sourceMode.value === 'MANUAL' && !isMobile.value) ? 'passengers' : 'drives'
   if (sourceMode.value === 'MANUAL') {
     addManualLeg()
   }
@@ -246,6 +296,7 @@ function initEdit(trip: any) {
   }
   if (!form.value.passengers.length) form.value.passengers.push(newPassenger(0, legs.length))
   pickerAnchor.value = form.value.date
+  phase.value = 'passengers'
 }
 
 watch([open, () => props.openToken], ([isOpen]) => {
@@ -341,14 +392,33 @@ async function handleModalRecalculate() {
   <ModalShell
     v-model:open="open"
     size="lg"
+    :class="main && !isMobile ? 'sm:max-w-5xl!' : ''"
     :icon="Users"
     icon-class="text-rose-400"
     :title="editingTripId ? $t('carpool.carpoolTripModal.edit') : $t('carpool.carpoolView.newCarpool')"
     body-class="space-y-5"
+    footer-class="flex-col gap-2"
   >
 
+      <!-- Phases (phone) -->
+      <ol v-if="isMobile" class="flex items-center gap-2 text-xs font-semibold" :aria-label="$t('carpool.editor.steps')">
+        <li v-for="(ph, i) in PHASES" :key="ph" class="flex-1">
+          <button
+            type="button"
+            class="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border px-2"
+            :class="phase === ph ? 'border-rose-500/60 bg-rose-500/10 text-rose-100' : 'border-slate-700 bg-slate-800 text-slate-300'"
+            :aria-current="phase === ph ? 'step' : undefined"
+            :disabled="ph !== 'drives' && !canContinue"
+            @click="goTo(ph)"
+          >
+            <span class="tabular-nums">{{ i + 1 }}</span>
+            <span class="truncate">{{ $t(`carpool.editor.step.${ph}`) }}</span>
+          </button>
+        </li>
+      </ol>
+
       <!-- Source -->
-      <div class="space-y-3">
+      <div v-if="phase === 'drives'" class="space-y-3">
         <div v-if="vehicleStore.hasTeslaMate || sourceMode === 'DRIVES'" class="flex items-center gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl w-fit text-xs font-semibold">
           <button
             @click="switchSource('DRIVES')"
@@ -373,86 +443,142 @@ async function handleModalRecalculate() {
           </div>
           <DrivePicker
             :key="openToken"
+            rich
             :vehicle-id="vehicleId"
             :selected-ids="selectedDriveIds"
             :anchor-date="pickerAnchor"
             @toggle="toggleDrive"
+            @select="selectDrives"
             @loaded="recentDrives = $event"
           />
         </div>
       </div>
 
-      <!-- Title & date -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="sm:col-span-2">
-          <label for="carpool-title" class="block text-xs font-semibold text-slate-400 mb-1">{{ $t('carpool.carpoolTripModal.title') }}</label>
-          <input
-            id="carpool-title"
-            v-model="form.title"
-            @input="titleTouched = true"
-            :placeholder="$t('carpool.carpoolTripModal.eGAnnecyValence')"
-            :aria-invalid="submitted && !!titleError"
-            :aria-describedby="submitted && titleError ? 'carpool-title-error' : undefined"
-            class="field"
-          />
-          <p v-if="submitted && titleError" id="carpool-title-error" class="text-xs text-danger-400 mt-1">{{ titleError }}</p>
-        </div>
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <label for="carpool-date" class="block text-xs font-semibold text-slate-400">{{ $t('common.date') }}</label>
-            <span v-if="isDateDisabled" class="text-xs text-slate-400 flex items-center gap-1 font-normal" :title="$t('carpool.carpoolTripModal.theDateIsAutomaticallyLinked')">
-              <Lock class="w-3 h-3 text-slate-400" />
-              {{ $t('carpool.carpoolTripModal.tripDate') }}
+      <div :class="showRecapColumn ? 'grid grid-cols-[minmax(0,1fr)_20rem] items-start gap-6' : ''">
+        <div class="min-w-0 space-y-5">
+          <!-- The drives chosen, with the way back to the picker -->
+          <div v-if="main && !isMobile && sourceMode === 'DRIVES'" class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-xs">
+            <span class="min-w-0 truncate text-slate-300">
+              {{ $t('carpool.editor.drivesSummary', { count: selectedDriveIds.length, distance: formatDistance(liveDistance, 1) }) }}
+              <span class="text-slate-400">· {{ stops[0] }} → {{ stops[stops.length - 1] }}</span>
             </span>
+            <button type="button" class="tap-text flex shrink-0 items-center gap-1 font-semibold text-sky-400 hover:text-sky-300" @click="phase = 'drives'">
+              <Pencil class="h-3.5 w-3.5" aria-hidden="true" /> {{ $t('carpool.editor.editDrives') }}
+            </button>
           </div>
-          <AppDatePicker
-            id="carpool-date"
-            v-model="form.date"
-            :disabled="isDateDisabled"
-            required
+
+          <!-- On a phone the recap is the first thing of the last phase -->
+          <CarpoolRecap
+            v-if="isMobile && phase === 'recap'"
+            :live="live"
+            :revenue="liveRevenue"
+            :currency="vehicleStore.currency"
+            :copy-label="$t('carpool.editor.copyFor', { name: selectedName })"
+            :copied="copied"
+            @copy="copySummary"
+          />
+
+          <!-- Title & date -->
+          <div v-if="showSummary" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-2">
+              <label for="carpool-title" class="block text-xs font-semibold text-slate-400 mb-1">{{ $t('carpool.carpoolTripModal.title') }}</label>
+              <input
+                id="carpool-title"
+                v-model="form.title"
+                @input="titleTouched = true"
+                :placeholder="$t('carpool.carpoolTripModal.eGAnnecyValence')"
+                :aria-invalid="submitted && !!titleError"
+                :aria-describedby="submitted && titleError ? 'carpool-title-error' : undefined"
+                class="field"
+              />
+              <p v-if="submitted && titleError" id="carpool-title-error" class="text-xs text-danger-400 mt-1">{{ titleError }}</p>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label for="carpool-date" class="block text-xs font-semibold text-slate-400">{{ $t('common.date') }}</label>
+                <span v-if="isDateDisabled" class="text-xs text-slate-400 flex items-center gap-1 font-normal" :title="$t('carpool.carpoolTripModal.theDateIsAutomaticallyLinked')">
+                  <Lock class="w-3 h-3 text-slate-400" />
+                  {{ $t('carpool.carpoolTripModal.tripDate') }}
+                </span>
+              </div>
+              <AppDatePicker
+                id="carpool-date"
+                v-model="form.date"
+                :disabled="isDateDisabled"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Legs -->
+          <CarpoolLegs
+            v-if="showLegs"
+            :legs="form.legs"
+            :source-mode="sourceMode"
+            :is-editing="!!editingTripId"
+            :submitted="submitted"
+            :estimating="estimating"
+            :live="live"
+            :live-distance="liveDistance"
+            :currency="vehicleStore.currency"
+            :follow-drives="form.followDrives"
+            @update:follow-drives="setFollowDrives"
+            @recalculate="handleModalRecalculate"
+            @add-leg="addManualLeg"
+            @estimate="estimateManualLeg"
+            @remove="removeLeg"
+          />
+
+          <!-- Passengers -->
+          <CarpoolPassengers
+            v-if="showPassengers"
+            v-model:passengers="form.passengers"
+            v-model:expanded="expandedPassengerIndex"
+            v-model:selected="selectedPassenger"
+            :legs="form.legs"
+            :stops="stops"
+            :live="live"
+            :currency="vehicleStore.currency"
+            :recent-names="recentNames"
+          />
+
+          <div v-if="showSummary">
+            <label for="carpool-notes" class="block text-xs font-semibold text-slate-400 mb-1">{{ $t('carpool.carpoolTripModal.notesOptional') }}</label>
+            <input id="carpool-notes" v-model="form.notes" class="field" />
+          </div>
+        </div>
+
+        <div v-if="showRecapColumn" class="sticky top-0">
+          <CarpoolRecap
+            :live="live"
+            :revenue="liveRevenue"
+            :currency="vehicleStore.currency"
+            :copy-label="$t('carpool.editor.copyFor', { name: selectedName })"
+            :copied="copied"
+            @copy="copySummary"
           />
         </div>
-      </div>
-
-      <!-- Legs -->
-      <CarpoolLegs
-        :legs="form.legs"
-        :source-mode="sourceMode"
-        :is-editing="!!editingTripId"
-        :submitted="submitted"
-        :estimating="estimating"
-        :live="live"
-        :live-distance="liveDistance"
-        :currency="vehicleStore.currency"
-        :follow-drives="form.followDrives"
-        @update:follow-drives="setFollowDrives"
-        @recalculate="handleModalRecalculate"
-        @add-leg="addManualLeg"
-        @estimate="estimateManualLeg"
-        @remove="removeLeg"
-      />
-
-      <!-- Passengers -->
-      <CarpoolPassengers
-        v-model:passengers="form.passengers"
-        v-model:expanded="expandedPassengerIndex"
-        :legs="form.legs"
-        :stops="stops"
-        :live="live"
-        :currency="vehicleStore.currency"
-        :recent-names="recentNames"
-      />
-
-      <!-- Simulation -->
-      <CarpoolSimulation :live="live" :live-revenue="liveRevenue" :live-coverage="liveCoverage" :live-net="liveNet" :currency="vehicleStore.currency" />
-
-      <div>
-        <label for="carpool-notes" class="block text-xs font-semibold text-slate-400 mb-1">{{ $t('carpool.carpoolTripModal.notesOptional') }}</label>
-        <input id="carpool-notes" v-model="form.notes" class="field" />
       </div>
 
     <template #footer>
+      <CarpoolRecap
+        v-if="showRecapBar && phase !== 'recap'"
+        compact
+        :live="live"
+        :revenue="liveRevenue"
+        :currency="vehicleStore.currency"
+      />
+      <div class="flex justify-end gap-2">
         <button
+          v-if="isMobile && phase !== 'drives'"
+          type="button"
+          @click="step(-1)"
+          class="btn btn-lg btn-secondary"
+        >
+          <ChevronLeft class="h-4 w-4" aria-hidden="true" /> {{ $t('carpool.editor.back') }}
+        </button>
+        <button
+          v-else
           type="button"
           @click="open = false"
           class="btn btn-lg btn-secondary"
@@ -460,6 +586,16 @@ async function handleModalRecalculate() {
           {{ $t('common.cancel') }}
         </button>
         <button
+          v-if="phase === 'drives' || (isMobile && phase === 'passengers')"
+          type="button"
+          @click="step(1)"
+          :disabled="!canContinue"
+          class="btn btn-lg btn-primary"
+        >
+          {{ $t('carpool.editor.continue') }} <ChevronRight class="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button
+          v-else
           type="button"
           @click="handleSave"
           :disabled="modalSubmitting || estimating"
@@ -467,6 +603,7 @@ async function handleModalRecalculate() {
         >
           {{ modalSubmitting ? $t('carpool.carpoolTripModal.saving') : $t('common.save') }}
         </button>
+      </div>
     </template>
   </ModalShell>
 </template>
