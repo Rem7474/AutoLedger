@@ -194,11 +194,9 @@
     "boardingStop": "Boarding stop",
     "alightingStop": "Alighting stop",
     "receivedOf": "{received} received",
-    "splitLabel": "Passengers {passengers}, driver {driver}",
     "receivedLabel": "{received} of the cost received, fair shares {fair}",
     "fairTick": "Fair shares of the passengers",
     "fairTickHint": "The mark is where the fair shares end ({fair} of the cost).",
-    "splitTitle": "Split of the cost",
     "receivedTitle": "Received / fair shares",
     "noLegs": "Choose the drives of the carpool first.",
     "toDrives": "Choose the drives"

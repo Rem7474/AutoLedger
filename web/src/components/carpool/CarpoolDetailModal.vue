@@ -70,8 +70,6 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
           </div>
           <div class="flex items-center gap-3 text-xs text-slate-300 flex-wrap">
             <span class="font-bold text-slate-100">{{ formatDistance(trip.distance_km, 1) }}</span>
-            <span class="text-sky-400 font-semibold">{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
-            <span class="text-sky-400 font-semibold">{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
           </div>
           <p v-if="trip.notes" class="text-xs text-slate-400 pt-2 border-t border-slate-700/60">{{ trip.notes }}</p>
         </div>
@@ -100,10 +98,10 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
           <div v-for="(p, index) in passengers" :key="p.id" class="bg-slate-800/40 border border-slate-800 rounded-xl px-3 py-2.5 text-xs space-y-1.5">
             <div class="flex items-baseline justify-between gap-2">
               <span class="font-semibold text-slate-200 truncate">{{ passengerLabel(p.passenger_name, index) }} <span class="font-normal text-slate-400">· {{ $t('carpool.carpoolTripList.seats', p.seats) }}</span></span>
-              <span class="shrink-0 tabular-nums"><strong class="text-emerald-300">{{ fmt(p.amount_paid) }}</strong> <span class="text-slate-400">/ {{ fmt(p.cost_share) }}</span></span>
+              <span class="shrink-0 tabular-nums" :title="$t('carpool.carpoolDetailModal.receivedOfShare')"><strong class="text-emerald-300">{{ fmt(p.amount_paid) }}</strong> <span class="text-slate-400">/ {{ fmt(p.cost_share) }}</span></span>
             </div>
             <CarpoolRouteStrip readonly :stops="stops" :board="p.board_stop_index" :alight="p.alight_stop_index" />
-            <p class="text-slate-400">{{ $t('carpool.carpoolDetailModal.receivedOfShare') }}<template v-if="p.balance !== 0"> · {{ p.balance > 0 ? $t('carpool.above', { amount: fmt(p.balance) }) : $t('carpool.below', { amount: fmt(-p.balance) }) }}</template></p>
+            <p v-if="p.balance !== 0" class="text-slate-400">{{ p.balance > 0 ? $t('carpool.above', { amount: fmt(p.balance) }) : $t('carpool.below', { amount: fmt(-p.balance) }) }}</p>
           </div>
         </div>
 
