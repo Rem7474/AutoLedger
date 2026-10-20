@@ -36,10 +36,7 @@
     "allTrips": "Tous les trajets"
   },
   "carpoolDetailModal": {
-    "paidByPassengers": "Payé par les passagers",
     "received": "Perçu : {amount}",
-    "fairShare": "Part équitable : {percent} %",
-    "fairShareAmount": "Part équitable {percent} % ({amount})",
     "onBoard": "{count} à bord",
     "perPerson": "{amount}/pers.",
     "receivedOfShare": "reçu / part due"
@@ -192,6 +189,8 @@
     "fairTick": "Parts équitables des passagers",
     "fairTickHint": "Le repère marque la fin des parts équitables ({fair} du coût).",
     "splitTitle": "Répartition du coût",
-    "receivedTitle": "Reçu / parts équitables"
+    "receivedTitle": "Reçu / parts équitables",
+    "noLegs": "Choisissez d'abord les trajets du covoiturage.",
+    "toDrives": "Choisir les trajets"
   }
 }

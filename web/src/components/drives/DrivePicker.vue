@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { formatDistance } from '@/units'
 import { ChevronLeft, ChevronRight, Link2, Check } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
@@ -48,6 +48,7 @@ async function load() {
     sticky.clear()
     await fetchMissingSelected()
     merge()
+    void scrollToLatest()
   } catch (err) {
     console.error('Failed to load the drives', err)
   }
@@ -81,6 +82,13 @@ watch(
 )
 
 const showShort = ref(false)
+const listEl = ref<HTMLElement | null>(null)
+// Without a date the picker offers the latest drives, which come last: the list opens on them
+async function scrollToLatest() {
+  if (!props.rich || pickerDate.value) return
+  await nextTick()
+  if (listEl.value) listEl.value.scrollTop = listEl.value.scrollHeight
+}
 const split = computed(() => splitShortDrives(drives.value, props.selectedIds))
 const listed = computed(() => (showShort.value ? drives.value : split.value.shown))
 const groups = computed(() => groupDrivesByDay(listed.value))
@@ -128,7 +136,7 @@ const place = (address?: string) => (address || '').split(',')[0]
         </span>
         <button v-else type="button" class="btn btn-secondary shrink-0" @click="emit('select', chain.map((d) => d.id))">{{ $t('drives.drivePicker.useChain') }}</button>
       </div>
-      <div class="max-h-[46dvh] space-y-3 overflow-y-auto pr-1">
+      <div ref="listEl" class="max-h-[46dvh] space-y-3 overflow-y-auto pr-1">
         <section v-for="g in groups" :key="g.day" :aria-label="formatDriveDay(g.day)">
           <h5 class="mb-1 text-xs font-semibold capitalize text-slate-400">{{ formatDriveDay(g.day) }}</h5>
           <div>

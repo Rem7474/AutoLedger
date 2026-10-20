@@ -53,7 +53,7 @@ function key(which: 'board' | 'alight', event: KeyboardEvent) {
 
 <template>
   <div>
-    <div ref="track" class="relative touch-none select-none" :class="readonly ? 'h-6' : 'h-11'">
+    <div ref="track" class="relative touch-pan-y select-none" :class="readonly ? 'h-6' : 'h-11'">
       <div class="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-slate-700" :style="{ left: left(0), width: `${((stops.length - 1) / stops.length) * 100}%` }"></div>
       <div
         class="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-rose-500"
@@ -82,7 +82,7 @@ function key(which: 'board' | 'alight', event: KeyboardEvent) {
         :key="which"
         role="slider"
         tabindex="0"
-        class="absolute top-1/2 z-10 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-full outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-rose-400"
+        class="absolute top-1/2 z-10 flex h-11 w-11 touch-none -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-full outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-rose-400"
         :style="{ left: left(which === 'board' ? board : alight) }"
         :aria-label="which === 'board' ? $t('carpool.editor.boardingStop') : $t('carpool.editor.alightingStop')"
         aria-orientation="horizontal"

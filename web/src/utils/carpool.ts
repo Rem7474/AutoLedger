@@ -290,19 +290,6 @@ export function earliestSelectedDriveDate(drives: any[], selectedIds: string[]):
   return first ? toDateInputString(first.start_time) : ''
 }
 
-/**
- * What the passengers paid against what they owed: paid and fair shares as a percentage of the actual cost of the
- * carpool. `status` compares the two (a cent of tolerance for rounding).
- */
-export function carpoolCoverage(trip: any) {
-  const total = Number(trip?.total_cost) || 0
-  const paid = Number(trip?.total_revenue) || 0
-  const fair = Number(trip?.passengers_cost_share) || 0
-  const pct = (v: number) => (total > 0 ? (v / total) * 100 : 0)
-  const status: 'below' | 'fair' | 'above' = paid < fair - 0.01 ? 'below' : paid > fair + 0.01 ? 'above' : 'fair'
-  return { total, paid, fair, paidPct: pct(paid), fairPct: pct(fair), status }
-}
-
 /** Days on each side of a date of the window of drives offered to build a carpool. */
 export const DRIVE_WINDOW_DAYS = 7
 

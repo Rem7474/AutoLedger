@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   allocate,
   carpoolCsvRows,
-  carpoolCoverage,
   cents,
   clampPassengerStops,
   differsFromDrive,
@@ -220,27 +219,6 @@ describe('carpoolCsvRows', () => {
     expect(rows[1][8]).toBe(100)
     expect(rows[2][8]).toBe(0)
     expect(rows[2][4]).toBe(0)
-  })
-})
-
-describe('carpoolCoverage', () => {
-  it('gives the paid and fair shares as a percentage of the cost', () => {
-    const c = carpoolCoverage({ total_cost: 34.06, total_revenue: 27, passengers_cost_share: 22.71 })
-    expect(c.paidPct).toBeCloseTo(79.3, 1)
-    expect(c.fairPct).toBeCloseTo(66.7, 1)
-    expect(c.status).toBe('above')
-  })
-
-  it('says when the passengers paid less than their share, or exactly it', () => {
-    expect(carpoolCoverage({ total_cost: 30, total_revenue: 10, passengers_cost_share: 20 }).status).toBe('below')
-    expect(carpoolCoverage({ total_cost: 30, total_revenue: 20, passengers_cost_share: 19.995 }).status).toBe('fair')
-  })
-
-  it('does not divide by zero', () => {
-    const c = carpoolCoverage({ total_cost: 0, total_revenue: 5 })
-    expect(c.paidPct).toBe(0)
-    expect(c.fairPct).toBe(0)
-    expect(carpoolCoverage(undefined).total).toBe(0)
   })
 })
 

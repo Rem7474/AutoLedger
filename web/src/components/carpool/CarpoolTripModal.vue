@@ -82,6 +82,11 @@ const liveDistance = computed(() => form.value.legs.reduce((s, l) => s + (Number
 const liveRevenue = computed(() => form.value.passengers.reduce((s, p) => s + cents(p.amount_paid), 0))
 const canContinue = computed(() => form.value.legs.length > 0 && !estimating.value)
 
+// A carpool without legs (an estimate that failed, every drive unticked) goes back to the drives
+watch([() => form.value.legs.length, estimating], ([count, busy]) => {
+  if (count === 0 && !busy && phase.value !== 'drives' && sourceMode.value === 'DRIVES') phase.value = 'drives'
+})
+
 function goTo(next: Phase) {
   if (next !== 'drives' && !canContinue.value) return
   phase.value = next
@@ -198,6 +203,8 @@ function switchSource(mode: 'DRIVES' | 'MANUAL') {
     form.value.legs = form.value.legs.map((l) => ({ ...l, drive_id: null }))
     if (!form.value.legs.length) addManualLeg()
     if (!isMobile.value) phase.value = 'passengers'
+  } else if (!isMobile.value) {
+    phase.value = 'drives'
   }
 }
 
@@ -401,7 +408,7 @@ async function handleModalRecalculate() {
       </ol>
 
       <!-- Source -->
-      <div v-if="phase === 'drives'" class="space-y-3">
+      <div v-if="phase === 'drives' || (!isMobile && sourceMode === 'MANUAL' && vehicleStore.hasTeslaMate)" class="space-y-3">
         <div v-if="vehicleStore.hasTeslaMate || sourceMode === 'DRIVES'" class="flex items-center gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl w-fit text-xs font-semibold">
           <button
             @click="switchSource('DRIVES')"
@@ -419,7 +426,7 @@ async function handleModalRecalculate() {
           </button>
         </div>
 
-        <div v-if="sourceMode === 'DRIVES'" class="space-y-1.5">
+        <div v-if="sourceMode === 'DRIVES' && phase === 'drives'" class="space-y-1.5">
           <div class="flex items-center justify-between text-xs">
             <span class="text-slate-400">{{ $t('carpool.carpoolTripModal.tickTheDrivesThatMake') }}</span>
             <span class="text-rose-400 font-semibold">{{ $t('carpool.carpoolTripModal.legsSelected', { count: selectedDriveIds.length }) }}{{ estimating ? $t('carpool.carpoolTripModal.estimating') : '' }}</span>
@@ -520,6 +527,7 @@ async function handleModalRecalculate() {
             :live="live"
             :currency="vehicleStore.currency"
             :recent-names="recentNames"
+            @to-drives="phase = 'drives'"
           />
 
           <div v-if="showSummary">

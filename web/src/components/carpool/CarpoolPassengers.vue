@@ -13,6 +13,7 @@ import { formatDistance } from '@/units'
 // was received against the fair share and, on demand, the section by section calculation of that share. `selected` is the
 // index of the passenger on the card; `expanded` the index of the one whose calculation is open.
 const props = defineProps<{ legs: LegForm[]; stops: string[]; live: any; currency: string; recentNames?: string[] }>()
+const emit = defineEmits<{ 'to-drives': [] }>()
 const passengers = defineModel<PassengerForm[]>('passengers', { required: true })
 const expandedPassengerIndex = defineModel<number | null>('expanded', { required: true })
 const selected = defineModel<number>('selected', { default: 0 })
@@ -67,7 +68,12 @@ function applyExactAmount() {
       </h4>
     </div>
 
-    <div class="flex flex-wrap gap-2" role="tablist" :aria-label="$t('carpool.editor.passengers')">
+    <div v-if="!legs.length" class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-xs text-slate-400" role="status">
+      <span>{{ $t('carpool.editor.noLegs') }}</span>
+      <button type="button" class="btn btn-secondary" @click="emit('to-drives')">{{ $t('carpool.editor.toDrives') }}</button>
+    </div>
+
+    <div v-else class="flex flex-wrap gap-2" role="tablist" :aria-label="$t('carpool.editor.passengers')">
       <button
         v-for="(q, i) in passengers"
         :key="i"
@@ -86,7 +92,7 @@ function applyExactAmount() {
       </button>
     </div>
 
-    <div v-if="p" class="space-y-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+    <div v-if="p && legs.length" class="space-y-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
         <div>
           <label :for="`passenger-name-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.name') }}</label>
