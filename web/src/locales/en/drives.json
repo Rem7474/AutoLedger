@@ -133,8 +133,6 @@
     "backToTrip": "Back to the trip",
     "tripLegs": "Trip legs ({count})",
     "tripCarpools": "Trip carpools ({count})",
-    "carpoolLegsPassengers": "{legs} leg(s) · {passengers} passenger(s)",
-    "carpoolNetCost": "net cost {amount}",
     "breakdownTitle": "Cost split",
     "breakdownAria": "Cost breakdown of the drive by category",
     "noCost": "No expense",

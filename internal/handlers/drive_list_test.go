@@ -183,7 +183,7 @@ func TestDriveListCarpoolsAndFilter(t *testing.T) {
 	for _, d := range got.Drives {
 		byID[d.ID] = d.Carpools
 	}
-	if c := byID[shared]; len(c) != 1 || c[0].ID != trip.ID || c[0].Title != "Weekend" || c[0].PassengerCount != 2 || c[0].TotalRevenue != 700 {
+	if c := byID[shared]; len(c) != 1 || c[0].ID != trip.ID || c[0].Title != "Weekend" || c[0].PassengerCount != 2 || c[0].TotalRevenue != 700 || c[0].TotalCost != 1000 || c[0].NetCost != 300 {
 		t.Fatalf("carpool of the shared drive: %+v", c)
 	}
 	if len(byID[alone]) != 0 {

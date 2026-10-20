@@ -133,8 +133,6 @@
     "backToTrip": "Retour au voyage",
     "tripLegs": "Étapes du voyage ({count})",
     "tripCarpools": "Covoiturages du voyage ({count})",
-    "carpoolLegsPassengers": "{legs} étape(s) · {passengers} passager(s)",
-    "carpoolNetCost": "coût net {amount}",
     "breakdownTitle": "Répartition du trajet",
     "breakdownAria": "Répartition des coûts du trajet par poste",
     "noCost": "Aucune dépense",

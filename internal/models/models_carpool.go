@@ -228,4 +228,6 @@ type DriveCarpoolRef struct {
 	Title          string      `json:"title"`
 	PassengerCount int         `json:"passenger_count"`
 	TotalRevenue   money.Cents `json:"total_revenue"`
+	TotalCost      money.Cents `json:"total_cost"`
+	NetCost        money.Cents `json:"net_cost"`
 }
