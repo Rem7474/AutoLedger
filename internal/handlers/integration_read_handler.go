@@ -325,6 +325,9 @@ type IntegrationDataGaps struct {
 	StartOdometerMissing     bool     `json:"start_odometer_missing" jsonschema:"true when the odometer at the start of ownership is not entered, so the distance before the first reading is not counted"`
 	UnconvertedExpenses      int      `json:"unconverted_expenses" jsonschema:"expenses in a foreign currency without a conversion rate, left out of the totals"`
 
+	// SuspiciousEntries are the recent entries that look mistyped, found by comparing each with the vehicle's own records.
+	SuspiciousEntries []IntegrationDataAlert `json:"suspicious_entries" jsonschema:"recent entries that look mistyped: an expense far above the usual of its category, or an energy price far outside the vehicle's own range; at most one of each kind, the most deviant; ask the owner before relying on them"`
+
 	// Missing is the same list the application shows under "what to complete", the most valuable first.
 	Missing []IntegrationMissing `json:"missing" jsonschema:"what to complete, ranked: the missing depreciation first, then the gaps with the largest estimated amount, then the ones that cannot be estimated"`
 	// ScoreDimensions are the weighted parts of the completeness score.
@@ -369,7 +372,11 @@ func (h *IntegrationReadHandler) DataGaps(ctx context.Context, userID, vehicleID
 	if err != nil {
 		return nil, err
 	}
-	out := buildIntegrationDataGaps(vehicle.ID, vehicle.Currency, issues, gaps, gapKm, anomalies, sum.Completeness)
+	alerts, err := h.tcoService.DataAlerts(ctx, vehicle.ID)
+	if err != nil {
+		return nil, err
+	}
+	out := buildIntegrationDataGaps(vehicle.ID, vehicle.Currency, issues, gaps, gapKm, anomalies, sum.Completeness, alerts)
 	return &out, nil
 }
 
@@ -383,7 +390,7 @@ func (h *IntegrationReadHandler) GetDataGaps(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, out)
 }
 
-func buildIntegrationDataGaps(vehicleID, currency string, issues []models.DataQualityIssue, gaps int, gapKm float64, anomalies int, comp services.TCOCompleteness) IntegrationDataGaps {
+func buildIntegrationDataGaps(vehicleID, currency string, issues []models.DataQualityIssue, gaps int, gapKm float64, anomalies int, comp services.TCOCompleteness, alerts []services.DataAlert) IntegrationDataGaps {
 	truncated := len(issues) > integrationReadIssues
 	if truncated {
 		issues = issues[:integrationReadIssues]
@@ -399,8 +406,8 @@ func buildIntegrationDataGaps(vehicleID, currency string, issues []models.DataQu
 		UntrackedDistance: kilometres(comp.UntrackedDistanceKm),
 		InsuranceMissing:  comp.InsuranceMissing, AcquisitionMissing: comp.AcquisitionMissing,
 		AcquisitionMissingFields: nonNil(comp.AcquisitionMissingFields), StartOdometerMissing: comp.StartOdometerMissing,
-		UnconvertedExpenses: comp.UnconvertedExpenses,
-		Missing:             integrationMissing(comp.Gaps, currency), ScoreDimensions: integrationScoreDimensions(comp.Dimensions),
+		UnconvertedExpenses: comp.UnconvertedExpenses, SuspiciousEntries: integrationDataAlerts(alerts, currency),
+		Missing: integrationMissing(comp.Gaps, currency), ScoreDimensions: integrationScoreDimensions(comp.Dimensions),
 	}
 }
 

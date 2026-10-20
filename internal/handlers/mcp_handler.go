@@ -202,7 +202,7 @@ func (h *MCPHandler) addTools() {
 		Name:  "get_vehicle_data_gaps",
 		Title: "Vehicle data gaps",
 		Description: "What is missing from a vehicle's records: odometer gaps and anomalies (the 20 most recent are listed), charges without a cost, " +
-			"unqualified drives, untracked distance, missing insurance or acquisition. \"missing\" ranks what to complete by what it is worth, the biggest first. Use it to say how far the costs can be trusted.",
+			"unqualified drives, untracked distance, missing insurance or acquisition, and recent entries that look mistyped (suspicious_entries). \"missing\" ranks what to complete by what it is worth, the biggest first. Use it to say how far the costs can be trusted.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpVehicleInput) (*mcp.CallToolResult, IntegrationDataGaps, error) {
 		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
