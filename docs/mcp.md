@@ -48,5 +48,6 @@ The tools return the same views as the [read API](ingestion-api.md#read-api), wi
 ## Notes
 
 - The endpoint is stateless: every request carries its own token and nothing is kept between requests.
-- Requests are limited to 120 per minute and address.
+- Requests are limited to 120 per minute and access token, and to 600 per minute and address.
+- The server log has one line per tool call (tool, account, outcome, duration); the arguments and the answers are not logged.
 - A read-only demo instance (`AUTOLEDGER_DEMO`) refuses the requests the endpoint needs.

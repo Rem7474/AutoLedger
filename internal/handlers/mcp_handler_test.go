@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -335,5 +336,37 @@ func TestMCPVehicleCanBeNamedInsteadOfIdentifiedAndListSaysHowItIsOwned(t *testi
 	}
 	if _, failed := call("list_vehicle_trips", map[string]any{"vehicle_id": f.theirs.ID}); !failed {
 		t.Error("another account's vehicle id stays refused")
+	}
+}
+
+func TestMCPToolCallsAreLoggedWithoutArgumentsOrResults(t *testing.T) {
+	f := newMCPFixture(t)
+	var logs strings.Builder
+	previous := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
+	t.Cleanup(func() { slog.SetDefault(previous) })
+
+	ctx := context.Background()
+	session := f.connect(t, f.readTok)
+	if _, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "list_vehicles"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "list_vehicle_trips", Arguments: map[string]any{"vehicle_id": f.theirs.ID, "search": "rue Secrète"}}); err != nil {
+		t.Fatal(err)
+	}
+
+	out := logs.String()
+	for _, want := range []string{"tool=list_vehicles", "tool=list_vehicle_trips", "outcome=ok", "outcome=error", "user_id=" + f.owner.ID} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in the log:\n%s", want, out)
+		}
+	}
+	for _, leaked := range []string{"Secrète", f.theirs.ID, f.vin, "Daily"} {
+		if strings.Contains(out, leaked) {
+			t.Errorf("%q must not reach the log:\n%s", leaked, out)
+		}
+	}
+	if strings.Count(out, "MCP tool call") != 2 {
+		t.Errorf("one line per tool call, not for the protocol's other methods:\n%s", out)
 	}
 }

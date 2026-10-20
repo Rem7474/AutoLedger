@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/auth"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -40,6 +41,7 @@ type MCPHandler struct {
 func NewMCPHandler(read *IntegrationReadHandler, tokens middleware.APITokenValidator, baseURL, version string) *MCPHandler {
 	h := &MCPHandler{read: read, tokens: tokens, issuer: trimTrailingSlash(baseURL)}
 	h.server = mcp.NewServer(&mcp.Implementation{Name: "autoledger", Version: version}, &mcp.ServerOptions{Instructions: mcpInstructions})
+	h.server.AddReceivingMiddleware(logToolCalls)
 	h.addTools()
 
 	streamable := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return h.server }, &mcp.StreamableHTTPOptions{
@@ -91,6 +93,33 @@ func (h *MCPHandler) verifyToken(ctx context.Context, token string, _ *http.Requ
 		return nil, auth.ErrInvalidToken
 	}
 	return &auth.TokenInfo{UserID: userID, Scopes: []string{scope}}, nil
+}
+
+// logToolCalls writes one line per tool call: which tool, for which account, how it ended and how long it took. The
+// arguments and the result stay out of the log, as they can hold what the owner wrote (an address to search for).
+func logToolCalls(next mcp.MethodHandler) mcp.MethodHandler {
+	return func(ctx context.Context, method string, req mcp.Request) (mcp.Result, error) {
+		if method != "tools/call" {
+			return next(ctx, method, req)
+		}
+		start := time.Now()
+		res, err := next(ctx, method, req)
+		tool := ""
+		if params, ok := req.GetParams().(*mcp.CallToolParamsRaw); ok {
+			tool = params.Name
+		}
+		outcome := "ok"
+		if result, isResult := res.(*mcp.CallToolResult); err != nil || (isResult && result != nil && result.IsError) {
+			outcome = "error"
+		}
+		userID := ""
+		if extra := req.GetExtra(); extra != nil && extra.TokenInfo != nil {
+			userID = extra.TokenInfo.UserID
+		}
+		slog.InfoContext(ctx, "MCP tool call", "component", "mcp", "tool", tool, "user_id", userID, "outcome", outcome,
+			"duration_ms", time.Since(start).Milliseconds())
+		return res, err
+	}
 }
 
 type mcpNoInput struct{}
