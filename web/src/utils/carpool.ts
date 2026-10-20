@@ -289,6 +289,12 @@ export function estimateTitle(names: string[], legCount: number) {
   return `${names[0]} → ${names[names.length - 1]}${legCount > 1 ? ` (${t('carpool.legCount', { count: legCount })})` : ''}`
 }
 
+/** Whether a title already starts with the route (the default title does), so the route need not be written again. */
+export function titleShowsRoute(title: string | null | undefined, stops: string[]): boolean {
+  if (stops.length < 2) return false
+  return (title || '').trim().startsWith(`${stops[0]} → ${stops[stops.length - 1]}`)
+}
+
 /** Date of the earliest selected drive, used when an estimate carries no start date. */
 export function earliestSelectedDriveDate(drives: any[], selectedIds: string[]): string {
   const first = drives

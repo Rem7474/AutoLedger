@@ -7,7 +7,7 @@ import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { buildCarpoolBreakdown } from '@/utils/costBreakdown'
 import CarpoolRecap from '@/components/carpool/CarpoolRecap.vue'
 import CarpoolRouteStrip from '@/components/carpool/CarpoolRouteStrip.vue'
-import { allocate, cents, driveCostGapCents, formatDate, hasLinkedLegs, passengerLabel, stopNames } from '@/utils/carpool'
+import { allocate, cents, driveCostGapCents, formatDate, hasLinkedLegs, passengerLabel, stopNames, titleShowsRoute } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import ModalShell from '@/components/ModalShell.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
@@ -38,6 +38,8 @@ const ROWS = {
   other: { icon: Receipt, tone: 'slate', label: 'dashboard.breakdown.other' },
 } as const
 const stops = computed(() => stopNames(props.trip?.legs || []))
+// The default title is the route: the route is written again only for a title the user changed
+const routeRepeated = computed(() => titleShowsRoute(props.trip?.title, stops.value))
 const passengers = computed<any[]>(() => props.trip?.passengers || [])
 
 const linked = computed(() => hasLinkedLegs(props.trip))
@@ -55,23 +57,20 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
           </div>
           <div class="min-w-0 truncate">
             <h3 class="text-base font-bold text-white truncate">{{ trip.title }}</h3>
-            <p class="text-xs text-slate-400">{{ formatDate(trip.date) }}</p>
+            <p class="text-xs text-slate-400">{{ formatDate(trip.date) }} · {{ formatDistance(trip.distance_km, 1) }}</p>
           </div>
         </div>
     </template>
 
-        <!-- Summary route -->
-        <div class="bg-slate-800/60 border border-slate-700/60 p-3.5 rounded-2xl space-y-2">
-          <div class="text-sm font-semibold text-white flex items-center gap-2">
+        <!-- The route, when the title does not say it, and the notes -->
+        <div v-if="!routeRepeated || trip.notes" class="bg-slate-800/60 border border-slate-700/60 p-3.5 rounded-2xl space-y-2">
+          <div v-if="!routeRepeated" class="text-sm font-semibold text-white flex items-center gap-2">
             <MapPin class="w-4 h-4 text-rose-400 shrink-0" />
             <span class="truncate">{{ stops[0] }}</span>
             <span class="text-slate-400">→</span>
             <span class="truncate">{{ stops[stops.length - 1] }}</span>
           </div>
-          <div class="flex items-center gap-3 text-xs text-slate-300 flex-wrap">
-            <span class="font-bold text-slate-100">{{ formatDistance(trip.distance_km, 1) }}</span>
-          </div>
-          <p v-if="trip.notes" class="text-xs text-slate-400 pt-2 border-t border-slate-700/60">{{ trip.notes }}</p>
+          <p v-if="trip.notes" class="text-xs text-slate-400" :class="routeRepeated ? '' : 'pt-2 border-t border-slate-700/60'">{{ trip.notes }}</p>
         </div>
 
         <!-- Where the amounts come from -->

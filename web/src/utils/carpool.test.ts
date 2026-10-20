@@ -11,6 +11,7 @@ import {
   hasLinkedLegs,
   keepOverrides,
   legState,
+  titleShowsRoute,
   legOverrides,
   driveWindow,
   earliestSelectedDriveDate,
@@ -317,5 +318,18 @@ describe('legs made from drives', () => {
     expect(hasLinkedLegs({ legs: [{ drive_id: null }] })).toBe(false)
     const est = legsFromEstimate({ legs: [{ drive_id: 'd1', tolls_cost: 8, electricity_cost: 3 }] })
     expect(est[0].drive_cost?.tolls_cost).toBe(8)
+  })
+})
+
+describe('title and route', () => {
+  it('recognises the default title, with or without the number of legs', () => {
+    expect(titleShowsRoute('Lyon → Annecy', ['Lyon', 'Grain', 'Annecy'])).toBe(true)
+    expect(titleShowsRoute('Lyon → Annecy (2 étapes)', ['Lyon', 'Grain', 'Annecy'])).toBe(true)
+  })
+
+  it('does not take a title the user changed for the route', () => {
+    expect(titleShowsRoute('Week-end au lac', ['Lyon', 'Annecy'])).toBe(false)
+    expect(titleShowsRoute('', ['Lyon', 'Annecy'])).toBe(false)
+    expect(titleShowsRoute(null, ['Lyon'])).toBe(false)
   })
 })
