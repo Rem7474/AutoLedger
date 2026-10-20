@@ -5,7 +5,7 @@ import { Users as PageIcon } from 'lucide-vue-next'
 import { t } from '@/i18n'
 import { APP_NAME } from '@/brand'
 import { ref, onMounted, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
@@ -25,6 +25,7 @@ import EmptyState from '@/components/EmptyState.vue'
 const vehicleStore = useVehicleStore()
 const { showConfirm, showAlert } = useConfirm()
 const route = useRoute()
+const router = useRouter()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
 
 const loading = ref(true)
@@ -217,6 +218,17 @@ watch(
   () => loadData()
 )
 
+// A link from a drive or a trip (?open=<carpool id>) opens that carpool once the list is there, then leaves the address clean
+async function openCarpoolFromRoute() {
+  const id = typeof route.query.open === 'string' ? route.query.open : ''
+  if (!id) return
+  if (!trips.value.some((t) => t.id === id)) await loadData()
+  const trip = trips.value.find((t) => t.id === id)
+  if (trip) openDetail(trip)
+  const { open: _open, ...rest } = route.query
+  router.replace({ path: route.path, query: rest })
+}
+
 function checkRouteQueryForCarpool() {
   const driveIds = [route.query.new_drive_id, ...String(route.query.new_drive_ids || '').split(',')]
     .map((v) => String(v || '').trim())
@@ -231,9 +243,16 @@ watch(
   () => checkRouteQueryForCarpool()
 )
 
-onMounted(() => {
-  loadData()
+watch(
+  () => route.query.open,
+  () => openCarpoolFromRoute()
+)
+
+onMounted(async () => {
+  const loaded = loadData()
   checkRouteQueryForCarpool()
+  await loaded
+  openCarpoolFromRoute()
 })
 </script>
 

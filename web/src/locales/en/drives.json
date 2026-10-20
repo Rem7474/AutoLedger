@@ -45,7 +45,11 @@
     "autoTollResult": "{created} created, {updated} updated, {skipped} skipped (manual: {manual}, trip: {trip}, no fare: {noPrice}, no GPS: {noGps}, other currency: {currency})",
     "autoTollFailed": ", {failed} failed",
     "autoTollShort": "Automatic toll",
-    "filters": "Filters"
+    "filters": "Filters",
+    "carpooled": "Carpooled",
+    "carpooledDrivesTitle": "Drives shared in a carpool",
+    "notCarpooled": "Not carpooled",
+    "notCarpooledTitle": "Drives never shared in a carpool"
   },
   "addToTripModal": {
     "add": "Add",
@@ -90,14 +94,17 @@
     "selectThisDrive": "Select this drive",
     "unknownStart": "Unknown start",
     "unknownEnd": "Unknown destination",
-    "openBreakdown": "Open the cost breakdown of the drive of {date}"
+    "openBreakdown": "Open the cost breakdown of the drive of {date}",
+    "carpooledSummary": "Carpooled · {passengers} passenger | Carpooled · {passengers} passengers",
+    "carpooledOpen": "Open the carpool of this drive"
   },
   "drivePicker": {
     "earlierDrives": "Earlier drives",
     "laterDrives": "Later drives",
     "latestDrives": "Latest drives",
     "aroundTheDate": "± {days} days around this date",
-    "noDriveInThisPeriod": "No drive in this period."
+    "noDriveInThisPeriod": "No drive in this period.",
+    "alreadyCarpooled": "Already in a carpool"
   },
   "tripSuggestions": {
     "title": "{count} trip(s) to qualify",
@@ -191,7 +198,9 @@
     "addedFromDrive": "Added from the drive view",
     "tripScope": " (cost of the trip “{name}”, every drive of the trip is affected)",
     "deleteCostTitle": "Delete the cost",
-    "deleteCostMessage": "Delete this cost of {amount}{scope}?"
+    "deleteCostMessage": "Delete this cost of {amount}{scope}?",
+    "driveCarpools": "Carpools of this drive ({count})",
+    "carpoolPassengers": "{passengers} passenger | {passengers} passengers"
   },
   "driveGroupModal": {
     "saveTheGroup": "Save the group",

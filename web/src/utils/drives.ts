@@ -330,8 +330,21 @@ export function buildTripCostDrive(tg: any, tgDrives: any[]) {
 }
 
 /** How many filters narrow the list. On a phone they sit behind a button, which shows this number. */
-export function countActiveDriveFilters(f: { mode: 'DRIVES' | 'TRIPS'; periodMode: string; unqualifiedOnly: boolean; hasTollOnly: boolean; selectedTag: string; tripQualifyOnly: boolean }): number {
+export function countActiveDriveFilters(f: { mode: 'DRIVES' | 'TRIPS'; periodMode: string; unqualifiedOnly: boolean; hasTollOnly: boolean; selectedTag: string; tripQualifyOnly: boolean; carpoolFilter?: string }): number {
   const period = f.periodMode !== 'ALL' ? 1 : 0
   if (f.mode === 'TRIPS') return period + (f.tripQualifyOnly ? 1 : 0)
-  return period + (f.unqualifiedOnly ? 1 : 0) + (f.hasTollOnly ? 1 : 0) + (f.selectedTag ? 1 : 0)
+  return period + (f.unqualifiedOnly ? 1 : 0) + (f.hasTollOnly ? 1 : 0) + (f.selectedTag ? 1 : 0) + (f.carpoolFilter ? 1 : 0)
+}
+
+/** The carpools a drive is part of, as the drives list returns them. */
+export interface DriveCarpoolRef { id: string; title: string; passenger_count: number; total_revenue: number }
+
+/** What the drive card shows about the carpools of a drive: how many, with how many passengers, for how much. Null when the drive was never carpooled. */
+export function summarizeDriveCarpools(refs: DriveCarpoolRef[] | null | undefined): { count: number; passengers: number; revenue: number } | null {
+  if (!refs?.length) return null
+  return {
+    count: refs.length,
+    passengers: refs.reduce((sum, c) => sum + (c.passenger_count || 0), 0),
+    revenue: refs.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0),
+  }
 }

@@ -4,6 +4,7 @@ import {
   applyBatchTag,
   buildSuggestionCostDrive,
   countActiveDriveFilters,
+  summarizeDriveCarpools,
   buildTripCostDrive,
   currentYearMonth,
   driveCsvHeaders,
@@ -318,6 +319,10 @@ describe('countActiveDriveFilters', () => {
   it('counts the period, the toll filters and the tag of the drives list', () => {
     expect(countActiveDriveFilters({ ...none, periodMode: 'MONTH', unqualifiedOnly: true, hasTollOnly: true, selectedTag: 'Pro' })).toBe(4)
   })
+  it('counts the carpool filter of the drives list', () => {
+    expect(countActiveDriveFilters({ ...none, carpoolFilter: 'yes' })).toBe(1)
+    expect(countActiveDriveFilters({ ...none, carpoolFilter: '' })).toBe(0)
+  })
   it('counts only the filters of the trips list in trip mode', () => {
     expect(countActiveDriveFilters({ ...none, mode: 'TRIPS', hasTollOnly: true, selectedTag: 'Pro', tripQualifyOnly: true, periodMode: 'CUSTOM' })).toBe(2)
   })
@@ -369,5 +374,23 @@ describe('period units', () => {
     expect(periodBounds({ ...f, mode: 'MONTH' })).toEqual({ from: '2026-09-01', to: '2026-09-30' })
     expect(periodBounds({ ...f, mode: 'WEEK' })).toEqual({ from: '2026-10-12', to: '2026-10-18' })
     expect(periodBounds({ ...f, mode: 'CUSTOM' })).toEqual({ from: '2026-08-01', to: undefined })
+  })
+})
+
+describe('summarizeDriveCarpools', () => {
+  it('is null for a drive that was never carpooled', () => {
+    expect(summarizeDriveCarpools(undefined)).toBeNull()
+    expect(summarizeDriveCarpools(null)).toBeNull()
+    expect(summarizeDriveCarpools([])).toBeNull()
+  })
+  it('adds up the passengers and the amounts received across the carpools of a drive', () => {
+    const refs = [
+      { id: 'a', title: 'A', passenger_count: 2, total_revenue: 30 },
+      { id: 'b', title: 'B', passenger_count: 1, total_revenue: 12.5 },
+    ]
+    expect(summarizeDriveCarpools(refs)).toEqual({ count: 2, passengers: 3, revenue: 42.5 })
+  })
+  it('counts a carpool without passenger as zero', () => {
+    expect(summarizeDriveCarpools([{ id: 'a', title: 'A', passenger_count: 0, total_revenue: 0 }])).toEqual({ count: 1, passengers: 0, revenue: 0 })
   })
 })

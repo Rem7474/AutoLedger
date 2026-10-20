@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -18,9 +19,10 @@ import (
 
 type driveListResponse struct {
 	Drives []struct {
-		ID    string             `json:"id"`
-		Tags  []string           `json:"tags"`
-		Costs DriveCostBreakdown `json:"costs"`
+		ID       string                   `json:"id"`
+		Tags     []string                 `json:"tags"`
+		Costs    DriveCostBreakdown       `json:"costs"`
+		Carpools []models.DriveCarpoolRef `json:"carpools"`
 	} `json:"drives"`
 	Total            int `json:"total"`
 	Page             int `json:"page"`
@@ -145,6 +147,57 @@ func TestDriveListPaginationFiltersAndCosts(t *testing.T) {
 
 	if rec := a.do(a.owner, http.MethodGet, "/drives/"+target+"/expenses", ""); rec.Code != http.StatusOK || rec.Body.String() == "null\n" {
 		t.Fatalf("expenses: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestDriveListCarpoolsAndFilter(t *testing.T) {
+	a := newDriveAPI(t, "carpools")
+	for _, body := range []string{
+		`{"start_time":"2026-09-01T08:00:00Z","distance_km":50}`,
+		`{"start_time":"2026-09-02T08:00:00Z","distance_km":20}`,
+	} {
+		if rec := a.do(a.owner, http.MethodPost, "/drives", body); rec.Code != http.StatusCreated {
+			t.Fatalf("create: %d %s", rec.Code, rec.Body.String())
+		}
+	}
+	all := a.list(a.owner, "")
+	shared, alone := all.Drives[1].ID, all.Drives[0].ID // the older drive is the one carpooled
+	for _, d := range all.Drives {
+		if d.Carpools == nil || len(d.Carpools) != 0 {
+			t.Fatalf("a drive with no carpool lists an empty array, not null: %+v", d.Carpools)
+		}
+	}
+
+	trip := &models.CarpoolTrip{VehicleID: a.vid, Title: "Weekend", Date: time.Date(2026, 9, 1, 8, 0, 0, 0, time.UTC), DistanceKm: 50}
+	legs := []models.CarpoolLeg{{DriveID: &shared, DistanceKm: 50, ElectricityCost: 1000}}
+	passengers := []models.CarpoolPassenger{
+		{PassengerName: "A", Seats: 1, AmountPaid: 400, BoardStopIndex: 0, AlightStopIndex: 1},
+		{PassengerName: "B", Seats: 1, AmountPaid: 300, BoardStopIndex: 0, AlightStopIndex: 1},
+	}
+	if err := a.repo.CreateCarpoolTrip(context.Background(), trip, legs, passengers); err != nil {
+		t.Fatal(err)
+	}
+
+	got := a.list(a.viewer, "")
+	byID := map[string][]models.DriveCarpoolRef{}
+	for _, d := range got.Drives {
+		byID[d.ID] = d.Carpools
+	}
+	if c := byID[shared]; len(c) != 1 || c[0].ID != trip.ID || c[0].Title != "Weekend" || c[0].PassengerCount != 2 || c[0].TotalRevenue != 700 {
+		t.Fatalf("carpool of the shared drive: %+v", c)
+	}
+	if len(byID[alone]) != 0 {
+		t.Fatalf("the other drive is not carpooled: %+v", byID[alone])
+	}
+
+	if only := a.list(a.owner, "?carpool=yes"); only.Total != 1 || only.Drives[0].ID != shared {
+		t.Fatalf("carpool=yes: %+v", only)
+	}
+	if none := a.list(a.owner, "?carpool=no"); none.Total != 1 || none.Drives[0].ID != alone {
+		t.Fatalf("carpool=no: %+v", none)
+	}
+	if every := a.list(a.owner, "?carpool=maybe"); every.Total != 2 {
+		t.Fatalf("an unknown value filters nothing: %+v", every)
 	}
 }
 

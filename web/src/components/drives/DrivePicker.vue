@@ -112,7 +112,10 @@ watch(
           <input type="checkbox" class="select-box" :checked="selectedIds.includes(d.id)" @change="emit('toggle', d.id)" />
           <span class="truncate">{{ formatDriveTime(d.start_time) }}{{ $t('drives.tripGroupsPanel.dateSeparator') }}{{ (d.start_address || $t('drives.driveCostModal.start')).split(',')[0] }} → {{ (d.end_address || $t('drives.driveCostModal.end')).split(',')[0] }}</span>
         </span>
-        <span class="font-mono text-xs text-slate-400 shrink-0">{{ formatDistance(Number(d.distance_km)) }}</span>
+        <span class="flex items-center gap-2 shrink-0">
+          <span v-if="d.carpools?.length" class="px-1.5 py-0.5 rounded-full text-[0.65rem] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">{{ $t('drives.drivePicker.alreadyCarpooled') }}</span>
+          <span class="font-mono text-xs text-slate-400">{{ formatDistance(Number(d.distance_km)) }}</span>
+        </span>
       </label>
     </div>
   </div>

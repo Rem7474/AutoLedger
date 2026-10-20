@@ -83,10 +83,13 @@ async function backToTrip() {
   if (refreshed) selectedCostDrive.value = refreshed
 }
 
-function openCarpools() {
+function openCarpool(carpoolId: string) {
   open.value = false
-  router.push({ path: '/carpools' })
+  router.push({ path: '/carpools', query: { open: carpoolId } })
 }
+
+// The carpools the drive takes part in, as the drives list returns them
+const driveCarpools = computed<any[]>(() => (selectedCostDrive.value?.is_trip_group ? [] : selectedCostDrive.value?.carpools || []))
 
 watch(open, (isOpen) => {
   const drive = selectedCostDrive.value
@@ -248,7 +251,20 @@ async function handleDriverChange(event: Event) {
 
       <DriveCostLegs v-if="selectedCostDrive.is_trip_group && tripLegs.length" :trip-legs="tripLegs" :vehicle-currency="vehicleCurrency" @open="openLeg" />
 
-      <DriveCostCarpools v-if="selectedCostDrive.is_trip_group && tripCarpools.length" :trip-carpools="tripCarpools" :vehicle-currency="vehicleCurrency" @open="openCarpools" />
+      <DriveCostCarpools
+        v-if="selectedCostDrive.is_trip_group && tripCarpools.length"
+        :trip-carpools="tripCarpools"
+        :vehicle-currency="vehicleCurrency"
+        :title="$t('drives.driveCostModal.tripCarpools', { count: tripCarpools.length })"
+        @open="openCarpool"
+      />
+      <DriveCostCarpools
+        v-else-if="driveCarpools.length"
+        :trip-carpools="driveCarpools"
+        :vehicle-currency="vehicleCurrency"
+        :title="$t('drives.driveCostModal.driveCarpools', { count: driveCarpools.length })"
+        @open="openCarpool"
+      />
 
       <!-- Same layout as the monthly detail: donut on the left, itemized costs on the right -->
       <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">

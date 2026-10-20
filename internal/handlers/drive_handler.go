@@ -45,6 +45,8 @@ type EnrichedDrive struct {
 	// NeedsTollQualification is true for a highway-like drive (speed heuristic or a toll found by the GPS
 	// detection) with no toll attached and no "no toll" review: the drives of the "to qualify" queue.
 	NeedsTollQualification bool `json:"needs_toll_qualification"`
+	// Carpools are the carpools the drive is a leg of, newest first.
+	Carpools []models.DriveCarpoolRef `json:"carpools"`
 }
 
 type DriveHandler struct {
@@ -113,6 +115,11 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 		writeRepoError(w, r, err, "Failed to load drive expenses")
 		return
 	}
+	carpoolsByDrive, err := h.repo.GetCarpoolsForDrives(r.Context(), vehicleID, driveIDs)
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to load the carpools of the drives")
+		return
+	}
 	// Without toll detection there is nothing to qualify: no drive is flagged and none is counted.
 	needsQualification := map[string]bool{}
 	unqualifiedCount := 0
@@ -155,6 +162,7 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 		enriched[i] = EnrichedDrive{
 			Drive:                  d,
 			NeedsTollQualification: needsQualification[d.ID],
+			Carpools:               carpoolsOrEmpty(carpoolsByDrive[d.ID]),
 			Costs: DriveCostBreakdown{
 				ElectricityCost:       elecCost,
 				ElectricityKwh:        math.Round(kwh*10) / 10,
@@ -240,12 +248,29 @@ func (h *DriveHandler) UpdateTags(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// carpoolsOrEmpty makes the carpools of a drive an empty list, not null, in the JSON.
+func carpoolsOrEmpty(c []models.DriveCarpoolRef) []models.DriveCarpoolRef {
+	if c == nil {
+		return []models.DriveCarpoolRef{}
+	}
+	return c
+}
+
+// parseCarpoolFilter keeps the two values the drive filter knows; anything else means no filter.
+func parseCarpoolFilter(v string) string {
+	if v == database.CarpoolOnly || v == database.CarpoolNone {
+		return v
+	}
+	return ""
+}
+
 func parseDriveFilter(r *http.Request) database.DriveFilter {
 	filter := database.DriveFilter{
 		Tag:             r.URL.Query().Get("tag"),
 		UnqualifiedOnly: r.URL.Query().Get("unqualified") == "true",
 		HasToll:         r.URL.Query().Get("has_toll") == "true",
 		TripGroupID:     r.URL.Query().Get("trip_group_id"),
+		Carpool:         parseCarpoolFilter(r.URL.Query().Get("carpool")),
 		DriveID:         r.URL.Query().Get("drive_id"),
 		Query:           strings.TrimSpace(r.URL.Query().Get("q")),
 	}
