@@ -145,6 +145,7 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		"GET /api/integrations/v1/vehicles/{vehicleId}/tires",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/odometer",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/data-sources",
+		"GET /api/integrations/v1/comparisons",
 		"GET /api/integrations/v1/fleet",
 	}
 	assertSameRoutes(t, "public", public, wantPublic)

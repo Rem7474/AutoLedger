@@ -304,6 +304,7 @@
     "rent_required": "Le loyer mensuel est requis"
   },
   "comparison": {
+    "not_found": "Comparaison introuvable",
     "name_invalid": "Nom invalide (1 à 100 caractères)",
     "annual_km": "Kilométrage annuel invalide ({p0} à {p1} {unit})",
     "years": "Durée invalide (1 à 15 ans)",
