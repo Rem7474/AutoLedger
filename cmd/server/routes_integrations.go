@@ -26,5 +26,6 @@ func (h *apiHandlers) registerIntegrationRoutes(r chi.Router) {
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/data-gaps", h.integrationRead.GetDataGaps)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/trips", h.integrationRead.GetTrips)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/monthly-costs", h.integrationRead.GetMonthlyCosts)
+		r.Get("/api/integrations/v1/vehicles/{vehicleId}/reminders", h.integrationRead.GetReminders)
 	})
 }

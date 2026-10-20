@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_monthly_costs,get_vehicle_costs,get_vehicle_data_gaps,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_monthly_costs,get_reminders,get_vehicle_costs,get_vehicle_data_gaps,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -401,5 +401,39 @@ func TestMCPMonthlyCostsServeTheSeriesAndExplainABadMonth(t *testing.T) {
 		if !strings.Contains(string(body), "YYYY-MM") && !strings.Contains(string(body), "after its end") {
 			t.Errorf("the error says what to fix: %s", body)
 		}
+	}
+}
+
+func TestMCPRemindersListWhatIsDueAndRefuseAnUnknownStatus(t *testing.T) {
+	f := newMCPFixture(t)
+	ctx := context.Background()
+	km := 5000
+	reminder := &models.MaintenanceReminder{VehicleID: f.mine.ID, Title: "Oil change", Category: "MAINTENANCE", IntervalKm: &km, LeadKm: 1000}
+	if err := f.repo.CreateMaintenanceReminder(ctx, reminder); err != nil {
+		t.Fatal(err)
+	}
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "get_reminders", Arguments: map[string]any{"vehicle_id": "daily"}})
+	if err != nil || res.IsError {
+		t.Fatalf("reminders of a vehicle named by its name: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationReminders
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Total != 1 || len(out.Reminders) != 1 || out.Reminders[0].Title != "Oil change" ||
+		out.Reminders[0].Status != "due_soon" || out.DueSoon != 1 || out.Overdue != 0 || out.Odometer.Value != 4200 {
+		t.Errorf("a 5000 km reminder never served counts from zero: 800 km left on a 4200 km odometer is inside its 1000 km window: %s", raw)
+	}
+
+	res, err = session.CallTool(ctx, &mcp.CallToolParams{Name: "get_reminders", Arguments: map[string]any{"vehicle_id": f.mine.ID, "status": "late"}})
+	if err != nil || !res.IsError {
+		t.Fatalf("an unknown status must be an error the model can read: %v %+v", err, res)
+	}
+	body, _ := json.Marshal(res.Content)
+	if !strings.Contains(string(body), "overdue") {
+		t.Errorf("the error lists the statuses: %s", body)
 	}
 }
