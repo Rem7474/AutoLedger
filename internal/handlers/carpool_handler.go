@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -140,7 +141,7 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 
 	passengers := make([]models.CarpoolPassenger, 0, len(req.Passengers))
 	seatsPerLeg := make([]int, len(legs))
-	for _, p := range req.Passengers {
+	for i, p := range req.Passengers {
 		if err := validateAmount(p.AmountPaid, true); err != nil {
 			return nil, nil, nil, err
 		}
@@ -148,9 +149,11 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 		if seats <= 0 {
 			seats = 1
 		}
+		// A blank name stays blank: the label shown for it ("Passenger 2") belongs to the interface language
 		name := strings.TrimSpace(p.PassengerName)
-		if name == "" {
-			name = "Passager"
+		who := name
+		if who == "" {
+			who = fmt.Sprintf("#%d", i+1)
 		}
 		board, alight := 0, len(legs)
 		if p.BoardStopIndex != nil {
@@ -160,7 +163,7 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 			alight = *p.AlightStopIndex
 		}
 		if board < 0 || alight <= board || alight > len(legs) {
-			return nil, nil, nil, apierror.Newf("carpool.alight_after_board", "%s: the drop-off stop must come after the pick-up stop", name)
+			return nil, nil, nil, apierror.Newf("carpool.alight_after_board", "%s: the drop-off stop must come after the pick-up stop", who)
 		}
 		for i := board; i < alight; i++ {
 			seatsPerLeg[i] += seats

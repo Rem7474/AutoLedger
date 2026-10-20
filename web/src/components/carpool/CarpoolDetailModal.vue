@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { formatNumber, formatPercent } from '@/utils/numbers'
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Users, MapPin, Navigation, Pencil, RotateCw, CheckCircle2, Sparkles, ChevronRight, Zap, Disc, Wrench, Shield, Receipt } from 'lucide-vue-next'
+import { Users, MapPin, Navigation, Pencil, RotateCw, CheckCircle2, Sparkles, ChevronRight, Zap, Disc, Wrench, Shield, Receipt, Copy, Check } from 'lucide-vue-next'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { buildCarpoolBreakdown } from '@/utils/costBreakdown'
-import { carpoolCoverage, formatDate, stopNames } from '@/utils/carpool'
+import { carpoolCoverage, carpoolShareSummary, formatDate, passengerLabel, stopNames } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import ModalShell from '@/components/ModalShell.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
@@ -37,6 +37,22 @@ const ROWS = {
   other: { icon: Receipt, tone: 'slate', label: 'dashboard.breakdown.other' },
 } as const
 const stops = computed(() => stopNames(props.trip?.legs || []))
+const passengers = computed<any[]>(() => props.trip?.passengers || [])
+
+// The recap of a passenger's share goes to the clipboard, ready to paste into a message; the button confirms for a moment
+const copiedIndex = ref<number | null>(null)
+let copiedTimer: ReturnType<typeof setTimeout> | undefined
+async function copySummary(index: number) {
+  try {
+    await navigator.clipboard.writeText(carpoolShareSummary(props.trip, index, fmt))
+  } catch {
+    return
+  }
+  copiedIndex.value = index
+  clearTimeout(copiedTimer)
+  copiedTimer = setTimeout(() => (copiedIndex.value = null), 2000)
+}
+onBeforeUnmount(() => clearTimeout(copiedTimer))
 </script>
 
 <template>
@@ -136,9 +152,9 @@ const stops = computed(() => stopNames(props.trip?.legs || []))
               {{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}
             </span>
           </h4>
-          <div v-for="p in trip.passengers" :key="p.id" class="bg-slate-800/40 border border-slate-800 rounded-xl px-3 py-2 text-xs space-y-1">
+          <div v-for="(p, index) in passengers" :key="p.id" class="bg-slate-800/40 border border-slate-800 rounded-xl px-3 py-2 text-xs space-y-1">
             <div class="flex items-center justify-between gap-2">
-              <span class="font-semibold text-slate-200 truncate">{{ p.passenger_name }}</span>
+              <span class="font-semibold text-slate-200 truncate">{{ passengerLabel(p.passenger_name, index) }}</span>
               <span class="font-bold text-success-400 shrink-0">+{{ fmt(p.amount_paid) }}</span>
             </div>
             <div class="text-xs text-slate-400 truncate">
@@ -150,6 +166,16 @@ const stops = computed(() => stopNames(props.trip?.legs || []))
                 {{ p.balance >= 0 ? $t('carpool.above', { amount: fmt(p.balance) }) : $t('carpool.below', { amount: fmt(-p.balance) }) }}
               </span>
             </div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 pt-0.5 font-semibold text-sky-400 hover:text-sky-300"
+              :title="$t('carpool.carpoolDetailModal.copySummaryTitle')"
+              @click="copySummary(index)"
+            >
+              <Check v-if="copiedIndex === index" class="w-3.5 h-3.5" />
+              <Copy v-else class="w-3.5 h-3.5" />
+              {{ copiedIndex === index ? $t('carpool.carpoolDetailModal.copied') : $t('carpool.carpoolDetailModal.copySummary') }}
+            </button>
           </div>
         </div>
 

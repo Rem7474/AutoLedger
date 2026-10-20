@@ -130,8 +130,8 @@ func TestCarpoolLifecycle(t *testing.T) {
 	if single["title"] != "Solo" || len(single["legs"].([]any)) != 1 {
 		t.Fatalf("single leg trip: %v", single)
 	}
-	if p := single["passengers"].([]any)[0].(map[string]any); p["passenger_name"] != "Passager" {
-		t.Fatalf("blank passenger name should default: %v", p)
+	if p := single["passengers"].([]any)[0].(map[string]any); p["passenger_name"] != "" {
+		t.Fatalf("blank passenger name should stay blank: %v", p)
 	}
 
 	list := a.as(a.viewerID, http.StatusOK, "GET", "/carpools", "")

@@ -16,7 +16,7 @@ import CarpoolDetailModal from '@/components/carpool/CarpoolDetailModal.vue'
 import DriveCostModal from '@/components/drives/DriveCostModal.vue'
 import { downloadCsv } from '@/utils/csv'
 import { toggleTag } from '@/utils/drives'
-import { carpoolCsvHeaders, carpoolCsvRows } from '@/utils/carpool'
+import { carpoolCsvHeaders, carpoolCsvRows, recentPassengerNames } from '@/utils/carpool'
 import { Users, Plus } from 'lucide-vue-next'
 import EmptyState from '@/components/EmptyState.vue'
 
@@ -50,6 +50,8 @@ const showDetail = ref(false)
 const detailTripId = ref<string | null>(null)
 // Read from the list so the detail follows a recalculation or an edit
 const detailTrip = computed(() => trips.value.find((t) => t.id === detailTripId.value) ?? null)
+
+const recentNames = computed(() => recentPassengerNames(trips.value))
 
 function openDetail(trip: any) {
   detailTripId.value = trip.id
@@ -349,6 +351,7 @@ onMounted(async () => {
       :editing="editingTrip"
       :create-options="createOptions"
       :open-token="openToken"
+      :recent-names="recentNames"
       @saved="loadData"
     />
   </div>

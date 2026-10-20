@@ -66,16 +66,42 @@ export function emptyLeg(): LegForm {
   }
 }
 
-/** A passenger riding the whole trip; legCount is the number of legs the form has so far. */
-export function newPassenger(index: number, legCount: number): PassengerForm {
+/** A passenger riding the whole trip; legCount is the number of legs the form has so far. The name stays empty until typed. */
+export function newPassenger(_index: number, legCount: number): PassengerForm {
   return {
-    passenger_name: t('carpool.passenger', { n: index + 1 }),
+    passenger_name: '',
     seats: 1,
     amount_paid: 0,
     board_stop_index: 0,
     alight_stop_index: Math.max(1, legCount),
     notes: '',
   }
+}
+
+/** What to call a passenger: the name typed, or "Passenger N". The label is display only, it is never stored. */
+export function passengerLabel(name: string | null | undefined, index: number): string {
+  return (name || '').trim() || t('carpool.passenger', { n: index + 1 })
+}
+
+// "Passenger", "Passager 2": the names older carpools stored when none was typed
+const GENERIC_PASSENGER_NAME = /^(passenger|passager)( \d+)?$/i
+
+/** The names already used on the carpools, those of the latest carpool first, without duplicates; generic names are left out. */
+export function recentPassengerNames(trips: any[], limit = 8): string[] {
+  const names: string[] = []
+  const seen = new Set<string>()
+  const latestFirst = [...trips].sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  for (const trip of latestFirst) {
+    for (const p of trip.passengers || []) {
+      const name = String(p.passenger_name || '').trim()
+      const key = name.toLowerCase()
+      if (!name || GENERIC_PASSENGER_NAME.test(name) || seen.has(key)) continue
+      seen.add(key)
+      names.push(name)
+      if (names.length >= limit) return names
+    }
+  }
+  return names
 }
 
 export function legTotalCents(leg: any) {
@@ -267,4 +293,41 @@ export function carpoolCsvRows(trips: any[]) {
     (t.net_cost || 0).toFixed(2),
     t.total_cost > 0 ? Math.min(100, Math.round((t.total_revenue / t.total_cost) * 100)) : 0,
   ])
+}
+
+/**
+ * A plain text recap of what one passenger owes, ready to paste into a message: the trip, its cost, the passenger's
+ * share and, for each leg travelled, the cost divided between the people on board. `fmt` formats an amount in euros.
+ */
+export function carpoolShareSummary(trip: any, passengerIndex: number, fmt: (amount: number) => string): string {
+  const passengers = trip.passengers || []
+  const legs = trip.legs || []
+  const p = passengers[passengerIndex]
+  const stops = stopNames(legs)
+  const alloc = allocate(legs, passengers)
+  const seats = Number(p.seats) || 1
+  const route = `${stops[p.board_stop_index]} → ${stops[p.alight_stop_index]}`
+  const lines = [t('carpool.summaryText.header', { title: trip.title, date: formatDate(trip.date) })]
+  // A title that already is the route (the default one) would only be repeated
+  if (route !== trip.title) lines.push(t('carpool.summaryText.route', { route }))
+  lines.push(
+    t('carpool.summaryText.totalCost', { amount: fmt(euros(alloc.total)) }),
+    t('carpool.summaryText.share', { amount: fmt(euros(alloc.shares[passengerIndex])) }),
+  )
+  legs.forEach((_: any, i: number) => {
+    if (p.board_stop_index > i || i >= p.alight_stop_index) return
+    const d = alloc.legDetails[i]
+    lines.push(
+      t(seats > 1 ? 'carpool.summaryText.legSeats' : 'carpool.summaryText.leg', {
+        from: stops[i],
+        to: stops[i + 1],
+        cost: fmt(euros(d.total)),
+        people: 1 + d.seats,
+        seats,
+        amount: fmt(euros(d.perPerson * seats)),
+      }),
+    )
+  })
+  if (Number(p.amount_paid) > 0) lines.push(t('carpool.summaryText.received', { amount: fmt(Number(p.amount_paid)) }))
+  return lines.join('\n')
 }
