@@ -28,7 +28,8 @@
     "invalid_value": "Valeur invalide",
     "origin_denied": "Origine de la requête non autorisée",
     "invalid_months": "months doit être compris entre 0 et 240",
-    "invalid_date_range": "from et to doivent être deux jours (AAAA-MM-JJ), from pas après to"
+    "invalid_date_range": "from et to doivent être deux jours (AAAA-MM-JJ), from pas après to",
+    "invalid_period": "Le début de la période est postérieur à sa fin"
   },
   "member": {
     "invalid_role": "Rôle invalide : {p0}",
