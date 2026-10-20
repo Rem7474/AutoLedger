@@ -825,6 +825,133 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "Where a vehicle's records come from and how fresh they are: what each origin wrote (TeslaMate, Home Assistant or a script, a CSV import, manual entries) with the date of its latest record, the state of the TeslaMate synchronization and how many pushed charging sessions still wait for a vehicle. Use it when asked why recent data is missing.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id"
+      ],
+      "type": "object"
+    },
+    "name": "get_data_sources",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "pending_charges": {
+          "description": "charging sessions pushed to the account that no vehicle claimed yet; they are in no vehicle's figures until the owner assigns them (all vehicles of the account together)",
+          "type": "integer"
+        },
+        "sources": {
+          "description": "what each origin wrote; an origin that wrote nothing is absent",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "charges": {
+                "description": "charging sessions it wrote",
+                "type": "integer"
+              },
+              "drives": {
+                "description": "drives it wrote",
+                "type": "integer"
+              },
+              "last_record": {
+                "description": "RFC 3339 instant of its most recent record; null when it wrote none",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "odometer_readings": {
+                "description": "odometer readings it wrote",
+                "type": "integer"
+              },
+              "origin": {
+                "description": "teslamate (the synchronization), webhook (Home Assistant or a script), csv (an import) or manual (typed in the app)",
+                "type": "string"
+              }
+            },
+            "required": [
+              "origin",
+              "drives",
+              "charges",
+              "odometer_readings",
+              "last_record"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "sync": {
+          "description": "the synchronization state of each resource read from TeslaMate; empty when no synchronization ran",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "history_imported_at": {
+                "description": "RFC 3339 instant the complete history was imported; null while it has not been",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "last_success_at": {
+                "description": "RFC 3339 instant of the last successful synchronization; null when none has succeeded",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "resource": {
+                "description": "drives or charges",
+                "type": "string"
+              }
+            },
+            "required": [
+              "resource",
+              "history_imported_at",
+              "last_success_at"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "teslamate_connected": {
+          "description": "true when the vehicle is connected to a TeslaMate instance; only the owner of the vehicle sees it as true",
+          "type": "boolean"
+        },
+        "vehicle_id": {
+          "description": "the vehicle these figures belong to",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "teslamate_connected",
+        "sources",
+        "sync",
+        "pending_charges"
+      ],
+      "type": "object"
+    },
+    "title": "Data sources"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "How a vehicle uses and pays for its energy. Electric: consumption per 100 km, price per kWh, energy cost per 100 km, charging efficiency, cost of a full charge, the mix of slow, AC and DC charging with the price of each, the effect of cold weather, the usable capacity and the battery state of health. Fuel: litres per 100 km, price per litre, fuel cost per 100 km. The basis field says which electric figures are measured and which are derived.",
     "inputSchema": {
       "additionalProperties": false,

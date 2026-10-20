@@ -111,6 +111,7 @@ Un jeton en lecture seule (`read`) ouvre aussi une API de lecture restreinte sou
 | `GET /api/integrations/v1/vehicles/{vehicleId}/trip-groups` | Les voyages d'un véhicule (`limit`, 20 par défaut, 50 au plus) : nom, période, trajets, distance, péages et parkings, trajets de covoiturage. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/tires` | Les pneus d'un véhicule et leur usure : position, distance, durée de vie consommée, profondeur de sculpture, état, distance restante, jour de remplacement prévu, coût au km. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/odometer` | Le compteur actuel, le nombre de relevés datés et la période qu'ils couvrent. Paramètre : `date` (`AAAA-MM-JJ`) ajoute le compteur ce jour-là et la façon de l'obtenir (`exact`, `interpolated` ou `bounded`). |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/data-sources` | D'où viennent les enregistrements d'un véhicule (par origine : trajets, charges, relevés de compteur, dernier enregistrement), l'état de la synchronisation TeslaMate et le nombre de charges poussées en attente d'un véhicule. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/charging-places` | La recharge d'un véhicule par lieu (`months`, 12 par défaut, `0` pour tout l'historique) : lieux nommés avec leurs adresses, sessions, énergie, coût et prix au kWh, comparaison avec le prix à domicile et emplacements les plus utilisés rattachés à aucun lieu. |
 
 Conventions :

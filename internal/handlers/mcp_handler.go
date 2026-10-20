@@ -154,6 +154,7 @@ func (h *MCPHandler) addTools() {
 	h.addTripGroupTools(readOnly)
 	h.addTireTools(readOnly)
 	h.addOdometerTools(readOnly)
+	h.addSourceTools(readOnly)
 
 	mcp.AddTool(h.server, &mcp.Tool{
 		Name:        "list_vehicles",

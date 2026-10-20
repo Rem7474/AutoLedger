@@ -32,6 +32,36 @@ func (r *Repository) MarkSyncSuccess(ctx context.Context, vehicleID, resource st
 	return err
 }
 
+// SyncState is when a resource of a vehicle was last synchronized and when its complete history was imported.
+type SyncState struct {
+	Resource              string
+	FullImportCompletedAt *time.Time
+	LastSuccessAt         *time.Time
+}
+
+// ListSyncStates lists the synchronization state of each resource of a vehicle.
+func (r *Repository) ListSyncStates(ctx context.Context, vehicleID string) ([]SyncState, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT resource, full_import_completed_at, last_success_at
+		FROM sync_state
+		WHERE vehicle_id = $1
+		ORDER BY resource;
+	`, vehicleID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []SyncState{}
+	for rows.Next() {
+		var s SyncState
+		if err := rows.Scan(&s.Resource, &s.FullImportCompletedAt, &s.LastSuccessAt); err != nil {
+			return nil, err
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
 // ============================================================================
 // Carpooling Module
 // ============================================================================
