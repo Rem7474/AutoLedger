@@ -24,7 +24,6 @@ import {
   newPassenger,
   passengerLabel,
   recentPassengerNames,
-  carpoolShareSummary,
   passengersFromTrip,
   remapPassengerStops,
   stopKeys,
@@ -293,46 +292,6 @@ describe('passenger names', () => {
   it('stops at the limit', () => {
     const trips = [{ date: '2026-10-18', passengers: ['A', 'B', 'C'].map((n) => ({ passenger_name: n })) }]
     expect(recentPassengerNames(trips, 2)).toEqual(['A', 'B'])
-  })
-})
-
-describe('carpoolShareSummary', () => {
-  const trip = {
-    title: 'Annecy → Valence',
-    date: '2026-10-18T00:00:00Z',
-    legs: [
-      { start_label: 'Annecy', end_label: 'Grain', electricity_cost: 20 },
-      { start_label: 'Grain', end_label: 'Valence', electricity_cost: 10 },
-    ],
-    passengers: [
-      { passenger_name: 'Camille', seats: 1, amount_paid: 12.5, board_stop_index: 0, alight_stop_index: 2 },
-      { passenger_name: 'Hugo', seats: 2, amount_paid: 0, board_stop_index: 1, alight_stop_index: 2 },
-    ],
-  }
-  const fmt = (v: number) => `${v.toFixed(2)} EUR`
-
-  it('gives the cost, the share and the calculation of each leg travelled', () => {
-    const lines = carpoolShareSummary({ ...trip, title: 'Week-end' }, 0, fmt).split('\n')
-    expect(lines[1]).toContain('Annecy → Valence')
-    expect(lines[2]).toContain('30.00 EUR')
-    // leg 1: 20 / 2 people = 10, leg 2: 10 / 4 people (driver, Camille, Hugo x2) = 2.50
-    expect(lines[3]).toContain('12.50 EUR')
-    expect(lines[4]).toContain('20.00 EUR ÷ 2 = 10.00 EUR')
-    expect(lines[5]).toContain('10.00 EUR ÷ 4 = 2.50 EUR')
-    expect(lines[6]).toContain('12.50 EUR')
-  })
-
-  it('does not repeat the route when the title already is the route', () => {
-    const lines = carpoolShareSummary(trip, 0, fmt).split('\n')
-    expect(lines.filter((l) => l.includes('Annecy → Valence')).length).toBe(1)
-    expect(lines.some((l) => l.startsWith('Trajet'))).toBe(false)
-  })
-
-  it('skips the legs the passenger does not travel and shows the seats', () => {
-    const text = carpoolShareSummary(trip, 1, fmt)
-    expect(text).not.toContain('Annecy → Grain:')
-    expect(text).toContain('10.00 EUR ÷ 4 × 2 places = 5.00 EUR')
-    expect(text).not.toContain('Reçu')
   })
 })
 

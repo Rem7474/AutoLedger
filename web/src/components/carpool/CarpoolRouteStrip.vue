@@ -3,8 +3,8 @@ import { computed, ref } from 'vue'
 import { stopFromRatio, tapStop, withAlight, withBoard, type StopRange } from '@/utils/carpoolEditor'
 
 // The route of a carpool as a strip of stops: the part a passenger rides is highlighted, and its two ends are handles to
-// drag (or move with the arrow keys). A tap on a stop moves the nearer end there.
-const props = defineProps<{ stops: string[]; board: number; alight: number }>()
+// drag (or move with the arrow keys). A tap on a stop moves the nearer end there. `readonly` only shows the ride.
+const props = defineProps<{ stops: string[]; board: number; alight: number; readonly?: boolean }>()
 const emit = defineEmits<{ change: [range: StopRange] }>()
 
 const track = ref<HTMLElement | null>(null)
@@ -53,14 +53,21 @@ function key(which: 'board' | 'alight', event: KeyboardEvent) {
 
 <template>
   <div>
-    <div ref="track" class="relative h-11 touch-none select-none">
+    <div ref="track" class="relative touch-none select-none" :class="readonly ? 'h-6' : 'h-11'">
       <div class="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-slate-700" :style="{ left: left(0), width: `${((stops.length - 1) / stops.length) * 100}%` }"></div>
       <div
         class="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-rose-500"
         :style="{ left: left(board), width: `${((alight - board) / stops.length) * 100}%` }"
       ></div>
+      <span
+        v-for="(name, i) in (readonly ? stops : [])"
+        :key="`dot-${i}`"
+        class="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-slate-900"
+        :class="i === board || i === alight ? 'border-rose-500 bg-rose-500' : i > board && i < alight ? 'border-rose-500' : 'border-slate-500'"
+        :style="{ left: left(i) }"
+      ></span>
       <button
-        v-for="(name, i) in stops"
+        v-for="(name, i) in (readonly ? [] : stops)"
         :key="i"
         type="button"
         class="absolute top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
@@ -71,7 +78,7 @@ function key(which: 'board' | 'alight', event: KeyboardEvent) {
         <span class="h-3 w-3 rounded-full border-2" :class="i >= board && i <= alight ? 'border-rose-500 bg-slate-900' : 'border-slate-500 bg-slate-900'"></span>
       </button>
       <div
-        v-for="which in (['board', 'alight'] as const)"
+        v-for="which in (readonly ? [] : (['board', 'alight'] as const))"
         :key="which"
         role="slider"
         tabindex="0"

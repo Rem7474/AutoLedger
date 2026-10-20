@@ -347,39 +347,3 @@ export function carpoolCsvRows(trips: any[]) {
   ])
 }
 
-/**
- * A plain text recap of what one passenger owes, ready to paste into a message: the trip, its cost, the passenger's
- * share and, for each leg travelled, the cost divided between the people on board. `fmt` formats an amount in euros.
- */
-export function carpoolShareSummary(trip: any, passengerIndex: number, fmt: (amount: number) => string): string {
-  const passengers = trip.passengers || []
-  const legs = trip.legs || []
-  const p = passengers[passengerIndex]
-  const stops = stopNames(legs)
-  const alloc = allocate(legs, passengers)
-  const seats = Number(p.seats) || 1
-  const route = `${stops[p.board_stop_index]} → ${stops[p.alight_stop_index]}`
-  const lines = [t('carpool.summaryText.header', { title: trip.title, date: formatDate(trip.date) })]
-  // A title that already is the route (the default one) would only be repeated
-  if (route !== trip.title) lines.push(t('carpool.summaryText.route', { route }))
-  lines.push(
-    t('carpool.summaryText.totalCost', { amount: fmt(euros(alloc.total)) }),
-    t('carpool.summaryText.share', { amount: fmt(euros(alloc.shares[passengerIndex])) }),
-  )
-  legs.forEach((_: any, i: number) => {
-    if (p.board_stop_index > i || i >= p.alight_stop_index) return
-    const d = alloc.legDetails[i]
-    lines.push(
-      t(seats > 1 ? 'carpool.summaryText.legSeats' : 'carpool.summaryText.leg', {
-        from: stops[i],
-        to: stops[i + 1],
-        cost: fmt(euros(d.total)),
-        people: 1 + d.seats,
-        seats,
-        amount: fmt(euros(d.perPerson * seats)),
-      }),
-    )
-  })
-  if (Number(p.amount_paid) > 0) lines.push(t('carpool.summaryText.received', { amount: fmt(Number(p.amount_paid)) }))
-  return lines.join('\n')
-}

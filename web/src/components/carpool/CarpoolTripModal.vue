@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
 import { Users, Lock, ChevronLeft, ChevronRight, Pencil } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import DrivePicker from '@/components/drives/DrivePicker.vue'
-import { COST_FIELDS, allocate, carpoolShareSummary, cents, clampPassengerStops as clampStops, driveCostGapCents, earliestSelectedDriveDate, emptyLeg, estimateTitle, followDrives as followLegsToDrives, keepOverrides, legOverrides, legsFromEstimate, legsFromTrip, newPassenger, passengerLabel, passengersFromTrip, remapPassengerStops, stopNames, toDateInputString, type LegForm, type PassengerForm } from '@/utils/carpool'
+import { COST_FIELDS, allocate, cents, clampPassengerStops as clampStops, driveCostGapCents, earliestSelectedDriveDate, emptyLeg, estimateTitle, followDrives as followLegsToDrives, keepOverrides, legOverrides, legsFromEstimate, legsFromTrip, newPassenger, passengersFromTrip, remapPassengerStops, stopNames, toDateInputString, type LegForm, type PassengerForm } from '@/utils/carpool'
 import ModalShell from '@/components/ModalShell.vue'
 import { formatAmount } from '@/currency'
 import { formatDistance } from '@/units'
@@ -90,22 +90,6 @@ function step(delta: number) {
   goTo(PHASES[Math.min(Math.max(PHASES.indexOf(phase.value) + delta, 0), PHASES.length - 1)])
 }
 
-// The recap of the selected passenger's share goes to the clipboard, ready to paste into a message
-const copied = ref(false)
-let copiedTimer: ReturnType<typeof setTimeout> | undefined
-const selectedName = computed(() => passengerLabel(form.value.passengers[selectedPassenger.value]?.passenger_name || '', selectedPassenger.value))
-async function copySummary() {
-  const trip = { title: form.value.title, date: form.value.date, legs: form.value.legs, passengers: form.value.passengers }
-  try {
-    await navigator.clipboard.writeText(carpoolShareSummary(trip, selectedPassenger.value, fmt))
-  } catch {
-    return
-  }
-  copied.value = true
-  clearTimeout(copiedTimer)
-  copiedTimer = setTimeout(() => (copied.value = false), 2000)
-}
-onBeforeUnmount(() => clearTimeout(copiedTimer))
 
 // After the drives are chosen (from a trip group or the drives page), the picker moves to their date
 function anchorPickerOnSelection() {
@@ -223,7 +207,6 @@ function resetForm() {
   currentRates.value = null
   expandedPassengerIndex.value = null
   selectedPassenger.value = 0
-  copied.value = false
   selectedDriveIds.value = []
   pickerAnchor.value = ''
   sourceMode.value = defaultSourceMode()
@@ -473,9 +456,6 @@ async function handleModalRecalculate() {
             :live="live"
             :revenue="liveRevenue"
             :currency="vehicleStore.currency"
-            :copy-label="$t('carpool.editor.copyFor', { name: selectedName })"
-            :copied="copied"
-            @copy="copySummary"
           />
 
           <!-- Title & date -->
@@ -553,9 +533,6 @@ async function handleModalRecalculate() {
             :live="live"
             :revenue="liveRevenue"
             :currency="vehicleStore.currency"
-            :copy-label="$t('carpool.editor.copyFor', { name: selectedName })"
-            :copied="copied"
-            @copy="copySummary"
           />
         </div>
       </div>
