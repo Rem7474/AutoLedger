@@ -42,9 +42,7 @@
     "fairShareAmount": "Part équitable {percent} % ({amount})",
     "onBoard": "{count} à bord",
     "perPerson": "{amount}/pers.",
-    "copySummary": "Copier le récap",
-    "copySummaryTitle": "Copier un récapitulatif de cette part, prêt à coller dans un message",
-    "copied": "Copié"
+    "receivedOfShare": "reçu / part due"
   },
   "carpoolTripList": {
     "netSurplus": "Excédent net : +{net_cost}",
@@ -150,15 +148,6 @@
   "stop": "Arrêt {n}",
   "legCount": "{count} étapes",
   "csvHeaders": "ID,Date,Titre,Distance_{unit},Passagers,Cout_Reel_{cur},Revenus_{cur},Cout_Net_{cur},Amortissement_pct",
-  "summaryText": {
-    "header": "{title} · {date}",
-    "route": "Trajet : {route}",
-    "totalCost": "Coût du trajet : {amount}",
-    "share": "Votre part : {amount}",
-    "leg": "{from} → {to} : {cost} ÷ {people} = {amount}",
-    "legSeats": "{from} → {to} : {cost} ÷ {people} × {seats} places = {amount}",
-    "received": "Reçu : {amount}"
-  },
   "linked": {
     "linked": "Lié aux trajets",
     "frozen": "Montants figés",
@@ -202,7 +191,6 @@
     "receivedLabel": "{received} du coût reçu, parts équitables {fair}",
     "fairTick": "Parts équitables des passagers",
     "fairTickHint": "Le repère marque la fin des parts équitables ({fair} du coût).",
-    "copyFor": "Copier le résumé pour {name}",
     "splitTitle": "Répartition du coût",
     "receivedTitle": "Reçu / parts équitables"
   }

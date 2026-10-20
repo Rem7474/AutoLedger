@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { formatNumber, formatPercent } from '@/utils/numbers'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Users, MapPin, Navigation, Pencil, RotateCw, Link2, Lock, LockOpen, CheckCircle2, Sparkles, ChevronRight, Zap, Disc, Wrench, Shield, Receipt, Copy, Check } from 'lucide-vue-next'
+import { Users, MapPin, Navigation, Pencil, RotateCw, Link2, Lock, LockOpen, ChevronRight, Zap, Disc, Wrench, Shield, Receipt } from 'lucide-vue-next'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { buildCarpoolBreakdown } from '@/utils/costBreakdown'
-import { carpoolCoverage, carpoolShareSummary, driveCostGapCents, formatDate, hasLinkedLegs, passengerLabel, stopNames } from '@/utils/carpool'
+import CarpoolRecap from '@/components/carpool/CarpoolRecap.vue'
+import CarpoolRouteStrip from '@/components/carpool/CarpoolRouteStrip.vue'
+import { allocate, cents, driveCostGapCents, formatDate, hasLinkedLegs, passengerLabel, stopNames } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import ModalShell from '@/components/ModalShell.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 import { distanceUnit, formatDistance } from '@/units'
 
-// Detail of a carpool trip, laid out like the drive and trip cost breakdown: summary, legs, cost split, passengers,
-// total. A leg made from a drive opens the cost detail of that drive, like the legs of a trip. The form to change the
+// Detail of a carpool trip: summary, where the amounts come from, the recap (what it costs, what was received, what is left
+// to the driver), the passengers on the route, the legs, the cost split and the total of the drive and trip cost breakdown. A leg made from a drive opens the cost detail of that drive, like the legs of a trip. The form to change the
 // carpool is the edit modal, reached from the footer.
 const props = defineProps<{ trip: any | null; recalculating: boolean }>()
 const emit = defineEmits<{ edit: [trip: any]; recalculate: [trip: any]; freeze: [trip: any]; unfreeze: [trip: any]; 'open-drive': [driveId: string] }>()
@@ -24,9 +25,9 @@ const vehicleStore = useVehicleStore()
 const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 
 const breakdown = computed(() => buildCarpoolBreakdown(props.trip))
-const coverage = computed(() => carpoolCoverage(props.trip))
-// Positive when the passengers paid more than their share
-const balance = computed(() => coverage.value.paid - coverage.value.fair)
+// The recap reads the carpool the way the editor does: the shares come from the legs and the seats on board
+const live = computed(() => allocate(props.trip?.legs || [], props.trip?.passengers || []))
+const revenue = computed(() => passengers.value.reduce((sum, p) => sum + cents(p.amount_paid), 0))
 // Same icons, colors and labels as the cost rows of the drive detail
 const ROWS = {
   energy: { icon: Zap, tone: 'sky', label: 'drives.driveCostModal.electricEnergy' },
@@ -39,20 +40,6 @@ const ROWS = {
 const stops = computed(() => stopNames(props.trip?.legs || []))
 const passengers = computed<any[]>(() => props.trip?.passengers || [])
 
-// The recap of a passenger's share goes to the clipboard, ready to paste into a message; the button confirms for a moment
-const copiedIndex = ref<number | null>(null)
-let copiedTimer: ReturnType<typeof setTimeout> | undefined
-async function copySummary(index: number) {
-  try {
-    await navigator.clipboard.writeText(carpoolShareSummary(props.trip, index, fmt))
-  } catch {
-    return
-  }
-  copiedIndex.value = index
-  clearTimeout(copiedTimer)
-  copiedTimer = setTimeout(() => (copiedIndex.value = null), 2000)
-}
-onBeforeUnmount(() => clearTimeout(copiedTimer))
 const linked = computed(() => hasLinkedLegs(props.trip))
 const frozen = computed(() => !!props.trip?.costs_frozen_at)
 // What the drives cost now minus what the frozen carpool shows, in the vehicle's currency
@@ -82,9 +69,9 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
             <span class="truncate">{{ stops[stops.length - 1] }}</span>
           </div>
           <div class="flex items-center gap-3 text-xs text-slate-300 flex-wrap">
-            <span class="font-bold text-rose-400">{{ formatDistance(trip.distance_km, 1) }}</span>
+            <span class="font-bold text-slate-100">{{ formatDistance(trip.distance_km, 1) }}</span>
             <span class="text-sky-400 font-semibold">{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
-            <span class="text-blue-400 font-semibold">{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
+            <span class="text-sky-400 font-semibold">{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
           </div>
           <p v-if="trip.notes" class="text-xs text-slate-400 pt-2 border-t border-slate-700/60">{{ trip.notes }}</p>
         </div>
@@ -99,6 +86,24 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
             <p v-if="frozen && gap !== 0" class="text-slate-300">
               {{ $t('carpool.linked.gap', { amount: fmt(Math.abs(gap)), direction: gap > 0 ? $t('carpool.linked.more') : $t('carpool.linked.less') }) }}
             </p>
+          </div>
+        </div>
+
+        <CarpoolRecap :live="live" :revenue="revenue" :currency="vehicleStore.currency" />
+
+        <!-- Passengers, each on the route -->
+        <div class="space-y-1.5">
+          <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+            <Users class="w-3.5 h-3.5 text-sky-400" />
+            {{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}
+          </h4>
+          <div v-for="(p, index) in passengers" :key="p.id" class="bg-slate-800/40 border border-slate-800 rounded-xl px-3 py-2.5 text-xs space-y-1.5">
+            <div class="flex items-baseline justify-between gap-2">
+              <span class="font-semibold text-slate-200 truncate">{{ passengerLabel(p.passenger_name, index) }} <span class="font-normal text-slate-400">· {{ $t('carpool.carpoolTripList.seats', p.seats) }}</span></span>
+              <span class="shrink-0 tabular-nums"><strong class="text-emerald-300">{{ fmt(p.amount_paid) }}</strong> <span class="text-slate-400">/ {{ fmt(p.cost_share) }}</span></span>
+            </div>
+            <CarpoolRouteStrip readonly :stops="stops" :board="p.board_stop_index" :alight="p.alight_stop_index" />
+            <p class="text-slate-400">{{ $t('carpool.carpoolDetailModal.receivedOfShare') }}<template v-if="p.balance !== 0"> · {{ p.balance > 0 ? $t('carpool.above', { amount: fmt(p.balance) }) : $t('carpool.below', { amount: fmt(-p.balance) }) }}</template></p>
           </div>
         </div>
 
@@ -161,99 +166,13 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
           </div>
         </div>
 
-        <!-- Passengers -->
-        <div class="space-y-1.5">
-          <h4 class="text-xs font-bold text-white">
-            <span class="flex items-center gap-1.5">
-              <Users class="w-3.5 h-3.5 text-blue-400" />
-              {{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}
-            </span>
-          </h4>
-          <div v-for="(p, index) in passengers" :key="p.id" class="bg-slate-800/40 border border-slate-800 rounded-xl px-3 py-2 text-xs space-y-1">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-semibold text-slate-200 truncate">{{ passengerLabel(p.passenger_name, index) }}</span>
-              <span class="font-bold text-success-400 shrink-0">+{{ fmt(p.amount_paid) }}</span>
-            </div>
-            <div class="text-xs text-slate-400 truncate">
-              {{ stops[p.board_stop_index] }} → {{ stops[p.alight_stop_index] }} • {{ $t('carpool.carpoolTripList.seats', p.seats) }}
-            </div>
-            <div v-if="trip.passengers.length > 1" class="flex items-center justify-between text-xs">
-              <span class="text-slate-400">{{ $t('carpool.carpoolTripList.share', { cost_share: fmt(p.cost_share) }) }}</span>
-              <span :class="p.balance >= 0 ? 'text-success-400' : 'text-warning-400'">
-                {{ p.balance >= 0 ? $t('carpool.above', { amount: fmt(p.balance) }) : $t('carpool.below', { amount: fmt(-p.balance) }) }}
-              </span>
-            </div>
-            <button
-              type="button"
-              class="inline-flex items-center gap-1.5 pt-0.5 font-semibold text-sky-400 hover:text-sky-300"
-              :title="$t('carpool.carpoolDetailModal.copySummaryTitle')"
-              @click="copySummary(index)"
-            >
-              <Check v-if="copiedIndex === index" class="w-3.5 h-3.5" />
-              <Copy v-else class="w-3.5 h-3.5" />
-              {{ copiedIndex === index ? $t('carpool.carpoolDetailModal.copied') : $t('carpool.carpoolDetailModal.copySummary') }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Balance: the total of the drive detail, then who paid what and what is left, each figure once -->
         <CostTotalBar
           :total="fmt(trip.total_cost)"
           :per-distance="formatCostPerDistance(trip.distance_km > 0 ? trip.total_cost / trip.distance_km : 0, vehicleStore.currency, 3, true)"
           :total-label="$t('drives.driveCostModal.totalCostPrice')"
           :per-distance-label="$t('drives.driveCostModal.costPerKilometre', { unit: distanceUnit() })"
           :strong="trip.net_cost <= 0"
-        >
-          <!-- What the passengers paid, against what they owed (the tick) -->
-          <div class="pt-3 border-t border-slate-700/60 space-y-2">
-            <div class="flex items-baseline justify-between gap-2">
-              <span class="text-xs font-semibold text-slate-300">{{ $t('carpool.carpoolDetailModal.paidByPassengers') }}</span>
-              <span class="text-sm font-bold font-mono" :class="coverage.status === 'below' ? 'text-warning-400' : 'text-success-400'">{{ formatPercent(coverage.paidPct, 0) }}</span>
-            </div>
-            <div
-              class="relative h-2.5 rounded-full bg-slate-950 border border-slate-700/60"
-              role="progressbar"
-              :aria-valuenow="Math.round(coverage.paidPct)"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              :aria-label="$t('carpool.carpoolDetailModal.paidByPassengers')"
-            >
-              <div
-                class="absolute inset-y-0 left-0 rounded-full transition-all"
-                :class="coverage.status === 'below' ? 'bg-warning-500' : 'bg-success-500'"
-                :style="{ width: Math.min(100, coverage.paidPct) + '%' }"
-              ></div>
-              <div
-                class="absolute -top-1 -bottom-1 w-0.5 rounded bg-white"
-                :style="{ left: `calc(${Math.min(100, coverage.fairPct)}% - 1px)` }"
-                :title="$t('carpool.carpoolDetailModal.fairShare', { percent: coverage.fairPct.toFixed(0) })"
-              ></div>
-            </div>
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-x-3 gap-y-0.5 text-xs text-slate-400">
-              <span>
-                {{ $t('carpool.carpoolDetailModal.received', { amount: fmt(coverage.paid) }) }} ·
-                {{ $t('carpool.carpoolDetailModal.fairShareAmount', { percent: coverage.fairPct.toFixed(0), amount: fmt(coverage.fair) }) }}
-              </span>
-              <span v-if="coverage.status !== 'fair'" :class="balance > 0 ? 'text-success-400' : 'text-warning-400'">
-                {{ balance > 0 ? $t('carpool.above', { amount: fmt(balance) }) : $t('carpool.carpoolSummaryGrid.below', { amount: fmt(-balance) }) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="pt-3 border-t border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-300">
-            <div class="flex items-center gap-2">
-              <CheckCircle2 v-if="trip.net_cost <= 0" class="w-4 h-4 text-success-400 shrink-0" />
-              <Sparkles v-else class="w-4 h-4 text-warning-400 shrink-0" />
-              <span>{{ $t('carpool.carpoolTripList.driverSShare') }} <strong>{{ fmt(trip.driver_cost_share) }}</strong></span>
-            </div>
-            <div>
-              <template v-if="trip.net_cost > 0">
-                {{ $t('carpool.carpoolTripList.leftToTheDriver') }} <strong class="text-white text-sm">{{ fmt(trip.net_cost) }}</strong>
-              </template>
-              <span v-else class="font-bold text-success-400 text-sm">{{ $t('carpool.carpoolTripList.netSurplus', { net_cost: fmt(Math.abs(trip.net_cost)) }) }}</span>
-            </div>
-          </div>
-        </CostTotalBar>
+        />
 
     <template #footer>
         <button @click="open = false" class="btn btn-lg btn-secondary">

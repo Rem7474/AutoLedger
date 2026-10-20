@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ChevronUp, Copy, Check } from 'lucide-vue-next'
+import { ChevronUp } from 'lucide-vue-next'
 import { euros } from '@/utils/carpool'
 import { recapFigures } from '@/utils/carpoolEditor'
 import { formatAmount } from '@/currency'
@@ -12,10 +12,7 @@ const props = defineProps<{
   revenue: number
   currency: string
   compact?: boolean
-  copyLabel?: string
-  copied?: boolean
 }>()
-const emit = defineEmits<{ copy: [] }>()
 const fmt = (v: number) => formatAmount(euros(v), props.currency)
 const fig = computed(() => recapFigures(props.live, props.revenue))
 const pct = (v: number) => `${Math.round(v)} %`
@@ -86,10 +83,6 @@ const covered = computed(() => fig.value.total > 0 && fig.value.left <= 0)
         <p class="text-xs text-slate-400">{{ $t('carpool.editor.fairTickHint', { fair: pct(fig.passengersPct) }) }}</p>
       </div>
 
-      <button v-if="copyLabel" type="button" class="btn btn-secondary w-full justify-center" @click="emit('copy')">
-        <component :is="copied ? Check : Copy" class="h-4 w-4" aria-hidden="true" />
-        {{ copied ? $t('carpool.carpoolDetailModal.copied') : copyLabel }}
-      </button>
     </div>
   </section>
 </template>
