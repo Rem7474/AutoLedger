@@ -36,10 +36,7 @@
     "allTrips": "All trips"
   },
   "carpoolDetailModal": {
-    "paidByPassengers": "Paid by the passengers",
     "received": "Received: {amount}",
-    "fairShare": "Fair share: {percent}%",
-    "fairShareAmount": "Fair share {percent}% ({amount})",
     "onBoard": "{count} on board",
     "perPerson": "{amount}/person",
     "receivedOfShare": "received / fair share"
@@ -192,6 +189,8 @@
     "fairTick": "Fair shares of the passengers",
     "fairTickHint": "The mark is where the fair shares end ({fair} of the cost).",
     "splitTitle": "Split of the cost",
-    "receivedTitle": "Received / fair shares"
+    "receivedTitle": "Received / fair shares",
+    "noLegs": "Choose the drives of the carpool first.",
+    "toDrives": "Choose the drives"
   }
 }

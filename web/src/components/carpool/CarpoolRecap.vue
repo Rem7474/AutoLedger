@@ -60,9 +60,9 @@ const covered = computed(() => fig.value.total > 0 && fig.value.left <= 0)
           <dt class="text-slate-400">{{ $t('carpool.carpoolTripModal.passengersShares') }}</dt>
           <dd class="text-sm font-bold tabular-nums text-sky-300">{{ fmt(fig.passengersShare) }}</dd>
         </div>
-        <div class="rounded-xl border border-amber-500/20 bg-amber-500/10 p-2.5">
+        <div class="rounded-xl border border-slate-600/60 bg-slate-700/40 p-2.5">
           <dt class="text-slate-400">{{ $t('carpool.carpoolTripModal.driverSShare') }}</dt>
-          <dd class="text-sm font-bold tabular-nums text-amber-300">{{ fmt(fig.driverShare) }}</dd>
+          <dd class="text-sm font-bold tabular-nums text-slate-100">{{ fmt(fig.driverShare) }}</dd>
         </div>
       </dl>
 
@@ -70,7 +70,7 @@ const covered = computed(() => fig.value.total > 0 && fig.value.left <= 0)
         <div class="text-xs text-slate-400">{{ $t('carpool.editor.splitTitle') }}</div>
         <div class="flex h-2 overflow-hidden rounded-full bg-slate-800" role="img" :aria-label="$t('carpool.editor.splitLabel', { passengers: pct(fig.passengersPct), driver: pct(fig.driverPct) })">
           <span class="bg-sky-400" :style="{ width: `${fig.passengersPct}%` }"></span>
-          <span class="bg-amber-400" :style="{ width: `${fig.driverPct}%` }"></span>
+          <span class="bg-slate-500" :style="{ width: `${fig.driverPct}%` }"></span>
         </div>
       </div>
 
