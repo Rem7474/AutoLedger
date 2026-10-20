@@ -5,7 +5,13 @@ import {
   carpoolCoverage,
   cents,
   clampPassengerStops,
+  differsFromDrive,
   DRIVE_WINDOW_DAYS,
+  driveCostGapCents,
+  followDrives,
+  hasLinkedLegs,
+  keepOverrides,
+  legOverrides,
   driveWindow,
   earliestSelectedDriveDate,
   emptyLeg,
@@ -327,5 +333,44 @@ describe('carpoolShareSummary', () => {
     expect(text).not.toContain('Annecy → Grain:')
     expect(text).toContain('10.00 EUR ÷ 4 × 2 places = 5.00 EUR')
     expect(text).not.toContain('Reçu')
+  })
+})
+
+describe('legs made from drives', () => {
+  const linked = (over: Partial<LegForm> = {}) =>
+    leg({ drive_id: 'd1', tolls_cost: 8, electricity_cost: 3, drive_cost: { electricity_cost: 3, tolls_cost: 8 }, ...over })
+
+  it('sends only the categories that differ from the drive as overrides', () => {
+    expect(legOverrides(linked())).toEqual({})
+    expect(legOverrides(linked({ tolls_cost: 5 }))).toEqual({ tolls_cost: 5 })
+    expect(legOverrides(leg({ tolls_cost: 5 }))).toEqual({})
+    expect(differsFromDrive(linked({ tolls_cost: 5 }), 'tolls_cost')).toBe(true)
+    expect(differsFromDrive(linked({ tolls_cost: 8.001 }), 'tolls_cost')).toBe(false)
+  })
+
+  it('keeps the adjusted amounts of a leg when the legs are estimated again', () => {
+    const previous = [linked({ tolls_cost: 5 })]
+    const next = [linked({ tolls_cost: 10, drive_cost: { electricity_cost: 3, tolls_cost: 10 } }), linked({ drive_id: 'd2' })]
+    keepOverrides(previous, next)
+    expect(next[0].tolls_cost).toBe(5)
+    expect(next[1].tolls_cost).toBe(8)
+  })
+
+  it('sets the amounts to the drive cost and measures the gap', () => {
+    const legs = [linked({ tolls_cost: 5 }), leg({ tolls_cost: 99 })]
+    expect(driveCostGapCents(legs)).toBe(300)
+    followDrives(legs)
+    expect(legs[0].tolls_cost).toBe(8)
+    expect(legs[1].tolls_cost).toBe(99)
+    expect(driveCostGapCents(legs)).toBe(0)
+  })
+
+  it('reads the drive cost from a saved trip and from an estimate', () => {
+    const saved = { id: 't', legs: [{ drive_id: 'd1', tolls_cost: 5, drive_cost: { tolls_cost: 8 } }, { drive_id: null, tolls_cost: 1 }] }
+    expect(legsFromTrip(saved).map((l) => l.drive_cost)).toEqual([{ tolls_cost: 8 }, null])
+    expect(hasLinkedLegs(saved)).toBe(true)
+    expect(hasLinkedLegs({ legs: [{ drive_id: null }] })).toBe(false)
+    const est = legsFromEstimate({ legs: [{ drive_id: 'd1', tolls_cost: 8, electricity_cost: 3 }] })
+    expect(est[0].drive_cost?.tolls_cost).toBe(8)
   })
 })

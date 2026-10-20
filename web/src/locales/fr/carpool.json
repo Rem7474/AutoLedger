@@ -158,5 +158,23 @@
     "leg": "{from} → {to} : {cost} ÷ {people} = {amount}",
     "legSeats": "{from} → {to} : {cost} ÷ {people} × {seats} places = {amount}",
     "received": "Reçu : {amount}"
+  },
+  "linked": {
+    "linked": "Lié aux trajets",
+    "frozen": "Montants figés",
+    "follow": "Suivre le coût des trajets",
+    "followHint": "Chaque étape prend le coût de son trajet et évolue avec lui (péage ajouté plus tard, nouveaux tarifs).",
+    "frozenHint": "Les montants restent tels que saisis ; ils ne suivent plus les trajets.",
+    "driveCost": "Trajet : {amount}",
+    "restore": "Revenir au montant du trajet",
+    "freeze": "Figer les montants",
+    "reopen": "Rouvrir et resynchroniser",
+    "gap": "Les trajets coûtent maintenant {amount} de {direction} que ces montants.",
+    "more": "plus",
+    "less": "moins",
+    "resyncTitle": "Suivre à nouveau les trajets ?",
+    "resyncMessage": "Les montants seront remplacés par le coût actuel des trajets : {amount} de {direction} qu'aujourd'hui.",
+    "resync": "Resynchroniser",
+    "error": "Impossible de mettre à jour le covoiturage : {message}"
   }
 }

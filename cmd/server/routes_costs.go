@@ -14,6 +14,8 @@ func (h *apiHandlers) registerCostRoutes(r chi.Router) {
 	r.Get("/{vehicleId}/carpools/{id}", h.carpool.Get)
 	r.Put("/{vehicleId}/carpools/{id}", h.carpool.Update)
 	r.Delete("/{vehicleId}/carpools/{id}", h.carpool.Delete)
+	r.Post("/{vehicleId}/carpools/{id}/freeze", h.carpool.Freeze)
+	r.Post("/{vehicleId}/carpools/{id}/unfreeze", h.carpool.Unfreeze)
 
 	// Tires
 	r.Get("/{vehicleId}/tires", h.tire.List)

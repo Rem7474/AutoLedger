@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -24,6 +25,7 @@ type carpoolStore interface {
 	GetTollExpensesForDrives(ctx context.Context, vehicleID string, driveIDs []string) (map[string]money.Cents, error)
 	GetCarpoolTrip(ctx context.Context, id, vehicleID string) (*models.CarpoolTripWithPassengers, error)
 	UpdateCarpoolTrip(ctx context.Context, trip *models.CarpoolTrip, legs []models.CarpoolLeg, passengers []models.CarpoolPassenger) error
+	UpdateCarpoolLegCosts(ctx context.Context, trip *models.CarpoolTripWithPassengers) error
 	ListCarpoolTrips(ctx context.Context, vehicleID string) ([]models.CarpoolTripWithPassengers, error)
 }
 
@@ -231,18 +233,18 @@ func (s *CarpoolService) EstimateCosts(ctx context.Context, vehicleID string, dr
 			return nil, err
 		}
 		for _, d := range drives {
-			kwh, src := DriveEnergyKwh(d.Distance(), d.EnergyConsumedKwh, d.ConsumptionKwh100km)
-			if src != EnergySourceMeasured {
-				energySource = src
+			cost := ComputeDriveCost(driveRates[d.ID], d, insuranceCosts[d.ID], tolls[d.ID])
+			if cost.EnergySource != EnergySourceMeasured {
+				energySource = cost.EnergySource
 			}
-			leg := costLeg(driveRates[d.ID], d.Distance(), kwh)
 			driveID := d.ID
-			leg.DriveID = &driveID
-			leg.StartLabel = placeLabel(d.StartAddress)
-			leg.EndLabel = placeLabel(d.EndAddress)
-			leg.TollsCost = tolls[d.ID]
-			leg.InsuranceCost = insuranceCosts[d.ID]
-
+			leg := models.CarpoolLeg{
+				DriveID:    &driveID,
+				StartLabel: placeLabel(d.StartAddress),
+				EndLabel:   placeLabel(d.EndAddress),
+				DistanceKm: math.Round(d.Distance()*100) / 100,
+			}
+			leg.SetCosts(legCosts(cost))
 			legs = append(legs, leg)
 		}
 	} else {
@@ -286,6 +288,153 @@ func (s *CarpoolService) EstimateCosts(ctx context.Context, vehicleID string, dr
 	}
 	est.TotalCost = est.ElectricityCost + est.TollsCost + est.TiresCost + est.MaintenanceCost + est.InsuranceCost
 	return est, nil
+}
+
+// legCosts is the cost of a drive as the categories of a carpool leg (a drive has no "other" cost).
+func legCosts(c DriveCost) models.CarpoolLegCosts {
+	return models.CarpoolLegCosts{
+		ElectricityCost: c.ElectricityCost, TollsCost: c.TollsCost, TiresCost: c.TiresCost,
+		MaintenanceCost: c.MaintenanceCost, InsuranceCost: c.InsuranceCost,
+	}
+}
+
+// driveCosts prices drives as the drive list does: each at the rates in force when it ended, with its share of the
+// insurance and the tolls allocated to it.
+func (s *CarpoolService) driveCosts(ctx context.Context, vehicleID string, drives []models.Drive) (map[string]DriveCost, error) {
+	costs := make(map[string]DriveCost, len(drives))
+	if len(drives) == 0 {
+		return costs, nil
+	}
+	rates, err := s.DriveRates(ctx, vehicleID, drives)
+	if err != nil {
+		return nil, err
+	}
+	insurance, err := s.AllocateInsuranceCosts(ctx, vehicleID, drives, rates)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(drives))
+	for i, d := range drives {
+		ids[i] = d.ID
+	}
+	tolls, err := s.repo.GetTollExpensesForDrives(ctx, vehicleID, ids)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range drives {
+		costs[d.ID] = ComputeDriveCost(rates[d.ID], d, insurance[d.ID], tolls[d.ID])
+	}
+	return costs, nil
+}
+
+// linkedDrives loads the drives the legs refer to; a drive that is gone is left out.
+func (s *CarpoolService) linkedDrives(ctx context.Context, vehicleID string, legs [][]models.CarpoolLeg) ([]models.Drive, error) {
+	seen := map[string]bool{}
+	var drives []models.Drive
+	for _, trip := range legs {
+		for _, l := range trip {
+			if l.DriveID == nil || *l.DriveID == "" || seen[*l.DriveID] {
+				continue
+			}
+			seen[*l.DriveID] = true
+			d, err := s.repo.GetDriveByID(ctx, *l.DriveID, vehicleID)
+			if errors.Is(err, database.ErrNotFound) {
+				continue
+			}
+			if err != nil {
+				return nil, err
+			}
+			drives = append(drives, *d)
+		}
+	}
+	return drives, nil
+}
+
+// followDrive sets what a leg made from a drive shows: the drive's distance and costs, with the leg's overrides on
+// top. DriveCost keeps what the drive costs on its own.
+func followDrive(l *models.CarpoolLeg, d models.Drive, cost DriveCost) {
+	drive := legCosts(cost)
+	l.DriveCost = &drive
+	l.DistanceKm = math.Round(d.Distance()*100) / 100
+	l.SetCosts(drive.With(l.Overrides))
+}
+
+// ResolveLegsForSave prices the legs of a carpool about to be saved: a leg made from a drive takes the cost of that
+// drive, with its overrides on top, whatever amounts came with it. The legs of a frozen carpool are saved as given.
+func (s *CarpoolService) ResolveLegsForSave(ctx context.Context, vehicleID string, legs []models.CarpoolLeg) error {
+	drives, err := s.linkedDrives(ctx, vehicleID, [][]models.CarpoolLeg{legs})
+	if err != nil || len(drives) == 0 {
+		return err
+	}
+	costs, err := s.driveCosts(ctx, vehicleID, drives)
+	if err != nil {
+		return err
+	}
+	byID := make(map[string]models.Drive, len(drives))
+	for _, d := range drives {
+		byID[d.ID] = d
+	}
+	for i := range legs {
+		if legs[i].DriveID == nil {
+			continue
+		}
+		if d, ok := byID[*legs[i].DriveID]; ok {
+			followDrive(&legs[i], d, costs[d.ID])
+		}
+	}
+	return nil
+}
+
+// RefreshLinkedCosts brings the legs made from drives up to date, in the trips given: a leg shows what its drive
+// costs now (DriveCost), and, unless the carpool is frozen, takes that cost (with its overrides) as its own. The new
+// amounts and the totals of the trip are stored, so what other readers see matches the carpool page.
+func (s *CarpoolService) RefreshLinkedCosts(ctx context.Context, vehicleID string, trips []models.CarpoolTripWithPassengers) error {
+	legs := make([][]models.CarpoolLeg, len(trips))
+	for i := range trips {
+		legs[i] = trips[i].Legs
+	}
+	drives, err := s.linkedDrives(ctx, vehicleID, legs)
+	if err != nil || len(drives) == 0 {
+		return err
+	}
+	costs, err := s.driveCosts(ctx, vehicleID, drives)
+	if err != nil {
+		return err
+	}
+	byID := make(map[string]models.Drive, len(drives))
+	for _, d := range drives {
+		byID[d.ID] = d
+	}
+	for i := range trips {
+		trip := &trips[i]
+		changed := false
+		for j := range trip.Legs {
+			l := &trip.Legs[j]
+			if l.DriveID == nil {
+				continue
+			}
+			d, ok := byID[*l.DriveID]
+			if !ok {
+				continue
+			}
+			if trip.CostsFrozenAt != nil {
+				drive := legCosts(costs[d.ID])
+				l.DriveCost = &drive
+				continue
+			}
+			before, distance := l.Costs(), l.DistanceKm
+			followDrive(l, d, costs[d.ID])
+			changed = changed || before != l.Costs() || distance != l.DistanceKm
+		}
+		if !changed {
+			continue
+		}
+		trip.SumLegs(trip.Legs)
+		if err := s.repo.UpdateCarpoolLegCosts(ctx, trip); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // insuranceMonthlyCost is the fixed monthly insurance cost behind a set of rates, 0 when there is none to share
@@ -401,62 +550,37 @@ func placeLabel(address *string) *string {
 	return &label
 }
 
-// RecalculateTrip recalculates the costs of a carpool trip using latest vehicle unit rates and recorded tolls.
+// RecalculateTrip recalculates the costs of a carpool trip. A trip with legs made from drives follows them on its own
+// (RefreshLinkedCosts, unless it is frozen), so this only re-prices a trip entered by distance, at the latest rates.
 func (s *CarpoolService) RecalculateTrip(ctx context.Context, vehicleID string, tripID string) (*models.CarpoolTripWithPassengers, error) {
 	trip, err := s.repo.GetCarpoolTrip(ctx, tripID, vehicleID)
 	if err != nil {
 		return nil, err
 	}
 
-	var driveIDs []string
+	linked := false
 	for _, l := range trip.Legs {
-		if l.DriveID != nil && *l.DriveID != "" {
-			driveIDs = append(driveIDs, *l.DriveID)
+		linked = linked || (l.DriveID != nil && *l.DriveID != "")
+	}
+	if linked {
+		trips := []models.CarpoolTripWithPassengers{*trip}
+		if err := s.RefreshLinkedCosts(ctx, vehicleID, trips); err != nil {
+			return nil, err
 		}
+		trip = &trips[0]
+		trip.DriverCostShare, trip.PassengersCostShare = AllocateCarpoolCosts(trip.Legs, trip.Passengers)
+		return trip, nil
 	}
 
-	var est *models.CarpoolCostEstimate
-	if len(driveIDs) > 0 {
-		est, err = s.EstimateCosts(ctx, vehicleID, trip.DriveID, trip.TripGroupID, driveIDs, 0)
+	if trip.DistanceKm > 0 && len(trip.Legs) == 1 {
+		est, err := s.EstimateCosts(ctx, vehicleID, nil, nil, nil, trip.DistanceKm)
 		if err != nil {
 			return nil, err
 		}
-	} else if trip.DistanceKm > 0 {
-		est, err = s.EstimateCosts(ctx, vehicleID, nil, nil, nil, trip.DistanceKm)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if est != nil {
-		if len(driveIDs) > 0 {
-			estByDriveID := make(map[string]models.CarpoolLeg, len(est.Legs))
-			for _, el := range est.Legs {
-				if el.DriveID != nil {
-					estByDriveID[*el.DriveID] = el
-				}
-			}
-			for i := range trip.Legs {
-				if trip.Legs[i].DriveID != nil {
-					if el, ok := estByDriveID[*trip.Legs[i].DriveID]; ok {
-						trip.Legs[i].ElectricityCost = el.ElectricityCost
-						trip.Legs[i].TollsCost = el.TollsCost
-						trip.Legs[i].TiresCost = el.TiresCost
-						trip.Legs[i].MaintenanceCost = el.MaintenanceCost
-						trip.Legs[i].InsuranceCost = el.InsuranceCost
-					}
-				}
-			}
-		} else if len(est.Legs) == 1 && len(trip.Legs) == 1 {
-			trip.Legs[0].ElectricityCost = est.Legs[0].ElectricityCost
-			trip.Legs[0].TiresCost = est.Legs[0].TiresCost
-			trip.Legs[0].MaintenanceCost = est.Legs[0].MaintenanceCost
-			trip.Legs[0].InsuranceCost = est.Legs[0].InsuranceCost
-		}
-
-		if est.StartDate != nil {
-			trip.Date = *est.StartDate
-		}
+		trip.Legs[0].ElectricityCost = est.Legs[0].ElectricityCost
+		trip.Legs[0].TiresCost = est.Legs[0].TiresCost
+		trip.Legs[0].MaintenanceCost = est.Legs[0].MaintenanceCost
+		trip.Legs[0].InsuranceCost = est.Legs[0].InsuranceCost
 	}
 
 	if err := s.repo.UpdateCarpoolTrip(ctx, &trip.CarpoolTrip, trip.Legs, trip.Passengers); err != nil {

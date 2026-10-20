@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/services"
@@ -17,6 +18,7 @@ import (
 
 type carpoolAPI struct {
 	t        *testing.T
+	repo     *database.Repository
 	router   chi.Router
 	userID   string
 	viewerID string
@@ -51,7 +53,9 @@ func newCarpoolAPI(t *testing.T, tag string) *carpoolAPI {
 	r.Get("/vehicles/{vehicleId}/carpools/{id}", h.Get)
 	r.Put("/vehicles/{vehicleId}/carpools/{id}", h.Update)
 	r.Delete("/vehicles/{vehicleId}/carpools/{id}", h.Delete)
-	return &carpoolAPI{t: t, router: r, userID: owner.ID, viewerID: viewer.ID, vid: v.ID}
+	r.Post("/vehicles/{vehicleId}/carpools/{id}/freeze", h.Freeze)
+	r.Post("/vehicles/{vehicleId}/carpools/{id}/unfreeze", h.Unfreeze)
+	return &carpoolAPI{t: t, repo: repo, router: r, userID: owner.ID, viewerID: viewer.ID, vid: v.ID}
 }
 
 func (a *carpoolAPI) as(userID string, want int, method, path, body string) map[string]any {

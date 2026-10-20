@@ -36,6 +36,7 @@ type IntegrationReadHandler struct {
 	residual   *services.ResidualService    // optional: without it the ownership view has no resale estimate
 	tireWear   *services.TireWearService    // optional: without it the tires view is unavailable
 	comparison *services.ComparisonService  // optional: without it the comparison view is unavailable
+	carpool    *services.CarpoolService     // optional: without it the carpool view shows the amounts as stored
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {

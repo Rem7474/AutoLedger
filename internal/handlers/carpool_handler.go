@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -51,25 +52,30 @@ type LegPayload struct {
 	MaintenanceCost money.Cents `json:"maintenance_cost"`
 	InsuranceCost   money.Cents `json:"insurance_cost"`
 	OtherCost       money.Cents `json:"other_cost"`
+	// Overrides are the categories (by cost field name) of a leg made from a drive whose amount differs from the
+	// drive's on purpose
+	Overrides map[string]money.Cents `json:"overrides"`
 }
 
 // UpsertCarpoolRequest describes a carpool trip. Legs are the ordered stages of the trip; when omitted,
 // the trip-level distance and costs form a single leg.
 type UpsertCarpoolRequest struct {
-	Title           string             `json:"title"`
-	Date            string             `json:"date"`
-	DistanceKm      float64            `json:"distance_km"`
-	DriveID         *string            `json:"drive_id"`
-	TripGroupID     *string            `json:"trip_group_id"`
-	ElectricityCost money.Cents        `json:"electricity_cost"`
-	TollsCost       money.Cents        `json:"tolls_cost"`
-	TiresCost       money.Cents        `json:"tires_cost"`
-	MaintenanceCost money.Cents        `json:"maintenance_cost"`
-	InsuranceCost   money.Cents        `json:"insurance_cost"`
-	OtherCost       money.Cents        `json:"other_cost"`
-	Notes           *string            `json:"notes"`
-	Legs            []LegPayload       `json:"legs"`
-	Passengers      []PassengerPayload `json:"passengers"`
+	Title           string      `json:"title"`
+	Date            string      `json:"date"`
+	DistanceKm      float64     `json:"distance_km"`
+	DriveID         *string     `json:"drive_id"`
+	TripGroupID     *string     `json:"trip_group_id"`
+	ElectricityCost money.Cents `json:"electricity_cost"`
+	TollsCost       money.Cents `json:"tolls_cost"`
+	TiresCost       money.Cents `json:"tires_cost"`
+	MaintenanceCost money.Cents `json:"maintenance_cost"`
+	InsuranceCost   money.Cents `json:"insurance_cost"`
+	OtherCost       money.Cents `json:"other_cost"`
+	Notes           *string     `json:"notes"`
+	// CostsFrozen keeps the amounts of the legs as sent instead of following their drives
+	CostsFrozen bool               `json:"costs_frozen"`
+	Legs        []LegPayload       `json:"legs"`
+	Passengers  []PassengerPayload `json:"passengers"`
 }
 
 // Maximum seats occupied by passengers on a single leg (7-seat vehicles).
@@ -126,7 +132,11 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 		if driveID != nil && *driveID == "" {
 			driveID = nil
 		}
-		legs[i] = models.CarpoolLeg{
+		overrides, err := buildOverrides(lp.Overrides, driveID != nil)
+		if err != nil {
+			return nil, nil, nil, apierror.Newf("carpool.leg_error", "Leg %d: %w", i+1, err)
+		}
+		legs[i] = models.CarpoolLeg{Overrides: overrides,
 			OrderIndex: i, DriveID: driveID, StartLabel: nonEmptyLabel(lp.StartLabel), EndLabel: nonEmptyLabel(lp.EndLabel),
 			DistanceKm: lp.DistanceKm, ElectricityCost: lp.ElectricityCost, TollsCost: lp.TollsCost, TiresCost: lp.TiresCost,
 			MaintenanceCost: lp.MaintenanceCost, InsuranceCost: lp.InsuranceCost, OtherCost: lp.OtherCost,
@@ -191,7 +201,29 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 	if len(legs) == 1 && legs[0].DriveID != nil {
 		trip.DriveID = legs[0].DriveID
 	}
+	if req.CostsFrozen {
+		now := time.Now().UTC()
+		trip.CostsFrozenAt = &now
+	}
 	return trip, legs, passengers, nil
+}
+
+// buildOverrides validates the overridden categories of a leg; only a leg made from a drive has any.
+func buildOverrides(in map[string]money.Cents, linked bool) (map[string]money.Cents, error) {
+	out := map[string]money.Cents{}
+	if !linked {
+		return out, nil
+	}
+	for name, v := range in {
+		if !slices.Contains(models.CarpoolCostFields, name) {
+			return nil, apierror.Newf("carpool.invalid_override", "Unknown cost category %s", name)
+		}
+		if err := validateAmount(v, true); err != nil {
+			return nil, err
+		}
+		out[name] = v
+	}
+	return out, nil
 }
 
 // allocate computes the fair split of the costs of a trip between its driver and passengers.
@@ -212,6 +244,11 @@ func (h *CarpoolHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Refreshed before the summary is read, which sums the stored amounts
+	if err := h.carpoolService.RefreshLinkedCosts(r.Context(), vehicleID, trips); err != nil {
+		writeRepoError(w, r, err, "Failed to refresh the carpool costs")
+		return
+	}
 	summary, err := h.repo.GetCarpoolSummary(r.Context(), vehicleID)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to summarize carpool trips")
@@ -241,8 +278,18 @@ func (h *CarpoolHandler) Get(w http.ResponseWriter, r *http.Request) {
 		writeRepoError(w, r, err, "Failed to load carpool trip")
 		return
 	}
-	allocate(trip)
-	writeJSON(w, http.StatusOK, trip)
+	h.writeTrip(w, r, vehicleID, http.StatusOK, trip)
+}
+
+// writeTrip answers with a trip whose linked legs are up to date and whose shares are computed.
+func (h *CarpoolHandler) writeTrip(w http.ResponseWriter, r *http.Request, vehicleID string, status int, trip *models.CarpoolTripWithPassengers) {
+	trips := []models.CarpoolTripWithPassengers{*trip}
+	if err := h.carpoolService.RefreshLinkedCosts(r.Context(), vehicleID, trips); err != nil {
+		writeRepoError(w, r, err, "Failed to refresh the carpool costs")
+		return
+	}
+	allocate(&trips[0])
+	writeJSON(w, status, &trips[0])
 }
 
 func (h *CarpoolHandler) save(w http.ResponseWriter, r *http.Request, tripID string) {
@@ -263,6 +310,13 @@ func (h *CarpoolHandler) save(w http.ResponseWriter, r *http.Request, tripID str
 		return
 	}
 
+	if trip.CostsFrozenAt == nil {
+		if err := h.carpoolService.ResolveLegsForSave(r.Context(), vehicleID, legs); err != nil {
+			writeRepoError(w, r, err, "Failed to price the carpool legs")
+			return
+		}
+	}
+
 	status := http.StatusCreated
 	if tripID == "" {
 		err = h.repo.CreateCarpoolTrip(r.Context(), trip, legs, passengers)
@@ -276,9 +330,12 @@ func (h *CarpoolHandler) save(w http.ResponseWriter, r *http.Request, tripID str
 		return
 	}
 
-	result := &models.CarpoolTripWithPassengers{CarpoolTrip: *trip, Legs: legs, Passengers: passengers}
-	allocate(result)
-	writeJSON(w, status, result)
+	saved, err := h.repo.GetCarpoolTrip(r.Context(), trip.ID, vehicleID)
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to load carpool trip")
+		return
+	}
+	h.writeTrip(w, r, vehicleID, status, saved)
 }
 
 func (h *CarpoolHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -304,6 +361,32 @@ func (h *CarpoolHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{"success": true})
 }
+
+// setFrozen freezes the amounts of a carpool, or lets them follow their drives again.
+func (h *CarpoolHandler) setFrozen(w http.ResponseWriter, r *http.Request, frozen bool) {
+	vehicleID := chi.URLParam(r, "vehicleId")
+	id := chi.URLParam(r, "id")
+
+	if v := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleEditor); v == nil {
+		return
+	}
+	if err := h.repo.SetCarpoolCostsFrozen(r.Context(), id, vehicleID, frozen); err != nil {
+		writeRepoError(w, r, err, "Failed to update carpool trip")
+		return
+	}
+	trip, err := h.repo.GetCarpoolTrip(r.Context(), id, vehicleID)
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to load carpool trip")
+		return
+	}
+	h.writeTrip(w, r, vehicleID, http.StatusOK, trip)
+}
+
+// Freeze keeps the amounts of a carpool as they are.
+func (h *CarpoolHandler) Freeze(w http.ResponseWriter, r *http.Request) { h.setFrozen(w, r, true) }
+
+// Unfreeze makes the legs made from drives follow the cost of their drives again.
+func (h *CarpoolHandler) Unfreeze(w http.ResponseWriter, r *http.Request) { h.setFrozen(w, r, false) }
 
 func (h *CarpoolHandler) Estimate(w http.ResponseWriter, r *http.Request) {
 	vehicleID := chi.URLParam(r, "vehicleId")

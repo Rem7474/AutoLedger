@@ -227,6 +227,7 @@
     "leg_error": "Leg {p0}: {p1}",
     "alight_after_board": "{p0}: the drop-off stop must come after the pick-up stop",
     "too_many_seats": "More than {p0} seats taken on leg {p1}",
+    "invalid_override": "Unknown cost category {p0}",
     "needs_leg": "A carpool needs at least one leg",
     "invalid_stops": "Invalid pick-up and drop-off stops for {p0}",
     "title_required": "The carpool title is required"

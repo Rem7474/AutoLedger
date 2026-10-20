@@ -7,7 +7,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { Users, Lock } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import DrivePicker from '@/components/drives/DrivePicker.vue'
-import { COST_FIELDS, allocate, cents, clampPassengerStops as clampStops, earliestSelectedDriveDate, emptyLeg, estimateTitle, legsFromEstimate, legsFromTrip, newPassenger, passengersFromTrip, remapPassengerStops, stopNames, toDateInputString, type LegForm, type PassengerForm } from '@/utils/carpool'
+import { COST_FIELDS, allocate, cents, clampPassengerStops as clampStops, driveCostGapCents, earliestSelectedDriveDate, emptyLeg, estimateTitle, followDrives as followLegsToDrives, keepOverrides, legOverrides, legsFromEstimate, legsFromTrip, newPassenger, passengersFromTrip, remapPassengerStops, stopNames, toDateInputString, type LegForm, type PassengerForm } from '@/utils/carpool'
 import ModalShell from '@/components/ModalShell.vue'
 import { formatAmount } from '@/currency'
 
@@ -26,7 +26,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
-const { showAlert } = useConfirm()
+const { showAlert, showConfirm } = useConfirm()
 
 const editingTripId = computed<string | null>(() => props.editing?.id ?? null)
 const modalSubmitting = ref(false)
@@ -55,6 +55,8 @@ const form = ref({
   notes: '',
   legs: [] as LegForm[],
   passengers: [] as PassengerForm[],
+  // The legs made from drives take the cost of their drive; when off, the amounts stay as entered
+  followDrives: true,
 })
 
 // ---------- Live form computations ----------
@@ -80,6 +82,7 @@ function applyEstimate(est: any) {
   const previousLegs = form.value.legs
   const previousLegCount = previousLegs.length
   form.value.legs = legsFromEstimate(est)
+  keepOverrides(previousLegs, form.value.legs)
   remapPassengerStops(previousLegs, form.value.legs, form.value.passengers)
   clampPassengerStops(previousLegCount === 0 ? 0 : -1)
   if (est.start_date) {
@@ -183,6 +186,7 @@ function resetForm() {
     notes: '',
     legs: [],
     passengers: [],
+    followDrives: true,
   }
   form.value.passengers.push(newPassenger(0, form.value.legs.length))
 }
@@ -238,6 +242,7 @@ function initEdit(trip: any) {
     notes: trip.notes || '',
     legs,
     passengers: passengersFromTrip(trip, legs.length),
+    followDrives: !trip.costs_frozen_at,
   }
   if (!form.value.passengers.length) form.value.passengers.push(newPassenger(0, legs.length))
   pickerAnchor.value = form.value.date
@@ -269,10 +274,13 @@ async function handleSave() {
       date: new Date(form.value.date).toISOString(),
       trip_group_id: form.value.trip_group_id,
       notes: form.value.notes || null,
-      legs: form.value.legs.map((l) => ({
+      costs_frozen: !form.value.followDrives,
+      legs: form.value.legs.map(({ drive_cost: _driveCost, ...l }) => ({
         ...l,
         distance_km: Number(l.distance_km) || 0,
         ...Object.fromEntries(COST_FIELDS.map((f) => [f.key, Number(l[f.key]) || 0])),
+        // A frozen carpool keeps its amounts as they are: nothing is adjusted against the drives
+        overrides: form.value.followDrives ? legOverrides(l as LegForm) : {},
       })),
       passengers: form.value.passengers.map((p) => ({
         ...p,
@@ -293,6 +301,25 @@ async function handleSave() {
   } finally {
     modalSubmitting.value = false
   }
+}
+
+// Following the drives again replaces the amounts with what the drives cost; the difference is shown before it happens
+async function setFollowDrives(follow: boolean) {
+  if (follow === form.value.followDrives) return
+  if (follow) {
+    const gap = driveCostGapCents(form.value.legs)
+    if (gap !== 0) {
+      const ok = await showConfirm({
+        title: t('carpool.linked.resyncTitle'),
+        message: t('carpool.linked.resyncMessage', { amount: fmt(Math.abs(gap) / 100), direction: gap > 0 ? t('carpool.linked.more') : t('carpool.linked.less') }),
+        confirmText: t('carpool.linked.resync'),
+        type: 'warning',
+      })
+      if (!ok) return
+    }
+    followLegsToDrives(form.value.legs)
+  }
+  form.value.followDrives = follow
 }
 
 async function handleModalRecalculate() {
@@ -397,6 +424,8 @@ async function handleModalRecalculate() {
         :live="live"
         :live-distance="liveDistance"
         :currency="vehicleStore.currency"
+        :follow-drives="form.followDrives"
+        @update:follow-drives="setFollowDrives"
         @recalculate="handleModalRecalculate"
         @add-leg="addManualLeg"
         @estimate="estimateManualLeg"

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import NumberInput from '@/components/NumberInput.vue'
 import DistanceInput from '@/components/DistanceInput.vue'
-import { Navigation, Plus, Trash2, Calculator, RotateCw } from 'lucide-vue-next'
-import { COST_FIELDS, euros, type LegForm } from '@/utils/carpool'
+import { Navigation, Plus, Trash2, Calculator, RotateCw, Lock, Undo2 } from 'lucide-vue-next'
+import { COST_FIELDS, differsFromDrive, euros, type CostKey, type LegForm } from '@/utils/carpool'
 import { currencySymbol, formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
 
@@ -17,9 +18,15 @@ const props = defineProps<{
   live: any
   liveDistance: number
   currency: string
+  followDrives: boolean
 }>()
-const emit = defineEmits<{ recalculate: []; 'add-leg': []; estimate: [index: number]; remove: [index: number] }>()
+const emit = defineEmits<{ recalculate: []; 'add-leg': []; estimate: [index: number]; remove: [index: number]; 'update:followDrives': [value: boolean] }>()
 const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
+const linked = computed(() => props.legs.some((l) => !!l.drive_id))
+// The amount of a category goes back to what its drive costs
+function restore(leg: LegForm, key: CostKey) {
+  if (leg.drive_cost) leg[key] = leg.drive_cost[key] ?? 0
+}
 </script>
 
 <template>
@@ -31,7 +38,7 @@ const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
       </h4>
       <div class="flex items-center gap-2">
         <button
-          v-if="isEditing && legs.length > 0"
+          v-if="isEditing && legs.length > 0 && !linked"
           type="button"
           @click="emit('recalculate')"
           :disabled="estimating"
@@ -51,6 +58,21 @@ const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
         </button>
       </div>
     </div>
+    <label v-if="linked" class="flex items-start gap-2 text-xs text-slate-300 bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 cursor-pointer">
+      <input
+        type="checkbox"
+        class="mt-0.5"
+        :checked="followDrives"
+        @change="emit('update:followDrives', ($event.target as HTMLInputElement).checked)"
+      />
+      <span>
+        <span class="font-semibold text-white flex items-center gap-1.5">
+          <Lock v-if="!followDrives" class="w-3.5 h-3.5 text-slate-400" />
+          {{ $t('carpool.linked.follow') }}
+        </span>
+        <span class="text-slate-400">{{ followDrives ? $t('carpool.linked.followHint') : $t('carpool.linked.frozenHint') }}</span>
+      </span>
+    </label>
     <p v-if="!legs.length" role="status" :class="['text-xs', submitted ? 'text-danger-400' : 'text-slate-400']">{{ $t('carpool.carpoolTripModal.selectAtLeastOneDrive') }}</p>
 
     <div v-for="(leg, i) in legs" :key="i" class="bg-slate-950/50 border border-slate-800 rounded-xl p-3 space-y-2">
@@ -106,6 +128,19 @@ const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
             min="0"
             class="field"
           />
+          <p v-if="differsFromDrive(leg, f.key)" class="mt-0.5 flex flex-wrap items-center gap-x-1 text-xs text-slate-400">
+            <span>{{ $t('carpool.linked.driveCost', { amount: fmt(leg.drive_cost?.[f.key] ?? 0) }) }}</span>
+            <button
+              v-if="followDrives"
+              type="button"
+              class="tap text-sky-400 hover:text-sky-300"
+              :title="$t('carpool.linked.restore')"
+              :aria-label="$t('carpool.linked.restore')"
+              @click="restore(leg, f.key)"
+            >
+              <Undo2 class="w-3.5 h-3.5" />
+            </button>
+          </p>
         </div>
       </div>
     </div>

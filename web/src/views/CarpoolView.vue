@@ -16,7 +16,8 @@ import CarpoolDetailModal from '@/components/carpool/CarpoolDetailModal.vue'
 import DriveCostModal from '@/components/drives/DriveCostModal.vue'
 import { downloadCsv } from '@/utils/csv'
 import { toggleTag } from '@/utils/drives'
-import { carpoolCsvHeaders, carpoolCsvRows, recentPassengerNames } from '@/utils/carpool'
+import { carpoolCsvHeaders, carpoolCsvRows, driveCostGapCents, recentPassengerNames } from '@/utils/carpool'
+import { formatAmount } from '@/currency'
 import { Users, Plus } from 'lucide-vue-next'
 import EmptyState from '@/components/EmptyState.vue'
 
@@ -194,6 +195,43 @@ async function handleRecalculateSingle(trip: any) {
   }
 }
 
+async function handleFreeze(trip: any) {
+  if (!vehicleStore.activeVehicle) return
+  recalculating.value = true
+  try {
+    await api.freezeCarpool(vehicleStore.activeVehicle.id, trip.id)
+    await loadData()
+  } catch (err: any) {
+    void showAlert(t('carpool.linked.error', { message: err.message }), t('shell.confirm.error'), 'danger')
+  } finally {
+    recalculating.value = false
+  }
+}
+
+// Letting a frozen carpool follow its drives again changes its amounts: the difference is shown first
+async function handleUnfreeze(trip: any) {
+  if (!vehicleStore.activeVehicle) return
+  const gap = driveCostGapCents(trip.legs || [])
+  if (gap !== 0) {
+    const ok = await showConfirm({
+      title: t('carpool.linked.resyncTitle'),
+      message: t('carpool.linked.resyncMessage', { amount: formatAmount(Math.abs(gap) / 100, vehicleStore.currency), direction: gap > 0 ? t('carpool.linked.more') : t('carpool.linked.less') }),
+      confirmText: t('carpool.linked.resync'),
+      type: 'warning',
+    })
+    if (!ok) return
+  }
+  recalculating.value = true
+  try {
+    await api.unfreezeCarpool(vehicleStore.activeVehicle.id, trip.id)
+    await loadData()
+  } catch (err: any) {
+    void showAlert(t('carpool.linked.error', { message: err.message }), t('shell.confirm.error'), 'danger')
+  } finally {
+    recalculating.value = false
+  }
+}
+
 async function handleBatchRecalculate() {
   if (!vehicleStore.activeVehicle || !selectedTripIds.value.length) return
   const count = selectedTripIds.value.length
@@ -329,6 +367,8 @@ onMounted(async () => {
       :recalculating="recalculating"
       @edit="(trip) => { showDetail = false; openEditModal(trip) }"
       @recalculate="handleRecalculateSingle"
+      @freeze="handleFreeze"
+      @unfreeze="handleUnfreeze"
       @open-drive="openLegDrive"
     />
 
