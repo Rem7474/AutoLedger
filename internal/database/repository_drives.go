@@ -77,6 +77,15 @@ func (r *Repository) GetLatestTeslaMateDriveStartTime(ctx context.Context, vehic
 	return &t, nil
 }
 
+// Values of DriveFilter.Carpool.
+const (
+	CarpoolOnly = "yes"
+	CarpoolNone = "no"
+)
+
+// carpoolDrivePredicate matches drives that are a leg of a carpool.
+const carpoolDrivePredicate = `EXISTS (SELECT 1 FROM carpool_legs cl WHERE cl.drive_id = drives.id)`
+
 // DriveFilter narrows drive listings.
 type DriveFilter struct {
 	Tag             string
@@ -84,6 +93,7 @@ type DriveFilter struct {
 	HasToll         bool
 	TollSource      string // "", ExpenseSourceManual or ExpenseSourceAutoToll (only with HasToll)
 	TripGroupID     string
+	Carpool         string // "", CarpoolOnly or CarpoolNone: drives that are, or are not, a leg of a carpool
 	DriveID         string // a single drive, whatever the other filters
 	From            *time.Time
 	To              *time.Time
@@ -154,6 +164,13 @@ func (r *Repository) ListDrives(ctx context.Context, vehicleID string, filter Dr
 			argIdx++
 		}
 		conditions = append(conditions, tollDrivePredicate(sourceCond))
+	}
+
+	switch filter.Carpool {
+	case CarpoolOnly:
+		conditions = append(conditions, carpoolDrivePredicate)
+	case CarpoolNone:
+		conditions = append(conditions, "NOT "+carpoolDrivePredicate)
 	}
 
 	if filter.DriveID != "" {

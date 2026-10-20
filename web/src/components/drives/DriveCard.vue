@@ -1,18 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { MapPin, Clock, Users, Coins, Pencil, Trash2 } from 'lucide-vue-next'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
-import { needsTollQualification } from '@/utils/drives'
+import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistance, formatPerDistanceValue } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 
 // One drive of the list: click opens its cost breakdown.
-defineProps<{ d: any; selected: boolean }>()
+const props = defineProps<{ d: any; selected: boolean }>()
 const emit = defineEmits<{
   open: [drive: any]
   toggle: [drive: any]
@@ -25,6 +26,14 @@ const router = useRouter()
 const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
 const formatDate = formatDayTime
+const carpoolSummary = computed(() => summarizeDriveCarpools(props.d.carpools))
+
+// One carpool opens it directly; several open the drive's cost breakdown, which lists them
+function openCarpool() {
+  const refs = props.d.carpools || []
+  if (refs.length === 1) router.push({ path: '/carpools', query: { open: refs[0].id } })
+  else emit('open', props.d)
+}
 </script>
 
 <template>
@@ -88,6 +97,17 @@ const formatDate = formatDayTime
           >
             {{ $t('drives.drivesView.manual') }}
           </span>
+          <button
+            v-if="carpoolSummary"
+            type="button"
+            @click="openCarpool"
+            class="relative z-10 text-xs px-2 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25 transition-colors flex items-center gap-1 shrink-0"
+            :title="$t('drives.driveCard.carpooledOpen')"
+          >
+            <Users class="w-3 h-3" />
+            {{ $t('drives.driveCard.carpooledSummary', { passengers: carpoolSummary.passengers }, carpoolSummary.passengers) }}
+            <span class="font-mono text-success-400">+{{ formatAmount(carpoolSummary.revenue, vehicleStore.currency) }}</span>
+          </button>
         </div>
 
         <!-- Route Address -->

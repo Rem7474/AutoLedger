@@ -226,6 +226,7 @@ export const api = {
       unqualified?: boolean
       hasToll?: boolean
       tollSource?: string
+      carpool?: 'yes' | 'no' | ''
       tripGroupId?: string
       driveId?: string
       from?: string
@@ -240,6 +241,7 @@ export const api = {
     if (params?.unqualified) q.set('unqualified', 'true')
     if (params?.hasToll) q.set('has_toll', 'true')
     if (params?.tollSource) q.set('toll_source', params.tollSource)
+    if (params?.carpool) q.set('carpool', params.carpool)
     if (params?.page) q.set('page', params.page.toString())
     if (params?.limit) q.set('limit', params.limit.toString())
     if (params?.from) q.set('from', params.from)

@@ -63,6 +63,7 @@ const selectedTag = ref('')
 const unqualifiedOnly = ref(false)
 const hasTollOnly = ref(false)
 const tollSource = ref('')
+const carpoolFilter = ref<'' | 'yes' | 'no'>('')
 const unqualifiedCount = ref(0)
 const loading = ref(true)
 const loadError = ref<string | null>(null)
@@ -158,6 +159,7 @@ function resetAllFilters() {
   unqualifiedOnly.value = false
   hasTollOnly.value = false
   tollSource.value = ''
+  carpoolFilter.value = ''
   periodMode.value = 'ALL'
   customFrom.value = ''
   customTo.value = ''
@@ -200,6 +202,7 @@ async function loadDrives(silent = false) {
       unqualified: unqualifiedOnly.value,
       hasToll: hasTollOnly.value,
       tollSource: hasTollOnly.value ? tollSource.value : '',
+      carpool: carpoolFilter.value,
       from: fromStr,
       to: toStr,
       q: searchQuery.value.trim() || undefined,
@@ -220,7 +223,7 @@ const viewMode = ref<'DRIVES' | 'TRIPS'>('DRIVES')
 const tripQualifyOnly = ref(false)
 
 // On a phone the filters sit behind one button, so the first drive is not pushed below the fold; a wide screen shows them
-const activeFilterCount = computed(() => countActiveDriveFilters({ mode: viewMode.value, periodMode: periodMode.value, unqualifiedOnly: unqualifiedOnly.value, hasTollOnly: hasTollOnly.value, selectedTag: selectedTag.value, tripQualifyOnly: tripQualifyOnly.value }))
+const activeFilterCount = computed(() => countActiveDriveFilters({ mode: viewMode.value, periodMode: periodMode.value, unqualifiedOnly: unqualifiedOnly.value, hasTollOnly: hasTollOnly.value, selectedTag: selectedTag.value, tripQualifyOnly: tripQualifyOnly.value, carpoolFilter: carpoolFilter.value }))
 const {
   tripGroups,
   tripSuggestions,
@@ -274,7 +277,7 @@ const {
 })
 
 watch(
-  () => [vehicleStore.activeVehicle?.id, selectedTag.value, unqualifiedOnly.value, hasTollOnly.value, tollSource.value],
+  () => [vehicleStore.activeVehicle?.id, selectedTag.value, unqualifiedOnly.value, hasTollOnly.value, tollSource.value, carpoolFilter.value],
   () => {
     page.value = 1
     loadDrives()
@@ -459,6 +462,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
           v-model:unqualified-only="unqualifiedOnly"
           v-model:has-toll-only="hasTollOnly"
           v-model:toll-source="tollSource"
+          v-model:carpool-filter="carpoolFilter"
           v-model:selected-tag="selectedTag"
           :unqualified-count="unqualifiedCount"
           :toll-detection-active="vehicleStore.tollDetectionActive"
@@ -502,7 +506,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
     <!-- EMPTY STATE -->
     <EmptyState v-else-if="!drives.length" :icon="PageIcon" :title="$t('drives.drivesView.noDriveFoundForThis')">
       <template #actions>
-      <EmptySourceHints v-if="!(searchQuery || periodMode !== 'ALL' || selectedTag || unqualifiedOnly || hasTollOnly)" @import-csv="openCSVImportModal" />
+      <EmptySourceHints v-if="!(searchQuery || periodMode !== 'ALL' || selectedTag || unqualifiedOnly || hasTollOnly || carpoolFilter)" @import-csv="openCSVImportModal" />
       <button
         v-if="searchQuery || periodMode !== 'ALL' || selectedTag || unqualifiedOnly || hasTollOnly"
         @click="resetAllFilters"

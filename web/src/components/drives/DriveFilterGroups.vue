@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Receipt } from 'lucide-vue-next'
+import { Receipt, Users } from 'lucide-vue-next'
 import ToQualifyFilter from '@/components/drives/ToQualifyFilter.vue'
 
 // The toll and Work / Personal filters of the drives list, as one group of toggles. The qualification queue and the
@@ -8,6 +8,7 @@ defineProps<{ unqualifiedCount: number; proPersoEnabled: boolean; tollDetectionA
 const unqualifiedOnly = defineModel<boolean>('unqualifiedOnly', { required: true })
 const hasTollOnly = defineModel<boolean>('hasTollOnly', { required: true })
 const tollSource = defineModel<string>('tollSource', { required: true })
+const carpoolFilter = defineModel<'' | 'yes' | 'no'>('carpoolFilter', { required: true })
 const selectedTag = defineModel<string>('selectedTag', { required: true })
 </script>
 
@@ -42,7 +43,27 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
         <option value="MANUAL">{{ $t('drives.drivesView.manual') }}</option>
       </select>
     </template>
+    <button
+      @click="carpoolFilter = carpoolFilter === 'yes' ? '' : 'yes'"
+      :aria-pressed="carpoolFilter === 'yes'"
+      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+      :class="carpoolFilter === 'yes' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-sky-400/80 hover:text-sky-300 border border-transparent'"
+      :title="$t('drives.drivesView.carpooledDrivesTitle')"
+    >
+      <Users class="w-3.5 h-3.5" />
+      {{ $t('drives.drivesView.carpooled') }}
+    </button>
+    <button
+      @click="carpoolFilter = carpoolFilter === 'no' ? '' : 'no'"
+      :aria-pressed="carpoolFilter === 'no'"
+      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+      :class="carpoolFilter === 'no' ? 'bg-slate-700 text-white border border-slate-600' : 'text-slate-400 hover:text-white border border-transparent'"
+      :title="$t('drives.drivesView.notCarpooledTitle')"
+    >
+      {{ $t('drives.drivesView.notCarpooled') }}
+    </button>
     <template v-if="proPersoEnabled">
+      <span class="hidden h-5 w-px bg-slate-700 sm:block" aria-hidden="true"></span>
       <button
         @click="selectedTag = ''"
         :aria-pressed="selectedTag === ''"

@@ -133,3 +133,11 @@ type CarpoolSummary struct {
 	TotalPassengersShare money.Cents `json:"total_passengers_share"`
 	TotalDriverShare     money.Cents `json:"total_driver_share"`
 }
+
+// DriveCarpoolRef is a carpool a drive belongs to, as the drive list shows it.
+type DriveCarpoolRef struct {
+	ID             string      `json:"id"`
+	Title          string      `json:"title"`
+	PassengerCount int         `json:"passenger_count"`
+	TotalRevenue   money.Cents `json:"total_revenue"`
+}
