@@ -344,23 +344,30 @@ async function handleSave() {
   }
 }
 
-// Following the drives again replaces the amounts with what the drives cost; the difference is shown before it happens
+// Taking the amounts of the drives back replaces what is entered; the difference is shown before it happens
+async function confirmResync(title: string): Promise<boolean> {
+  const gap = driveCostGapCents(form.value.legs)
+  if (gap === 0) return true
+  return showConfirm({
+    title,
+    message: t('carpool.linked.resyncMessage', { amount: fmt(Math.abs(gap) / 100), direction: gap > 0 ? t('carpool.linked.more') : t('carpool.linked.less') }),
+    confirmText: t('carpool.linked.resync'),
+    type: 'warning',
+  })
+}
+
 async function setFollowDrives(follow: boolean) {
   if (follow === form.value.followDrives) return
   if (follow) {
-    const gap = driveCostGapCents(form.value.legs)
-    if (gap !== 0) {
-      const ok = await showConfirm({
-        title: t('carpool.linked.resyncTitle'),
-        message: t('carpool.linked.resyncMessage', { amount: fmt(Math.abs(gap) / 100), direction: gap > 0 ? t('carpool.linked.more') : t('carpool.linked.less') }),
-        confirmText: t('carpool.linked.resync'),
-        type: 'warning',
-      })
-      if (!ok) return
-    }
+    if (!(await confirmResync(t('carpool.linked.resyncTitle')))) return
     followLegsToDrives(form.value.legs)
   }
   form.value.followDrives = follow
+}
+
+async function restoreAllLegs() {
+  if (!(await confirmResync(t('carpool.linked.restoreAllTitle')))) return
+  followLegsToDrives(form.value.legs)
 }
 
 async function handleModalRecalculate() {
@@ -509,6 +516,7 @@ async function handleModalRecalculate() {
             :live-distance="liveDistance"
             :currency="vehicleStore.currency"
             :follow-drives="form.followDrives"
+            @restore-all="restoreAllLegs"
             @update:follow-drives="setFollowDrives"
             @recalculate="handleModalRecalculate"
             @add-leg="addManualLeg"

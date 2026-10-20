@@ -10,6 +10,7 @@ import {
   followDrives,
   hasLinkedLegs,
   keepOverrides,
+  legState,
   legOverrides,
   driveWindow,
   earliestSelectedDriveDate,
@@ -283,6 +284,13 @@ describe('legs made from drives', () => {
     expect(legOverrides(leg({ tolls_cost: 5 }))).toEqual({})
     expect(differsFromDrive(linked({ tolls_cost: 5 }), 'tolls_cost')).toBe(true)
     expect(differsFromDrive(linked({ tolls_cost: 8.001 }), 'tolls_cost')).toBe(false)
+  })
+
+  it('tells whether a leg follows its drive, was adjusted or is frozen', () => {
+    expect(legState(linked(), true)).toBe('synced')
+    expect(legState(linked({ tolls_cost: 5 }), true)).toBe('adjusted')
+    expect(legState(linked({ tolls_cost: 5 }), false)).toBe('frozen')
+    expect(legState(leg({ tolls_cost: 5 }), true)).toBeNull()
   })
 
   it('keeps the adjusted amounts of a leg when the legs are estimated again', () => {
