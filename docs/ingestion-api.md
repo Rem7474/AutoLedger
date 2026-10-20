@@ -108,6 +108,7 @@ A read-only token (`read`) also opens a narrow read API under `/api/integrations
 | `GET /api/integrations/v1/fleet` | The vehicles of the account side by side (month cost, running and full cost per km, annual cost, consumption, cost rank among the comparable vehicles of a currency), the month's totals per currency, the monthly budget and its use, the last 12 months of household cost in the fleet currency, and the share of the distance each named driver drove. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/tags` | The drives of a vehicle split by tag over the whole history: distance, energy, tolls, allocated cost and cost per km of each tag and of the untagged drives. A drive with several tags counts in each. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/carpool` | The carpool totals of a vehicle and its most recent shared trips (`limit`, 10 by default, 30 at most) with their stops, costs and named passengers. |
+| `GET /api/integrations/v1/vehicles/{vehicleId}/trip-groups` | The journeys of a vehicle (`limit`, 20 by default, 50 at most): name, period, drives, distance, tolls and parking, carpool trips. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/charging-places` | The charging of a vehicle by place (`months`, 12 by default, `0` for the whole history): named places with their addresses, sessions, energy, cost and price per kWh, the comparison with the home price and the most used locations linked to no place. |
 
 Conventions:
@@ -117,7 +118,7 @@ Conventions:
 - A figure that cannot be known (a cost per km with no distance, a score with nothing to score) is `null`, never `0`.
 - `months_covered` says how many calendar months a period spans: `last_12_months` of a vehicle with a shorter history spans fewer than 12.
 - The costs are cash spent, the purchase of the vehicle excluded. The month in progress counts with the instalments that fall due later in it.
-- The responses carry no VIN, plate, coordinate, document or drive identifier. The trips are the one view with addresses (`from` and `to`); an address stored only as coordinates is `null`.
+- The responses carry no VIN, plate, coordinate, document or drive identifier. Addresses and names the account recorded are returned (trip addresses, drivers, carpool stops and passengers, charging places); an address stored only as coordinates is `null`.
 - A vehicle the account cannot see answers `404`.
 
 ## Examples

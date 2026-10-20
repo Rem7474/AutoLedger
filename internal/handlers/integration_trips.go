@@ -45,6 +45,7 @@ type IntegrationTrip struct {
 	// is recorded. An expense shared by a trip group is split between its drives by distance.
 	TravelExpenses *IntegrationAmount `json:"travel_expenses" jsonschema:"cost of tolls, parking and ferries for this trip, null when none is recorded; a cost shared by a trip group is split between its drives by distance"`
 	Tags           []string           `json:"tags" jsonschema:"tags the owner put on the trip, user text"`
+	Driver         *string            `json:"driver" jsonschema:"name of the person who drove, as the owner recorded them, user text; null when no driver is assigned"`
 }
 
 // IntegrationTrips lists the trips of a vehicle, the most recent first.
@@ -115,7 +116,7 @@ func integrationTrip(d models.Drive, currency string, expenses map[string]money.
 	trip := IntegrationTrip{
 		StartTime: d.StartTime.UTC().Format(time.RFC3339), EndTime: d.EndTime.UTC().Format(time.RFC3339),
 		From: publicAddress(d.StartAddress), To: publicAddress(d.EndAddress),
-		DurationMin: d.DurationMin, EnergyKwh: d.EnergyConsumedKwh, Tags: d.Tags,
+		DurationMin: d.DurationMin, EnergyKwh: d.EnergyConsumedKwh, Tags: d.Tags, Driver: noteOf(d.DriverName),
 	}
 	if trip.Tags == nil {
 		trip.Tags = []string{}
