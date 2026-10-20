@@ -58,6 +58,26 @@ Wherever a tool takes a `vehicle_id`, the name of the vehicle works too when no 
 
 The tools return the same views as the [read API](ingestion-api.md#read-api), with the same conventions: an amount is a decimal string in the currency of its vehicle and is never converted, a distance is in kilometres, an unknown figure is `null`. VINs, plates, positions, documents and drive identifiers are never returned. Names and places the account recorded are returned so an assistant can talk about them: the departure and arrival addresses of the trips (`list_vehicle_trips`), the drivers' names, the stops and passenger names of carpool trips (`get_carpool`), the names and addresses of the charging places (`get_charging_places`), tags and notes. An address stored only as coordinates is returned as `null`. These texts are the owner's own words and are labelled as data in the tool descriptions. Anything you authorize an assistant to read can be repeated in its answers and kept by its provider: do not authorize one for an account whose names and addresses you would not share. A vehicle the account cannot see is reported as not found.
 
+## Resources and prompts
+
+Besides the tools, the server offers what a client shows in its own menus.
+
+| Resource | Content |
+|---|---|
+| `autoledger://glossary` | The terms the figures use (running cost, full cost, cost per km, completeness...), in Markdown. |
+| `autoledger://account` | The account's units (distance, volume), language, reporting time zone, the month in progress and its vehicles with their currency and role. |
+| `autoledger://vehicles/{vehicle_id}` | One vehicle, as `list_vehicles` returns it. A vehicle the account cannot see is not found. |
+
+| Prompt | Asks the assistant to |
+|---|---|
+| `monthly_review` | Explain what a month (`month`, `YYYY-MM`; the previous full month by default) cost, what changed against the previous ones and what to complete. |
+| `what_is_missing` | List what to complete in a vehicle's records, most valuable first. |
+| `lease_check` | Check the lease or loan: mileage allowance used, projected excess cost, end date. |
+| `receipt_check` | List the expenses of a year (`year`) that have no receipt, grouped by category. |
+| `tax_year` | Prepare the professional and personal split of a year (`year`; the previous year by default) from the drive tags. |
+
+Each prompt takes an optional `vehicle` (a name or an id; the assistant asks which one when the account has several). A prompt contains no figure: it tells the assistant which tools to call. The client completes `vehicle` and `vehicle_id` with the vehicles of the account.
+
 ## Notes
 
 - The endpoint is stateless: every request carries its own token and nothing is kept between requests.
