@@ -194,11 +194,9 @@
     "boardingStop": "Arrêt de montée",
     "alightingStop": "Arrêt de descente",
     "receivedOf": "{received} reçu",
-    "splitLabel": "Passagers {passengers}, conducteur {driver}",
     "receivedLabel": "{received} du coût reçu, parts équitables {fair}",
     "fairTick": "Parts équitables des passagers",
     "fairTickHint": "Le repère marque la fin des parts équitables ({fair} du coût).",
-    "splitTitle": "Répartition du coût",
     "receivedTitle": "Reçu / parts équitables",
     "noLegs": "Choisissez d'abord les trajets du covoiturage.",
     "toDrives": "Choisir les trajets"

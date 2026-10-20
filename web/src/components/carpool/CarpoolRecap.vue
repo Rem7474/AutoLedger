@@ -67,14 +67,6 @@ const covered = computed(() => fig.value.total > 0 && fig.value.left <= 0)
       </dl>
 
       <div class="space-y-1.5">
-        <div class="text-xs text-slate-400">{{ $t('carpool.editor.splitTitle') }}</div>
-        <div class="flex h-2 overflow-hidden rounded-full bg-slate-800" role="img" :aria-label="$t('carpool.editor.splitLabel', { passengers: pct(fig.passengersPct), driver: pct(fig.driverPct) })">
-          <span class="bg-sky-400" :style="{ width: `${fig.passengersPct}%` }"></span>
-          <span class="bg-slate-500" :style="{ width: `${fig.driverPct}%` }"></span>
-        </div>
-      </div>
-
-      <div class="space-y-1.5">
         <div class="text-xs text-slate-400">{{ $t('carpool.editor.receivedTitle') }}</div>
         <div class="relative h-2 rounded-full bg-slate-800" role="img" :aria-label="$t('carpool.editor.receivedLabel', { received: pct(fig.receivedPct), fair: pct(fig.passengersPct) })">
           <span class="absolute inset-y-0 left-0 rounded-full bg-emerald-400" :style="{ width: `${Math.min(fig.receivedPct, 100)}%` }"></span>
