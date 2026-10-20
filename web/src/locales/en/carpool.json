@@ -162,7 +162,14 @@
     "resyncMessage": "The amounts will be replaced by what the drives cost now: {amount} {direction} than today.",
     "resync": "Resync",
     "error": "Could not update the carpool: {message}",
-    "adjusted": "Adjusted"
+    "state": {
+      "synced": "Synced",
+      "adjusted": "Adjusted",
+      "frozen": "Frozen"
+    },
+    "someAdjusted": "Some legs differ from what their drives cost.",
+    "restoreAll": "Restore the drives' amounts",
+    "restoreAllTitle": "Restore the drives' amounts?"
   },
   "editor": {
     "recap": "Recap",

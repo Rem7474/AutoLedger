@@ -195,6 +195,13 @@ export function differsFromDrive(leg: Pick<LegForm, 'drive_id' | 'drive_cost'> &
   return !!leg.drive_id && !!leg.drive_cost && cents(leg[key]) !== cents(leg.drive_cost[key] ?? 0)
 }
 
+/** Where a leg made from a drive stands: frozen with its carpool, adjusted by hand, or following its drive (null for a typed leg). */
+export function legState(leg: Pick<LegForm, 'drive_id' | 'drive_cost'> & Record<string, any>, follow: boolean): 'frozen' | 'adjusted' | 'synced' | null {
+  if (!leg.drive_id) return null
+  if (!follow) return 'frozen'
+  return COST_FIELDS.some((f) => differsFromDrive(leg, f.key)) ? 'adjusted' : 'synced'
+}
+
 /** The categories of a leg to send as overrides: those that differ from the drive's. */
 export function legOverrides(leg: LegForm): Partial<Record<CostKey, number>> {
   const out: Partial<Record<CostKey, number>> = {}

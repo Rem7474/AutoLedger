@@ -2,8 +2,8 @@
 import { computed, ref } from 'vue'
 import NumberInput from '@/components/NumberInput.vue'
 import DistanceInput from '@/components/DistanceInput.vue'
-import { Navigation, Plus, Trash2, Calculator, RotateCw, Lock, Undo2, ChevronDown } from 'lucide-vue-next'
-import { COST_FIELDS, differsFromDrive, euros, type CostKey, type LegForm } from '@/utils/carpool'
+import { Navigation, Plus, Trash2, Calculator, RotateCw, Lock, Undo2, ChevronDown, Link2 } from 'lucide-vue-next'
+import { COST_FIELDS, differsFromDrive, euros, legState, type CostKey, type LegForm } from '@/utils/carpool'
 import { currencySymbol, formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
 
@@ -21,7 +21,7 @@ const props = defineProps<{
   currency: string
   followDrives: boolean
 }>()
-const emit = defineEmits<{ recalculate: []; 'add-leg': []; estimate: [index: number]; remove: [index: number]; 'update:followDrives': [value: boolean] }>()
+const emit = defineEmits<{ recalculate: []; 'restore-all': []; 'add-leg': []; estimate: [index: number]; remove: [index: number]; 'update:followDrives': [value: boolean] }>()
 const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
 const linked = computed(() => props.legs.some((l) => !!l.drive_id))
 // Legs whose state was toggled by the user: a drive leg opens, a manual leg closes
@@ -32,7 +32,7 @@ function toggle(i: number) {
   if (!next.delete(i)) next.add(i)
   toggled.value = next
 }
-const adjusted = (leg: LegForm) => COST_FIELDS.some((f) => differsFromDrive(leg, f.key))
+const anyAdjusted = computed(() => props.followDrives && props.legs.some((l) => legState(l, true) === 'adjusted'))
 // The amount of a category goes back to what its drive costs
 function restore(leg: LegForm, key: CostKey) {
   if (leg.drive_cost) leg[key] = leg.drive_cost[key] ?? 0
@@ -83,6 +83,12 @@ function restore(leg: LegForm, key: CostKey) {
         <span class="text-slate-400">{{ followDrives ? $t('carpool.linked.followHint') : $t('carpool.linked.frozenHint') }}</span>
       </span>
     </label>
+    <div v-if="anyAdjusted" class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+      <span>{{ $t('carpool.linked.someAdjusted') }}</span>
+      <button type="button" class="btn btn-secondary" @click="emit('restore-all')">
+        <Undo2 class="h-3.5 w-3.5" aria-hidden="true" /> {{ $t('carpool.linked.restoreAll') }}
+      </button>
+    </div>
     <p v-if="!legs.length" role="status" :class="['text-xs', submitted ? 'text-danger-400' : 'text-slate-400']">{{ $t('carpool.carpoolTripModal.selectAtLeastOneDrive') }}</p>
 
     <div v-for="(leg, i) in legs" :key="i" class="bg-slate-950/50 border border-slate-800 rounded-xl">
@@ -97,7 +103,11 @@ function restore(leg: LegForm, key: CostKey) {
         <span class="shrink-0 text-slate-400 tabular-nums">{{ formatDistanceValue(Number(leg.distance_km) || 0, 1) }} {{ distanceUnit() }}</span>
         <span class="shrink-0 font-semibold tabular-nums text-white">{{ fmt(euros(live.legDetails[i]?.total || 0)) }}</span>
         <ChevronDown class="h-4 w-4 shrink-0 text-slate-400 transition-transform" :class="isOpen(leg, i) ? 'rotate-180' : ''" aria-hidden="true" />
-        <span v-if="adjusted(leg)" class="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 font-semibold text-slate-300">{{ $t('carpool.linked.adjusted') }}</span>
+        <span v-if="legState(leg, followDrives)" class="flex items-center gap-1 rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 font-semibold text-slate-300">
+          <Lock v-if="legState(leg, followDrives) === 'frozen'" class="h-3 w-3" aria-hidden="true" />
+          <Link2 v-else-if="legState(leg, followDrives) === 'synced'" class="h-3 w-3 text-sky-400" aria-hidden="true" />
+          {{ $t(`carpool.linked.state.${legState(leg, followDrives)}`) }}
+        </span>
       </button>
 
       <div v-if="isOpen(leg, i)" class="space-y-2 border-t border-slate-800 px-3 pb-3 pt-2.5">

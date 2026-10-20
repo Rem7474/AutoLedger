@@ -162,7 +162,14 @@
     "resyncMessage": "Les montants seront remplacés par le coût actuel des trajets : {amount} de {direction} qu'aujourd'hui.",
     "resync": "Resynchroniser",
     "error": "Impossible de mettre à jour le covoiturage : {message}",
-    "adjusted": "Ajusté"
+    "state": {
+      "synced": "Synchronisée",
+      "adjusted": "Ajustée",
+      "frozen": "Figée"
+    },
+    "someAdjusted": "Certaines étapes diffèrent du coût de leurs trajets.",
+    "restoreAll": "Rétablir les montants des trajets",
+    "restoreAllTitle": "Rétablir les montants des trajets ?"
   },
   "editor": {
     "recap": "Récapitulatif",
