@@ -112,6 +112,7 @@
     "chained": "enchaînés · même lieu",
     "hideShort": "Masquer les trajets courts",
     "showShort": "Afficher {count} trajet(s) court(s)",
+    "totalCost": "Coût réel de la sélection",
     "selectedCount": "{count} trajet(s) sélectionné(s)",
     "alreadyCarpooledIn": "Dans {title}"
   },

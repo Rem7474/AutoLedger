@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findDriveChain, groupDrivesByDay, recapFigures, splitShortDrives, stopFromRatio, tapStop, withAlight, withBoard } from './carpoolEditor'
+import { driveSteps, findDriveChain, groupDrivesByDay, recapFigures, splitShortDrives, stopFromRatio, tapStop, withAlight, withBoard } from './carpoolEditor'
 
 describe('stops of a passenger', () => {
   it('turns a position along the route into a stop', () => {
@@ -85,5 +85,17 @@ describe('drive picker', () => {
     ])
     expect(groups.map((g) => g.day)).toEqual(['2026-10-18', '2026-10-19'])
     expect(groups[0].drives.map((x) => x.id)).toEqual(['c', 'a'])
+  })
+})
+
+describe('leg numbers of the selected drives', () => {
+  it('numbers them in driving order, whatever the order of the list', () => {
+    const steps = driveSteps([
+      { id: 'b', start_time: '2026-10-19T09:00:00Z' },
+      { id: 'a', start_time: '2026-10-18T19:00:00Z' },
+    ])
+    expect(steps.get('a')).toBe(1)
+    expect(steps.get('b')).toBe(2)
+    expect(steps.has('c')).toBe(false)
   })
 })

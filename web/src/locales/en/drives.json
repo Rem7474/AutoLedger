@@ -112,6 +112,7 @@
     "chained": "chained · same place",
     "hideShort": "Hide the short drives",
     "showShort": "Show {count} short drive(s)",
+    "totalCost": "Actual cost of the selection",
     "selectedCount": "{count} drive(s) selected",
     "alreadyCarpooledIn": "In {title}"
   },
