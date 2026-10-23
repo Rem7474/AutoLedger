@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -25,11 +24,11 @@ func (h *apiHandlers) registerOAuthPublicRoutes(r chi.Router) {
 
 // registerOAuthSessionRoutes registers the two calls the consent page makes for the signed-in user. The page itself
 // is the front end's /oauth/authorize route, which the server leaves to the single-page app. Approving creates a
-// credential, so it needs an active session like creating an API token does.
-func (h *apiHandlers) registerOAuthSessionRoutes(r chi.Router, activeSession func(http.Handler) http.Handler) {
+// credential; like every session route it needs an active session.
+func (h *apiHandlers) registerOAuthSessionRoutes(r chi.Router) {
 	if h.oauth == nil {
 		return
 	}
 	r.Get("/api/oauth/authorize", h.oauth.PreviewAuthorization)
-	r.With(httprate.LimitByIP(20, time.Minute), activeSession).Post("/api/oauth/authorize", h.oauth.DecideAuthorization)
+	r.With(httprate.LimitByIP(20, time.Minute)).Post("/api/oauth/authorize", h.oauth.DecideAuthorization)
 }

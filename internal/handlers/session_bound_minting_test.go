@@ -15,18 +15,19 @@ import (
 	"github.com/teslacost/teslacost/internal/middleware"
 )
 
-// accountRouter mounts the account routes behind the same chain as cmd/server: a session access token, and for the
-// routes that create a credential an active session.
+// accountRouter mounts the account routes behind the same chain as cmd/server: a session access token whose session
+// is still active.
 func accountRouter(repo *database.Repository, h *AuthHandler) chi.Router {
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthenticateJWT(authTestConfig().JWTSecret))
+		r.Use(middleware.RequireActiveSession(repo))
 		r.Get("/api/auth/me", h.Me)
 		r.Post("/api/auth/logout-all", h.LogoutAll)
 		r.Delete("/api/auth/sessions/{sessionId}", h.RevokeSession)
 		r.Get("/api/auth/sessions", h.ListSessions)
-		r.With(middleware.RequireActiveSession(repo)).Post("/api/auth/tokens", NewTokenHandler(repo).CreateToken)
-		r.With(middleware.RequireActiveSession(repo)).Post("/api/auth/password", h.ChangePassword)
+		r.Post("/api/auth/tokens", NewTokenHandler(repo).CreateToken)
+		r.Post("/api/auth/password", h.ChangePassword)
 	})
 	return r
 }
@@ -126,23 +127,26 @@ func TestRevokingOneSessionOnlyEndsThatSession(t *testing.T) {
 	if rec := callWithBearer(r, http.MethodPost, "/api/auth/tokens", second, body); rec.Code != http.StatusCreated {
 		t.Errorf("the other session is untouched: %d", rec.Code)
 	}
-	if rec := callWithBearer(r, http.MethodGet, "/api/auth/me", first, ""); rec.Code != http.StatusOK {
-		t.Errorf("reading with a still valid access token keeps working until it expires: %d", rec.Code)
+	if rec := callWithBearer(r, http.MethodGet, "/api/auth/me", first, ""); rec.Code != http.StatusUnauthorized {
+		t.Errorf("the revoked session must not read either, its access token is refused at once: %d", rec.Code)
+	}
+	if rec := callWithBearer(r, http.MethodGet, "/api/auth/me", second, ""); rec.Code != http.StatusOK {
+		t.Errorf("the other session keeps reading: %d", rec.Code)
 	}
 }
 
-func TestATokenThatNamesNoSessionReadsButIsAskedToRenewBeforeMinting(t *testing.T) {
+func TestATokenThatNamesNoSessionIsAskedToRenew(t *testing.T) {
 	repo := authTestRepo(t)
 	user, _ := repo.CreateUser(context.Background(), "legacy@example.org", "hash")
 	h := NewAuthHandler(repo, authTestConfig(), nil)
 	r := accountRouter(repo, h)
 	legacy, _ := auth.GenerateAccessToken(user.ID, user.Email, authTestConfig().JWTSecret, 15)
 
-	if rec := callWithBearer(r, http.MethodGet, "/api/auth/me", legacy, ""); rec.Code != http.StatusOK {
-		t.Fatalf("a token issued before sessions were named keeps reading: %d", rec.Code)
+	if rec := callWithBearer(r, http.MethodGet, "/api/auth/me", legacy, ""); rec.Code != http.StatusUnauthorized {
+		t.Fatalf("a token bound to no session must be renewed before it reads: %d", rec.Code)
 	}
 	if rec := callWithBearer(r, http.MethodPost, "/api/auth/tokens", legacy, `{"name":"x","scope":"read"}`); rec.Code != http.StatusUnauthorized {
-		t.Fatalf("it must be renewed before it creates a credential: %d", rec.Code)
+		t.Fatalf("nor create a credential: %d", rec.Code)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -335,14 +336,21 @@ func (r *Repository) RevokeAllUserRefreshTokens(ctx context.Context, userID stri
 	return nil
 }
 
+var uuidText = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
 // IsSessionActive reports whether the session (refresh token family) of a user still holds a usable refresh token,
 // that is whether it can still renew its access. A revoked or expired session, and one of another user, is not.
 func (r *Repository) IsSessionActive(ctx context.Context, userID, familyID string) (bool, error) {
+	// Every request of a session goes through here: compare the uuid columns, so that their indexes serve, rather
+	// than their text form. An identifier that is not a uuid names no session.
+	if !uuidText.MatchString(userID) || !uuidText.MatchString(familyID) {
+		return false, nil
+	}
 	var active bool
 	err := r.pool.QueryRow(ctx, `
 		SELECT EXISTS (
 			SELECT 1 FROM refresh_tokens
-			WHERE user_id::text = $1 AND family_id::text = $2 AND NOT is_revoked AND expires_at > NOW()
+			WHERE user_id = $1::uuid AND family_id = $2::uuid AND NOT is_revoked AND expires_at > NOW()
 		);
 	`, userID, familyID).Scan(&active)
 	if err != nil {
