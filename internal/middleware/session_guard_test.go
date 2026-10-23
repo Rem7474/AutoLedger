@@ -63,3 +63,19 @@ func TestRequireActiveSessionFailsClosedWhenTheLookupFails(t *testing.T) {
 		t.Fatalf("got %d", rec.Code)
 	}
 }
+
+func TestRequireActiveSessionLetsAnAPITokenThrough(t *testing.T) {
+	checker := &fakeSessions{active: false}
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusNoContent) })
+	req := httptest.NewRequest(http.MethodGet, "/api/integrations/v1/vehicles", nil)
+	ctx := context.WithValue(req.Context(), UserIDKey, "u1")
+	ctx = context.WithValue(ctx, TokenScopeKey, "read")
+	rec := httptest.NewRecorder()
+	RequireActiveSession(checker)(next).ServeHTTP(rec, req.WithContext(ctx))
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("an API token has no session, its own validation applies: %d", rec.Code)
+	}
+	if checker.asked != ([2]string{}) {
+		t.Fatal("no session lookup for an API token")
+	}
+}

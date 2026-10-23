@@ -139,7 +139,7 @@ French captures sit next to the English ones (`*.fr.png`); `scripts/screenshots/
 - **Multi-Channel Dispatchers**: Native integrations for **Discord** (rich embeds), **Telegram** (Markdown bot API), **Gotify** (push notifications), and **Generic JSON Webhooks** (Home Assistant, Node-RED, n8n).
 
 ### 🔐 Hybrid Authentication & Homelab Security
-- **Local Authentication**: bcrypt password hashing, 15-minute HS256 JWT access tokens, and rotating 30-day `HttpOnly` refresh cookies.
+- **Local Authentication**: bcrypt password hashing, 15-minute HS256 JWT access tokens bound to their session (revoking a session ends its access tokens at once), and rotating 30-day `HttpOnly` refresh cookies.
 - **OIDC / SSO Integration**: Seamless single sign-on with Authentik, Keycloak, Authelia, or Kanidm via standard Authorization Code Flow with PKCE.
 - **Security & Hardening**: AES-256-GCM encryption for stored credentials, brute-force rate limiters, security headers (CSP, HSTS, X-Frame-Options), and configurable trusted reverse proxies.
 

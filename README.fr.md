@@ -139,7 +139,7 @@ Les captures anglaises se trouvent à côté des françaises (`*.en.png`) ; `scr
 - **Notifications multicanal** : intégrations natives pour **Discord** (embeds enrichis), **Telegram** (API bot en Markdown), **Gotify** (notifications push) et **webhooks JSON génériques** (Home Assistant, Node-RED, n8n).
 
 ### 🔐 Authentification hybride et sécurité homelab
-- **Authentification locale** : mots de passe hachés avec bcrypt, jetons d'accès JWT HS256 de 15 minutes et cookies de rafraîchissement `HttpOnly` de 30 jours avec rotation.
+- **Authentification locale** : mots de passe hachés avec bcrypt, jetons d'accès JWT HS256 de 15 minutes liés à leur session (révoquer une session met fin à ses jetons d'accès immédiatement) et cookies de rafraîchissement `HttpOnly` de 30 jours avec rotation.
 - **Intégration OIDC / SSO** : authentification unique avec Authentik, Keycloak, Authelia ou Kanidm par le flux Authorization Code avec PKCE standard.
 - **Sécurité et durcissement** : chiffrement AES-256-GCM des identifiants stockés, limitation de débit contre la force brute, en-têtes de sécurité (CSP, HSTS, X-Frame-Options) et reverse proxies de confiance configurables.
 

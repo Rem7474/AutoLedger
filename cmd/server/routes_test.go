@@ -72,7 +72,7 @@ func probe(r chi.Router, method, pattern, bearer string) string {
 func TestRouteTableAuthTiers(t *testing.T) {
 	r := newRouteTable(t)
 
-	session, err := auth.GenerateAccessToken("user-1", "user@example.com", testJWTSecret, 5)
+	session, err := auth.GenerateSessionAccessToken("user-1", "user@example.com", "session-1", testJWTSecret, 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,6 +232,54 @@ func assertSameRoutes(t *testing.T, tier string, got, want []string) {
 	sort.Strings(want)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("%s routes differ\n got: %v\nwant: %v", tier, got, want)
+	}
+}
+
+// endedSessionChecker answers that every session was revoked.
+type endedSessionChecker struct{}
+
+func (endedSessionChecker) IsSessionActive(context.Context, string, string) (bool, error) {
+	return false, nil
+}
+
+// TestEveryRouteRefusesARevokedSession fails for a route that honours an access token whose session was ended: every
+// route a session opens, on the session tier and on the integration tier, answers 401 to it, while the integration
+// routes keep accepting an API token, which is not bound to a session.
+func TestEveryRouteRefusesARevokedSession(t *testing.T) {
+	r := chi.NewRouter()
+	passThrough := func(next http.Handler) http.Handler { return next }
+	registerAPIRoutes(r, testJWTSecret, fakeTokenValidator{}, endedSessionChecker{}, passThrough, &apiHandlers{
+		oauth: handlers.NewOAuthHandler(nil, "http://localhost"),
+		mcp:   handlers.NewMCPHandler(nil, fakeTokenValidator{}, "http://localhost", "test"),
+	})
+	session, err := auth.GenerateSessionAccessToken("user-1", "user@example.com", "session-1", testJWTSecret, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	apiToken := auth.TokenPrefix + "route-table-test"
+
+	var refused, tokenRoutes int
+	err = chi.Walk(r, func(method, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		if strings.HasSuffix(route, "/*") || !strings.Contains(probe(r, method, route, ""), noCredentialsMessage) {
+			return nil // a public route
+		}
+		refused++
+		if body := probe(r, method, route, session); !strings.Contains(body, "Session is no longer active") {
+			t.Errorf("%s %s honours the access token of a revoked session: %q", method, route, body)
+		}
+		if strings.HasPrefix(route, "/api/integrations/") {
+			tokenRoutes++
+			if body := probe(r, method, route, apiToken); strings.Contains(body, "Session is no longer active") {
+				t.Errorf("%s %s asks an API token for a session: %q", method, route, body)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if refused < 150 || tokenRoutes == 0 {
+		t.Fatalf("only %d routes checked (%d with an API token), the route table lost routes", refused, tokenRoutes)
 	}
 }
 

@@ -116,6 +116,7 @@ func registerAPIRoutes(r chi.Router, jwtSecret string, tokens appMiddleware.APIT
 	// Integration routes: the only ones an API token opens (Home Assistant, scripts); a session works too.
 	r.Group(func(r chi.Router) {
 		r.Use(appMiddleware.AuthenticateIntegration(jwtSecret, tokens))
+		r.Use(appMiddleware.RequireActiveSession(sessions))
 		r.Use(idempotency)
 
 		h.registerIntegrationRoutes(r)
@@ -124,10 +125,11 @@ func registerAPIRoutes(r chi.Router, jwtSecret string, tokens appMiddleware.APIT
 	// Protected routes (session only)
 	r.Group(func(r chi.Router) {
 		r.Use(appMiddleware.AuthenticateJWT(jwtSecret))
+		r.Use(appMiddleware.RequireActiveSession(sessions))
 		r.Use(idempotency)
 
-		h.registerSessionAuthRoutes(r, appMiddleware.RequireActiveSession(sessions))
-		h.registerOAuthSessionRoutes(r, appMiddleware.RequireActiveSession(sessions))
+		h.registerSessionAuthRoutes(r)
+		h.registerOAuthSessionRoutes(r)
 		h.registerAccountRoutes(r)
 
 		r.Route("/api/vehicles", func(r chi.Router) {

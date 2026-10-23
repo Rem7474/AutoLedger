@@ -50,13 +50,18 @@ type SessionChecker interface {
 }
 
 // RequireActiveSession refuses a request whose access token comes from a session that was revoked or has expired,
-// and a token that names no session. An access token stays valid until it expires, which is fine to read data; the
-// routes that create credentials (an API token, a new password) must not honour one whose session was ended, or
-// revoking a session would not contain a stolen token. Run it after AuthenticateJWT. The 401 makes the web app
-// renew its session, and the retry carries a token bound to it.
+// and a token that names no session: an access token is honoured only while the session it was issued for is
+// active, so ending a session (logout, "sign out everywhere", a revoked device) cuts off its access token at once
+// instead of leaving it valid until it expires. Run it after AuthenticateJWT or AuthenticateIntegration. A request
+// authenticated by an API token (TokenScopeKey set) has no session and passes: its token is checked by the
+// validator. The 401 makes the web app renew its session, and the retry carries a token bound to the new one.
 func RequireActiveSession(checker SessionChecker) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if _, isAPIToken := r.Context().Value(TokenScopeKey).(string); isAPIToken {
+				next.ServeHTTP(w, r)
+				return
+			}
 			sessionID, _ := r.Context().Value(SessionIDKey).(string)
 			userID := GetUserID(r.Context())
 			if sessionID == "" || userID == "" {
