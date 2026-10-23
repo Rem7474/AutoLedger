@@ -774,6 +774,10 @@ func TestIntegrationOwnershipLoanLeaseAndInsuranceShare(t *testing.T) {
 		t.Fatal(err)
 	}
 	mustDrive(t, repo, insured.ID, 1, now.AddDate(0, -3, 0), 1000, 3500)
+	// The odometer agrees with the drive: 3,500 km since it read 1,000 km.
+	if _, err := db.Pool.Exec(ctx, `UPDATE vehicles SET current_odometer = 4500 WHERE id = $1`, insured.ID); err != nil {
+		t.Fatal(err)
+	}
 	r, err = rates.GetVehicleUnitRates(ctx, insured.ID)
 	if err != nil {
 		t.Fatal(err)
