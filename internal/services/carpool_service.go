@@ -27,6 +27,7 @@ type carpoolStore interface {
 	UpdateCarpoolTrip(ctx context.Context, trip *models.CarpoolTrip, legs []models.CarpoolLeg, passengers []models.CarpoolPassenger) error
 	UpdateCarpoolLegCosts(ctx context.Context, trip *models.CarpoolTripWithPassengers) error
 	ListCarpoolTrips(ctx context.Context, vehicleID string) ([]models.CarpoolTripWithPassengers, error)
+	ListOdometerAnchors(ctx context.Context, vehicleID string) ([]database.OdometerAnchor, error)
 }
 
 type CarpoolService struct {
