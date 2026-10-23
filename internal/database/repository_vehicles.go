@@ -135,10 +135,10 @@ func (r *Repository) ListVehiclesByUserID(ctx context.Context, userID string) ([
 		       v.telemetry_mode, v.make, v.model,
 		       v.default_driver_id, v.tariff_plan_id, v.is_home_charger_default, v.toll_detection,
 		       v.created_at, v.updated_at,
-		       COALESCE(vm.role, CASE WHEN v.user_id::text = $1 THEN 'OWNER' ELSE 'VIEWER' END) as role
+		       vm.role
 		FROM vehicles v
-		LEFT JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $1
-		WHERE v.user_id::text = $1 OR vm.user_id IS NOT NULL
+		JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $1
+		WHERE vm.user_id::text = $1
 		ORDER BY v.created_at ASC;
 	`
 	rows, err := r.pool.Query(ctx, query, userID)
@@ -193,10 +193,10 @@ func (r *Repository) GetVehicleByID(ctx context.Context, id, userID string) (*mo
 		       v.telemetry_mode, v.make, v.model,
 		       v.default_driver_id, v.tariff_plan_id, v.is_home_charger_default, v.toll_detection,
 		       v.created_at, v.updated_at,
-		       COALESCE(vm.role, CASE WHEN v.user_id::text = $2 THEN 'OWNER' ELSE 'VIEWER' END) as role
+		       vm.role
 		FROM vehicles v
-		LEFT JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $2
-		WHERE v.id::text = $1 AND (v.user_id::text = $2 OR vm.user_id IS NOT NULL);
+		JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $2
+		WHERE v.id::text = $1;
 	`
 	var role string
 	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
@@ -286,9 +286,9 @@ func (r *Repository) UpdateVehicleEstimatedEnergy(ctx context.Context, vehicleID
 	query := `
 		UPDATE vehicles
 		SET estimated_kwh_100km = $1, estimated_price_per_kwh = $2, updated_at = NOW()
-		WHERE id::text = $3 AND (user_id::text = $4 OR EXISTS (
+		WHERE id::text = $3 AND EXISTS (
 			SELECT 1 FROM vehicle_members vm WHERE vm.vehicle_id = vehicles.id AND vm.user_id::text = $4 AND vm.role IN ('OWNER', 'EDITOR')
-		));
+		);
 	`
 	tag, err := r.pool.Exec(ctx, query, kwh100km, eurPerKwh, vehicleID, userID)
 	if err != nil {
@@ -313,9 +313,9 @@ func (r *Repository) UpdateVehicleOdometer(ctx context.Context, vehicleID string
 func (r *Repository) DeleteVehicle(ctx context.Context, id, userID string) error {
 	query := `
 		DELETE FROM vehicles 
-		WHERE id::text = $1 AND (user_id::text = $2 OR EXISTS (
+		WHERE id::text = $1 AND EXISTS (
 			SELECT 1 FROM vehicle_members vm WHERE vm.vehicle_id = vehicles.id AND vm.user_id::text = $2 AND vm.role = 'OWNER'
-		));
+		);
 	`
 	tag, err := r.pool.Exec(ctx, query, id, userID)
 	if err != nil {
@@ -491,10 +491,10 @@ func (r *Repository) RemoveVehicleMember(ctx context.Context, vehicleID, targetU
 func (r *Repository) GetVehicleMemberRole(ctx context.Context, vehicleID, userID string) (models.VehicleRole, error) {
 	var role string
 	query := `
-		SELECT COALESCE(vm.role, CASE WHEN v.user_id::text = $2 THEN 'OWNER' ELSE 'VIEWER' END)
+		SELECT vm.role
 		FROM vehicles v
-		LEFT JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $2
-		WHERE v.id::text = $1 AND (v.user_id::text = $2 OR vm.user_id IS NOT NULL);
+		JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $2
+		WHERE v.id::text = $1;
 	`
 	err := r.pool.QueryRow(ctx, query, vehicleID, userID).Scan(&role)
 	if err != nil {
