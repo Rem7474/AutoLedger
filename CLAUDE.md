@@ -151,6 +151,15 @@ Replace the generated list of PR titles with written release notes (`gh release 
 - Related PRs are merged into one bullet (a feature and its follow-up fixes read as one line), each bullet ends with its PR numbers `(#123, #124)`, and the version-sync PR is not listed.
 - End with the `**Full Changelog**` compare link of the generated notes.
 
+## Security advisories
+
+A private project of this size does not request CVE ids: an advisory is classified, fixed, released and published without one.
+
+- Classify each draft advisory through the API (`PATCH repos/Rem7474/AutoLedger/security-advisories/<ghsa>`): CVSS 3.1 vector, CWE, `vulnerabilities` with ecosystem `other` and package `AutoLedger`, affected range and patched version, reporter credit. The severity comes from the vector, not from the reporter's label.
+- Fix on public branches from `origin/main` with normal PRs: the description states the defect and the change, never an exploit recipe. A reporter's patch keeps its authorship.
+- Answer the reporter on the advisory in English, constructively (see Git and PRs). The API can create comments but not delete them: never probe the comments endpoint, and never test a write route of a deployed instance.
+- Order: merge the fixes, release (fixes only: patch bump), close the pull request of each temporary private fork (`PATCH repos/<fork>/pulls/1 -f state=closed`, publication fails with 422 while it is open), then publish with `state: published`.
+
 ## Browser checks
 
 Playwright and Chromium are available on the dev host (`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers` in the remote environment). Run `vite preview` bound to 127.0.0.1, mock `/api/**` with `context.route`, and never `pkill -f` a pattern that also appears in your own command line.
