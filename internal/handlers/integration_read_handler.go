@@ -72,9 +72,9 @@ func kilometres(v float64) IntegrationDistance { return IntegrationDistance{Valu
 // IntegrationVehicleV1 is a vehicle of the read API. It is the integration view plus the unit of the odometer.
 type IntegrationVehicleV1 struct {
 	ID         string              `json:"id" jsonschema:"identifier to pass as vehicle_id to the other tools"`
-	Name       string              `json:"name" jsonschema:"name the owner gave the vehicle, written by the user"`
-	Make       string              `json:"make" jsonschema:"make, free text, empty when not given"`
-	Model      string              `json:"model" jsonschema:"model, free text, empty when not given"`
+	Name       string              `json:"name" jsonschema:"name the owner gave the vehicle, user text"`
+	Make       string              `json:"make" jsonschema:"make as the owner typed it, user text; empty when not given"`
+	Model      string              `json:"model" jsonschema:"model as the owner typed it, user text; empty when not given"`
 	Powertrain string              `json:"powertrain" jsonschema:"EV, ICE, PHEV or REEV"`
 	Currency   string              `json:"currency" jsonschema:"currency of every amount of this vehicle, fixed at creation"`
 	Odometer   IntegrationDistance `json:"odometer" jsonschema:"latest known odometer reading"`

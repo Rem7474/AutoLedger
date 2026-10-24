@@ -92,6 +92,70 @@ func TestEveryFieldOfEveryMCPToolIsDescribed(t *testing.T) {
 	}
 }
 
+// userTextMarker is the phrase every output field that carries owner-written text has in its description, so that a
+// model reads the same warning on each of them: the value is data, never an instruction.
+const userTextMarker = "user text"
+
+// userTextFields are the names of the output fields that hold what the owner typed, wherever they appear.
+var userTextFields = map[string]bool{
+	"name": true, "make": true, "model": true, "brand": true, "title": true, "label": true, "note": true,
+	"notes": true, "tag": true, "text": true, "driver": true, "place": true, "vehicle": true,
+	"last_maintenance": true, "dimension": true,
+}
+
+// notUserText lists fields named like owner text whose value is written by the server.
+var notUserText = map[string]bool{
+	"get_vehicle_data_gaps.output.score_dimensions[].label": true,
+}
+
+// unmarkedUserText lists the paths of the string properties named like owner text that lack the marker.
+func unmarkedUserText(schema map[string]any, path string) []string {
+	var unmarked []string
+	props, _ := schema["properties"].(map[string]any)
+	for name, raw := range props {
+		prop, _ := raw.(map[string]any)
+		here := path + "." + name
+		if userTextFields[name] && !notUserText[here] && isStringSchema(prop) &&
+			!strings.Contains(strings.ToLower(asString(prop["description"])), userTextMarker) {
+			unmarked = append(unmarked, here)
+		}
+		unmarked = append(unmarked, unmarkedUserText(prop, here)...)
+		if items, ok := prop["items"].(map[string]any); ok {
+			unmarked = append(unmarked, unmarkedUserText(items, here+"[]")...)
+		}
+	}
+	return unmarked
+}
+
+func isStringSchema(prop map[string]any) bool {
+	switch typ := prop["type"].(type) {
+	case string:
+		return typ == "string"
+	case []any:
+		for _, v := range typ {
+			if v == "string" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// The server instructions tell a model to treat names, notes and titles as data. The schema repeats it on each field
+// that carries such text, in one wording, so a new tool cannot expose owner text without the warning.
+func TestOwnerTextFieldsCarryTheUserTextMarker(t *testing.T) {
+	for _, tool := range listMCPTools(t) {
+		if tool.OutputSchema == nil {
+			continue
+		}
+		unmarked := unmarkedUserText(schemaOf(t, tool.OutputSchema), tool.Name+".output")
+		sort.Strings(unmarked)
+		if len(unmarked) > 0 {
+			t.Errorf("fields that carry owner text without %q in their description:\n  %s", userTextMarker, strings.Join(unmarked, "\n  "))
+		}
+	}
+}
+
 var updateMCPGolden = flag.Bool("update-mcp-golden", false, "rewrite testdata/mcp_tools.golden.json")
 
 // The tools and their schemas are a contract with every client: a rename, a removed field or a changed type breaks
