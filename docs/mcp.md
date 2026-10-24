@@ -81,6 +81,14 @@ Besides the tools, the server offers what a client shows in its own menus.
 
 Each prompt takes an optional `vehicle` (a name or an id; the assistant asks which one when the account has several). A prompt contains no figure: it tells the assistant which tools to call. The client completes `vehicle` and `vehicle_id` with the vehicles of the account.
 
+## Compatibility
+
+The tool names, the arguments and the fields of the answers are a contract with every client: an assistant keeps prompts and saved instructions that rely on them. A new tool, a new optional argument and a new field in an answer can arrive in any release, so a client ignores the fields it does not know. A rename, a removal or a change of type or meaning is a breaking change: it is listed here with the version that carries it, and the schema snapshot `internal/handlers/testdata/mcp_tools.golden.json` turns it into a visible diff in review. The `code` of a completeness warning is stable, while its `message` is text for a person.
+
+| Version | Breaking change |
+|---|---|
+| | None. |
+
 ## Notes
 
 - The endpoint is stateless: every request carries its own token and nothing is kept between requests.

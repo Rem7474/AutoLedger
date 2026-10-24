@@ -81,6 +81,14 @@ En plus des outils, le serveur propose ce qu'un client affiche dans ses propres 
 
 Chaque prompt accepte un `vehicle` facultatif (un nom ou un identifiant ; l'assistant demande lequel quand le compte en a plusieurs). Un prompt ne contient aucun chiffre : il indique à l'assistant quels outils appeler. Le client complète `vehicle` et `vehicle_id` avec les véhicules du compte.
 
+## Compatibilité
+
+Les noms des outils, leurs arguments et les champs des réponses sont un contrat avec tous les clients : un assistant conserve des prompts et des consignes enregistrées qui s'appuient dessus. Un nouvel outil, un nouvel argument facultatif et un nouveau champ dans une réponse peuvent arriver dans n'importe quelle version, un client ignore donc les champs qu'il ne connaît pas. Un renommage, une suppression ou un changement de type ou de sens est une rupture : elle est listée ici avec la version qui la porte, et l'instantané de schéma `internal/handlers/testdata/mcp_tools.golden.json` en fait une différence visible en revue. Le `code` d'un avertissement de complétude est stable, alors que son `message` est un texte pour une personne.
+
+| Version | Rupture |
+|---|---|
+| | Aucune. |
+
 ## Remarques
 
 - Le point d'accès est sans état : chaque requête porte son propre jeton et rien n'est conservé entre deux requêtes.
