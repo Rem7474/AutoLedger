@@ -12,13 +12,54 @@ Le reverse proxy doit transmettre l'en-tête `Authorization` et l'en-tête `Host
 
 Donnez l'adresse du point d'accès au client. Il découvre seul le serveur d'autorisation, s'enregistre et ouvre la page de consentement d'AutoLedger dans le navigateur ; l'approuver crée l'accès (voir [Autoriser un assistant](oauth.fr.md)).
 
+L'accès figure dans les jetons d'API de la page du compte, et le supprimer à cet endroit coupe l'assistant immédiatement. Une autorisation limitée à certains véhicules (choisis sur la page de consentement) ne lit que ceux-là : les vues du foyer qui additionnent tous les véhicules, comme `get_fleet_summary`, sont refusées avec `token.vehicles_limited`, et `get_vehicle_costs` répond pour un véhicule autorisé.
+
+### Claude (claude.ai, Claude Desktop et applications mobiles)
+
+Dans les réglages des connecteurs, ajoutez un connecteur personnalisé avec `https://ledger.example/mcp`. La connexion part des serveurs d'Anthropic, pas de votre appareil : l'instance doit être joignable depuis internet, avec un certificat qu'un client public accepte. Un serveur sur un réseau privé ne peut pas y être ajouté. Avec une offre Team ou Enterprise, un propriétaire ajoute le connecteur pour l'organisation, puis chaque membre se connecte avec son propre compte AutoLedger.
+
+### Claude Code
+
 ```
 claude mcp add --transport http autoledger https://ledger.example/mcp
 ```
 
-Authentifiez-vous ensuite depuis le client (`/mcp` dans Claude Code). Un client qui demande un jeton au lieu de lancer l'autorisation (un script, une automatisation) peut utiliser un jeton d'API en lecture seule créé dans la page du compte, envoyé en `Authorization: Bearer al_live_...`. Un jeton de portée `ingest` est refusé : il peut envoyer des événements, et un assistant qui lit ne doit pas le détenir.
+Lancez ensuite `/mcp` dans une session et choisissez de vous authentifier. Le navigateur ouvre la page de consentement.
 
-L'accès figure dans les jetons d'API de la page du compte, et le supprimer à cet endroit coupe l'assistant immédiatement. Une autorisation limitée à certains véhicules (choisis sur la page de consentement) ne lit que ceux-là : les vues du foyer qui additionnent tous les véhicules, comme `get_fleet_summary`, sont refusées avec `token.vehicles_limited`, et `get_vehicle_costs` répond pour un véhicule autorisé.
+### Cursor
+
+Dans `~/.cursor/mcp.json` (tous les projets) ou `.cursor/mcp.json` (un projet) :
+
+```json
+{
+  "mcpServers": {
+    "autoledger": { "url": "https://ledger.example/mcp" }
+  }
+}
+```
+
+Cursor s'enregistre et ouvre la page de consentement ; l'accès revient vers Cursor par son adresse `cursor://`, que le serveur accepte.
+
+### Un client qui prend un jeton
+
+Un script, une automatisation ou un client sans OAuth envoie un jeton d'API en lecture seule (page du compte, accès « Lecture seule ») dans l'en-tête `Authorization`. Dans le `mcp.json` de Cursor :
+
+```json
+{
+  "mcpServers": {
+    "autoledger": {
+      "url": "https://ledger.example/mcp",
+      "headers": { "Authorization": "Bearer al_live_..." }
+    }
+  }
+}
+```
+
+Un jeton de portée `ingest` est refusé : il peut envoyer des événements, et un assistant qui lit ne doit pas le détenir. Un jeton créé ainsi lit tous les véhicules du compte ; seule la page de consentement peut limiter un accès à certains véhicules.
+
+### Home Assistant
+
+L'intégration Model Context Protocol de Home Assistant documente un point d'accès SSE, et ce serveur ne parle que Streamable HTTP (`POST /mcp`) : cette intégration ne peut donc pas s'y connecter. Pour amener les chiffres d'AutoLedger dans Home Assistant, utilisez l'[API de lecture](ingestion-api.fr.md#api-de-lecture) avec un jeton, ou l'[intégration HACS](https://github.com/Rem7474/autoledger-homeassistant).
 
 ## Vérifier le point d'accès
 
@@ -81,6 +122,52 @@ En plus des outils, le serveur propose ce qu'un client affiche dans ses propres 
 | `tax_year` | Préparer la répartition professionnel / personnel d'une année (`year` ; l'année précédente par défaut) à partir des étiquettes de trajet. |
 
 Chaque prompt accepte un `vehicle` facultatif (un nom ou un identifiant ; l'assistant demande lequel quand le compte en a plusieurs). Un prompt ne contient aucun chiffre : il indique à l'assistant quels outils appeler. Le client complète `vehicle` et `vehicle_id` avec les véhicules du compte.
+
+## Questions à poser
+
+L'assistant choisit seul les outils. Des questions qui fonctionnent bien, et ce qui y répond :
+
+| Question | Outils |
+|---|---|
+| Combien m'a coûté ma voiture sur les 12 derniers mois, et depuis l'achat ? | `get_vehicle_costs` |
+| Pourquoi mars a-t-il coûté si cher ? | `get_monthly_costs`, `get_month_breakdown` |
+| Que manque-t-il à mes données avant de me fier à ces chiffres ? | `get_vehicle_data_gaps`, `get_data_sources` |
+| Lequel de mes véhicules coûte le plus au km ? | `get_fleet_summary` |
+| Quel est mon coût réel de possession, dépréciation comprise ? | `get_vehicle_ownership` |
+| Combien ai-je roulé pour le travail l'an dernier, et quelle est l'indemnité ? | `get_drive_summary`, `get_tag_breakdown`, `get_mileage_report` |
+| Combien a coûté mon voyage à la mer, péages compris ? | `list_trip_groups`, `list_vehicle_trips` |
+| Où est-ce que je recharge, et où est-ce le moins cher ? | `get_charging_places`, `get_energy_efficiency` |
+| Quel entretien est à prévoir, et mes pneus sont-ils usés ? | `get_reminders`, `get_tire_status` |
+| Combien le covoiturage a-t-il rapporté ? | `get_carpool` |
+| Une voiture électrique m'aurait-elle coûté moins cher que mon diesel ? | `get_comparison` |
+| Quelles dépenses n'ont pas de justificatif ? | `list_expenses` (ou le prompt `receipt_check`) |
+
+## Confidentialité
+
+Tout ce qu'un outil renvoie entre dans la conversation, donc est envoyé au fournisseur de l'assistant que vous utilisez (Anthropic pour Claude, le fournisseur de l'éditeur pour Cursor), selon les conditions de ce fournisseur. AutoLedger n'envoie rien de lui-même : l'assistant demande, et seulement les chiffres dont la question a besoin.
+
+- Les montants, distances, dates, noms de véhicules, marques et modèles sont envoyés quand un outil en a besoin.
+- Les noms et lieux que vous avez saisis le sont aussi : adresses des trajets, lieux de recharge, conducteurs et passagers de covoiturage, étiquettes et notes. La page de consentement les énumère.
+- Les VIN, plaques, positions GPS et documents ne sont jamais servis.
+- Une autorisation limitée à certains véhicules ne sert que ces véhicules, et refuse les vues qui additionnent tout le compte.
+- Un assistant ne modifie rien : le point d'accès ne fait que lire, et un jeton qui peut envoyer des événements est refusé.
+- Le serveur journalise l'outil, le compte, le résultat et la durée de chaque appel, jamais les arguments ni les réponses.
+
+Supprimez l'accès dans les jetons d'API de la page du compte pour y mettre fin immédiatement.
+
+## Dépannage
+
+| Symptôme | Cause et remède |
+|---|---|
+| Le client ne joint pas le serveur ou signale un serveur invalide | Une des adresses de [Vérifier le point d'accès](#vérifier-le-point-daccès) ne répond pas comme décrit : un `AUTOLEDGER_BASE_URL` erroné, une adresse `http`, ou un proxy qui réécrit l'hôte. |
+| La page de consentement dit que l'adresse de retour ne correspond pas à celle que l'application a enregistrée | Le client a envoyé une autre adresse que celle qu'il a enregistrée. Relancez la connexion depuis le client. |
+| La page de consentement dit que l'application demande un jeton pour un autre serveur | Le client a demandé l'accès à une autre adresse que `<URL de base>/mcp` : donnez-lui exactement l'URL de base de l'instance suivie de `/mcp`. |
+| `401` au bout d'un moment | Le jeton d'accès dure une heure et se renouvelle tant que le client sert. Un accès inutilisé depuis 90 jours, dont le jeton de rafraîchissement a été présenté deux fois, ou supprimé dans la page du compte, doit être autorisé de nouveau. |
+| `401` avec un jeton que vous avez créé | Le jeton est révoqué ou expiré, il a la portée `ingest` (créez-en un avec l'accès « Lecture seule »), ou le proxy ne transmet pas l'en-tête `Authorization`. |
+| `token.vehicles_limited` | L'accès est limité à certains véhicules et l'outil additionne tous les véhicules (`get_fleet_summary`). Interrogez un véhicule avec `get_vehicle_costs`, ou autorisez de nouveau pour tous les véhicules. |
+| Un véhicule manque dans les réponses | L'accès a été limité à d'autres véhicules sur la page de consentement. |
+| `429` | Plus de 120 requêtes par minute pour l'accès, ou 600 par adresse. Demandez moins ou patientez une minute. |
+| Le résultat est remplacé par une erreur qui demande moins | La réponse dépassait 100 Ko : demandez une période plus courte ou un `limit` plus bas. |
 
 ## Compatibilité
 

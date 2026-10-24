@@ -12,13 +12,54 @@ The reverse proxy must forward the `Authorization` header and the original `Host
 
 Give the client the endpoint address. It discovers the authorization server by itself, registers, and opens the AutoLedger consent page in the browser; approving it creates the access (see [Authorizing an assistant](oauth.md)).
 
+The access is listed in the API tokens of the account page, and deleting it there cuts the assistant off at once. A grant limited to some vehicles (chosen on the consent page) reads only those: the household views that add up every vehicle, such as `get_fleet_summary`, are refused with `token.vehicles_limited`, and `get_vehicle_costs` answers for an allowed vehicle.
+
+### Claude (claude.ai, Claude Desktop and the mobile apps)
+
+In the connectors settings, add a custom connector and give it `https://ledger.example/mcp`. The connection is made from Anthropic's servers, not from your device: the instance must be reachable from the internet, with a certificate a public client accepts. A server on a private network cannot be added there. On a Team or Enterprise plan an owner adds the connector for the organization and each member then connects with their own AutoLedger account.
+
+### Claude Code
+
 ```
 claude mcp add --transport http autoledger https://ledger.example/mcp
 ```
 
-Then authenticate from the client (`/mcp` in Claude Code). Clients that ask for a token instead of running the authorization (a script, an automation) can use a read-only API token created on the account page, sent as `Authorization: Bearer al_live_...`. A token with the `ingest` scope is refused: it can push events, and an assistant that reads must not hold it.
+Then run `/mcp` in a session and choose to authenticate. The browser opens the consent page.
 
-The access is listed in the API tokens of the account page, and deleting it there cuts the assistant off at once. A grant limited to some vehicles (chosen on the consent page) reads only those: the household views that add up every vehicle, such as `get_fleet_summary`, are refused with `token.vehicles_limited`, and `get_vehicle_costs` answers for an allowed vehicle.
+### Cursor
+
+In `~/.cursor/mcp.json` (all projects) or `.cursor/mcp.json` (one project):
+
+```json
+{
+  "mcpServers": {
+    "autoledger": { "url": "https://ledger.example/mcp" }
+  }
+}
+```
+
+Cursor registers itself and opens the consent page; the access returns to Cursor through its `cursor://` address, which the server accepts.
+
+### A client that takes a token
+
+A script, an automation or a client without OAuth sends a read-only API token (account page, access "Read only") in the `Authorization` header. In Cursor's `mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "autoledger": {
+      "url": "https://ledger.example/mcp",
+      "headers": { "Authorization": "Bearer al_live_..." }
+    }
+  }
+}
+```
+
+A token with the `ingest` scope is refused: it can push events, and an assistant that reads must not hold it. A token created this way reads every vehicle of the account; only the consent page can limit an access to some vehicles.
+
+### Home Assistant
+
+The Model Context Protocol integration of Home Assistant documents an SSE endpoint, and this server speaks Streamable HTTP only (`POST /mcp`), so that integration cannot connect to it. To bring AutoLedger figures into Home Assistant, use the [read API](ingestion-api.md#read-api) with a token, or the [HACS integration](https://github.com/Rem7474/autoledger-homeassistant).
 
 ## Check the endpoint
 
@@ -81,6 +122,52 @@ Besides the tools, the server offers what a client shows in its own menus.
 | `tax_year` | Prepare the professional and personal split of a year (`year`; the previous year by default) from the drive tags. |
 
 Each prompt takes an optional `vehicle` (a name or an id; the assistant asks which one when the account has several). A prompt contains no figure: it tells the assistant which tools to call. The client completes `vehicle` and `vehicle_id` with the vehicles of the account.
+
+## Questions to ask
+
+The assistant picks the tools by itself. Questions that work well, and what answers them:
+
+| Question | Tools |
+|---|---|
+| What did my car cost me over the last 12 months, and since I bought it? | `get_vehicle_costs` |
+| Why was March so expensive? | `get_monthly_costs`, `get_month_breakdown` |
+| What is missing from my records before I trust these figures? | `get_vehicle_data_gaps`, `get_data_sources` |
+| Which of my vehicles costs the most per km? | `get_fleet_summary` |
+| What is my real cost of owning it, depreciation included? | `get_vehicle_ownership` |
+| How much did I drive for work last year, and what is the allowance? | `get_drive_summary`, `get_tag_breakdown`, `get_mileage_report` |
+| What did my trip to the coast cost, tolls included? | `list_trip_groups`, `list_vehicle_trips` |
+| Where do I charge, and where is it cheapest? | `get_charging_places`, `get_energy_efficiency` |
+| What maintenance is due, and are my tires worn? | `get_reminders`, `get_tire_status` |
+| How much did carpooling bring in? | `get_carpool` |
+| Would an electric car have cost me less than my diesel? | `get_comparison` |
+| Which expenses have no receipt? | `list_expenses` (or the `receipt_check` prompt) |
+
+## Privacy
+
+Everything a tool returns becomes part of the conversation, so it is sent to the provider of the assistant you use (Anthropic for Claude, the editor's provider for Cursor), under that provider's terms. AutoLedger sends nothing by itself: the assistant asks, and only for the figures the question needs.
+
+- Amounts, distances, dates, vehicle names, makes and models are sent when a tool needs them.
+- The names and places you typed are sent too: trip addresses, charging places, drivers and carpool passengers, tags and notes. The consent page lists them.
+- VINs, plates, GPS positions and documents are never served.
+- A grant limited to some vehicles serves those vehicles only, and refuses the views that add up the whole account.
+- Nothing is changed by an assistant: the endpoint only reads, and a token that can push events is refused.
+- The server logs the tool, the account, the outcome and the duration of each call, never the arguments or the answers.
+
+Delete the access in the API tokens of the account page to end it at once.
+
+## Troubleshooting
+
+| Symptom | Cause and remedy |
+|---|---|
+| The client cannot reach the server or reports an invalid server | One of the addresses of [Check the endpoint](#check-the-endpoint) does not answer as described: a wrong `AUTOLEDGER_BASE_URL`, an `http` address, or a proxy that rewrites the host. |
+| The consent page says the return address does not match the one the application registered | The client sent another address than the one it registered. Start the connection again from the client. |
+| The consent page says the application asks for a token for another server | The client asked for access to an address other than `<base URL>/mcp`: give it exactly the base URL of the instance followed by `/mcp`. |
+| `401` after a while | The access token lasts one hour and renews while the client is used. An access unused for 90 days, one whose refresh token was presented twice, or one deleted on the account page must be authorized again. |
+| `401` with a token you created | The token is revoked or expired, it has the `ingest` scope (create one with the "Read only" access), or the proxy does not forward the `Authorization` header. |
+| `token.vehicles_limited` | The access is limited to some vehicles and the tool adds up every vehicle (`get_fleet_summary`). Ask about one vehicle with `get_vehicle_costs`, or authorize again for all vehicles. |
+| A vehicle is missing from the answers | The access was limited to other vehicles at the consent page. |
+| `429` | More than 120 requests per minute for the access, or 600 per address. Ask for less or wait a minute. |
+| The result is replaced by an error that asks for less | The answer exceeded 100 KB: ask for a shorter period or a lower `limit`. |
 
 ## Compatibility
 
