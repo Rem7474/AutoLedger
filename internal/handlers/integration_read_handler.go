@@ -39,6 +39,7 @@ type IntegrationReadHandler struct {
 	comparison *services.ComparisonService  // optional: without it the comparison view is unavailable
 	carpool    *services.CarpoolService     // optional: without it the carpool view shows the amounts as stored
 	mileage    *services.MileageService     // optional: without it the mileage view is unavailable
+	tariffs    *services.TariffService      // optional: without it the charge estimate is unavailable
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {
@@ -127,6 +128,11 @@ func writeIntegrationError(w http.ResponseWriter, r *http.Request, err error, fa
 	}
 	if errors.Is(err, errIntegrationVehiclesLimited) {
 		writeAPIError(w, http.StatusForbidden, apierror.New("token.vehicles_limited", "This token is limited to some vehicles, so the view that adds up every vehicle is unavailable"))
+		return
+	}
+	var refused mcpUserError
+	if errors.As(err, &refused) {
+		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_query", refused.Error()))
 		return
 	}
 	if errors.Is(err, errIntegrationComparisonNotFound) {

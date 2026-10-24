@@ -6,7 +6,7 @@ An assistant or any other application that speaks OAuth 2.1 can ask for read-onl
 
 The application sends the browser to `/oauth/authorize` on the instance. After signing in, the user reads what the application asks for and approves or denies it:
 
-- It can see the vehicles (name, make, model, powertrain, currency, odometer), what each one costs over the last 12 months and since purchase, and what is missing from the records. It also sees the names and places recorded: trip addresses, charging places, drivers and carpool passengers, tags and notes.
+- It can see the vehicles (name, make, model, powertrain, currency, odometer), what each one costs over the last 12 months and since purchase, and what is missing from the records. It also sees the names and places recorded: trip addresses, charging places, drivers and carpool passengers, tags, notes and tariff plans.
 - When the account has several vehicles, the user chooses whether the application sees all of them (including the ones added later) or only the ones ticked. A limited grant lists those vehicles in the API tokens list, and the other vehicles do not exist for it: they are absent from the lists and refused by id. Approving needs at least one vehicle.
 - It cannot change, add or delete anything, and it never sees VINs, plates, GPS positions or documents.
 

@@ -15,7 +15,7 @@
     "canVehicles": "Voir vos véhicules : nom, marque, modèle, motorisation, devise et compteur.",
     "canCosts": "Lire ce que coûte chaque véhicule : les 12 derniers mois et depuis l'achat, par catégorie.",
     "canGaps": "Voir ce qui manque à vos données (trous de compteur, charges sans coût).",
-    "canNames": "Voir les noms et lieux que vous avez saisis : adresses des trajets, lieux de recharge, conducteurs et passagers de covoiturage, étiquettes et notes.",
+    "canNames": "Voir les noms et lieux que vous avez saisis : adresses des trajets, lieux de recharge, conducteurs et passagers de covoiturage, étiquettes, notes et forfaits d'électricité.",
     "cannotTitle": "Elle ne pourra pas",
     "cannotWrite": "Modifier, ajouter ou supprimer quoi que ce soit.",
     "cannotPrivate": "Voir les VIN, plaques, positions GPS ni documents.",

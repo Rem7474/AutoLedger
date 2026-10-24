@@ -117,6 +117,8 @@ A read-only token (`read`) also opens a narrow read API under `/api/integrations
 | `GET /api/integrations/v1/vehicles/{vehicleId}/data-sources` | Where the records of a vehicle come from (per origin: drives, charges, odometer readings, latest record), the TeslaMate synchronization state and the number of pushed charges waiting for a vehicle. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/charging-places` | The charging of a vehicle by place (`months`, 12 by default, `0` for the whole history): named places with their addresses, sessions, energy, cost and price per kWh, the comparison with the home price and the most used locations linked to no place. |
 | `GET /api/integrations/v1/comparisons` | The saved electric-versus-combustion scenarios and, with `scenario` (an id), the result of that one: cost of each vehicle by category, savings, break-even, sensitivity and assumptions. |
+| `GET /api/integrations/v1/tariff-plans` | The electricity tariff plans of the account: id, name, currency, validity dates, bands with their price per kWh and the rules that say when each applies. |
+| `GET /api/integrations/v1/charge-estimate` | What a charge would cost at home, priced like a recorded charge: `energy_kwh` and `duration_minutes` are required, `start` (RFC 3339 with its offset, now by default) and either `vehicle_id` (the plan assigned to the vehicle, or the default plan) or `plan_id` are optional; with neither, the default plan prices it. Returns the cost, the plan used and the bands the energy was split between; `priced` is false, with `unpriced_reason`, when no plan prices it. Nothing is stored. |
 
 Conventions:
 

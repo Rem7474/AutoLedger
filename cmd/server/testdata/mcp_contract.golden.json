@@ -1,4 +1,40 @@
 {
+  "estimate_charge_cost / empty": {
+    "average_price_per_kwh": null,
+    "bands": [],
+    "cost": null,
+    "kwh": "number",
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
+  "estimate_charge_cost / ev": {
+    "average_price_per_kwh": null,
+    "bands": [],
+    "cost": null,
+    "kwh": "number",
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
+  "estimate_charge_cost / ice": {
+    "average_price_per_kwh": null,
+    "bands": [],
+    "cost": null,
+    "kwh": "number",
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
+  "estimate_charge_cost / layout": {
+    "average_price_per_kwh": null,
+    "bands": [],
+    "cost": null,
+    "kwh": "number",
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
   "get_carpool / empty": {
     "currency": "string",
     "summary": {
@@ -2678,6 +2714,9 @@
       "currency": "string"
     },
     "vehicle_id": "string"
+  },
+  "list_tariff_plans": {
+    "plans": []
   },
   "list_trip_groups / empty": {
     "groups": [],
