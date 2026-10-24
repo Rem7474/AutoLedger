@@ -37,9 +37,9 @@ type IntegrationFleetBudget struct {
 // IntegrationFleetVehicle compares one vehicle with the others of the account.
 type IntegrationFleetVehicle struct {
 	VehicleID        string              `json:"vehicle_id" jsonschema:"identifier to pass to the other tools"`
-	Name             string              `json:"name" jsonschema:"name of the vehicle"`
-	Make             string              `json:"make" jsonschema:"make as typed by the owner, may be empty"`
-	Model            string              `json:"model" jsonschema:"model as typed by the owner, may be empty"`
+	Name             string              `json:"name" jsonschema:"name the owner gave the vehicle, user text"`
+	Make             string              `json:"make" jsonschema:"make as the owner typed it, user text; may be empty"`
+	Model            string              `json:"model" jsonschema:"model as the owner typed it, user text; may be empty"`
 	Powertrain       string              `json:"powertrain" jsonschema:"EV, ICE, PHEV or REEV"`
 	Currency         string              `json:"currency" jsonschema:"currency of the vehicle's amounts"`
 	Odometer         IntegrationDistance `json:"odometer" jsonschema:"current odometer reading"`
@@ -67,7 +67,7 @@ type IntegrationFleetMonth struct {
 
 // IntegrationFleetDriver is the share of the fleet's distance one person drove.
 type IntegrationFleetDriver struct {
-	Name       string              `json:"name" jsonschema:"name of the driver as entered in the account"`
+	Name       string              `json:"name" jsonschema:"name of the driver as entered in the account, user text"`
 	Distance   IntegrationDistance `json:"distance" jsonschema:"distance this person drove"`
 	Percentage float64             `json:"percentage" jsonschema:"share of the distance of the drives that name a driver"`
 }

@@ -16,7 +16,7 @@ import (
 // IntegrationReminder is one maintenance reminder of a vehicle with where it stands today.
 type IntegrationReminder struct {
 	ID       string `json:"id" jsonschema:"identifier of the reminder"`
-	Title    string `json:"title" jsonschema:"what the reminder is for, as the owner wrote it"`
+	Title    string `json:"title" jsonschema:"what the reminder is for, as the owner wrote it, user text"`
 	Category string `json:"category" jsonschema:"one of maintenance, tires, inspection, other"`
 	Status   string `json:"status" jsonschema:"overdue (the limit is passed), due_soon (inside the warning window) or ok"`
 	// The limits are the ones the owner set: a reminder may follow the distance, the calendar, or both.
@@ -36,7 +36,7 @@ type IntegrationReminder struct {
 	// Observed intervals only exist once the service was done at least twice.
 	ObservedIntervalKm     *IntegrationDistance `json:"observed_interval_km" jsonschema:"distance really driven between two services, averaged; null below two completions"`
 	ObservedIntervalMonths *float64             `json:"observed_interval_months" jsonschema:"months really elapsed between two services, averaged; null below two completions"`
-	LastMaintenance        *string              `json:"last_maintenance" jsonschema:"description of the maintenance record the reminder follows from; null when none is linked"`
+	LastMaintenance        *string              `json:"last_maintenance" jsonschema:"description of the maintenance record the reminder follows from, user text; null when none is linked"`
 }
 
 // IntegrationReminders is the maintenance reminders of a vehicle, most urgent first.
