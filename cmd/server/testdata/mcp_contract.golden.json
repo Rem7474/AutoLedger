@@ -780,6 +780,98 @@
       }
     ]
   },
+  "get_month_breakdown / empty": {
+    "category": "string",
+    "currency": "string",
+    "entries": [],
+    "estimate": null,
+    "matching": "number",
+    "month": "string",
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_month_breakdown / ev": {
+    "category": "string",
+    "currency": "string",
+    "entries": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "date": "string",
+        "interval_months": null,
+        "kind": "string",
+        "label": "string",
+        "recurring": "boolean"
+      }
+    ],
+    "estimate": null,
+    "matching": "number",
+    "month": "string",
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_month_breakdown / ice": {
+    "category": "string",
+    "currency": "string",
+    "entries": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "date": "string",
+        "interval_months": null,
+        "kind": "string",
+        "label": null,
+        "recurring": "boolean"
+      }
+    ],
+    "estimate": null,
+    "matching": "number",
+    "month": "string",
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_month_breakdown / layout": {
+    "category": "string",
+    "currency": "string",
+    "entries": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "date": "string",
+        "interval_months": null,
+        "kind": "string",
+        "label": "string",
+        "recurring": "boolean"
+      }
+    ],
+    "estimate": null,
+    "matching": "number",
+    "month": "string",
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
   "get_monthly_costs / empty": {
     "cost_per_km": null,
     "currency": "string",

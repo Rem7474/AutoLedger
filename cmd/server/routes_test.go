@@ -134,6 +134,7 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		"GET /api/integrations/v1/vehicles/{vehicleId}/data-gaps",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/trips",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/monthly-costs",
+		"GET /api/integrations/v1/vehicles/{vehicleId}/month-breakdown",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/reminders",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/ownership",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/energy-efficiency",

@@ -192,10 +192,16 @@ func toolArguments(t *testing.T, tool *mcp.Tool, vehicleID string) map[string]an
 	}
 	_ = json.Unmarshal(schema, &parsed)
 	args := map[string]any{}
+	extra := map[string]any{"month": time.Now().UTC().Format("2006-01"), "category": "energy"}
 	for _, name := range parsed.Required {
-		if name != "vehicle_id" {
+		value, ok := extra[name]
+		if name == "vehicle_id" {
+			continue
+		}
+		if !ok {
 			t.Fatalf("%s requires %q: give it a value in toolArguments", tool.Name, name)
 		}
+		args[name] = value
 	}
 	if _, ok := parsed.Properties["vehicle_id"]; ok {
 		args["vehicle_id"] = vehicleID
@@ -231,6 +237,7 @@ func TestMCPContractOnTheDemoVehicles(t *testing.T) {
 	t.Cleanup(func() { _ = session.Close() })
 	t.Run("structure", func(t *testing.T) { checkStructure(t, session, ids) })
 	t.Run("dashboard parity", func(t *testing.T) { checkDashboardParity(t, c, session, ids) })
+	t.Run("month breakdown parity", func(t *testing.T) { checkMonthBreakdownParity(t, session, ids) })
 }
 
 func checkStructure(t *testing.T, session *mcp.ClientSession, ids map[string]string) {
@@ -321,6 +328,36 @@ func checkDashboardParity(t *testing.T, c *demoseed.Client, session *mcp.ClientS
 			want, _ := tco[tcoField].(float64)
 			if diff := amountOf(t, since[mcpField]) - want; diff > 0.005 || diff < -0.005 {
 				t.Errorf("%s: %s is %v for the assistant and %v on the dashboard", name, mcpField, since[mcpField], want)
+			}
+		}
+	}
+}
+
+// The records get_month_breakdown lists add up to the figure get_monthly_costs gives for the same month.
+func checkMonthBreakdownParity(t *testing.T, session *mcp.ClientSession, ids map[string]string) {
+	month := time.Now().UTC().AddDate(0, -1, 0).Format("2006-01")
+	for label, id := range ids {
+		series, isErr := callTool(t, session, "get_monthly_costs", map[string]any{"vehicle_id": id, "from": month, "to": month})
+		months, _ := series["months"].([]any)
+		if isErr || (len(months) != 1 && label != "empty") {
+			t.Fatalf("%s: monthly costs: %v", label, series)
+		}
+		if len(months) == 0 {
+			// A vehicle with no record has no month: its breakdown is empty too.
+			breakdown, _ := callTool(t, session, "get_month_breakdown", map[string]any{"vehicle_id": id, "month": month, "category": "energy"})
+			if entries, _ := breakdown["entries"].([]any); len(entries) != 0 || amountOf(t, breakdown["total"]) != 0 {
+				t.Errorf("%s: a vehicle with no record has nothing to break down: %v", label, breakdown)
+			}
+			continue
+		}
+		for category, field := range map[string]string{"energy": "energy", "insurance": "insurance"} {
+			breakdown, isErr := callTool(t, session, "get_month_breakdown", map[string]any{"vehicle_id": id, "month": month, "category": category})
+			if isErr {
+				t.Fatalf("%s: month breakdown %s failed", label, category)
+			}
+			want := amountOf(t, months[0].(map[string]any)["costs"].(map[string]any)[field])
+			if got := amountOf(t, breakdown["total"]); got != want {
+				t.Errorf("%s %s %s: breakdown says %v, monthly costs say %v", label, month, category, got, want)
 			}
 		}
 	}

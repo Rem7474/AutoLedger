@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -541,6 +541,41 @@ func TestMCPDriveSummaryAnswersForAVehicleWithoutDrivesAndRefusesAnotherAccounts
 	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_drive_summary", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
 	if err != nil || !other.IsError {
 		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
+	}
+}
+
+func TestMCPMonthBreakdownAnswersForAnEmptyMonthAndRefusesWhatItCannotBreakDown(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+	call := func(args map[string]any) *mcp.CallToolResult {
+		res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_month_breakdown", Arguments: args})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+
+	res := call(map[string]any{"vehicle_id": f.mine.ID, "month": "2026-03", "category": "Energy"})
+	if res.IsError {
+		t.Fatalf("month breakdown: %+v", res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationMonthBreakdown
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Currency != "GBP" || out.Category != "energy" || out.Month != "2026-03" || out.Entries == nil || len(out.Entries) != 0 || strings.Contains(string(raw), f.vin) {
+		t.Errorf("month breakdown: %s", raw)
+	}
+
+	for name, args := range map[string]map[string]any{
+		"a category with no breakdown": {"vehicle_id": f.mine.ID, "month": "2026-03", "category": "tires"},
+		"a month that is not a month":  {"vehicle_id": f.mine.ID, "month": "March", "category": "energy"},
+		"another account's vehicle":    {"vehicle_id": f.theirs.ID, "month": "2026-03", "category": "energy"},
+	} {
+		if !call(args).IsError {
+			t.Errorf("%s is refused", name)
+		}
 	}
 }
 
