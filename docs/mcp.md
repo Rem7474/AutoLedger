@@ -83,5 +83,6 @@ Each prompt takes an optional `vehicle` (a name or an id; the assistant asks whi
 
 - The endpoint is stateless: every request carries its own token and nothing is kept between requests.
 - Requests are limited to 120 per minute and access token, and to 600 per minute and address.
+- A tool result is limited to 100 KB. A larger one is replaced by an error that asks for less (a shorter period, a filter, a lower `limit`); the lists have their own caps and say when they are cut.
 - The server log has one line per tool call (tool, account, outcome, duration); the arguments and the answers are not logged.
 - A read-only demo instance (`AUTOLEDGER_DEMO`) refuses the requests the endpoint needs.

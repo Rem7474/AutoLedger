@@ -43,7 +43,7 @@ type MCPHandler struct {
 func NewMCPHandler(read *IntegrationReadHandler, tokens middleware.APITokenValidator, baseURL, version string) *MCPHandler {
 	h := &MCPHandler{read: read, tokens: tokens, issuer: trimTrailingSlash(baseURL)}
 	h.server = mcp.NewServer(&mcp.Implementation{Name: "autoledger", Version: version}, &mcp.ServerOptions{Instructions: mcpInstructions, CompletionHandler: h.complete})
-	h.server.AddReceivingMiddleware(logToolCalls)
+	h.server.AddReceivingMiddleware(guardToolCalls)
 	h.addTools()
 	h.addResources()
 	h.addPrompts()
