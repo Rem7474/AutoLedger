@@ -29,6 +29,7 @@ const (
 // coordinate or document, and the trips are the only view with addresses; amounts carry their currency, and an
 // unknown figure is null rather than zero.
 type IntegrationReadHandler struct {
+	calendarDates
 	repo       *database.Repository
 	tcoService *services.TCOService
 	fleet      *services.FleetService       // optional: without it the fleet view is unavailable
@@ -37,6 +38,7 @@ type IntegrationReadHandler struct {
 	tireWear   *services.TireWearService    // optional: without it the tires view is unavailable
 	comparison *services.ComparisonService  // optional: without it the comparison view is unavailable
 	carpool    *services.CarpoolService     // optional: without it the carpool view shows the amounts as stored
+	mileage    *services.MileageService     // optional: without it the mileage view is unavailable
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {

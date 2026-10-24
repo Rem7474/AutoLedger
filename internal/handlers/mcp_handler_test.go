@@ -64,7 +64,7 @@ func newMCPFixture(t *testing.T) *mcpFixture {
 	f.readTok = f.newToken(t, owner.ID, auth.ScopeRead)
 	f.otherTok = f.newToken(t, other.ID, auth.ScopeRead)
 
-	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo)).WithComparison(services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC")))
+	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo)).WithComparison(services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC"))).WithMileage(services.NewMileageService(repo, "UTC"), "UTC")
 	f.server = httptest.NewServer(NewMCPHandler(read, repo, "https://ledger.example/", "test").Endpoint())
 	t.Cleanup(f.server.Close)
 	return f
@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -785,5 +785,32 @@ func TestMCPComparisonListsTheAccountsScenariosAndEvaluatesOne(t *testing.T) {
 		if !res.IsError {
 			t.Errorf("%q must be refused", ref)
 		}
+	}
+}
+
+func TestMCPMileageReportAnswersWithoutScalesAndRefusesAnotherAccountsVehicle(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_mileage_report", Arguments: map[string]any{"vehicle_id": f.mine.ID, "from": "2026-01-01", "to": "2026-12-31"}})
+	if err != nil || res.IsError {
+		t.Fatalf("mileage report: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationMileageReport
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Currency != "GBP" || out.Scale != nil || out.Scales == nil || out.Tags == nil || strings.Contains(string(raw), f.vin) {
+		t.Errorf("mileage report: %s", raw)
+	}
+
+	unknown, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_mileage_report", Arguments: map[string]any{"vehicle_id": f.mine.ID, "rates": "Nope"}})
+	if err != nil || !unknown.IsError {
+		t.Errorf("a scale the owner never typed is refused: %v %+v", err, unknown)
+	}
+	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_mileage_report", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
+	if err != nil || !other.IsError {
+		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
 	}
 }

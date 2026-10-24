@@ -780,6 +780,70 @@
       }
     ]
   },
+  "get_mileage_report / empty": {
+    "available_scales": [],
+    "currency": "string",
+    "from": "string",
+    "rate_label": null,
+    "tags": [],
+    "to": "string",
+    "vehicle_id": "string"
+  },
+  "get_mileage_report / ev": {
+    "available_scales": [],
+    "currency": "string",
+    "from": "string",
+    "rate_label": null,
+    "tags": [
+      {
+        "allowance": null,
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "tag": null,
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "trips": "number"
+      }
+    ],
+    "to": "string",
+    "vehicle_id": "string"
+  },
+  "get_mileage_report / ice": {
+    "available_scales": [],
+    "currency": "string",
+    "from": "string",
+    "rate_label": null,
+    "tags": [],
+    "to": "string",
+    "vehicle_id": "string"
+  },
+  "get_mileage_report / layout": {
+    "available_scales": [],
+    "currency": "string",
+    "from": "string",
+    "rate_label": null,
+    "tags": [
+      {
+        "allowance": null,
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "tag": null,
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "trips": "number"
+      }
+    ],
+    "to": "string",
+    "vehicle_id": "string"
+  },
   "get_month_breakdown / empty": {
     "category": "string",
     "currency": "string",
