@@ -76,7 +76,7 @@ func TestIntegrationCostsCoverTheLastTwelveMonthsAndSincePurchase(t *testing.T) 
 	if since.CostPerKm == nil || since.CostPerKm.Amount != "0.2500" || since.CostPerKm.Currency != "GBP" {
 		t.Errorf("since purchase per km: %+v", since.CostPerKm)
 	}
-	if got.Completeness.ScorePct == nil || *got.Completeness.ScorePct != 82 || got.Completeness.Warnings == nil {
+	if got.Completeness.ScorePct == nil || *got.Completeness.ScorePct != 82 || got.Completeness.Warnings == nil || got.Completeness.WarningDetails == nil {
 		t.Errorf("completeness: %+v", got.Completeness)
 	}
 }

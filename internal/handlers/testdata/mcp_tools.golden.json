@@ -3949,8 +3949,38 @@
                 "integer"
               ]
             },
+            "warning_details": {
+              "description": "the same entries as warnings with a stable code and the numbers behind the sentence in params; branch on code, not on message",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "description": "stable identifier of the warning; branch on it rather than on the sentence",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "the warning as an English sentence",
+                    "type": "string"
+                  },
+                  "params": {
+                    "additionalProperties": true,
+                    "description": "the numbers and names behind the sentence, to word it in the user's language",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
             "warnings": {
-              "description": "what makes the figures less reliable, as sentences; call get_vehicle_data_gaps for the detail",
+              "description": "what makes the figures less reliable, as English sentences; warning_details has the same entries with a stable code; call get_vehicle_data_gaps for the detail",
               "items": {
                 "type": "string"
               },
@@ -3964,7 +3994,8 @@
             "is_complete",
             "score_available",
             "score_pct",
-            "warnings"
+            "warnings",
+            "warning_details"
           ],
           "type": "object"
         },
