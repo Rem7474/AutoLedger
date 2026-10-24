@@ -393,6 +393,7 @@ describe('endpoint contract', () => {
     ['testVehicleWebhook', () => api.testVehicleWebhook('v1', { url: 'u' }), 'POST', '/vehicles/v1/webhook/test', { url: 'u' }],
     ['getAPITokens', () => api.getAPITokens(), 'GET', '/auth/tokens'],
     ['createAPIToken', () => api.createAPIToken({ name: 'ha', scope: 'ingest' }), 'POST', '/auth/tokens', { name: 'ha', scope: 'ingest' }],
+    ['getAPITokenCalls', () => api.getAPITokenCalls('k1'), 'GET', '/auth/tokens/k1/calls'],
     ['revokeAPIToken', () => api.revokeAPIToken('k1'), 'DELETE', '/auth/tokens/k1'],
     ['previewOAuthAuthorization', () => api.previewOAuthAuthorization({ client_id: 'c1', redirect_uri: 'http://127.0.0.1:1/cb', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', state: 'a b' }), 'GET', '/oauth/authorize?client_id=c1&redirect_uri=http%3A%2F%2F127.0.0.1%3A1%2Fcb&response_type=code&code_challenge=ch&code_challenge_method=S256&state=a+b'],
     ['decideOAuthAuthorization', () => api.decideOAuthAuthorization({ client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256' }, 'deny'), 'POST', '/oauth/authorize', { client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', decision: 'deny', vehicle_ids: null }],

@@ -27,6 +27,7 @@ func accountRouter(repo *database.Repository, h *AuthHandler) chi.Router {
 		r.Delete("/api/auth/sessions/{sessionId}", h.RevokeSession)
 		r.Get("/api/auth/sessions", h.ListSessions)
 		r.Post("/api/auth/tokens", NewTokenHandler(repo).CreateToken)
+		r.Get("/api/auth/tokens/{tokenId}/calls", NewTokenHandler(repo).ListTokenCalls)
 		r.Post("/api/auth/password", h.ChangePassword)
 	})
 	return r

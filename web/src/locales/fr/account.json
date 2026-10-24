@@ -96,7 +96,13 @@
     "oauthBadge": "Application connectée",
     "oauthHelp": "Connectée par OAuth. L'accès se renouvelle tant que l'application est utilisée ; voici quand il expire sinon.",
     "vehiclesLimited": "Véhicules : {names}",
-    "vehiclesMissing": "{count} absent(s) de votre compte"
+    "vehiclesMissing": "{count} absent(s) de votre compte",
+    "activity": "Activité récente",
+    "activityHide": "Masquer l'activité",
+    "activityHelp": "Les 50 derniers appels faits avec cet accès : quel outil, quand, et si cela a fonctionné. Ce qui a été demandé et répondu n'est pas conservé.",
+    "activityEmpty": "Aucun appel pour l'instant.",
+    "activityOk": "Servi",
+    "activityError": "Refusé ou échoué"
   },
   "sso": {
     "link": "Lier {provider}",

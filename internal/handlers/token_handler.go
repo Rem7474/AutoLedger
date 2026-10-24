@@ -32,6 +32,17 @@ func (h *TokenHandler) ListTokens(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"tokens": tokens})
 }
 
+// ListTokenCalls returns the recent calls an assistant made with one of the user's tokens: tool, vehicle, outcome and
+// duration, never what was asked or answered.
+func (h *TokenHandler) ListTokenCalls(w http.ResponseWriter, r *http.Request) {
+	calls, err := h.repo.ListAPITokenCalls(r.Context(), middleware.GetUserID(r.Context()), chi.URLParam(r, "tokenId"))
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to list the calls of the token")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"calls": calls})
+}
+
 func (h *TokenHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 

@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/teslacost/teslacost/internal/apierror"
 	appAuth "github.com/teslacost/teslacost/internal/auth"
 	"github.com/teslacost/teslacost/internal/middleware"
+	"github.com/teslacost/teslacost/internal/models"
 )
 
 // mcpInstructions is what a client shows its model about the server. It states the conventions every tool's output
@@ -33,6 +36,7 @@ A list that is cut says so (truncated, matching or next_cursor): never present i
 type MCPHandler struct {
 	read    *IntegrationReadHandler
 	tokens  middleware.APITokenValidator
+	callLog MCPCallLog
 	issuer  string
 	server  *mcp.Server
 	handler http.Handler
@@ -42,8 +46,9 @@ type MCPHandler struct {
 // authorization server is the instance itself.
 func NewMCPHandler(read *IntegrationReadHandler, tokens middleware.APITokenValidator, baseURL, version string) *MCPHandler {
 	h := &MCPHandler{read: read, tokens: tokens, issuer: trimTrailingSlash(baseURL)}
+	h.callLog, _ = tokens.(MCPCallLog)
 	h.server = mcp.NewServer(&mcp.Implementation{Name: "autoledger", Version: version}, &mcp.ServerOptions{Instructions: mcpInstructions, CompletionHandler: h.complete})
-	h.server.AddReceivingMiddleware(guardToolCalls, limitToGrantedVehicles)
+	h.server.AddReceivingMiddleware(h.guardToolCalls, limitToGrantedVehicles)
 	h.addTools()
 	h.addResources()
 	h.addPrompts()
@@ -96,11 +101,33 @@ func (h *MCPHandler) verifyToken(ctx context.Context, token string, _ *http.Requ
 	if err != nil {
 		return nil, auth.ErrInvalidToken
 	}
-	info := &auth.TokenInfo{UserID: grant.UserID, Scopes: []string{grant.Scope}}
+	info := &auth.TokenInfo{UserID: grant.UserID, Scopes: []string{grant.Scope}, Extra: map[string]any{mcpTokenIDExtra: grant.TokenID}}
 	if len(grant.VehicleIDs) > 0 {
-		info.Extra = map[string]any{mcpVehicleIDsExtra: grant.VehicleIDs}
+		info.Extra[mcpVehicleIDsExtra] = grant.VehicleIDs
 	}
 	return info, nil
+}
+
+// mcpTokenIDExtra is the key of TokenInfo.Extra that carries the id of the token the request was made with.
+const mcpTokenIDExtra = "token_id"
+
+// MCPCallLog keeps the recent calls of an access, for the account page.
+type MCPCallLog interface {
+	RecordAPITokenCall(ctx context.Context, tokenID string, c models.APITokenCall) error
+}
+
+// vehicleIDPattern is the shape of the id list_vehicles gives; a vehicle named by its name is not logged.
+var vehicleIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
+// calledVehicle returns the vehicle id a tool call names, when it names one by id.
+func calledVehicle(raw json.RawMessage) *string {
+	var args struct {
+		VehicleID string `json:"vehicle_id"`
+	}
+	if json.Unmarshal(raw, &args) != nil || !vehicleIDPattern.MatchString(args.VehicleID) {
+		return nil
+	}
+	return &args.VehicleID
 }
 
 // mcpVehicleIDsExtra is the key of TokenInfo.Extra that carries the vehicles a grant is limited to.
@@ -119,9 +146,10 @@ func limitToGrantedVehicles(next mcp.MethodHandler) mcp.MethodHandler {
 	}
 }
 
-// logToolCalls writes one line per tool call: which tool, for which account, how it ended and how long it took. The
-// arguments and the result stay out of the log, as they can hold what the owner wrote (an address to search for).
-func logToolCalls(next mcp.MethodHandler) mcp.MethodHandler {
+// logToolCalls writes one line per tool call: which tool, for which account, how it ended and how long it took, and
+// keeps the call in the log of its token. The arguments and the result stay out of both, as they can hold what the
+// owner wrote (an address to search for); only a vehicle named by id is kept.
+func (h *MCPHandler) logToolCalls(next mcp.MethodHandler) mcp.MethodHandler {
 	return func(ctx context.Context, method string, req mcp.Request) (mcp.Result, error) {
 		if method != "tools/call" {
 			return next(ctx, method, req)
@@ -129,20 +157,37 @@ func logToolCalls(next mcp.MethodHandler) mcp.MethodHandler {
 		start := time.Now()
 		res, err := next(ctx, method, req)
 		tool := ""
+		var vehicleID *string
 		if params, ok := req.GetParams().(*mcp.CallToolParamsRaw); ok {
 			tool = params.Name
+			vehicleID = calledVehicle(params.Arguments)
 		}
 		outcome := "ok"
 		if result, isResult := res.(*mcp.CallToolResult); err != nil || (isResult && result != nil && result.IsError) {
 			outcome = "error"
 		}
-		userID := ""
+		userID, tokenID := "", ""
 		if extra := req.GetExtra(); extra != nil && extra.TokenInfo != nil {
 			userID = extra.TokenInfo.UserID
+			tokenID, _ = extra.TokenInfo.Extra[mcpTokenIDExtra].(string)
 		}
+		elapsed := time.Since(start)
 		slog.InfoContext(ctx, "MCP tool call", "component", "mcp", "tool", tool, "user_id", userID, "outcome", outcome,
-			"duration_ms", time.Since(start).Milliseconds())
+			"duration_ms", elapsed.Milliseconds())
+		if h.callLog != nil && tokenID != "" {
+			call := models.APITokenCall{Tool: tool, VehicleID: vehicleID, Outcome: outcome, DurationMS: int(elapsed.Milliseconds())}
+			go h.recordCall(tokenID, call)
+		}
 		return res, err
+	}
+}
+
+// recordCall stores a call off the request path: a slow or failing log must not delay the answer.
+func (h *MCPHandler) recordCall(tokenID string, call models.APITokenCall) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := h.callLog.RecordAPITokenCall(ctx, tokenID, call); err != nil {
+		slog.Warn("MCP call log", "component", "mcp", "error", err)
 	}
 }
 
