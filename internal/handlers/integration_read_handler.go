@@ -208,7 +208,9 @@ type IntegrationCompleteness struct {
 	IsComplete     bool     `json:"is_complete" jsonschema:"true when nothing is known to be missing"`
 	ScoreAvailable bool     `json:"score_available" jsonschema:"false while the vehicle has no distance and no expense, so there is nothing to score"`
 	ScorePct       *int     `json:"score_pct" jsonschema:"0 to 100, how much of the figures rests on recorded data; null when no score is available"`
-	Warnings       []string `json:"warnings" jsonschema:"what makes the figures less reliable, as sentences; call get_vehicle_data_gaps for the detail"`
+	Warnings       []string `json:"warnings" jsonschema:"what makes the figures less reliable, as English sentences; warning_details has the same entries with a stable code; call get_vehicle_data_gaps for the detail"`
+	// WarningDetails lists the same entries as Warnings, in the same order.
+	WarningDetails []services.CompletenessWarning `json:"warning_details" jsonschema:"the same entries as warnings with a stable code and the numbers behind the sentence in params; branch on code, not on message"`
 }
 
 // IntegrationCosts is the cost summary of a vehicle.
@@ -295,9 +297,12 @@ func buildIntegrationCosts(vehicle *models.Vehicle, sum *services.TCOSummary) In
 	}
 
 	comp := sum.Completeness
-	completeness := IntegrationCompleteness{IsComplete: comp.IsComplete, ScoreAvailable: comp.ScoreAvailable, Warnings: comp.Warnings}
+	completeness := IntegrationCompleteness{IsComplete: comp.IsComplete, ScoreAvailable: comp.ScoreAvailable, Warnings: comp.Warnings, WarningDetails: comp.WarningDetails}
 	if completeness.Warnings == nil {
 		completeness.Warnings = []string{}
+	}
+	if completeness.WarningDetails == nil {
+		completeness.WarningDetails = []services.CompletenessWarning{}
 	}
 	if comp.ScoreAvailable {
 		score := comp.ScorePct

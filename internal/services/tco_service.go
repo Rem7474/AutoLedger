@@ -153,7 +153,7 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 	}
 	comp.StartOdometerMissing = ownership == nil || ownership.StartOdometer == nil
 	if comp.StartOdometerMissing && known {
-		comp.Warnings = append(comp.Warnings, "The odometer at the start of ownership is not entered: the mileage before the first reading is not counted")
+		comp.addWarning(CompletenessWarning{Code: "start_odometer_missing", Message: "The odometer at the start of ownership is not entered: the mileage before the first reading is not counted"})
 	}
 	kmSinceStart := trackedSinceStart
 	if ownership != nil && ownership.StartOdometer != nil && currentOdometer > *ownership.StartOdometer {
@@ -208,8 +208,11 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 		return nil, fmt.Errorf("energy: %w", err)
 	}
 	if comp.ChargesWithoutCost > 0 {
-		comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-			"%d charge(s) without a cost (%.0f kWh): energy cost underestimated", comp.ChargesWithoutCost, comp.KwhWithoutCost))
+		comp.addWarning(CompletenessWarning{
+			Code:    "charges_without_cost",
+			Params:  map[string]any{"count": comp.ChargesWithoutCost, "kwh": round1(comp.KwhWithoutCost)},
+			Message: fmt.Sprintf("%d charge(s) without a cost (%.0f kWh): energy cost underestimated", comp.ChargesWithoutCost, comp.KwhWithoutCost),
+		})
 	}
 
 	if refuels {
@@ -218,7 +221,7 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 		sum.AvgCostPerLiter = fuelStats.AvgPricePerLiter
 		sum.ConsumptionL100km = fuelStats.ConsumptionL100
 		if fuelStats.FillUps == 0 && (fuelOnly || kwhAdded == 0) {
-			comp.Warnings = append(comp.Warnings, "No fill-up recorded: fuel cost unknown")
+			comp.addWarning(CompletenessWarning{Code: "no_fill_up", Message: "No fill-up recorded: fuel cost unknown"})
 		}
 	}
 
@@ -238,8 +241,11 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 		comp.UnconvertedTarget = "expenses"
 	}
 	if comp.UnconvertedExpenses > 0 {
-		comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-			"%d expense(s) in a foreign currency without a conversion rate: excluded from the totals", comp.UnconvertedExpenses))
+		comp.addWarning(CompletenessWarning{
+			Code:    "unconverted_expenses",
+			Params:  map[string]any{"count": comp.UnconvertedExpenses},
+			Message: fmt.Sprintf("%d expense(s) in a foreign currency without a conversion rate: excluded from the totals", comp.UnconvertedExpenses),
+		})
 	}
 	switch {
 	case insuranceEntries > 0:
@@ -249,7 +255,7 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 	default:
 		sum.InsuranceSource = InsuranceSourceNone
 		comp.InsuranceMissing = true
-		comp.Warnings = append(comp.Warnings, "No insurance premium recorded (recurring “Insurance” expense)")
+		comp.addWarning(CompletenessWarning{Code: "insurance_missing", Message: "No insurance premium recorded (recurring “Insurance” expense)"})
 	}
 
 	// 6. Tires amortized by kilometers actually driven on each tire
@@ -310,9 +316,13 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 	if len(owned.Missing) > 0 {
 		comp.AcquisitionMissing = true
 		comp.AcquisitionMissingFields = owned.MissingFields
-		comp.Warnings = append(comp.Warnings, owned.Missing...)
+		for _, w := range owned.Missing {
+			comp.addWarning(w)
+		}
 	}
-	comp.Warnings = append(comp.Warnings, owned.LeaseWarnings(now)...)
+	for _, w := range owned.LeaseWarnings(now) {
+		comp.addWarning(w)
+	}
 
 	// 8. Toll qualification backlog
 	var highwayDrives, drivesWithOdometer, ledgerEntries int
@@ -333,11 +343,14 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 		comp.UnqualifiedDrives, highwayDrives = 0, 0
 	}
 	if comp.UnqualifiedDrives > 0 {
-		comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-			"%d motorway-type drive(s) with no toll entered and not qualified as “no toll”", comp.UnqualifiedDrives))
+		comp.addWarning(CompletenessWarning{
+			Code:    "unqualified_drives",
+			Params:  map[string]any{"count": comp.UnqualifiedDrives},
+			Message: fmt.Sprintf("%d motorway-type drive(s) with no toll entered and not qualified as “no toll”", comp.UnqualifiedDrives),
+		})
 	}
 	if basisKm <= 0 {
-		comp.Warnings = append(comp.Warnings, "No mileage recorded: the cost per kilometre cannot be calculated")
+		comp.addWarning(CompletenessWarning{Code: "no_mileage", Message: "No mileage recorded: the cost per kilometre cannot be calculated"})
 	}
 
 	// 9. Odometer continuity
@@ -357,17 +370,26 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 	if isManual {
 		// Manual tracking does not expect continuous drives; gaps between manual entries are normal.
 		if comp.OdometerAnomalies > 0 {
-			comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-				"%d odometer inconsistency(ies) (odometer going backwards or distance differing from reading)", comp.OdometerAnomalies))
+			comp.addWarning(CompletenessWarning{
+				Code:    "odometer_inconsistencies",
+				Params:  map[string]any{"count": comp.OdometerAnomalies},
+				Message: fmt.Sprintf("%d odometer inconsistency(ies) (odometer going backwards or distance differing from reading)", comp.OdometerAnomalies),
+			})
 		}
 	} else {
 		if comp.OdometerGaps > 0 {
-			comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-				"%d odometer gap(s) between consecutive drives (%.0f km with no recorded drive)", comp.OdometerGaps, gapKm))
+			comp.addWarning(CompletenessWarning{
+				Code:    "odometer_gaps",
+				Params:  map[string]any{"count": comp.OdometerGaps, "km": round1(gapKm)},
+				Message: fmt.Sprintf("%d odometer gap(s) between consecutive drives (%.0f km with no recorded drive)", comp.OdometerGaps, gapKm),
+			})
 		}
 		if comp.OdometerAnomalies > 0 {
-			comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-				"%d odometer inconsistency(ies) (odometer going backwards or distance differing from the reading) to check in TeslaMate", comp.OdometerAnomalies))
+			comp.addWarning(CompletenessWarning{
+				Code:    "odometer_inconsistencies",
+				Params:  map[string]any{"count": comp.OdometerAnomalies},
+				Message: fmt.Sprintf("%d odometer inconsistency(ies) (odometer going backwards or distance differing from the reading) to check in TeslaMate", comp.OdometerAnomalies),
+			})
 		}
 	}
 
@@ -377,6 +399,9 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 	}
 	if comp.Warnings == nil {
 		comp.Warnings = []string{}
+	}
+	if comp.WarningDetails == nil {
+		comp.WarningDetails = []CompletenessWarning{}
 	}
 	scoreInputs := completenessInputs{
 		kwhAdded:            kwhAdded,
@@ -491,11 +516,17 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 	}
 	if comp.UntrackedDistanceKm > 0 {
 		if sum.EstimatedEnergyKwh > 0 {
-			comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-				"%.0f km driven before tracking started: charges estimated and completed (%.1f kWh/100km at %.3f/kWh)", sum.EstimatedEnergyDistanceKm, *estKwh100km, *estPricePerKwh))
+			comp.addWarning(CompletenessWarning{
+				Code:    "untracked_distance_estimated",
+				Params:  map[string]any{"km": round1(sum.EstimatedEnergyDistanceKm), "kwh_per_100km": round1(*estKwh100km), "price_per_kwh": round3(*estPricePerKwh)},
+				Message: fmt.Sprintf("%.0f km driven before tracking started: charges estimated and completed (%.1f kWh/100km at %.3f/kWh)", sum.EstimatedEnergyDistanceKm, *estKwh100km, *estPricePerKwh),
+			})
 		} else {
-			comp.Warnings = append(comp.Warnings, fmt.Sprintf(
-				"%.0f km driven appear in no drive (before TeslaMate or TeslaMate offline): the cost per km uses the odometer distance", comp.UntrackedDistanceKm))
+			comp.addWarning(CompletenessWarning{
+				Code:    "untracked_distance",
+				Params:  map[string]any{"km": comp.UntrackedDistanceKm},
+				Message: fmt.Sprintf("%.0f km driven appear in no drive (before TeslaMate or TeslaMate offline): the cost per km uses the odometer distance", comp.UntrackedDistanceKm),
+			})
 		}
 	}
 	if sum.SmoothedDistanceKm > 0 {

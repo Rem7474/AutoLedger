@@ -36,7 +36,7 @@ type OwnershipCosts struct {
 	IncludesTires       bool
 
 	// Missing lists the settings needed for a complete cost of ownership.
-	Missing []string
+	Missing []CompletenessWarning
 	// MissingFields names the depreciation inputs not entered: "purchase_price", "resale_value", "holding_period".
 	MissingFields []string
 }
@@ -62,14 +62,14 @@ func centsOrZero(c *money.Cents) money.Cents {
 func ComputeOwnershipCosts(o *models.VehicleOwnership, now time.Time, kmSinceStart float64) OwnershipCosts {
 	var c OwnershipCosts
 	if o == nil {
-		c.Missing = append(c.Missing, "Acquisition mode not entered (cash, loan, LOA or LLD): depreciation or lease payments missing from the full cost")
+		c.Missing = append(c.Missing, CompletenessWarning{Code: "acquisition_mode_missing", Message: "Acquisition mode not entered (cash, loan, LOA or LLD): depreciation or lease payments missing from the full cost"})
 		return c
 	}
 
 	switch o.AcquisitionType {
 	case models.AcquisitionCash, models.AcquisitionLoan:
 		if o.PurchasePrice == nil || *o.PurchasePrice <= 0 {
-			c.Missing = append(c.Missing, "Purchase price not entered")
+			c.Missing = append(c.Missing, CompletenessWarning{Code: "purchase_price_missing", Message: "Purchase price not entered"})
 			c.MissingFields = append(c.MissingFields, "purchase_price")
 			c.DepreciationUnknown = true
 		} else {
@@ -84,12 +84,12 @@ func ComputeOwnershipCosts(o *models.VehicleOwnership, now time.Time, kmSinceSta
 				if o.ExpectedHoldingMonths == nil || *o.ExpectedHoldingMonths <= 0 {
 					c.MissingFields = append(c.MissingFields, "holding_period")
 				}
-				c.Missing = append(c.Missing, "Estimated resale value or holding period not entered: depreciation excluded from the full cost")
+				c.Missing = append(c.Missing, CompletenessWarning{Code: "depreciation_inputs_missing", Message: "Estimated resale value or holding period not entered: depreciation excluded from the full cost"})
 			}
 		}
 		if o.AcquisitionType == models.AcquisitionLoan && (o.LoanAmount == nil || *o.LoanAmount <= 0 ||
 			o.LoanDurationMonths == nil || *o.LoanDurationMonths <= 0 || o.LoanRatePct == nil) {
-			c.Missing = append(c.Missing, "Incomplete loan (amount borrowed, rate or duration): interest not calculated")
+			c.Missing = append(c.Missing, CompletenessWarning{Code: "loan_incomplete", Message: "Incomplete loan (amount borrowed, rate or duration): interest not calculated"})
 		}
 
 	case models.AcquisitionLOA, models.AcquisitionLLD:
@@ -124,7 +124,7 @@ func computeLease(c *OwnershipCosts, o *models.VehicleOwnership, now time.Time, 
 		c.ContractEndDate = &contractEnd
 	}
 	if o.LeaseMonthlyRent == nil || *o.LeaseMonthlyRent <= 0 || o.LeaseDurationMonths == nil || *o.LeaseDurationMonths <= 0 {
-		c.Missing = append(c.Missing, "Incomplete lease (monthly rent or duration): rent not counted")
+		c.Missing = append(c.Missing, CompletenessWarning{Code: "lease_incomplete", Message: "Incomplete lease (monthly rent or duration): rent not counted"})
 		return
 	}
 	duration := *o.LeaseDurationMonths
@@ -170,7 +170,7 @@ func computeLease(c *OwnershipCosts, o *models.VehicleOwnership, now time.Time, 
 	}
 
 	if o.LeaseKmAllowancePerYear == nil || o.LeaseExcessKmPrice == nil {
-		c.Missing = append(c.Missing, "Mileage allowance or price per extra kilometre not entered: overage penalty not estimated")
+		c.Missing = append(c.Missing, CompletenessWarning{Code: "lease_allowance_missing", Message: "Mileage allowance or price per extra kilometre not entered: overage penalty not estimated"})
 	} else if started && !optionExercised {
 		elapsed := math.Min(monthsBetween(o.StartDate, now), monthsBetween(o.StartDate, phaseEnd))
 		c.LeaseKmDriven = kmSinceStart
@@ -185,29 +185,35 @@ func computeLease(c *OwnershipCosts, o *models.VehicleOwnership, now time.Time, 
 
 	if o.AcquisitionType == models.AcquisitionLOA {
 		if o.LeasePurchaseOptionPrice == nil {
-			c.Missing = append(c.Missing, "LOA purchase option price not entered")
+			c.Missing = append(c.Missing, CompletenessWarning{Code: "lease_option_price_missing", Message: "LOA purchase option price not entered"})
 		}
 		if optionExercised && o.LeasePurchaseOptionPrice != nil {
 			dep, ok := depreciation(*o.LeasePurchaseOptionPrice, *o.OptionExercisedDate, o, now)
 			c.Depreciation = dep
 			if !ok {
 				c.DepreciationUnknown = true
-				c.Missing = append(c.Missing, "Purchase option exercised: estimated resale value or holding period not entered, depreciation excluded")
+				c.Missing = append(c.Missing, CompletenessWarning{Code: "lease_option_depreciation_missing", Message: "Purchase option exercised: estimated resale value or holding period not entered, depreciation excluded"})
 			}
 		}
 	}
 }
 
 // LeaseWarnings returns informational warnings about the lease contract (mileage pace, contract end).
-func (c OwnershipCosts) LeaseWarnings(now time.Time) []string {
-	var warnings []string
+func (c OwnershipCosts) LeaseWarnings(now time.Time) []CompletenessWarning {
+	var warnings []CompletenessWarning
 	if c.LeaseExcessKmProjected > 0 {
-		warnings = append(warnings, fmt.Sprintf(
-			"At the current pace the mileage allowance will be exceeded: estimated end-of-contract penalty of %s", c.LeaseExcessKmProjected))
+		warnings = append(warnings, CompletenessWarning{
+			Code:    "lease_excess_projected",
+			Params:  map[string]any{"amount": c.LeaseExcessKmProjected.String()},
+			Message: fmt.Sprintf("At the current pace the mileage allowance will be exceeded: estimated end-of-contract penalty of %s", c.LeaseExcessKmProjected),
+		})
 	}
 	if c.ContractEndDate != nil && now.Before(*c.ContractEndDate) && monthsBetween(now, *c.ContractEndDate) <= 3 {
-		warnings = append(warnings, fmt.Sprintf(
-			"The lease ends on %s: consider the purchase option or the return", c.ContractEndDate.Format("02/01/2006")))
+		warnings = append(warnings, CompletenessWarning{
+			Code:    "lease_ending",
+			Params:  map[string]any{"date": c.ContractEndDate.Format("2006-01-02")},
+			Message: fmt.Sprintf("The lease ends on %s: consider the purchase option or the return", c.ContractEndDate.Format("02/01/2006")),
+		})
 	}
 	return warnings
 }

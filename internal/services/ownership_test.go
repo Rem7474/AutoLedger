@@ -98,6 +98,46 @@ func TestOwnershipMissingContract(t *testing.T) {
 	}
 }
 
+func TestOwnershipWarningsCarryAStableCode(t *testing.T) {
+	codes := func(ws []CompletenessWarning) []string {
+		out := make([]string, len(ws))
+		for i, w := range ws {
+			out[i] = w.Code
+		}
+		return out
+	}
+	if got := codes(ComputeOwnershipCosts(nil, time.Now(), 0).Missing); len(got) != 1 || got[0] != "acquisition_mode_missing" {
+		t.Errorf("no ownership: %v", got)
+	}
+	cash := &models.VehicleOwnership{AcquisitionType: models.AcquisitionCash, StartDate: time.Now()}
+	if got := codes(ComputeOwnershipCosts(cash, time.Now(), 0).Missing); len(got) != 1 || got[0] != "purchase_price_missing" {
+		t.Errorf("cash without a price: %v", got)
+	}
+	loan := &models.VehicleOwnership{AcquisitionType: models.AcquisitionLoan, StartDate: time.Now(), PurchasePrice: cents(2000000)}
+	if got := codes(ComputeOwnershipCosts(loan, time.Now(), 0).Missing); len(got) != 2 || got[0] != "depreciation_inputs_missing" || got[1] != "loan_incomplete" {
+		t.Errorf("loan without terms: %v", got)
+	}
+
+	end := time.Date(2026, 12, 1, 0, 0, 0, 0, time.UTC)
+	ending := OwnershipCosts{ContractEndDate: &end, LeaseExcessKmProjected: 12345}
+	got := ending.LeaseWarnings(time.Date(2026, 10, 24, 0, 0, 0, 0, time.UTC))
+	if len(got) != 2 || got[0].Code != "lease_excess_projected" || got[0].Params["amount"] != "123.45" || got[1].Code != "lease_ending" || got[1].Params["date"] != "2026-12-01" {
+		t.Errorf("lease warnings: %+v", got)
+	}
+	if len(ending.LeaseWarnings(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))) != 1 {
+		t.Error("a lease ending in more than three months only warns about the overage")
+	}
+}
+
+func TestAddWarningKeepsTheSentenceAndTheDetailsInStep(t *testing.T) {
+	var c TCOCompleteness
+	c.addWarning(CompletenessWarning{Code: "a", Message: "first"})
+	c.addWarning(CompletenessWarning{Code: "b", Params: map[string]any{"count": 2}, Message: "second"})
+	if len(c.Warnings) != 2 || c.Warnings[1] != "second" || len(c.WarningDetails) != 2 || c.WarningDetails[1].Code != "b" || c.WarningDetails[1].Message != c.Warnings[1] {
+		t.Errorf("warnings %v details %+v", c.Warnings, c.WarningDetails)
+	}
+}
+
 func TestOwnershipLeaseEndDateComputed(t *testing.T) {
 	start := time.Date(2024, 11, 16, 0, 0, 0, 0, time.UTC)
 	duration := 48

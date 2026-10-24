@@ -91,6 +91,8 @@ type TCOCompleteness struct {
 	// StartOdometerMissing is true when the odometer at the start of ownership is not entered.
 	StartOdometerMissing bool     `json:"start_odometer_missing"`
 	Warnings             []string `json:"warnings"`
+	// WarningDetails are the same warnings with a stable code and their numbers, in the same order.
+	WarningDetails []CompletenessWarning `json:"warning_details"`
 	// ScoreAvailable is false while the vehicle has no distance and no expense: there is nothing to score yet.
 	ScoreAvailable bool `json:"score_available"`
 	// Gaps lists what is missing with its estimated worth, the largest first.
@@ -98,6 +100,20 @@ type TCOCompleteness struct {
 	// ScorePct is a weighted completeness score (0-100) over the dimensions below; 0 when ScoreAvailable is false.
 	ScorePct   int                     `json:"score_pct"`
 	Dimensions []CompletenessDimension `json:"dimensions"`
+}
+
+// CompletenessWarning is one reason the figures are less reliable. Code is stable and Params carry the numbers a client
+// needs to word it; Message is the English sentence, kept as a fallback.
+type CompletenessWarning struct {
+	Code    string         `json:"code" jsonschema:"stable identifier of the warning; branch on it rather than on the sentence"`
+	Params  map[string]any `json:"params,omitempty" jsonschema:"the numbers and names behind the sentence, to word it in the user's language"`
+	Message string         `json:"message" jsonschema:"the warning as an English sentence"`
+}
+
+// addWarning records a warning in both forms: the sentence list and the coded details.
+func (c *TCOCompleteness) addWarning(w CompletenessWarning) {
+	c.Warnings = append(c.Warnings, w.Message)
+	c.WarningDetails = append(c.WarningDetails, w)
 }
 
 // CompletenessDimension is one weighted component of the completeness score.
