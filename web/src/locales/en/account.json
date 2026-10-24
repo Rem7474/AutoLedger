@@ -94,7 +94,9 @@
     "scopeBadgeIngest": "Send and read",
     "scopeBadgeRead": "Read only",
     "oauthBadge": "Connected app",
-    "oauthHelp": "Connected through OAuth. The access renews itself while the application is used; this is when it lapses otherwise."
+    "oauthHelp": "Connected through OAuth. The access renews itself while the application is used; this is when it lapses otherwise.",
+    "vehiclesLimited": "Vehicles: {names}",
+    "vehiclesMissing": "{count} no longer in your account"
   },
   "sso": {
     "link": "Link {provider}",

@@ -18,7 +18,7 @@ claude mcp add --transport http autoledger https://ledger.example/mcp
 
 Then authenticate from the client (`/mcp` in Claude Code). Clients that ask for a token instead of running the authorization (a script, an automation) can use a read-only API token created on the account page, sent as `Authorization: Bearer al_live_...`. A token with the `ingest` scope is refused: it can push events, and an assistant that reads must not hold it.
 
-The access is listed in the API tokens of the account page, and deleting it there cuts the assistant off at once.
+The access is listed in the API tokens of the account page, and deleting it there cuts the assistant off at once. A grant limited to some vehicles (chosen on the consent page) reads only those: the household views that add up every vehicle, such as `get_fleet_summary`, are refused with `token.vehicles_limited`, and `get_vehicle_costs` answers for an allowed vehicle.
 
 ## Check the endpoint
 

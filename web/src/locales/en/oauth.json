@@ -2,6 +2,15 @@
   "authorize": {
     "title": "Authorize an application",
     "intro": "{name} asks to read your AutoLedger data.",
+    "vehiclesTitle": "Vehicles it can read",
+    "vehiclesAll": "All my vehicles, including the ones I add later",
+    "vehiclesSome": "Only the vehicles I choose",
+    "vehiclesNone": "Choose at least one vehicle.",
+    "vehiclesRole": {
+      "OWNER": "Owner",
+      "EDITOR": "Editor",
+      "VIEWER": "Viewer"
+    },
     "canTitle": "It will be able to",
     "canVehicles": "See your vehicles: name, make, model, powertrain, currency and odometer.",
     "canCosts": "Read what each vehicle costs: the last 12 months and since purchase, by category.",

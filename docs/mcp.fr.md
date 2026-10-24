@@ -18,7 +18,7 @@ claude mcp add --transport http autoledger https://ledger.example/mcp
 
 Authentifiez-vous ensuite depuis le client (`/mcp` dans Claude Code). Un client qui demande un jeton au lieu de lancer l'autorisation (un script, une automatisation) peut utiliser un jeton d'API en lecture seule créé dans la page du compte, envoyé en `Authorization: Bearer al_live_...`. Un jeton de portée `ingest` est refusé : il peut envoyer des événements, et un assistant qui lit ne doit pas le détenir.
 
-L'accès figure dans les jetons d'API de la page du compte, et le supprimer à cet endroit coupe l'assistant immédiatement.
+L'accès figure dans les jetons d'API de la page du compte, et le supprimer à cet endroit coupe l'assistant immédiatement. Une autorisation limitée à certains véhicules (choisis sur la page de consentement) ne lit que ceux-là : les vues du foyer qui additionnent tous les véhicules, comme `get_fleet_summary`, sont refusées avec `token.vehicles_limited`, et `get_vehicle_costs` répond pour un véhicule autorisé.
 
 ## Vérifier le point d'accès
 

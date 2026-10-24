@@ -94,7 +94,9 @@
     "scopeBadgeIngest": "Envoi et lecture",
     "scopeBadgeRead": "Lecture seule",
     "oauthBadge": "Application connectée",
-    "oauthHelp": "Connectée par OAuth. L'accès se renouvelle tant que l'application est utilisée ; voici quand il expire sinon."
+    "oauthHelp": "Connectée par OAuth. L'accès se renouvelle tant que l'application est utilisée ; voici quand il expire sinon.",
+    "vehiclesLimited": "Véhicules : {names}",
+    "vehiclesMissing": "{count} absent(s) de votre compte"
   },
   "sso": {
     "link": "Lier {provider}",
