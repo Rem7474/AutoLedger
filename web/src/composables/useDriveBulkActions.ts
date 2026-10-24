@@ -1,5 +1,4 @@
 import { ref, watch, type Ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { t } from '@/i18n'
 import { api, type VehiclePerson } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
@@ -15,9 +14,9 @@ export function useDriveBulkActions(options: {
   selectedList: Readonly<Ref<any[]>>
   clearSelection: () => void
   loadDrives: () => Promise<void>
+  openCarpoolEditor: (options: { driveIds: string[] }) => void
 }) {
-  const { drives, selectedDrives, selectedDriveIds, selectedList, clearSelection, loadDrives } = options
-  const router = useRouter()
+  const { drives, selectedDrives, selectedDriveIds, selectedList, clearSelection, loadDrives, openCarpoolEditor } = options
   const vehicleStore = useVehicleStore()
   const { showConfirm, showAlert } = useConfirm()
   const bulkApplyingToll = ref(false)
@@ -82,12 +81,10 @@ export function useDriveBulkActions(options: {
     downloadCsv(`${t('drives.drivesView.csvFileName')}_${new Date().toISOString().slice(0, 10)}.csv`, driveCsvHeaders(vehicleStore.currency), driveCsvRows(selectedList.value))
   }
 
-  async function handleCarpoolSelectedDrives() {
+  // Each selected drive becomes a leg of the carpool, in chronological order. The selection stays until the carpool is saved.
+  function handleCarpoolSelectedDrives() {
     if (!vehicleStore.activeVehicle || !selectedDriveIds.value.length) return
-    // Each selected drive becomes a leg of the carpool, in chronological order
-    const ids = selectedList.value.map((d: any) => d.id)
-    clearSelection()
-    void router.push({ path: '/carpools', query: { new_drive_ids: ids.join(',') } })
+    openCarpoolEditor({ driveIds: selectedList.value.map((d: any) => d.id) })
   }
 
   async function handleBulkApplyToll() {

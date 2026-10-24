@@ -383,6 +383,7 @@ onMounted(async () => {
       :back-label="$t('carpool.carpoolView.backToTheCarpool')"
       @back="backToCarpool"
       @toggle-tag="toggleLegDriveTag"
+      @carpool="openCreateModal"
     />
 
     <CarpoolTripModal

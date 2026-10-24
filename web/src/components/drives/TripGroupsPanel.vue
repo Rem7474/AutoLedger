@@ -3,7 +3,6 @@ import CardOpenButton from '@/components/CardOpenButton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { intlLocale } from '@/i18n'
 import { distanceUnit, formatDistance, perDistance } from '@/units'
-import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { Layers, X, Users, Coins, Pencil, Trash2 } from 'lucide-vue-next'
 import { formatTripDates } from '@/utils/drives'
@@ -18,8 +17,8 @@ const emit = defineEmits<{
   edit: [trip: any]
   delete: [trip: any]
   'remove-drive': [trip: any, driveId: string]
+  carpool: [trip: any]
 }>()
-const router = useRouter()
 const vehicleStore = useVehicleStore()
 const formatDate = formatDayTime
 </script>
@@ -103,7 +102,7 @@ const formatDate = formatDayTime
           <!-- Quick Carpool Button -->
           <button
             v-if="vehicleStore.canEdit"
-            @click="router.push({ path: '/carpools', query: { new_trip_group_id: tg.id } })"
+            @click="emit('carpool', tg)"
             class="btn btn-secondary hover:text-rose-400 hover:border-rose-500/40"
             :title="$t('drives.tripGroupsPanel.carpoolThisTrip')"
           >

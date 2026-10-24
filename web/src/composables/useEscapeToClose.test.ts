@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { effectScope, ref } from 'vue'
-import { closeTopLayerOnEscape, useEscapeToClose } from './useEscapeToClose'
+import { closeTopLayerOnEscape, hasOpenEscapeLayer, useEscapeToClose } from './useEscapeToClose'
 
 const press = (key = 'Escape', extra: Record<string, unknown> = {}) => ({ key, defaultPrevented: false, isComposing: false, preventDefault: vi.fn(), ...extra })
 
@@ -56,5 +56,17 @@ describe('useEscapeToClose', () => {
     scope.stop()
     expect(closeTopLayerOnEscape(press())).toBe(false)
     expect(close).not.toHaveBeenCalled()
+  })
+
+  it('tells whether a layer is open', async () => {
+    const scope = effectScope()
+    const open = ref(false)
+    scope.run(() => useEscapeToClose(open, vi.fn()))
+    expect(hasOpenEscapeLayer()).toBe(false)
+    open.value = true
+    await Promise.resolve()
+    expect(hasOpenEscapeLayer()).toBe(true)
+    scope.stop()
+    expect(hasOpenEscapeLayer()).toBe(false)
   })
 })

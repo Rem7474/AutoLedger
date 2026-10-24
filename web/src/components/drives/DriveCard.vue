@@ -21,6 +21,7 @@ const emit = defineEmits<{
   'no-toll': [drive: any]
   edit: [drive: any]
   delete: [drive: any]
+  carpool: [drive: any]
 }>()
 const router = useRouter()
 const vehicleStore = useVehicleStore()
@@ -153,7 +154,7 @@ function openCarpool() {
       <template v-if="vehicleStore.canEdit">
         <button
           type="button"
-          @click="router.push({ path: '/carpools', query: { new_drive_id: d.id } })"
+          @click="emit('carpool', d)"
           class="row-action"
           :title="$t('drives.driveCard.createACarpoolFromThis')" :aria-label="$t('drives.driveCard.carpool')"
         >

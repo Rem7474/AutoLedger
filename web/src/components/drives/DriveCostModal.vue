@@ -40,6 +40,7 @@ const emit = defineEmits<{
   'create-trip': [suggestion: any]
   'dismiss-trip': [suggestion: any]
   'edit-trip': [trip: any]
+  carpool: [options: { driveIds?: string[]; tripGroupId?: string }]
   back: []
 }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -338,7 +339,7 @@ async function handleDriverChange(event: Event) {
             <span>{{ $t('common.edit') }}</span>
           </button>
           <button
-            @click="open = false; router.push({ path: '/carpools', query: selectedCostDrive.is_trip_group ? { new_trip_group_id: selectedCostDrive.id } : { new_drive_id: selectedCostDrive.id } })"
+            @click="open = false; emit('carpool', selectedCostDrive.is_trip_group ? { tripGroupId: selectedCostDrive.id } : { driveIds: [selectedCostDrive.id] })"
             class="btn btn-lg btn-primary"
           >
             <Users class="w-4 h-4" />

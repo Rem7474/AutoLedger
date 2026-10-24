@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { X, MoreHorizontal } from 'lucide-vue-next'
+import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 
 const props = withDefaults(
   defineProps<{
@@ -27,7 +28,7 @@ const moreOpen = ref(false)
 const moreRoot = ref<HTMLElement | null>(null)
 
 function onKeyDown(e: KeyboardEvent) {
-  if (e.key !== 'Escape') return
+  if (e.key !== 'Escape' || hasOpenEscapeLayer()) return
   if (moreOpen.value) {
     moreOpen.value = false
     return

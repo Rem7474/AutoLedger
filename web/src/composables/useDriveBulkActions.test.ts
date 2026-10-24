@@ -5,8 +5,6 @@ import { useDriveBulkActions } from './useDriveBulkActions'
 const api = vi.hoisted(() => ({ updateDriveTags: vi.fn(), applyTollEstimatesBulk: vi.fn(), updateDrivesDriver: vi.fn(), getVehiclePeople: vi.fn() }))
 vi.mock('@/services/api', () => ({ api }))
 vi.mock('@/i18n', () => ({ t: (k: string) => k }))
-const push = vi.hoisted(() => vi.fn())
-vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
 const store = vi.hoisted(() => ({ activeVehicle: { id: 'v1' } as { id: string } | null, currency: 'EUR' }))
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => store }))
 const confirm = vi.hoisted(() => ({ showConfirm: vi.fn(), showAlert: vi.fn() }))
@@ -24,8 +22,9 @@ function setup(selected: string[] = ['d1', 'd2']) {
   const selectedList = computed(() => Object.values(selectedDrives.value))
   const clearSelection = vi.fn()
   const loadDrives = vi.fn().mockResolvedValue(undefined)
-  const h = useDriveBulkActions({ drives, selectedDrives, selectedDriveIds, selectedList, clearSelection, loadDrives })
-  return { h, drives, clearSelection, loadDrives }
+  const openCarpoolEditor = vi.fn()
+  const h = useDriveBulkActions({ drives, selectedDrives, selectedDriveIds, selectedList, clearSelection, loadDrives, openCarpoolEditor })
+  return { h, drives, clearSelection, loadDrives, openCarpoolEditor }
 }
 
 describe('useDriveBulkActions', () => {
@@ -108,11 +107,21 @@ describe('useDriveBulkActions', () => {
     expect(csv.downloadCsv).toHaveBeenCalledTimes(1)
   })
 
-  it('opens a carpool with the selected drives in chronological order', async () => {
-    const { h, clearSelection } = setup()
-    await h.handleCarpoolSelectedDrives()
-    expect(clearSelection).toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith({ path: '/carpools', query: { new_drive_ids: 'd1,d2' } })
+  it('opens the carpool editor with the selected drives and keeps the selection', () => {
+    const { h, clearSelection, openCarpoolEditor } = setup()
+    h.handleCarpoolSelectedDrives()
+    expect(openCarpoolEditor).toHaveBeenCalledWith({ driveIds: ['d1', 'd2'] })
+    expect(clearSelection).not.toHaveBeenCalled()
+  })
+
+  it('opens no carpool editor without a selection or a vehicle', () => {
+    const empty = setup([])
+    empty.h.handleCarpoolSelectedDrives()
+    expect(empty.openCarpoolEditor).not.toHaveBeenCalled()
+    store.activeVehicle = null
+    const none = setup()
+    none.h.handleCarpoolSelectedDrives()
+    expect(none.openCarpoolEditor).not.toHaveBeenCalled()
   })
 
   it('applies toll estimates after confirmation and reloads', async () => {

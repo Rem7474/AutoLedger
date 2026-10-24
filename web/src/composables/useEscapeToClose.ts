@@ -6,6 +6,9 @@ import type { Ref } from 'vue'
 const layers: Array<() => void> = []
 let listening = false
 
+/** True while a modal, sheet or preview is open: Escape then belongs to it. */
+export const hasOpenEscapeLayer = () => layers.length > 0
+
 export function closeTopLayerOnEscape(e: Pick<KeyboardEvent, 'key' | 'defaultPrevented' | 'isComposing' | 'preventDefault'>): boolean {
   if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return false
   const close = layers[layers.length - 1]

@@ -548,3 +548,27 @@ test('a session from a shared charger is qualified onto a vehicle', async ({ pag
     await dropSecondVehicle()
   }
 })
+
+test('a carpool is started from the selected drives without leaving the drives page', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await useVehicle(page, ev.id, '/drives')
+  const search = page.getByPlaceholder(/Search for a city/)
+  await search.fill('Office')
+  const cards = page.getByRole('checkbox', { name: 'Select this drive' })
+  await expect(cards.first()).toBeVisible()
+  await cards.first().check()
+
+  // The selection bar's button, not the quiet icon of a row
+  const bulkCarpool = page.locator('button.btn', { hasText: 'Carpool' })
+  await bulkCarpool.click()
+  const dialog = page.getByRole('dialog', { name: 'New carpool' })
+  await expect(dialog).toBeVisible()
+  expect(new URL(page.url()).pathname).toBe('/drives')
+
+  // Closing the editor leaves the page as it was: the search and the selection are still there
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(search).toHaveValue('Office')
+  await expect(page.locator('input.select-box:checked')).toHaveCount(1)
+  await expect(bulkCarpool).toBeVisible()
+})
