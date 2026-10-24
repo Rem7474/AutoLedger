@@ -11,6 +11,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDriveSelection } from '@/composables/useDriveSelection'
+import { useCarpoolEditor } from '@/composables/useCarpoolEditor'
 import { useDriveBulkActions } from '@/composables/useDriveBulkActions'
 import { useTripGroups } from '@/composables/useTripGroups'
 import { useDriveCostModal } from '@/composables/useDriveCostModal'
@@ -26,6 +27,7 @@ import TripSuggestions from '@/components/drives/TripSuggestions.vue'
 import ToQualifyFilter from '@/components/drives/ToQualifyFilter.vue'
 import DriveFilterGroups from '@/components/drives/DriveFilterGroups.vue'
 import DriveListSkeleton from '@/components/drives/DriveListSkeleton.vue'
+import CarpoolTripModal from '@/components/carpool/CarpoolTripModal.vue'
 import DriveCostModal from '@/components/drives/DriveCostModal.vue'
 import DriveGroupModal from '@/components/drives/DriveGroupModal.vue'
 import TripEditModal from '@/components/drives/TripEditModal.vue'
@@ -246,6 +248,12 @@ const showTripEditModal = ref(false)
 const tripBeingEdited = ref<any | null>(null)
 const showAddToTripModal = ref(false)
 const showGroupModal = ref(false)
+// The carpool editor opens on this page, so the filters and the selection stay
+const { showCarpoolEditor, carpoolCreateOptions, carpoolOpenToken, recentCarpoolNames, openCarpoolEditor } = useCarpoolEditor()
+function onCarpoolSaved() {
+  clearSelection()
+  loadDrives(true)
+}
 const { bulkApplyingToll, vehiclePeople, handleBatchDriver, handleBatchTag, exportSelectedDrives, handleCarpoolSelectedDrives, handleBulkApplyToll } = useDriveBulkActions({
   drives,
   selectedDrives,
@@ -253,6 +261,7 @@ const { bulkApplyingToll, vehiclePeople, handleBatchDriver, handleBatchTag, expo
   selectedList,
   clearSelection,
   loadDrives,
+  openCarpoolEditor,
 })
 const {
   showCostModal,
@@ -544,6 +553,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
         @no-toll="markNoToll"
         @edit="openManualDriveModal"
         @delete="handleDeleteManualDrive"
+        @carpool="(drive) => openCarpoolEditor({ driveIds: [drive.id] })"
       />
 
       <DrivesPagination
@@ -580,6 +590,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       @edit="openTripEdit"
       @delete="handleDeleteTrip"
       @remove-drive="removeDriveFromTrip"
+      @carpool="(trip) => openCarpoolEditor({ tripGroupId: trip.id })"
     />
     </template>
 
@@ -595,6 +606,18 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       @edit-trip="editTripFromCostModal"
       @create-trip="createTripFromCostModal"
       @dismiss-trip="dismissTripFromCostModal"
+      @carpool="openCarpoolEditor"
+    />
+
+    <CarpoolTripModal
+      v-if="vehicleId"
+      v-model:open="showCarpoolEditor"
+      :vehicle-id="vehicleId"
+      :editing="null"
+      :create-options="carpoolCreateOptions"
+      :open-token="carpoolOpenToken"
+      :recent-names="recentCarpoolNames"
+      @saved="onCarpoolSaved"
     />
 
     <DriveGroupModal
