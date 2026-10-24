@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 
+	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
 
@@ -30,27 +31,25 @@ func (s *TCOService) tagBreakdown(ctx context.Context, vehicleID string, totalDi
 		return nil, err
 	}
 
-	var rates map[string]*UnitRates
-	var insurance map[string]money.Cents
+	var costs map[string]money.Cents
 	if anyTagged {
-		if rates, err = s.carpool.DriveRates(ctx, vehicleID, drives); err != nil {
-			return nil, err
-		}
-		if insurance, err = s.carpool.AllocateInsuranceCosts(ctx, vehicleID, drives, rates); err != nil {
+		if costs, err = s.driveCosts(ctx, vehicleID, drives, tolls); err != nil {
 			return nil, err
 		}
 	}
 
+	return splitByTag(drives, costs, tolls, totalDistance), nil
+}
+
+// splitByTag groups drives by tag; costs may be nil, which leaves every cost at zero.
+func splitByTag(drives []models.Drive, costs map[string]money.Cents, tolls map[string]money.Cents, totalDistance float64) []TagCostBreakdown {
 	byTag := map[string]*TagCostBreakdown{}
 	for _, d := range drives {
 		tags := d.Tags
 		if len(tags) == 0 {
 			tags = []string{""}
 		}
-		var cost money.Cents
-		if rates != nil {
-			cost = ComputeDriveCost(rates[d.ID], d, insurance[d.ID], tolls[d.ID]).TotalCost
-		}
+		cost := costs[d.ID]
 		for _, tag := range tags {
 			tb := byTag[tag]
 			if tb == nil {
@@ -87,5 +86,24 @@ func (s *TCOService) tagBreakdown(ctx context.Context, vehicleID string, totalDi
 		}
 		return list[i].Tag < list[j].Tag
 	})
-	return list, nil
+	return list
+}
+
+// driveCosts is the cost of each drive as the drive list shows it: energy, wear, insurance share and tolls at the
+// vehicle's unit rates. The insurance is shared over all the drives, so they must all be passed, whatever period the
+// caller reports on.
+func (s *TCOService) driveCosts(ctx context.Context, vehicleID string, drives []models.Drive, tolls map[string]money.Cents) (map[string]money.Cents, error) {
+	rates, err := s.carpool.DriveRates(ctx, vehicleID, drives)
+	if err != nil {
+		return nil, err
+	}
+	insurance, err := s.carpool.AllocateInsuranceCosts(ctx, vehicleID, drives, rates)
+	if err != nil {
+		return nil, err
+	}
+	costs := make(map[string]money.Cents, len(drives))
+	for _, d := range drives {
+		costs[d.ID] = ComputeDriveCost(rates[d.ID], d, insurance[d.ID], tolls[d.ID]).TotalCost
+	}
+	return costs, nil
 }

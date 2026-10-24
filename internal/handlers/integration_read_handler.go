@@ -331,7 +331,7 @@ type IntegrationDataGaps struct {
 	Truncated bool                 `json:"truncated" jsonschema:"true when more issues exist than the ones listed"`
 
 	ChargesWithoutCost int                 `json:"charges_without_cost" jsonschema:"charging sessions recorded without a price, whose cost is left out of the totals"`
-	UnqualifiedDrives  int                 `json:"unqualified_drives" jsonschema:"drives not yet classed as professional or personal"`
+	UnqualifiedDrives  int                 `json:"unqualified_drives" jsonschema:"motorway-type drives with no toll entered and not reviewed as having none: their toll cost may be missing"`
 	UntrackedDistance  IntegrationDistance `json:"untracked_distance" jsonschema:"distance driven that no drive record covers, estimated from the odometer"`
 	InsuranceMissing   bool                `json:"insurance_missing" jsonschema:"true when no insurance premium is recorded and the lease does not include it"`
 	AcquisitionMissing bool                `json:"acquisition_missing" jsonschema:"true when the acquisition (purchase, loan or lease) is not entered or lacks details, so depreciation and financing are not fully known"`
