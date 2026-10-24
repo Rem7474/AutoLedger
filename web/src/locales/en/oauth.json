@@ -15,7 +15,7 @@
     "canVehicles": "See your vehicles: name, make, model, powertrain, currency and odometer.",
     "canCosts": "Read what each vehicle costs: the last 12 months and since purchase, by category.",
     "canGaps": "See what is missing from your records (odometer gaps, charges without a cost).",
-    "canNames": "See the names and places you recorded: trip addresses, charging places, drivers and carpool passengers, tags and notes.",
+    "canNames": "See the names and places you recorded: trip addresses, charging places, drivers and carpool passengers, tags, notes and tariff plans.",
     "cannotTitle": "It will not be able to",
     "cannotWrite": "Change, add or delete anything.",
     "cannotPrivate": "See VINs, plates, GPS positions or documents.",

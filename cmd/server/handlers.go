@@ -123,7 +123,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		pendingCharges:  handlers.NewPendingChargesHandler(repo, tariffService),
 		fleet:           handlers.NewFleetHandler(services.NewFleetService(repo, svc.tco)),
 		ha:              handlers.NewHomeAssistantHandler(repo, tariffService),
-		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco).WithEnergy(svc.energyStats).WithFleet(services.NewFleetService(repo, svc.tco)).WithResidual(services.NewResidualService(repo, svc.energyStats)).WithTires(svc.tireWear).WithComparison(svc.comparison).WithCarpool(svc.carpool).WithMileage(mileageService, cfg.ReportingTimezone),
+		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco).WithEnergy(svc.energyStats).WithFleet(services.NewFleetService(repo, svc.tco)).WithResidual(services.NewResidualService(repo, svc.energyStats)).WithTires(svc.tireWear).WithComparison(svc.comparison).WithCarpool(svc.carpool).WithMileage(mileageService, cfg.ReportingTimezone).WithTariffs(tariffService),
 	}
 	if cfg.MCPEnabled {
 		h.oauth = handlers.NewOAuthHandler(repo, cfg.AppBaseURL)

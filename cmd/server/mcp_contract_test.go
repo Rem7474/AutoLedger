@@ -192,7 +192,7 @@ func toolArguments(t *testing.T, tool *mcp.Tool, vehicleID string) map[string]an
 	}
 	_ = json.Unmarshal(schema, &parsed)
 	args := map[string]any{}
-	extra := map[string]any{"month": time.Now().UTC().Format("2006-01"), "category": "energy"}
+	extra := map[string]any{"month": time.Now().UTC().Format("2006-01"), "category": "energy", "energy_kwh": 10, "duration_minutes": 60}
 	for _, name := range parsed.Required {
 		value, ok := extra[name]
 		if name == "vehicle_id" {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -146,32 +147,54 @@ func (r parsedRule) matches(weekday time.Weekday, mod int) bool {
 	return (r.days[weekday] && mod >= r.startMin) || (r.days[previous] && mod < r.endMin)
 }
 
+// BandShare is the part of a session priced in one band of a plan.
+type BandShare struct {
+	Band    string
+	Minutes int
+	Kwh     float64
+	Rate    money.Rate
+}
+
+// SessionPricing is the cost of a session and how it splits between the bands of the plan, the largest share first.
+type SessionPricing struct {
+	Cost  money.Cents
+	Bands []BandShare
+}
+
 // CalculateSessionCost splits the energy of a session between the bands in force while it ran, in proportion to
 // the time spent in each, and returns the cost in cents. The clock is read in the service timezone, so a window
 // follows the wall clock across daylight-saving changes. A plan whose validity range excludes the day of the
 // session prices nothing.
 func (s *TariffService) CalculateSessionCost(plan *models.TariffPlan, startTime, endTime time.Time, kwh float64) (money.Cents, error) {
+	pricing, err := s.PriceSession(plan, startTime, endTime, kwh)
+	return pricing.Cost, err
+}
+
+// PriceSession is CalculateSessionCost with the bands the session was priced in.
+func (s *TariffService) PriceSession(plan *models.TariffPlan, startTime, endTime time.Time, kwh float64) (SessionPricing, error) {
 	if plan == nil || kwh <= 0 {
-		return 0, nil
+		return SessionPricing{}, nil
 	}
 	startTime = startTime.In(s.loc)
 	if !plan.AppliesOn(startTime.Format("2006-01-02")) {
-		return 0, nil
+		return SessionPricing{}, nil
 	}
 
 	bands, rules, defaultBand, ok := effectiveGrid(plan)
 	if !ok {
-		return 0, nil
+		return SessionPricing{}, nil
 	}
-	if len(rules) == 0 {
-		return bands[defaultBand].Cost(kwh), nil
-	}
-	parsed := parseRules(rules)
-
 	if !endTime.After(startTime) {
 		endTime = startTime.Add(1 * time.Minute)
 	}
 	totalMinutes := int(math.Max(1, math.Round(endTime.Sub(startTime).Minutes())))
+	if len(rules) == 0 {
+		return SessionPricing{
+			Cost:  bands[defaultBand].Cost(kwh),
+			Bands: []BandShare{{Band: defaultBand, Minutes: totalMinutes, Kwh: kwh, Rate: bands[defaultBand]}},
+		}, nil
+	}
+	parsed := parseRules(rules)
 
 	// Sessions longer than a day are sampled every 5 minutes to bound the loop
 	step := 1
@@ -195,11 +218,22 @@ func (s *TariffService) CalculateSessionCost(plan *models.TariffPlan, startTime,
 		evaluated += step
 	}
 
-	cost := 0.0
+	shares := make([]BandShare, 0, len(minutesByBand))
 	for band, minutes := range minutesByBand {
-		cost += kwh * float64(minutes) / float64(evaluated) * bands[band].Float()
+		fraction := float64(minutes) / float64(evaluated)
+		shares = append(shares, BandShare{Band: band, Minutes: int(math.Round(fraction * float64(totalMinutes))), Kwh: kwh * fraction, Rate: bands[band]})
 	}
-	return money.FromFloat(cost), nil
+	sort.Slice(shares, func(i, j int) bool {
+		if shares[i].Kwh != shares[j].Kwh {
+			return shares[i].Kwh > shares[j].Kwh
+		}
+		return shares[i].Band < shares[j].Band
+	})
+	cost := 0.0
+	for _, share := range shares {
+		cost += share.Kwh * share.Rate.Float()
+	}
+	return SessionPricing{Cost: money.FromFloat(cost), Bands: shares}, nil
 }
 
 // CalculateSessionCostIfApplicable distinguishes a known free session from an unknown cost.
@@ -247,4 +281,28 @@ func (s *TariffService) CalculatePublicCharging(req models.PublicChargingCalcula
 		IdleCost:       idleCost,
 		TotalCost:      totalCost,
 	}
+}
+
+// Grid reads any plan as named bands, rules and a default band, the way sessions are priced. A band plan keeps the
+// order of its bands; the others list theirs by name. ok is false when the plan carries no usable price.
+func (s *TariffService) Grid(plan *models.TariffPlan) (bands []models.TariffBand, rules []models.TariffRule, defaultBand string, ok bool) {
+	if plan == nil {
+		return nil, nil, "", false
+	}
+	rates, rules, defaultBand, ok := effectiveGrid(plan)
+	if !ok {
+		return nil, nil, "", false
+	}
+	if plan.PlanType == models.TariffTypeBands {
+		return plan.Bands, rules, defaultBand, true
+	}
+	names := make([]string, 0, len(rates))
+	for name := range rates {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		bands = append(bands, models.TariffBand{Name: name, RateCents: rates[name]})
+	}
+	return bands, rules, defaultBand, true
 }
