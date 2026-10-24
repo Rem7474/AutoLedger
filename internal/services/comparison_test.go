@@ -409,11 +409,19 @@ func TestDefaultsForCurrency(t *testing.T) {
 		}
 	}
 
-	for _, currency := range []string{"", "EUR", "eur"} {
+	for _, currency := range []string{"EUR", "eur"} {
 		d := newDefaults()
 		d.ForCurrency(currency)
 		if !d.IndicativePrices || d.MaintenanceYearly != money.FromFloat(700) || d.ICE[0].FuelPrice != 1.75 || d.TrackedEurPerKwh == nil {
 			t.Errorf("currency %q: indicative prices must stay", currency)
+		}
+	}
+
+	for _, currency := range []string{"USD", ""} {
+		d := newDefaults()
+		d.ForCurrency(currency)
+		if d.IndicativePrices || d.MaintenanceYearly != 0 || d.InsuranceYearly != 0 || d.TrackedEurPerKwh != nil {
+			t.Errorf("currency %q: prices must be dropped: %+v", currency, d)
 		}
 	}
 
