@@ -17,9 +17,7 @@ import (
 	"github.com/teslacost/teslacost/internal/config"
 	"github.com/teslacost/teslacost/internal/crypto"
 	"github.com/teslacost/teslacost/internal/database"
-	"github.com/teslacost/teslacost/internal/handlers"
 	appMiddleware "github.com/teslacost/teslacost/internal/middleware"
-	"github.com/teslacost/teslacost/internal/services"
 )
 
 // AppVersion is the application version, injected at build time via -ldflags "-X main.AppVersion=..."; "dev" for a build
@@ -123,31 +121,11 @@ func main() {
 
 	seedInitialAdmin(ctx, cfg, repo)
 
-	notificationService := services.NewNotificationService(repo)
-	syncService := services.NewSyncService(repo, encryptor)
-	syncService.SetNotificationService(notificationService)
-	tcoService := services.NewTCOService(dbPool.Pool, cfg.ReportingTimezone)
-	svc := appServices{
-		sync:         syncService,
-		tireWear:     services.NewTireWearService(repo),
-		tco:          tcoService,
-		energyStats:  services.NewEnergyStatsService(dbPool.Pool, cfg.ReportingTimezone),
-		comparison:   services.NewComparisonService(tcoService),
-		carpool:      services.NewCarpoolService(dbPool.Pool, repo),
-		notification: notificationService,
-	}
-
-	// 4. Setup Chi router
-	r := newRouter(cfg, trustedProxies)
-	registerSystemRoutes(r, dbPool.Pool.Ping)
-
-	api, err := newAPIHandlers(cfg, repo, encryptor, svc)
+	r, svc, err := newApplication(cfg, trustedProxies, dbPool.Pool, repo, encryptor)
 	if err != nil {
 		slog.Error("failed to initialize the API handlers", "error", err)
 		os.Exit(1)
 	}
-	registerAPIRoutes(r, cfg.JWTSecret, repo, repo, handlers.Idempotency(repo), api)
-	registerSPA(r)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
@@ -162,7 +140,7 @@ func main() {
 
 	bgCtx, cancelBg := context.WithCancel(context.Background())
 	defer cancelBg()
-	startWorkers(bgCtx, cfg, repo, syncService, notificationService)
+	startWorkers(bgCtx, cfg, repo, svc.sync, svc.notification)
 
 	go func() {
 		defer func() {

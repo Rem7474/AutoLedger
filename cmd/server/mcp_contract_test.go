@@ -1,0 +1,327 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/teslacost/teslacost/internal/auth"
+	"github.com/teslacost/teslacost/internal/config"
+	"github.com/teslacost/teslacost/internal/crypto"
+	"github.com/teslacost/teslacost/internal/database"
+	"github.com/teslacost/teslacost/internal/demodata"
+	"github.com/teslacost/teslacost/internal/demoseed"
+)
+
+var updateMCPContract = flag.Bool("update-mcp-contract", false, "rewrite testdata/mcp_contract.golden.json")
+
+type bearer struct{ token string }
+
+func (b bearer) RoundTrip(r *http.Request) (*http.Response, error) {
+	r = r.Clone(r.Context())
+	r.Header.Set("Authorization", "Bearer "+b.token)
+	return http.DefaultTransport.RoundTrip(r)
+}
+
+// contractServer runs the real application on a fresh database and seeds it with the demo datasets and an empty
+// vehicle, as the screenshots and the end-to-end suite do. It returns the base URL, a client signed in as the
+// owner and the read token an assistant would hold.
+func contractServer(t *testing.T) (string, *demoseed.Client, string, map[string]string) {
+	t.Helper()
+	base := os.Getenv("TEST_DATABASE_URL")
+	if base == "" {
+		t.Skip("TEST_DATABASE_URL not set")
+	}
+	ctx := context.Background()
+	t.Setenv("DATABASE_URL", dedicatedDatabaseURL(t, base, "contract"))
+	t.Setenv("AUTOLEDGER_JWT_SECRET", "contract-secret-contract-secret-contract-00")
+	t.Setenv("AUTOLEDGER_ENCRYPTION_KEY", "contract-encryption-key-contract-key-0")
+	t.Setenv("AUTOLEDGER_MCP_ENABLED", "true")
+	t.Setenv("AUTOLEDGER_BASE_URL", "http://127.0.0.1")
+	t.Setenv("ENVIRONMENT", "development")
+	cfg := config.Load()
+
+	db, err := database.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Pool.Close)
+	if _, err := db.Pool.Exec(ctx, `DROP SCHEMA public CASCADE; CREATE SCHEMA public;`); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	repo := database.NewRepository(db.Pool)
+	encryptor, err := crypto.NewEncryptor(cfg.AppEncryptionKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	router, _, err := newApplication(cfg, nil, db.Pool, repo, encryptor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(router)
+	t.Cleanup(srv.Close)
+
+	c := demoseed.New(srv.URL)
+	if err := c.Login("contract@example.com", "Contract-Pass-123!"); err != nil {
+		t.Fatal(err)
+	}
+	var ingest struct {
+		Token string `json:"token"`
+	}
+	if err := c.Do("POST", "/api/auth/tokens/", map[string]string{"name": "contract seed", "scope": "ingest"}, &ingest, ""); err != nil {
+		t.Fatal(err)
+	}
+	names := map[string]string{"empty": "Empty"}
+	for _, key := range []string{"ev", "ice", "layout"} {
+		ds, err := demodata.Build(key, time.Now())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := c.Seed(ds, ingest.Token); err != nil {
+			t.Fatalf("%s: %v", key, err)
+		}
+		names[key] = ds.Vehicle.Name
+	}
+	var empty struct {
+		ID string `json:"id"`
+	}
+	if err := c.Do("POST", "/api/vehicles", map[string]any{"name": "Empty", "powertrain": "ICE", "currency": "CHF", "current_odometer": 0}, &empty, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	var read struct {
+		Token string `json:"token"`
+	}
+	if err := c.Do("POST", "/api/auth/tokens/", map[string]string{"name": "contract read", "scope": auth.ScopeRead}, &read, ""); err != nil {
+		t.Fatal(err)
+	}
+	var vehicles []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+	if err := c.Do("GET", "/api/vehicles", nil, &vehicles, ""); err != nil {
+		t.Fatal(err)
+	}
+	byName := map[string]string{}
+	for _, v := range vehicles {
+		byName[v.Name] = v.ID
+	}
+	ids := map[string]string{}
+	for label, name := range names {
+		if ids[label] = byName[name]; ids[label] == "" {
+			t.Fatalf("vehicle %q (%s) is not seeded: %v", name, label, byName)
+		}
+	}
+	return srv.URL, c, read.Token, ids
+}
+
+func dedicatedDatabaseURL(t *testing.T, baseURL, suffix string) string {
+	t.Helper()
+	cfg, err := pgxpool.ParseConfig(baseURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := cfg.ConnConfig.Database + "_" + suffix
+	admin, err := pgxpool.NewWithConfig(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close()
+	var exists bool
+	if err := admin.QueryRow(context.Background(), `SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)`, name).Scan(&exists); err != nil {
+		t.Fatal(err)
+	}
+	if !exists {
+		if _, err := admin.Exec(context.Background(), `CREATE DATABASE "`+name+`"`); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return strings.Replace(baseURL, "/"+cfg.ConnConfig.Database, "/"+name, 1)
+}
+
+// shape reduces a JSON value to its structure: the keys, the type of each value, whether it is null, and whether a
+// list is empty. The demo data is dated from the day it is seeded, so the figures change with the clock while the
+// shape of an answer is the contract a client codes against.
+func shape(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		out := map[string]any{}
+		for k, val := range x {
+			out[k] = shape(val)
+		}
+		return out
+	case []any:
+		if len(x) == 0 {
+			return []any{}
+		}
+		return []any{shape(x[0])}
+	case string:
+		return "string"
+	case float64:
+		return "number"
+	case bool:
+		return "boolean"
+	case nil:
+		return nil
+	}
+	return fmt.Sprintf("%T", v)
+}
+
+// toolArguments gives a tool the arguments the contract calls it with: the vehicle, nothing else.
+func toolArguments(t *testing.T, tool *mcp.Tool, vehicleID string) map[string]any {
+	t.Helper()
+	schema, _ := json.Marshal(tool.InputSchema)
+	var parsed struct {
+		Properties map[string]any `json:"properties"`
+		Required   []string       `json:"required"`
+	}
+	_ = json.Unmarshal(schema, &parsed)
+	args := map[string]any{}
+	for _, name := range parsed.Required {
+		if name != "vehicle_id" {
+			t.Fatalf("%s requires %q: give it a value in toolArguments", tool.Name, name)
+		}
+	}
+	if _, ok := parsed.Properties["vehicle_id"]; ok {
+		args["vehicle_id"] = vehicleID
+	}
+	return args
+}
+
+func callTool(t *testing.T, session *mcp.ClientSession, name string, args map[string]any) (map[string]any, bool) {
+	t.Helper()
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: name, Arguments: args})
+	if err != nil {
+		t.Fatalf("%s: %v", name, err)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil && !res.IsError {
+		t.Fatalf("%s: structured content: %v", name, err)
+	}
+	return out, res.IsError
+}
+
+// Every tool answers for every kind of vehicle (electric with a lease, combustion with a purchase, a plug-in hybrid
+// in another currency, a vehicle with no record) with the structure the golden file records, through the protocol
+// and the real router.
+func TestMCPContractOnTheDemoVehicles(t *testing.T) {
+	url, c, token, ids := contractServer(t)
+	session, err := mcp.NewClient(&mcp.Implementation{Name: "contract", Version: "1"}, nil).Connect(context.Background(), &mcp.StreamableClientTransport{
+		Endpoint: url + "/mcp", HTTPClient: &http.Client{Transport: bearer{token}}, DisableStandaloneSSE: true, MaxRetries: -1,
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = session.Close() })
+	t.Run("structure", func(t *testing.T) { checkStructure(t, session, ids) })
+	t.Run("dashboard parity", func(t *testing.T) { checkDashboardParity(t, c, session, ids) })
+}
+
+func checkStructure(t *testing.T, session *mcp.ClientSession, ids map[string]string) {
+	vehicles := []string{"ev", "ice", "layout", "empty"}
+	listed, err := session.ListTools(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]any{}
+	for _, tool := range listed.Tools {
+		for _, vehicle := range vehicles {
+			args := toolArguments(t, tool, ids[vehicle])
+			if _, perVehicle := args["vehicle_id"]; !perVehicle && vehicle != vehicles[0] {
+				continue
+			}
+			out, isErr := callTool(t, session, tool.Name, args)
+			key := tool.Name + " / " + vehicle
+			if _, perVehicle := args["vehicle_id"]; !perVehicle {
+				key = tool.Name
+			}
+			if isErr {
+				t.Errorf("%s answered with an error", key)
+				continue
+			}
+			got[key] = shape(out)
+		}
+	}
+	encoded, err := json.MarshalIndent(got, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded = append(encoded, '\n')
+
+	const path = "testdata/mcp_contract.golden.json"
+	if *updateMCPContract {
+		if err := os.MkdirAll("testdata", 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, encoded, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	want, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("%v (generate it with -update-mcp-contract)", err)
+	}
+	if string(want) != string(encoded) {
+		keys := make([]string, 0, len(got))
+		for k := range got {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		t.Errorf("the structure of a tool answer changed (%d answers); review the diff of %s and regenerate with -update-mcp-contract", len(keys), path)
+	}
+}
+
+func amountOf(t *testing.T, v any) float64 {
+	t.Helper()
+	m, ok := v.(map[string]any)
+	if !ok {
+		t.Fatalf("not an amount: %v", v)
+	}
+	f, err := strconv.ParseFloat(fmt.Sprint(m["amount"]), 64)
+	if err != nil {
+		t.Fatalf("amount %v: %v", m["amount"], err)
+	}
+	return f
+}
+
+// The figures an assistant reads are the ones the dashboard shows for the same vehicle.
+func checkDashboardParity(t *testing.T, c *demoseed.Client, session *mcp.ClientSession, ids map[string]string) {
+	for label, id := range ids {
+		name := label
+		var tco map[string]any
+		if err := c.Do("GET", "/api/vehicles/"+id+"/tco", nil, &tco, ""); err != nil {
+			t.Fatalf("%s: tco: %v", name, err)
+		}
+		costs, isErr := callTool(t, session, "get_vehicle_costs", map[string]any{"vehicle_id": id})
+		if isErr {
+			t.Fatalf("%s: get_vehicle_costs failed", name)
+		}
+		since := costs["since_purchase"].(map[string]any)["costs"].(map[string]any)
+		if total, _ := tco["total_cost"].(float64); label != "empty" && total == 0 {
+			t.Fatalf("%s: the demo vehicle has no cost, so the comparison proves nothing", label)
+		}
+		for mcpField, tcoField := range map[string]string{"total": "total_cost", "energy": "energy_cost", "tolls": "tolls_cost", "insurance": "insurance_cost", "financing": "financing_cost", "tires": "tires_cost"} {
+			want, _ := tco[tcoField].(float64)
+			if diff := amountOf(t, since[mcpField]) - want; diff > 0.005 || diff < -0.005 {
+				t.Errorf("%s: %s is %v for the assistant and %v on the dashboard", name, mcpField, since[mcpField], want)
+			}
+		}
+	}
+}

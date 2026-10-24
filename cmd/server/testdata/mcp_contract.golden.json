@@ -1,0 +1,2626 @@
+{
+  "get_carpool / empty": {
+    "currency": "string",
+    "summary": {
+      "coverage_rate_pct": null,
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "driver_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost_per_km": null,
+      "passengers": "number",
+      "passengers_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "real_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "trips": "number"
+    },
+    "trips": [],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_carpool / ev": {
+    "currency": "string",
+    "summary": {
+      "coverage_rate_pct": "number",
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "driver_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "passengers": "number",
+      "passengers_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "real_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "trips": "number"
+    },
+    "trips": [
+      {
+        "date": "string",
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "driver_cost_share": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "energy_cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "net_cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "notes": null,
+        "passengers": [
+          {
+            "alights_at": "string",
+            "balance": {
+              "amount": "string",
+              "currency": "string"
+            },
+            "boards_at": "string",
+            "cost_share": {
+              "amount": "string",
+              "currency": "string"
+            },
+            "name": "string",
+            "notes": null,
+            "paid": {
+              "amount": "string",
+              "currency": "string"
+            },
+            "seats": "number"
+          }
+        ],
+        "revenue": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "stops": [
+          "string"
+        ],
+        "title": "string",
+        "tolls_cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total_cost": {
+          "amount": "string",
+          "currency": "string"
+        }
+      }
+    ],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_carpool / ice": {
+    "currency": "string",
+    "summary": {
+      "coverage_rate_pct": null,
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "driver_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost_per_km": null,
+      "passengers": "number",
+      "passengers_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "real_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "trips": "number"
+    },
+    "trips": [],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_carpool / layout": {
+    "currency": "string",
+    "summary": {
+      "coverage_rate_pct": null,
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "driver_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "net_cost_per_km": null,
+      "passengers": "number",
+      "passengers_fair_share": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "real_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "trips": "number"
+    },
+    "trips": [],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_charging_places / empty": {
+    "currency": "string",
+    "home_savings": null,
+    "home_savings_unavailable": "string",
+    "months": "number",
+    "places": [],
+    "unplaced_locations": [],
+    "vehicle_id": "string"
+  },
+  "get_charging_places / ev": {
+    "currency": "string",
+    "home_savings": {
+      "at_home_price": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "away_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "away_sessions": "number",
+      "home_price_per_kwh": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "savings": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "home_savings_unavailable": null,
+    "months": "number",
+    "places": [
+      {
+        "addresses": [
+          "string"
+        ],
+        "category": "string",
+        "cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "energy_kwh": "number",
+        "free_sessions": "number",
+        "name": "string",
+        "price_per_kwh": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "sessions": "number",
+        "unpriced_energy_kwh": "number",
+        "unpriced_sessions": "number"
+      }
+    ],
+    "unplaced_locations": [],
+    "vehicle_id": "string"
+  },
+  "get_charging_places / ice": {
+    "currency": "string",
+    "home_savings": null,
+    "home_savings_unavailable": "string",
+    "months": "number",
+    "places": [],
+    "unplaced_locations": [],
+    "vehicle_id": "string"
+  },
+  "get_charging_places / layout": {
+    "currency": "string",
+    "home_savings": null,
+    "home_savings_unavailable": "string",
+    "months": "number",
+    "places": [
+      {
+        "addresses": [
+          "string"
+        ],
+        "category": "string",
+        "cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "energy_kwh": "number",
+        "free_sessions": "number",
+        "name": "string",
+        "price_per_kwh": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "sessions": "number",
+        "unpriced_energy_kwh": "number",
+        "unpriced_sessions": "number"
+      }
+    ],
+    "unplaced_locations": [],
+    "vehicle_id": "string"
+  },
+  "get_comparison": {
+    "result": null,
+    "scenarios": [
+      {
+        "annual_distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "currency": "string",
+        "fuel_type": "string",
+        "id": "string",
+        "l_per_100km": "number",
+        "mode": "string",
+        "name": "string",
+        "updated_at": "string",
+        "vehicle": "string",
+        "years": "number"
+      }
+    ]
+  },
+  "get_data_sources / empty": {
+    "pending_charges": "number",
+    "sources": [],
+    "sync": [],
+    "teslamate_connected": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_data_sources / ev": {
+    "pending_charges": "number",
+    "sources": [
+      {
+        "charges": "number",
+        "drives": "number",
+        "last_record": "string",
+        "odometer_readings": "number",
+        "origin": "string"
+      }
+    ],
+    "sync": [],
+    "teslamate_connected": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_data_sources / ice": {
+    "pending_charges": "number",
+    "sources": [
+      {
+        "charges": "number",
+        "drives": "number",
+        "last_record": "string",
+        "odometer_readings": "number",
+        "origin": "string"
+      }
+    ],
+    "sync": [],
+    "teslamate_connected": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_data_sources / layout": {
+    "pending_charges": "number",
+    "sources": [
+      {
+        "charges": "number",
+        "drives": "number",
+        "last_record": "string",
+        "odometer_readings": "number",
+        "origin": "string"
+      }
+    ],
+    "sync": [],
+    "teslamate_connected": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_drive_summary / empty": {
+    "cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "cost_per_km": null,
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "drives": "number",
+    "drives_to_qualify": "number",
+    "drives_without_distance": "number",
+    "energy_kwh": "number",
+    "from": "string",
+    "tags": [],
+    "to": "string",
+    "tolls": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "trip_groups": "number",
+    "untagged_drives": "number",
+    "vehicle_id": "string"
+  },
+  "get_drive_summary / ev": {
+    "cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "cost_per_km": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "drives": "number",
+    "drives_to_qualify": "number",
+    "drives_without_distance": "number",
+    "energy_kwh": "number",
+    "from": "string",
+    "tags": [
+      {
+        "cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "distance_share_pct": "number",
+        "energy_kwh": "number",
+        "shared_drives": "number",
+        "tag": null,
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        }
+      }
+    ],
+    "to": "string",
+    "tolls": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "trip_groups": "number",
+    "untagged_drives": "number",
+    "vehicle_id": "string"
+  },
+  "get_drive_summary / ice": {
+    "cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "cost_per_km": null,
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "drives": "number",
+    "drives_to_qualify": "number",
+    "drives_without_distance": "number",
+    "energy_kwh": "number",
+    "from": "string",
+    "tags": [],
+    "to": "string",
+    "tolls": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "trip_groups": "number",
+    "untagged_drives": "number",
+    "vehicle_id": "string"
+  },
+  "get_drive_summary / layout": {
+    "cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "cost_per_km": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "drives": "number",
+    "drives_to_qualify": "number",
+    "drives_without_distance": "number",
+    "energy_kwh": "number",
+    "from": "string",
+    "tags": [
+      {
+        "cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "distance_share_pct": "number",
+        "energy_kwh": "number",
+        "shared_drives": "number",
+        "tag": null,
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        }
+      }
+    ],
+    "to": "string",
+    "tolls": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "trip_groups": "number",
+    "untagged_drives": "number",
+    "vehicle_id": "string"
+  },
+  "get_energy_efficiency / empty": {
+    "currency": "string",
+    "electric": null,
+    "fuel": {
+      "consumption_l_100km": null,
+      "cost_per_100km": null,
+      "fill_ups": "number",
+      "litres": "number",
+      "price_per_litre": null
+    },
+    "powertrain": "string",
+    "vehicle_id": "string"
+  },
+  "get_energy_efficiency / ev": {
+    "currency": "string",
+    "electric": {
+      "basis": {
+        "battery": "string",
+        "charging": "string",
+        "consumption": "string",
+        "cost": "string",
+        "full_charge": "string",
+        "temperature": "string"
+      },
+      "battery_health": null,
+      "charge_efficiency_pct": null,
+      "charge_mix": [
+        {
+          "charge_efficiency_pct": null,
+          "class": "string",
+          "cost_per_full_charge": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "energy_cost": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "kwh_added": "number",
+          "price_per_kwh": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "sessions": "number",
+          "sessions_without_cost": "number"
+        }
+      ],
+      "consumption_kwh_100km": "number",
+      "cost_per_100km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "cost_per_full_charge": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "estimated_usable_capacity_kwh": null,
+      "price_per_kwh": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "sessions_without_cost": "number",
+      "temperature": null
+    },
+    "fuel": null,
+    "powertrain": "string",
+    "vehicle_id": "string"
+  },
+  "get_energy_efficiency / ice": {
+    "currency": "string",
+    "electric": null,
+    "fuel": {
+      "consumption_l_100km": "number",
+      "cost_per_100km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "fill_ups": "number",
+      "litres": "number",
+      "price_per_litre": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "powertrain": "string",
+    "vehicle_id": "string"
+  },
+  "get_energy_efficiency / layout": {
+    "currency": "string",
+    "electric": {
+      "basis": {
+        "battery": "string",
+        "charging": "string",
+        "consumption": "string",
+        "cost": "string",
+        "full_charge": "string",
+        "temperature": "string"
+      },
+      "battery_health": null,
+      "charge_efficiency_pct": null,
+      "charge_mix": [
+        {
+          "charge_efficiency_pct": null,
+          "class": "string",
+          "cost_per_full_charge": null,
+          "energy_cost": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "kwh_added": "number",
+          "price_per_kwh": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "sessions": "number",
+          "sessions_without_cost": "number"
+        }
+      ],
+      "consumption_kwh_100km": "number",
+      "cost_per_100km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "cost_per_full_charge": null,
+      "estimated_usable_capacity_kwh": null,
+      "price_per_kwh": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "sessions_without_cost": "number",
+      "temperature": null
+    },
+    "fuel": {
+      "consumption_l_100km": "number",
+      "cost_per_100km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "fill_ups": "number",
+      "litres": "number",
+      "price_per_litre": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "powertrain": "string",
+    "vehicle_id": "string"
+  },
+  "get_fleet_summary": {
+    "budget": {
+      "monthly": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "remaining": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "spent_this_month": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "used_pct": "number"
+    },
+    "current_month": "string",
+    "current_month_totals": [
+      {
+        "currency": "string",
+        "current_month_cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "vehicles": "number"
+      }
+    ],
+    "drivers": [
+      {
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "name": "string",
+        "percentage": "number"
+      }
+    ],
+    "fleet_currency": "string",
+    "monthly_costs": [
+      {
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "month": "string",
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      }
+    ],
+    "vehicle_count": "number",
+    "vehicles": [
+      {
+        "annual_cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "comparable": "boolean",
+        "completeness_pct": "number",
+        "currency": "string",
+        "current_month_cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "current_month_distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "energy_cost_per_100km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "full_cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "full_cost_rank": "number",
+        "kwh_per_100km": "number",
+        "litres_per_100km": null,
+        "make": "string",
+        "model": "string",
+        "name": "string",
+        "odometer": {
+          "unit": "string",
+          "value": "number"
+        },
+        "powertrain": "string",
+        "running_cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "vehicle_id": "string"
+      }
+    ]
+  },
+  "get_monthly_costs / empty": {
+    "cost_per_km": null,
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "months": [
+      {
+        "cost_per_km": null,
+        "costs": {
+          "energy": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "financing": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "insurance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "maintenance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "other": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tires": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tolls": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "total": {
+            "amount": "string",
+            "currency": "string"
+          }
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "in_progress": "boolean",
+        "month": "string",
+        "scheduled": null
+      }
+    ],
+    "total": {
+      "energy": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "financing": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "insurance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "maintenance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "other": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tolls": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "total": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "vehicle_id": "string"
+  },
+  "get_monthly_costs / ev": {
+    "cost_per_km": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "months": [
+      {
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "costs": {
+          "energy": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "financing": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "insurance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "maintenance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "other": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tires": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tolls": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "total": {
+            "amount": "string",
+            "currency": "string"
+          }
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "in_progress": "boolean",
+        "month": "string",
+        "scheduled": null
+      }
+    ],
+    "total": {
+      "energy": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "financing": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "insurance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "maintenance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "other": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tolls": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "total": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "vehicle_id": "string"
+  },
+  "get_monthly_costs / ice": {
+    "cost_per_km": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "months": [
+      {
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "costs": {
+          "energy": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "financing": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "insurance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "maintenance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "other": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tires": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tolls": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "total": {
+            "amount": "string",
+            "currency": "string"
+          }
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "in_progress": "boolean",
+        "month": "string",
+        "scheduled": null
+      }
+    ],
+    "total": {
+      "energy": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "financing": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "insurance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "maintenance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "other": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tolls": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "total": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "vehicle_id": "string"
+  },
+  "get_monthly_costs / layout": {
+    "cost_per_km": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "currency": "string",
+    "distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "months": [
+      {
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "costs": {
+          "energy": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "financing": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "insurance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "maintenance": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "other": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tires": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "tolls": {
+            "amount": "string",
+            "currency": "string"
+          },
+          "total": {
+            "amount": "string",
+            "currency": "string"
+          }
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "in_progress": "boolean",
+        "month": "string",
+        "scheduled": null
+      }
+    ],
+    "total": {
+      "energy": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "financing": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "insurance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "maintenance": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "other": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tolls": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "total": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "vehicle_id": "string"
+  },
+  "get_odometer / empty": {
+    "current": {
+      "unit": "string",
+      "value": "number"
+    },
+    "estimate": null,
+    "first_reading": null,
+    "last_reading": null,
+    "readings": "number",
+    "vehicle_id": "string"
+  },
+  "get_odometer / ev": {
+    "current": {
+      "unit": "string",
+      "value": "number"
+    },
+    "estimate": null,
+    "first_reading": "string",
+    "last_reading": "string",
+    "readings": "number",
+    "vehicle_id": "string"
+  },
+  "get_odometer / ice": {
+    "current": {
+      "unit": "string",
+      "value": "number"
+    },
+    "estimate": null,
+    "first_reading": "string",
+    "last_reading": "string",
+    "readings": "number",
+    "vehicle_id": "string"
+  },
+  "get_odometer / layout": {
+    "current": {
+      "unit": "string",
+      "value": "number"
+    },
+    "estimate": null,
+    "first_reading": "string",
+    "last_reading": "string",
+    "readings": "number",
+    "vehicle_id": "string"
+  },
+  "get_reminders / empty": {
+    "as_of": "string",
+    "due_soon": "number",
+    "odometer": {
+      "unit": "string",
+      "value": "number"
+    },
+    "overdue": "number",
+    "reminders": [],
+    "total": "number",
+    "vehicle_id": "string"
+  },
+  "get_reminders / ev": {
+    "as_of": "string",
+    "due_soon": "number",
+    "odometer": {
+      "unit": "string",
+      "value": "number"
+    },
+    "overdue": "number",
+    "reminders": [
+      {
+        "category": "string",
+        "due_date": null,
+        "due_odometer": null,
+        "id": "string",
+        "interval_km": null,
+        "interval_months": null,
+        "last_maintenance": null,
+        "last_service_date": null,
+        "last_service_odometer": null,
+        "observed_interval_km": null,
+        "observed_interval_months": null,
+        "remaining_days": null,
+        "remaining_km": null,
+        "repeat_yearly": "boolean",
+        "scheduled_date": null,
+        "status": "string",
+        "title": "string"
+      }
+    ],
+    "total": "number",
+    "vehicle_id": "string"
+  },
+  "get_reminders / ice": {
+    "as_of": "string",
+    "due_soon": "number",
+    "odometer": {
+      "unit": "string",
+      "value": "number"
+    },
+    "overdue": "number",
+    "reminders": [
+      {
+        "category": "string",
+        "due_date": null,
+        "due_odometer": null,
+        "id": "string",
+        "interval_km": null,
+        "interval_months": null,
+        "last_maintenance": null,
+        "last_service_date": null,
+        "last_service_odometer": null,
+        "observed_interval_km": null,
+        "observed_interval_months": null,
+        "remaining_days": null,
+        "remaining_km": null,
+        "repeat_yearly": "boolean",
+        "scheduled_date": null,
+        "status": "string",
+        "title": "string"
+      }
+    ],
+    "total": "number",
+    "vehicle_id": "string"
+  },
+  "get_reminders / layout": {
+    "as_of": "string",
+    "due_soon": "number",
+    "odometer": {
+      "unit": "string",
+      "value": "number"
+    },
+    "overdue": "number",
+    "reminders": [
+      {
+        "category": "string",
+        "due_date": null,
+        "due_odometer": null,
+        "id": "string",
+        "interval_km": null,
+        "interval_months": null,
+        "last_maintenance": null,
+        "last_service_date": null,
+        "last_service_odometer": null,
+        "observed_interval_km": null,
+        "observed_interval_months": null,
+        "remaining_days": null,
+        "remaining_km": null,
+        "repeat_yearly": "boolean",
+        "scheduled_date": null,
+        "status": "string",
+        "title": "string"
+      }
+    ],
+    "total": "number",
+    "vehicle_id": "string"
+  },
+  "get_tag_breakdown / empty": {
+    "currency": "string",
+    "tags": [],
+    "vehicle_id": "string"
+  },
+  "get_tag_breakdown / ev": {
+    "currency": "string",
+    "tags": [
+      {
+        "cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "distance_share_pct": "number",
+        "energy_kwh": "number",
+        "shared_drives": "number",
+        "tag": null,
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        }
+      }
+    ],
+    "vehicle_id": "string"
+  },
+  "get_tag_breakdown / ice": {
+    "currency": "string",
+    "tags": [],
+    "vehicle_id": "string"
+  },
+  "get_tag_breakdown / layout": {
+    "currency": "string",
+    "tags": [
+      {
+        "cost": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "distance_share_pct": "number",
+        "energy_kwh": "number",
+        "shared_drives": "number",
+        "tag": null,
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        }
+      }
+    ],
+    "vehicle_id": "string"
+  },
+  "get_tire_status / empty": {
+    "tires": [],
+    "vehicle_id": "string"
+  },
+  "get_tire_status / ev": {
+    "tires": [
+      {
+        "brand": "string",
+        "condition": "string",
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "depth_measured": "boolean",
+        "depth_measurements": "number",
+        "dimension": "string",
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "legal_min_mm": "number",
+        "life_used_pct": "number",
+        "model": "string",
+        "position": "string",
+        "purchase_date": "string",
+        "purchase_price": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "remaining_distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "replacement_date": "string",
+        "season": "string",
+        "tread_depth_mm": "number",
+        "wear_basis": "string",
+        "wear_pct": "number"
+      }
+    ],
+    "vehicle_id": "string"
+  },
+  "get_tire_status / ice": {
+    "tires": [
+      {
+        "brand": "string",
+        "condition": "string",
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "depth_measured": "boolean",
+        "depth_measurements": "number",
+        "dimension": "string",
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "legal_min_mm": "number",
+        "life_used_pct": "number",
+        "model": "string",
+        "position": "string",
+        "purchase_date": "string",
+        "purchase_price": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "remaining_distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "replacement_date": "string",
+        "season": "string",
+        "tread_depth_mm": "number",
+        "wear_basis": "string",
+        "wear_pct": "number"
+      }
+    ],
+    "vehicle_id": "string"
+  },
+  "get_tire_status / layout": {
+    "tires": [
+      {
+        "brand": "string",
+        "condition": "string",
+        "cost_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "depth_measured": "boolean",
+        "depth_measurements": "number",
+        "dimension": "string",
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "legal_min_mm": "number",
+        "life_used_pct": "number",
+        "model": "string",
+        "position": "string",
+        "purchase_date": "string",
+        "purchase_price": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "remaining_distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "replacement_date": "string",
+        "season": "string",
+        "tread_depth_mm": "number",
+        "wear_basis": "string",
+        "wear_pct": "number"
+      }
+    ],
+    "vehicle_id": "string"
+  },
+  "get_vehicle_costs / empty": {
+    "completeness": {
+      "is_complete": "boolean",
+      "score_available": "boolean",
+      "score_pct": null,
+      "warning_details": [
+        {
+          "code": "string",
+          "message": "string"
+        }
+      ],
+      "warnings": [
+        "string"
+      ]
+    },
+    "currency": "string",
+    "last_12_months": {
+      "cost_per_km": null,
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": "string",
+      "months_covered": "number",
+      "to": "string"
+    },
+    "since_purchase": {
+      "cost_per_km": null,
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": null,
+      "months_covered": "number",
+      "to": null
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_costs / ev": {
+    "completeness": {
+      "is_complete": "boolean",
+      "score_available": "boolean",
+      "score_pct": "number",
+      "warning_details": [
+        {
+          "code": "string",
+          "message": "string",
+          "params": {
+            "km": "number",
+            "kwh_per_100km": "number",
+            "price_per_kwh": "number"
+          }
+        }
+      ],
+      "warnings": [
+        "string"
+      ]
+    },
+    "currency": "string",
+    "last_12_months": {
+      "cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": "string",
+      "months_covered": "number",
+      "to": "string"
+    },
+    "since_purchase": {
+      "cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": null,
+      "months_covered": "number",
+      "to": null
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_costs / ice": {
+    "completeness": {
+      "is_complete": "boolean",
+      "score_available": "boolean",
+      "score_pct": "number",
+      "warning_details": [],
+      "warnings": []
+    },
+    "currency": "string",
+    "last_12_months": {
+      "cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": "string",
+      "months_covered": "number",
+      "to": "string"
+    },
+    "since_purchase": {
+      "cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": null,
+      "months_covered": "number",
+      "to": null
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_costs / layout": {
+    "completeness": {
+      "is_complete": "boolean",
+      "score_available": "boolean",
+      "score_pct": "number",
+      "warning_details": [
+        {
+          "code": "string",
+          "message": "string"
+        }
+      ],
+      "warnings": [
+        "string"
+      ]
+    },
+    "currency": "string",
+    "last_12_months": {
+      "cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": "string",
+      "months_covered": "number",
+      "to": "string"
+    },
+    "since_purchase": {
+      "cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "costs": {
+        "energy": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "financing": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "insurance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "maintenance": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "other": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tires": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "tolls": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "total": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "from": null,
+      "months_covered": "number",
+      "to": null
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_data_gaps / empty": {
+    "acquisition_missing": "boolean",
+    "acquisition_missing_fields": [],
+    "charges_without_cost": "number",
+    "insurance_missing": "boolean",
+    "issues": [],
+    "missing": [],
+    "odometer_anomalies": "number",
+    "odometer_gap_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "odometer_gaps": "number",
+    "score_dimensions": [],
+    "start_odometer_missing": "boolean",
+    "suspicious_entries": [],
+    "truncated": "boolean",
+    "unconverted_expenses": "number",
+    "unqualified_drives": "number",
+    "untracked_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_data_gaps / ev": {
+    "acquisition_missing": "boolean",
+    "acquisition_missing_fields": [],
+    "charges_without_cost": "number",
+    "insurance_missing": "boolean",
+    "issues": [],
+    "missing": [],
+    "odometer_anomalies": "number",
+    "odometer_gap_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "odometer_gaps": "number",
+    "score_dimensions": [
+      {
+        "applicable": "boolean",
+        "key": "string",
+        "label": "string",
+        "score_pct": "number",
+        "weight": "number"
+      }
+    ],
+    "start_odometer_missing": "boolean",
+    "suspicious_entries": [
+      {
+        "amount": null,
+        "category": "string",
+        "date": "string",
+        "highest_other_price": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "kind": "string",
+        "lowest_other_price": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "unit_price": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "usual_amount": null
+      }
+    ],
+    "truncated": "boolean",
+    "unconverted_expenses": "number",
+    "unqualified_drives": "number",
+    "untracked_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_data_gaps / ice": {
+    "acquisition_missing": "boolean",
+    "acquisition_missing_fields": [],
+    "charges_without_cost": "number",
+    "insurance_missing": "boolean",
+    "issues": [],
+    "missing": [],
+    "odometer_anomalies": "number",
+    "odometer_gap_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "odometer_gaps": "number",
+    "score_dimensions": [
+      {
+        "applicable": "boolean",
+        "key": "string",
+        "label": "string",
+        "score_pct": "number",
+        "weight": "number"
+      }
+    ],
+    "start_odometer_missing": "boolean",
+    "suspicious_entries": [],
+    "truncated": "boolean",
+    "unconverted_expenses": "number",
+    "unqualified_drives": "number",
+    "untracked_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_data_gaps / layout": {
+    "acquisition_missing": "boolean",
+    "acquisition_missing_fields": [
+      "string"
+    ],
+    "charges_without_cost": "number",
+    "insurance_missing": "boolean",
+    "issues": [],
+    "missing": [
+      {
+        "count": "number",
+        "estimated_amount": null,
+        "fix_in": null,
+        "kind": "string",
+        "quantity": null,
+        "quantity_unit": null
+      }
+    ],
+    "odometer_anomalies": "number",
+    "odometer_gap_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "odometer_gaps": "number",
+    "score_dimensions": [
+      {
+        "applicable": "boolean",
+        "key": "string",
+        "label": "string",
+        "score_pct": "number",
+        "weight": "number"
+      }
+    ],
+    "start_odometer_missing": "boolean",
+    "suspicious_entries": [],
+    "truncated": "boolean",
+    "unconverted_expenses": "number",
+    "unqualified_drives": "number",
+    "untracked_distance": {
+      "unit": "string",
+      "value": "number"
+    },
+    "vehicle_id": "string"
+  },
+  "get_vehicle_ownership / empty": {
+    "acquisition_cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "acquisition_type": null,
+    "contract": null,
+    "currency": "string",
+    "economic_cost": {
+      "carpool_revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation_known": "boolean",
+      "depreciation_per_km": null,
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "full_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net_per_km": null,
+      "full_cost_per_km": null,
+      "tires_amortized": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires_paid": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "resale": null,
+    "resale_unavailable": "string",
+    "vehicle_id": "string"
+  },
+  "get_vehicle_ownership / ev": {
+    "acquisition_cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "acquisition_type": "string",
+    "contract": {
+      "down_payment": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "duration_months": "number",
+      "end": "string",
+      "includes_insurance": "boolean",
+      "includes_maintenance": "boolean",
+      "includes_tires": "boolean",
+      "mileage": {
+        "allowance_per_year": {
+          "unit": "string",
+          "value": "number"
+        },
+        "allowance_to_date": {
+          "unit": "string",
+          "value": "number"
+        },
+        "allowance_total": {
+          "unit": "string",
+          "value": "number"
+        },
+        "driven": {
+          "unit": "string",
+          "value": "number"
+        },
+        "excess_accrued": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "excess_price_per_km": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "excess_projected": {
+          "amount": "string",
+          "currency": "string"
+        }
+      },
+      "monthly_rent": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "option_exercised_on": null,
+      "purchase_option": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "start": "string"
+    },
+    "currency": "string",
+    "economic_cost": {
+      "carpool_revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation_known": "boolean",
+      "depreciation_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "full_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires_amortized": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires_paid": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "resale": {
+      "age_months": "number",
+      "assumptions": "string",
+      "battery_health_percent": null,
+      "current_value": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation_to_date": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "expected_value": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "holding_months": "number",
+      "progress": "number",
+      "purchase_option_margin": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "start_value": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "under_lease": "boolean"
+    },
+    "resale_unavailable": null,
+    "vehicle_id": "string"
+  },
+  "get_vehicle_ownership / ice": {
+    "acquisition_cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "acquisition_type": "string",
+    "contract": null,
+    "currency": "string",
+    "economic_cost": {
+      "carpool_revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation_known": "boolean",
+      "depreciation_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "full_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires_amortized": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires_paid": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "resale": {
+      "age_months": "number",
+      "assumptions": "string",
+      "battery_health_percent": null,
+      "current_value": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation_to_date": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "expected_value": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "holding_months": "number",
+      "progress": "number",
+      "purchase_option_margin": null,
+      "start_value": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "under_lease": "boolean"
+    },
+    "resale_unavailable": null,
+    "vehicle_id": "string"
+  },
+  "get_vehicle_ownership / layout": {
+    "acquisition_cost": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "acquisition_type": "string",
+    "contract": null,
+    "currency": "string",
+    "economic_cost": {
+      "carpool_revenue": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "depreciation_known": "boolean",
+      "depreciation_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "distance": {
+        "unit": "string",
+        "value": "number"
+      },
+      "full_cost": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_net_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "full_cost_per_km": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires_amortized": {
+        "amount": "string",
+        "currency": "string"
+      },
+      "tires_paid": {
+        "amount": "string",
+        "currency": "string"
+      }
+    },
+    "resale": null,
+    "resale_unavailable": "string",
+    "vehicle_id": "string"
+  },
+  "list_expenses / empty": {
+    "by_category": [],
+    "count": "number",
+    "currency": "string",
+    "expenses": [],
+    "next_cursor": null,
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "vehicle_id": "string"
+  },
+  "list_expenses / ev": {
+    "by_category": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "category": "string",
+        "count": "number"
+      }
+    ],
+    "count": "number",
+    "currency": "string",
+    "expenses": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "category": "string",
+        "date": "string",
+        "has_receipt": "boolean",
+        "kind": "string",
+        "kwh": "number",
+        "litres": null,
+        "note": null,
+        "place": "string",
+        "place_category": "string",
+        "recurring": "boolean"
+      }
+    ],
+    "next_cursor": "string",
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "vehicle_id": "string"
+  },
+  "list_expenses / ice": {
+    "by_category": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "category": "string",
+        "count": "number"
+      }
+    ],
+    "count": "number",
+    "currency": "string",
+    "expenses": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "category": "string",
+        "date": "string",
+        "has_receipt": null,
+        "kind": "string",
+        "kwh": null,
+        "litres": "number",
+        "note": null,
+        "place": null,
+        "place_category": null,
+        "recurring": "boolean"
+      }
+    ],
+    "next_cursor": null,
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "vehicle_id": "string"
+  },
+  "list_expenses / layout": {
+    "by_category": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "category": "string",
+        "count": "number"
+      }
+    ],
+    "count": "number",
+    "currency": "string",
+    "expenses": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "category": "string",
+        "date": "string",
+        "has_receipt": "boolean",
+        "kind": "string",
+        "kwh": "number",
+        "litres": null,
+        "note": null,
+        "place": "string",
+        "place_category": "string",
+        "recurring": "boolean"
+      }
+    ],
+    "next_cursor": "string",
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "vehicle_id": "string"
+  },
+  "list_trip_groups / empty": {
+    "groups": [],
+    "matching": "number",
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_trip_groups / ev": {
+    "groups": [],
+    "matching": "number",
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_trip_groups / ice": {
+    "groups": [],
+    "matching": "number",
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_trip_groups / layout": {
+    "groups": [],
+    "matching": "number",
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_vehicle_trips / empty": {
+    "matching": "number",
+    "trips": [],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_vehicle_trips / ev": {
+    "matching": "number",
+    "trips": [
+      {
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "driver": "string",
+        "duration_min": "number",
+        "end_time": "string",
+        "energy_kwh": "number",
+        "from": "string",
+        "start_time": "string",
+        "tags": [],
+        "to": "string",
+        "travel_expenses": null
+      }
+    ],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_vehicle_trips / ice": {
+    "matching": "number",
+    "trips": [],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_vehicle_trips / layout": {
+    "matching": "number",
+    "trips": [
+      {
+        "distance": {
+          "unit": "string",
+          "value": "number"
+        },
+        "driver": "string",
+        "duration_min": "number",
+        "end_time": "string",
+        "energy_kwh": "number",
+        "from": "string",
+        "start_time": "string",
+        "tags": [],
+        "to": "string",
+        "travel_expenses": null
+      }
+    ],
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "list_vehicles": {
+    "vehicles": [
+      {
+        "acquisition_type": "string",
+        "currency": "string",
+        "id": "string",
+        "make": "string",
+        "model": "string",
+        "name": "string",
+        "odometer": {
+          "unit": "string",
+          "value": "number"
+        },
+        "owned_since": "string",
+        "powertrain": "string",
+        "role": "string",
+        "tracking_mode": "string"
+      }
+    ]
+  }
+}
