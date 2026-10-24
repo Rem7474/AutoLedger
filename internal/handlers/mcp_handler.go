@@ -153,6 +153,7 @@ func (h *MCPHandler) addTools() {
 	h.addExpenseTools(readOnly)
 	h.addFleetTools(readOnly)
 	h.addTagTools(readOnly)
+	h.addDriveSummaryTools(readOnly)
 	h.addCarpoolTools(readOnly)
 	h.addPlaceTools(readOnly)
 	h.addTripGroupTools(readOnly)

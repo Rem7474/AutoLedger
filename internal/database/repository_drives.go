@@ -255,6 +255,16 @@ func (r *Repository) CountUnqualifiedDrives(ctx context.Context, vehicleID strin
 	return count, err
 }
 
+// CountUnqualifiedDrivesBetween is CountUnqualifiedDrives for the drives that began between from and to (both
+// optional, both included).
+func (r *Repository) CountUnqualifiedDrivesBetween(ctx context.Context, vehicleID string, from, to *time.Time) (int, error) {
+	var count int
+	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM drives WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL
+		AND ($2::timestamptz IS NULL OR start_time >= $2) AND ($3::timestamptz IS NULL OR start_time <= $3) AND `+UnqualifiedDrivePredicate,
+		vehicleID, from, to).Scan(&count)
+	return count, err
+}
+
 // SetDriveTollReviewed marks (or unmarks) a drive as explicitly reviewed without toll.
 func (r *Repository) SetDriveTollReviewed(ctx context.Context, driveID, vehicleID string, reviewed bool) error {
 	tag, err := r.pool.Exec(ctx, `

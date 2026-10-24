@@ -168,7 +168,7 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_comparison,get_data_sources,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_trip_groups,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -512,6 +512,33 @@ func TestMCPTagBreakdownAnswersForAVehicleWithoutTaggedDrives(t *testing.T) {
 	}
 
 	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_tag_breakdown", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
+	if err != nil || !other.IsError {
+		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
+	}
+}
+
+func TestMCPDriveSummaryAnswersForAVehicleWithoutDrivesAndRefusesAnotherAccountsOne(t *testing.T) {
+	f := newMCPFixture(t)
+	session := f.connect(t, f.readTok)
+
+	res, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_drive_summary", Arguments: map[string]any{"vehicle_id": f.mine.ID, "from": "2026-01-01", "to": "2026-01-31"}})
+	if err != nil || res.IsError {
+		t.Fatalf("drive summary: %v %+v", err, res)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationDriveSummary
+	if err := json.Unmarshal(raw, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.VehicleID != f.mine.ID || out.Currency != "GBP" || out.Drives != 0 || out.From != "2026-01-01" || out.Tags == nil || strings.Contains(string(raw), f.vin) {
+		t.Errorf("drive summary: %s", raw)
+	}
+
+	bad, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_drive_summary", Arguments: map[string]any{"vehicle_id": f.mine.ID, "from": "last week"}})
+	if err != nil || !bad.IsError {
+		t.Errorf("a period that is not a date is refused: %v %+v", err, bad)
+	}
+	other, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_drive_summary", Arguments: map[string]any{"vehicle_id": f.theirs.ID}})
 	if err != nil || !other.IsError {
 		t.Errorf("another account's vehicle is refused: %v %+v", err, other)
 	}
