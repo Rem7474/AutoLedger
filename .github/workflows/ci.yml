@@ -216,6 +216,8 @@ jobs:
           ENVIRONMENT: development
           DATABASE_URL: postgres://teslacost:test@localhost:5432/teslacost_e2e?sslmode=disable
           AUTOLEDGER_PORT: 8080
+          # The address the tests use: an MCP client checks it against the one the server announces for its endpoint.
+          AUTOLEDGER_BASE_URL: ${{ env.BASE_URL }}
           AUTOLEDGER_STORAGE_DIR: ${{ runner.temp }}/documents
           AUTOLEDGER_MCP_ENABLED: true
         run: |
