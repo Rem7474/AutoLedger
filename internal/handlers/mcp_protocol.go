@@ -181,7 +181,7 @@ var mcpPrompts = []mcpPromptSpec{
 		text: func(a map[string]string) string {
 			return "Prepare the professional and personal split of " + periodClause(a, "year", "the previous year") + " for " + vehicleClause(a) + ". " +
 				"Call get_drive_summary from the first to the last day of the year for the distance and allocated cost of each tag and of the untagged drives, and list_vehicle_trips over the same days for the trips behind them. " +
-				"Say how much of the year is untagged (untagged_drives) and how that limits the split, and that drives_to_qualify counts motorway drives whose tolls may be missing. A drive with several tags counts in each: do not add the rows when shared_drives is above zero. Do not apply any tax scale."
+				"Say how much of the year is untagged (untagged_drives) and how that limits the split, and that drives_to_qualify counts motorway drives whose tolls may be missing. A drive with several tags counts in each: do not add the rows when shared_drives is above zero. Do not apply any tax scale of your own; when the owner wants the mileage allowance, call get_mileage_report over the same days and say that its scales are the rates the owner typed, not an official table."
 		},
 	},
 }
