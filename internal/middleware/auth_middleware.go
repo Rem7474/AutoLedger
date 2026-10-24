@@ -115,14 +115,15 @@ func authenticate(jwtSecret string, tokenValidator APITokenValidator) func(http.
 					return
 				}
 				tokenHash := auth.HashAPIToken(tokenString)
-				userID, email, scope, err := tokenValidator.ValidateAPIToken(r.Context(), tokenHash)
+				grant, err := ValidateTokenGrant(r.Context(), tokenValidator, tokenHash)
 				if err != nil {
 					sendJSONError(w, http.StatusUnauthorized, "Invalid or expired API token")
 					return
 				}
-				ctx := context.WithValue(r.Context(), UserIDKey, userID)
-				ctx = context.WithValue(ctx, UserEmailKey, email)
-				ctx = context.WithValue(ctx, TokenScopeKey, scope)
+				ctx := context.WithValue(r.Context(), UserIDKey, grant.UserID)
+				ctx = context.WithValue(ctx, UserEmailKey, grant.Email)
+				ctx = context.WithValue(ctx, TokenScopeKey, grant.Scope)
+				ctx = WithVehicleScope(ctx, grant.VehicleIDs)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}

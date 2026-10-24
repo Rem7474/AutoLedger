@@ -112,6 +112,10 @@ func (h *IntegrationReadHandler) withOwnership(ctx context.Context, out *Integra
 // errIntegrationVehicleNotFound is a vehicle the account cannot see, whether it does not exist or belongs to someone else.
 var errIntegrationVehicleNotFound = errors.New("vehicle not found")
 
+// errIntegrationVehiclesLimited is a household-wide view asked by a token that is limited to some vehicles: its totals
+// would include the others.
+var errIntegrationVehiclesLimited = errors.New("this connection is limited to some vehicles")
+
 // errIntegrationComparisonNotFound is a scenario the account has not saved.
 var errIntegrationComparisonNotFound = errors.New("comparison not found")
 
@@ -119,6 +123,10 @@ var errIntegrationComparisonNotFound = errors.New("comparison not found")
 func writeIntegrationError(w http.ResponseWriter, r *http.Request, err error, fallback string) {
 	if errors.Is(err, errIntegrationVehicleNotFound) {
 		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))
+		return
+	}
+	if errors.Is(err, errIntegrationVehiclesLimited) {
+		writeAPIError(w, http.StatusForbidden, apierror.New("token.vehicles_limited", "This token is limited to some vehicles, so the view that adds up every vehicle is unavailable"))
 		return
 	}
 	if errors.Is(err, errIntegrationComparisonNotFound) {
@@ -130,6 +138,9 @@ func writeIntegrationError(w http.ResponseWriter, r *http.Request, err error, fa
 
 // vehicleOf returns a vehicle of the user's account, or errIntegrationVehicleNotFound.
 func (h *IntegrationReadHandler) vehicleOf(ctx context.Context, userID, vehicleID string) (*models.Vehicle, error) {
+	if !middleware.VehicleAllowed(ctx, vehicleID) {
+		return nil, errIntegrationVehicleNotFound
+	}
 	v, err := h.repo.GetVehicleByID(ctx, vehicleID, userID)
 	if err != nil {
 		return nil, errIntegrationVehicleNotFound
@@ -137,7 +148,7 @@ func (h *IntegrationReadHandler) vehicleOf(ctx context.Context, userID, vehicleI
 	return v, nil
 }
 
-// Vehicles lists the vehicles the account can see.
+// Vehicles lists the vehicles the account can see, within the vehicles the token is limited to.
 func (h *IntegrationReadHandler) Vehicles(ctx context.Context, userID string) ([]IntegrationVehicleV1, error) {
 	vehicles, err := h.repo.ListVehiclesByUserID(ctx, userID)
 	if err != nil {
@@ -145,6 +156,9 @@ func (h *IntegrationReadHandler) Vehicles(ctx context.Context, userID string) ([
 	}
 	out := make([]IntegrationVehicleV1, 0, len(vehicles))
 	for i := range vehicles {
+		if !middleware.VehicleAllowed(ctx, vehicles[i].ID) {
+			continue
+		}
 		v := integrationVehicleV1(&vehicles[i])
 		if err := h.withOwnership(ctx, &v); err != nil {
 			return nil, err

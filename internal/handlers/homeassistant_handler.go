@@ -398,6 +398,9 @@ func (h *HomeAssistantHandler) ListVehicles(w http.ResponseWriter, r *http.Reque
 	}
 	out := make([]IntegrationVehicle, 0, len(vehicles))
 	for i := range vehicles {
+		if !middleware.VehicleAllowed(r.Context(), vehicles[i].ID) {
+			continue
+		}
 		out = append(out, integrationVehicle(&vehicles[i]))
 	}
 	writeJSON(w, http.StatusOK, out)

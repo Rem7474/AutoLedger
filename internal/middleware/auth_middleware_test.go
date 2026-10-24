@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/teslacost/teslacost/internal/auth"
+	"github.com/teslacost/teslacost/internal/models"
 )
 
 func TestAuthenticateJWTAcceptsBearerHeader(t *testing.T) {
@@ -196,5 +197,42 @@ func TestAPITokensOnlyOpenIntegrationRoutes(t *testing.T) {
 	}
 	if code, user := call(AuthenticateIntegration(secret, validator), session); code != http.StatusOK || user != "user-2" {
 		t.Errorf("integration routes: a session got %d for %q, want 200 for user-2", code, user)
+	}
+}
+
+// grantTokenValidator also knows the vehicles a token is limited to.
+type grantTokenValidator struct {
+	scopedTokenValidator
+	vehicles []string
+}
+
+func (g grantTokenValidator) ValidateAPITokenGrant(ctx context.Context, tokenHash string) (models.TokenGrant, error) {
+	userID, email, scope, err := g.ValidateAPIToken(ctx, tokenHash)
+	return models.TokenGrant{UserID: userID, Email: email, Scope: scope, VehicleIDs: g.vehicles}, err
+}
+
+func TestAuthenticateIntegrationCarriesTheVehiclesATokenIsLimitedTo(t *testing.T) {
+	read := auth.TokenPrefix + "read-token-0123456789abcdef0123456789abcdef0123"
+	hash := auth.HashAPIToken(read)
+	seen := func(validator APITokenValidator) (ids []string, limited bool, allowedOther bool) {
+		handler := AuthenticateIntegration("secret", validator)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			ids, limited = VehicleScope(r.Context())
+			allowedOther = VehicleAllowed(r.Context(), "vehicle-b")
+		}))
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req.Header.Set("Authorization", "Bearer "+read)
+		handler.ServeHTTP(httptest.NewRecorder(), req)
+		return ids, limited, allowedOther
+	}
+
+	ids, limited, other := seen(grantTokenValidator{scopedTokenValidator{hash: auth.ScopeRead}, []string{"vehicle-a"}})
+	if !limited || len(ids) != 1 || ids[0] != "vehicle-a" || other {
+		t.Errorf("a limited token reaches its vehicles only: %v %v %v", ids, limited, other)
+	}
+	if _, limited, other = seen(grantTokenValidator{scopedTokenValidator{hash: auth.ScopeRead}, nil}); limited || !other {
+		t.Errorf("a token with no list is not limited: %v %v", limited, other)
+	}
+	if _, limited, other = seen(scopedTokenValidator{hash: auth.ScopeRead}); limited || !other {
+		t.Errorf("a validator that knows nothing of vehicles leaves the token unlimited: %v %v", limited, other)
 	}
 }

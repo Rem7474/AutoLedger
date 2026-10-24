@@ -142,7 +142,7 @@ func TestOAuthAuthorizationCodeFlowGivesARevocableReadGrant(t *testing.T) {
 
 	preview := f.do(http.MethodGet, "/api/oauth/authorize?client_id="+clientID+"&redirect_uri="+url.QueryEscape(callbackURI)+
 		"&response_type=code&code_challenge="+pkceChallenge+"&code_challenge_method=S256&resource="+url.QueryEscape("https://ledger.example/mcp"), "", "")
-	if got := decode[map[string]string](t, preview); preview.Code != http.StatusOK || got["client_name"] != "Claude Desktop" || got["redirect_host"] != "127.0.0.1:7777" || got["scope"] != "read" {
+	if got := decode[map[string]any](t, preview); preview.Code != http.StatusOK || got["client_name"] != "Claude Desktop" || got["redirect_host"] != "127.0.0.1:7777" || got["scope"] != "read" {
 		t.Fatalf("preview: %d %v", preview.Code, got)
 	}
 
@@ -412,5 +412,82 @@ func TestOAuthMetadataAdvertisesOnlyWhatIsSupported(t *testing.T) {
 	}
 	if h.Resource() != "https://ledger.example/mcp" {
 		t.Errorf("resource %q", h.Resource())
+	}
+}
+
+func TestOAuthGrantLimitedToChosenVehiclesKeepsTheLimitThroughRenewals(t *testing.T) {
+	f := newOAuthFixture(t)
+	ctx := context.Background()
+	var ids []string
+	for _, name := range []string{"Daily", "Van"} {
+		v := &models.Vehicle{UserID: f.user.ID, Name: name, Currency: "EUR", TeslaMateAuthType: models.AuthModeNone}
+		if err := f.repo.CreateVehicle(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+		ids = append(ids, v.ID)
+	}
+	stranger, err := f.repo.CreateUser(ctx, "oauth-stranger@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	foreign := &models.Vehicle{UserID: stranger.ID, Name: "Not mine", Currency: "EUR", TeslaMateAuthType: models.AuthModeNone}
+	if err := f.repo.CreateVehicle(ctx, foreign); err != nil {
+		t.Fatal(err)
+	}
+	clientID := f.register("Claude Desktop", callbackURI)
+
+	preview := f.do(http.MethodGet, "/api/oauth/authorize?client_id="+clientID+"&redirect_uri="+url.QueryEscape(callbackURI)+
+		"&response_type=code&code_challenge="+pkceChallenge+"&code_challenge_method=S256", "", "")
+	shown := decode[struct {
+		Vehicles []struct{ ID, Name, Role string } `json:"vehicles"`
+	}](t, preview)
+	if len(shown.Vehicles) != 2 || shown.Vehicles[0].Role != string(models.RoleOwner) {
+		t.Fatalf("the consent page lists the vehicles the account can see, with the role: %+v", shown.Vehicles)
+	}
+
+	decide := func(vehicleIDs any) *httptest.ResponseRecorder {
+		body, _ := json.Marshal(map[string]any{
+			"client_id": clientID, "redirect_uri": callbackURI, "response_type": "code", "code_challenge": pkceChallenge,
+			"code_challenge_method": "S256", "state": "xyz", "decision": "approve", "vehicle_ids": vehicleIDs,
+		})
+		return f.do(http.MethodPost, "/api/oauth/authorize", "application/json", string(body))
+	}
+	for name, bad := range map[string]any{"an empty list": []string{}, "a vehicle of another account": []string{foreign.ID}, "an unknown id": []string{"00000000-0000-0000-0000-000000000000"}} {
+		if rec := decide(bad); rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "oauth.invalid_vehicles") {
+			t.Errorf("%s is refused: %d %s", name, rec.Code, rec.Body.String())
+		}
+	}
+
+	rec := decide([]string{ids[1], ids[1]})
+	if rec.Code != http.StatusOK {
+		t.Fatalf("approve: %d %s", rec.Code, rec.Body.String())
+	}
+	target, _ := url.Parse(decode[struct {
+		RedirectURL string `json:"redirect_url"`
+	}](t, rec).RedirectURL)
+	granted := decode[tokens](t, f.exchange(clientID, target.Query().Get("code"), pkceVerifier))
+
+	grant, err := f.repo.ValidateAPITokenGrant(ctx, auth.HashAPIToken(granted.AccessToken))
+	if err != nil || len(grant.VehicleIDs) != 1 || grant.VehicleIDs[0] != ids[1] {
+		t.Fatalf("the grant is limited to the chosen vehicle, once: %+v %v", grant, err)
+	}
+	list, err := f.repo.ListAPITokens(ctx, f.user.ID)
+	if err != nil || len(list) != 1 || len(list[0].VehicleIDs) != 1 || list[0].VehicleIDs[0] != ids[1] {
+		t.Fatalf("the account page can say which vehicles the grant covers: %+v %v", list, err)
+	}
+
+	renewed := decode[tokens](t, f.form("/oauth/token", url.Values{"grant_type": {"refresh_token"}, "client_id": {clientID}, "refresh_token": {granted.RefreshToken}}))
+	if grant, err = f.repo.ValidateAPITokenGrant(ctx, auth.HashAPIToken(renewed.AccessToken)); err != nil || len(grant.VehicleIDs) != 1 || grant.VehicleIDs[0] != ids[1] {
+		t.Fatalf("a renewal keeps the limit: %+v %v", grant, err)
+	}
+
+	// Authorizing again without a list grants every vehicle and replaces the earlier grant.
+	again := decode[struct {
+		RedirectURL string `json:"redirect_url"`
+	}](t, decide(nil))
+	target, _ = url.Parse(again.RedirectURL)
+	all := decode[tokens](t, f.exchange(clientID, target.Query().Get("code"), pkceVerifier))
+	if grant, err = f.repo.ValidateAPITokenGrant(ctx, auth.HashAPIToken(all.AccessToken)); err != nil || grant.VehicleIDs != nil {
+		t.Fatalf("without a list every vehicle is granted: %+v %v", grant, err)
 	}
 }

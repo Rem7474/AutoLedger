@@ -37,7 +37,7 @@ func (r *Repository) ListAPITokens(ctx context.Context, userID string) ([]models
 	query := `
 		SELECT id, user_id, name, token_prefix, scope, last_used_at,
 		       CASE WHEN oauth_client_id IS NULL THEN expires_at ELSE refresh_expires_at END,
-		       created_at, oauth_client_id IS NOT NULL
+		       created_at, oauth_client_id IS NOT NULL, vehicle_ids::text[]
 		FROM api_tokens
 		WHERE user_id = $1
 		ORDER BY created_at DESC;
@@ -53,7 +53,7 @@ func (r *Repository) ListAPITokens(ctx context.Context, userID string) ([]models
 		var tok models.APIToken
 		if err := rows.Scan(
 			&tok.ID, &tok.UserID, &tok.Name, &tok.TokenPrefix, &tok.Scope,
-			&tok.LastUsedAt, &tok.ExpiresAt, &tok.CreatedAt, &tok.OAuth,
+			&tok.LastUsedAt, &tok.ExpiresAt, &tok.CreatedAt, &tok.OAuth, &tok.VehicleIDs,
 		); err != nil {
 			return nil, err
 		}
@@ -79,18 +79,29 @@ func (r *Repository) RevokeAPIToken(ctx context.Context, userID, tokenID string)
 
 // ValidateAPIToken verifies a token hash and returns the associated user's ID and email, and the token's scope.
 func (r *Repository) ValidateAPIToken(ctx context.Context, tokenHash string) (userID, email, scope string, err error) {
+	g, err := r.ValidateAPITokenGrant(ctx, tokenHash)
+	if err != nil {
+		return "", "", "", err
+	}
+	return g.UserID, g.Email, g.Scope, nil
+}
+
+// ValidateAPITokenGrant verifies a token hash and returns what the token lets its holder do: the account, the scope
+// and the vehicles it is limited to.
+func (r *Repository) ValidateAPITokenGrant(ctx context.Context, tokenHash string) (models.TokenGrant, error) {
 	query := `
-		SELECT t.id, t.user_id, u.email, t.scope
+		SELECT t.id, t.user_id, u.email, t.scope, t.vehicle_ids::text[]
 		FROM api_tokens t
 		JOIN users u ON u.id = t.user_id
 		WHERE t.token_hash = $1 AND (t.expires_at IS NULL OR t.expires_at > NOW());
 	`
 	var tokenID string
-	if err := r.pool.QueryRow(ctx, query, tokenHash).Scan(&tokenID, &userID, &email, &scope); err != nil {
+	var g models.TokenGrant
+	if err := r.pool.QueryRow(ctx, query, tokenHash).Scan(&tokenID, &g.UserID, &g.Email, &g.Scope, &g.VehicleIDs); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return "", "", "", ErrNotFound
+			return models.TokenGrant{}, ErrNotFound
 		}
-		return "", "", "", err
+		return models.TokenGrant{}, err
 	}
 
 	// Update last_used_at asynchronously
@@ -100,5 +111,5 @@ func (r *Repository) ValidateAPIToken(ctx context.Context, tokenHash string) (us
 		_, _ = r.pool.Exec(updateCtx, `UPDATE api_tokens SET last_used_at = NOW() WHERE id = $1;`, tokenID)
 	}()
 
-	return userID, email, scope, nil
+	return g, nil
 }
