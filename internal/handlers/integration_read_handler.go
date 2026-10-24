@@ -132,7 +132,7 @@ func writeIntegrationError(w http.ResponseWriter, r *http.Request, err error, fa
 	}
 	var refused mcpUserError
 	if errors.As(err, &refused) {
-		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_query", refused.Error()))
+		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_value", refused.Error()))
 		return
 	}
 	if errors.Is(err, errIntegrationComparisonNotFound) {

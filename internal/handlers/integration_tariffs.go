@@ -240,14 +240,14 @@ func (h *IntegrationReadHandler) GetChargeEstimate(w http.ResponseWriter, r *htt
 	kwh, kwhErr := strconv.ParseFloat(query.Get("energy_kwh"), 64)
 	minutes, minutesErr := strconv.Atoi(query.Get("duration_minutes"))
 	if kwhErr != nil || minutesErr != nil {
-		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_query", "energy_kwh (a number) and duration_minutes (a whole number) are required"))
+		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_value", "energy_kwh (a number) and duration_minutes (a whole number) are required"))
 		return
 	}
 	start := time.Now()
 	if raw := strings.TrimSpace(query.Get("start")); raw != "" {
 		parsed, err := time.Parse(time.RFC3339, raw)
 		if err != nil {
-			writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_query", "start must be an RFC 3339 date and time with its offset"))
+			writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_date", "start must be an RFC 3339 date and time with its offset"))
 			return
 		}
 		start = parsed

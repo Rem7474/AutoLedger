@@ -67,7 +67,7 @@ async function call(client: Client, name: string, args: Record<string, unknown> 
 
 // What each tool needs, read from its own input schema so that a tool added later is called without editing this file.
 function argumentsFor(tool: { name: string; inputSchema: { required?: string[] } }, vehicleId: string): Record<string, unknown> {
-  const known: Record<string, unknown> = { vehicle_id: vehicleId, month: new Date().toISOString().slice(0, 7), category: 'energy' }
+  const known: Record<string, unknown> = { vehicle_id: vehicleId, month: new Date().toISOString().slice(0, 7), category: 'energy', energy_kwh: 10, duration_minutes: 60 }
   const args: Record<string, unknown> = {}
   for (const key of tool.inputSchema.required ?? []) {
     expect(known, `${tool.name} requires "${key}": give this test a value for it`).toHaveProperty(key)
