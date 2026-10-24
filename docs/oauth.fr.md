@@ -7,6 +7,7 @@ Un assistant, ou toute application qui parle OAuth 2.1, peut demander un accès 
 L'application envoie le navigateur vers `/oauth/authorize` sur l'instance. Après connexion, l'utilisateur lit ce que l'application demande et l'approuve ou la refuse :
 
 - Elle peut voir les véhicules (nom, marque, modèle, motorisation, devise, compteur), ce que chacun coûte sur les 12 derniers mois et depuis l'achat, et ce qui manque aux données. Elle voit aussi les noms et lieux saisis : adresses des trajets, lieux de recharge, conducteurs et passagers de covoiturage, étiquettes et notes.
+- Quand le compte a plusieurs véhicules, l'utilisateur choisit si l'application les voit tous (y compris ceux ajoutés plus tard) ou seulement ceux qu'il coche. Une autorisation limitée affiche ces véhicules dans la liste des jetons d'API, et les autres véhicules n'existent pas pour elle : ils sont absents des listes et refusés par identifiant. Approuver demande au moins un véhicule.
 - Elle ne peut rien modifier, ajouter ni supprimer, et ne voit jamais les VIN, plaques, positions GPS ni documents.
 
 Le nom de l'application est donné par l'application elle-même et n'est pas vérifié : n'approuvez qu'une application que vous venez de lancer. La page indique où l'utilisateur est renvoyé.

@@ -2,6 +2,15 @@
   "authorize": {
     "title": "Autoriser une application",
     "intro": "{name} demande à lire vos données AutoLedger.",
+    "vehiclesTitle": "Véhicules qu'elle pourra lire",
+    "vehiclesAll": "Tous mes véhicules, y compris ceux que j'ajouterai plus tard",
+    "vehiclesSome": "Seulement les véhicules que je choisis",
+    "vehiclesNone": "Choisissez au moins un véhicule.",
+    "vehiclesRole": {
+      "OWNER": "Propriétaire",
+      "EDITOR": "Éditeur",
+      "VIEWER": "Lecteur"
+    },
     "canTitle": "Elle pourra",
     "canVehicles": "Voir vos véhicules : nom, marque, modèle, motorisation, devise et compteur.",
     "canCosts": "Lire ce que coûte chaque véhicule : les 12 derniers mois et depuis l'achat, par catégorie.",

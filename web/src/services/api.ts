@@ -547,8 +547,8 @@ export const api = {
     request<APITokenCreatedResponse>('/auth/tokens', { method: 'POST', body: JSON.stringify(data) }),
   previewOAuthAuthorization: (params: OAuthAuthorizeParams) =>
     request<OAuthAuthorizePreview>(`/oauth/authorize?${new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => typeof e[1] === 'string'))}`),
-  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny') =>
-    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision }) }),
+  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny', vehicleIds: string[] | null = null) =>
+    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision, vehicle_ids: vehicleIds }) }),
   revokeAPIToken: (tokenId: string) =>
     request<{ success: boolean }>(`/auth/tokens/${tokenId}`, { method: 'DELETE' }),
 
@@ -656,6 +656,8 @@ export interface OAuthAuthorizePreview {
   /** Where the approval sends the user back: a host, or the scheme of an application. */
   redirect_host: string
   scope: string
+  /** The vehicles the user can limit the access to. */
+  vehicles: { id: string; name: string; role: string }[]
 }
 
 export interface APITokenInfo {
@@ -665,6 +667,8 @@ export interface APITokenInfo {
   scope: APITokenScope
   /** True for a grant an assistant obtained by OAuth; expires_at is then when it lapses unless renewed. */
   oauth: boolean
+  /** The only vehicles the token can read; null is every vehicle of the account. */
+  vehicle_ids: string[] | null
   last_used_at: string | null
   expires_at: string | null
   created_at: string

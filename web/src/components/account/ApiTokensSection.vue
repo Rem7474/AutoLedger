@@ -6,9 +6,19 @@ import { api, type APITokenInfo, type APITokenCreatedResponse, type APITokenScop
 import { describeRelativeTime } from '@/utils/userAgent'
 import { useConfirm } from '@/composables/useConfirm'
 import { t } from '@/i18n'
+import { useVehicleStore } from '@/stores/vehicle'
+import { coveredVehicles } from '@/utils/oauthVehicles'
 import LoadError from '@/components/LoadError.vue'
 
 const { showConfirm } = useConfirm()
+const vehicleStore = useVehicleStore()
+
+// A grant limited to some vehicles names them; one with no list covers the whole account and says nothing.
+function limitedTo(tok: APITokenInfo): { names: string; missing: number } | null {
+  if (!tok.vehicle_ids) return null
+  const { names, missing } = coveredVehicles(tok.vehicle_ids, vehicleStore.vehicles)
+  return { names: names.join(', '), missing }
+}
 
 const tokens = ref<APITokenInfo[]>([])
 const loading = ref(true)
@@ -182,6 +192,12 @@ onMounted(() => {
               {{ t('account.tokens.expires', { date: describeRelativeTime(tok.expires_at) }) }}
             </span>
           </div>
+          <p v-if="limitedTo(tok)" class="text-xs text-slate-400 mt-1 line-clamp-2 break-words" :title="limitedTo(tok)!.names">
+            {{ t('account.tokens.vehiclesLimited', { names: limitedTo(tok)!.names || '—' }) }}
+            <span v-if="limitedTo(tok)!.missing" class="text-warning-400/80">
+              ({{ t('account.tokens.vehiclesMissing', { count: limitedTo(tok)!.missing }) }})
+            </span>
+          </p>
         </div>
 
         <button

@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { AlertCircle, Check, ShieldCheck, X } from 'lucide-vue-next'
 import { api, type OAuthAuthorizeParams, type OAuthAuthorizePreview } from '@/services/api'
 import { t } from '@/i18n'
+import { canApproveGrant, grantedVehicleIds, toggleVehicle, type GrantVehicleMode } from '@/utils/oauthVehicles'
 
 const route = useRoute()
 
@@ -31,6 +32,14 @@ const loading = ref(true)
 const deciding = ref(false)
 const finished = ref<'approve' | 'deny' | null>(null)
 
+// Which vehicles the access covers: all of them by default, or the ones the user ticks.
+const vehicleMode = ref<GrantVehicleMode>('all')
+const selected = ref<ReadonlySet<string>>(new Set())
+const choices = computed(() => preview.value?.vehicles ?? [])
+// With a single vehicle there is nothing to choose.
+const canChoose = computed(() => choices.value.length > 1)
+const approvable = computed(() => !canChoose.value || canApproveGrant(vehicleMode.value, selected.value, choices.value))
+
 onMounted(async () => {
   try {
     preview.value = await api.previewOAuthAuthorization(params.value)
@@ -45,7 +54,8 @@ async function decide(decision: 'approve' | 'deny') {
   deciding.value = true
   error.value = ''
   try {
-    const { redirect_url } = await api.decideOAuthAuthorization(params.value, decision)
+    const vehicleIds = decision === 'approve' && canChoose.value ? grantedVehicleIds(vehicleMode.value, selected.value, choices.value) : null
+    const { redirect_url } = await api.decideOAuthAuthorization(params.value, decision, vehicleIds)
     finished.value = decision
     // Back to the assistant: a local address it listens on, or the application it opens.
     window.location.assign(redirect_url)
@@ -90,6 +100,27 @@ async function decide(decision: 'approve' | 'deny') {
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canNames') }}</li>
           </ul>
         </div>
+        <fieldset v-if="canChoose" class="space-y-2 min-w-0">
+          <legend class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{{ t('oauth.authorize.vehiclesTitle') }}</legend>
+          <label class="flex items-start gap-2 text-sm text-slate-200">
+            <input v-model="vehicleMode" type="radio" name="vehicle-mode" value="all" class="mt-1 shrink-0" />
+            <span>{{ t('oauth.authorize.vehiclesAll') }}</span>
+          </label>
+          <label class="flex items-start gap-2 text-sm text-slate-200">
+            <input v-model="vehicleMode" type="radio" name="vehicle-mode" value="some" class="mt-1 shrink-0" />
+            <span>{{ t('oauth.authorize.vehiclesSome') }}</span>
+          </label>
+          <ul v-if="vehicleMode === 'some'" class="space-y-1 pl-6 min-w-0">
+            <li v-for="v in choices" :key="v.id" class="min-w-0">
+              <label class="flex items-center gap-2 text-sm text-slate-200 min-w-0">
+                <input type="checkbox" :checked="selected.has(v.id)" class="shrink-0" @change="selected = toggleVehicle(selected, v.id)" />
+                <span class="truncate" :title="v.name">{{ v.name }}</span>
+                <span class="text-xs text-slate-400 shrink-0">{{ t(`oauth.authorize.vehiclesRole.${v.role}`) }}</span>
+              </label>
+            </li>
+          </ul>
+          <p v-if="!approvable" class="text-xs text-warning-400" role="status">{{ t('oauth.authorize.vehiclesNone') }}</p>
+        </fieldset>
         <div>
           <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{{ t('oauth.authorize.cannotTitle') }}</h2>
           <ul class="space-y-1.5 text-sm text-slate-200">
@@ -107,7 +138,7 @@ async function decide(decision: 'approve' | 'deny') {
         <div v-if="error" class="p-3 bg-danger-500/10 border border-danger-500/20 rounded-xl text-sm text-danger-400" role="alert">{{ error }}</div>
 
         <div class="flex gap-3">
-          <button type="button" :disabled="deciding" class="btn btn-lg btn-primary flex-1" @click="decide('approve')">{{ t('oauth.authorize.approve') }}</button>
+          <button type="button" :disabled="deciding || !approvable" class="btn btn-lg btn-primary flex-1" @click="decide('approve')">{{ t('oauth.authorize.approve') }}</button>
           <button type="button" :disabled="deciding" class="btn btn-lg btn-secondary flex-1" @click="decide('deny')">{{ t('oauth.authorize.deny') }}</button>
         </div>
       </template>
