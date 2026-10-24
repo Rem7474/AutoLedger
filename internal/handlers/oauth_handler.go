@@ -25,6 +25,7 @@ const (
 	oauthGrantAuthorizationCode = "authorization_code"
 	oauthGrantRefreshToken      = "refresh_token"
 	maxOAuthStateLength         = 512
+	maxOAuthGrantedVehicles     = 100
 )
 
 // OAuthHandler is the authorization server an assistant uses to obtain a read token without the user copying one:
@@ -182,6 +183,9 @@ type authorizeRequest struct {
 	Resource            string `json:"resource"`
 	// Decision is "approve" or "deny"; it is read on the POST only.
 	Decision string `json:"decision"`
+	// VehicleIDs limits the grant to these vehicles (POST only). Absent or null grants every vehicle of the account;
+	// an empty list is refused rather than read as "none".
+	VehicleIDs []string `json:"vehicle_ids"`
 }
 
 func authorizeRequestFromQuery(q url.Values) authorizeRequest {
@@ -232,11 +236,46 @@ func (h *OAuthHandler) PreviewAuthorization(w http.ResponseWriter, r *http.Reque
 		writeAPIError(w, http.StatusBadRequest, apiErr)
 		return
 	}
+	vehicles, err := h.repo.ListVehiclesByUserID(r.Context(), middleware.GetUserID(r.Context()))
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to load the vehicles")
+		return
+	}
+	choices := make([]map[string]string, 0, len(vehicles))
+	for _, v := range vehicles {
+		choices = append(choices, map[string]string{"id": v.ID, "name": v.Name, "role": string(v.Role)})
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"client_name":   client.Name,
 		"redirect_host": oauth.RedirectHost(p.RedirectURI),
 		"scope":         scope,
+		"vehicles":      choices,
 	})
+}
+
+// grantedVehicles checks the vehicles the user limits a grant to: each must be one the account can see. nil means
+// every vehicle.
+func (h *OAuthHandler) grantedVehicles(r *http.Request, ids []string) ([]string, *apierror.Error) {
+	if ids == nil {
+		return nil, nil
+	}
+	if len(ids) == 0 || len(ids) > maxOAuthGrantedVehicles {
+		return nil, apierror.New("oauth.invalid_vehicles", "Choose at least one vehicle, or all of them")
+	}
+	userID := middleware.GetUserID(r.Context())
+	seen := make(map[string]bool, len(ids))
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if seen[id] {
+			continue
+		}
+		seen[id] = true
+		if _, err := h.repo.GetVehicleByID(r.Context(), id, userID); err != nil {
+			return nil, apierror.New("oauth.invalid_vehicles", "Choose at least one vehicle, or all of them")
+		}
+		out = append(out, id)
+	}
+	return out, nil
 }
 
 // DecideAuthorization records the user's decision and answers with the address to send the browser to: the client's
@@ -268,7 +307,12 @@ func (h *OAuthHandler) DecideAuthorization(w http.ResponseWriter, r *http.Reques
 			writeAPIError(w, http.StatusInternalServerError, apierror.New("internal", "Failed to authorize"))
 			return
 		}
-		stored := models.OAuthCode{ClientID: client.ID, UserID: middleware.GetUserID(r.Context()), RedirectURI: p.RedirectURI, CodeChallenge: p.CodeChallenge, Scope: scope}
+		vehicleIDs, apiErr := h.grantedVehicles(r, p.VehicleIDs)
+		if apiErr != nil {
+			writeAPIError(w, http.StatusBadRequest, apiErr)
+			return
+		}
+		stored := models.OAuthCode{ClientID: client.ID, UserID: middleware.GetUserID(r.Context()), RedirectURI: p.RedirectURI, CodeChallenge: p.CodeChallenge, Scope: scope, VehicleIDs: vehicleIDs}
 		if err := h.repo.CreateOAuthCode(r.Context(), hash, stored, time.Now().Add(oauth.CodeTTL)); err != nil {
 			writeRepoError(w, r, err, "Failed to authorize")
 			return
@@ -295,7 +339,7 @@ type tokenResponse struct {
 }
 
 // newGrantTokens generates the secrets of a grant and the response that hands them to the client.
-func newGrantTokens(userID, clientID, name, scope string, now time.Time) (database.OAuthGrant, tokenResponse, error) {
+func newGrantTokens(userID, clientID, name, scope string, vehicleIDs []string, now time.Time) (database.OAuthGrant, tokenResponse, error) {
 	access, prefix, accessHash, err := auth.GenerateAPIToken()
 	if err != nil {
 		return database.OAuthGrant{}, tokenResponse{}, err
@@ -305,7 +349,7 @@ func newGrantTokens(userID, clientID, name, scope string, now time.Time) (databa
 		return database.OAuthGrant{}, tokenResponse{}, err
 	}
 	grant := database.OAuthGrant{
-		UserID: userID, ClientID: clientID, Name: name, Scope: scope,
+		UserID: userID, ClientID: clientID, Name: name, Scope: scope, VehicleIDs: vehicleIDs,
 		AccessHash: accessHash, AccessPrefix: prefix, AccessExpiresAt: now.Add(oauth.AccessTokenTTL),
 		RefreshHash: refreshHash, RefreshExpiresAt: now.Add(oauth.RefreshTokenTTL),
 	}
@@ -354,7 +398,7 @@ func (h *OAuthHandler) exchangeCode(w http.ResponseWriter, r *http.Request) {
 		writeOAuthError(w, http.StatusBadRequest, "invalid_client", "This application is not registered")
 		return
 	}
-	grant, resp, err := newGrantTokens(stored.UserID, client.ID, client.Name, stored.Scope, time.Now())
+	grant, resp, err := newGrantTokens(stored.UserID, client.ID, client.Name, stored.Scope, stored.VehicleIDs, time.Now())
 	if err == nil {
 		err = h.repo.IssueOAuthGrant(r.Context(), grant)
 	}
@@ -372,7 +416,7 @@ func (h *OAuthHandler) refresh(w http.ResponseWriter, r *http.Request) {
 		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "refresh_token and client_id are required")
 		return
 	}
-	next, resp, err := newGrantTokens("", clientID, "", "", time.Now())
+	next, resp, err := newGrantTokens("", clientID, "", "", nil, time.Now())
 	if err != nil {
 		writeOAuthError(w, http.StatusInternalServerError, "server_error", "")
 		return

@@ -272,12 +272,14 @@
     "unknown_client": "Cette application n'est pas enregistrée",
     "invalid_redirect_uri": "L'adresse de retour ne correspond pas à celle que l'application a enregistrée",
     "invalid_scope": "L'application demande un accès qui n'existe pas",
-    "invalid_resource": "L'application demande un jeton pour un autre serveur"
+    "invalid_resource": "L'application demande un jeton pour un autre serveur",
+    "invalid_vehicles": "Choisissez au moins un véhicule, ou tous"
   },
   "token": {
     "name_required": "Le nom du jeton est requis",
     "name_too_long": "Le nom du jeton ne doit pas dépasser 100 caractères",
-    "scope_invalid": "Choisissez ce que le jeton peut faire : lire les données ou envoyer des événements"
+    "scope_invalid": "Choisissez ce que le jeton peut faire : lire les données ou envoyer des événements",
+    "vehicles_limited": "Ce jeton est limité à certains véhicules : la vue qui additionne tous les véhicules est indisponible"
   },
   "ownership": {
     "start_required": "La date de début (achat ou contrat) est requise",

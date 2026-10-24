@@ -11,7 +11,9 @@ type APIToken struct {
 	Scope       string `json:"scope"` // "ingest" or "read", fixed at creation
 	// OAuth is true for a grant an assistant obtained through the authorization server; ExpiresAt is then when the
 	// grant lapses unless the application renews it.
-	OAuth      bool       `json:"oauth"`
+	OAuth bool `json:"oauth"`
+	// VehicleIDs are the only vehicles the token can read; null is every vehicle of the account.
+	VehicleIDs []string   `json:"vehicle_ids"`
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	ExpiresAt  *time.Time `json:"expires_at,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
@@ -28,4 +30,11 @@ type CreateAPITokenRequest struct {
 type APITokenCreatedResponse struct {
 	Token string   `json:"token"`
 	Info  APIToken `json:"info"`
+}
+
+// TokenGrant is what a valid API token lets its holder do.
+type TokenGrant struct {
+	UserID, Email, Scope string
+	// VehicleIDs are the only vehicles the token can read; nil is every vehicle the account can see.
+	VehicleIDs []string
 }

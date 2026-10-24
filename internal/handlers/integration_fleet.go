@@ -161,6 +161,9 @@ func (h *IntegrationReadHandler) FleetSummary(ctx context.Context, userID string
 	if h.fleet == nil {
 		return nil, errIntegrationUnavailable
 	}
+	if _, limited := middleware.VehicleScope(ctx); limited {
+		return nil, errIntegrationVehiclesLimited
+	}
 	res, err := h.fleet.GetSummary(ctx, userID)
 	if err != nil {
 		return nil, err

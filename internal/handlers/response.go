@@ -63,6 +63,10 @@ func requestLanguage(r *http.Request, repo *database.Repository) string {
 // requireVehicleAccess checks that the authenticated user has access to the vehicle with at least minRole.
 func requireVehicleAccess(w http.ResponseWriter, r *http.Request, repo *database.Repository, vehicleID string, minRole models.VehicleRole) *models.Vehicle {
 	userID := middleware.GetUserID(r.Context())
+	if !middleware.VehicleAllowed(r.Context(), vehicleID) {
+		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))
+		return nil
+	}
 	v, err := repo.GetVehicleByID(r.Context(), vehicleID, userID)
 	if err != nil {
 		writeAPIError(w, http.StatusNotFound, apierror.New("vehicle.not_found", "Vehicle not found"))

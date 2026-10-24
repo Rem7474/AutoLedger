@@ -144,6 +144,9 @@ func (h *IntegrationReadHandler) Comparisons(ctx context.Context, userID, scenar
 	for i := range scenarios {
 		sc := scenarios[i]
 		var name *string
+		if sc.VehicleID != nil && !middleware.VehicleAllowed(ctx, *sc.VehicleID) {
+			continue
+		}
 		if sc.VehicleID != nil {
 			if n, ok := names[*sc.VehicleID]; ok {
 				name = &n

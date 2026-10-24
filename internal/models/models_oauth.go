@@ -18,4 +18,6 @@ type OAuthCode struct {
 	RedirectURI   string
 	CodeChallenge string
 	Scope         string
+	// VehicleIDs limits the grant to these vehicles; nil is every vehicle the account can see.
+	VehicleIDs []string
 }

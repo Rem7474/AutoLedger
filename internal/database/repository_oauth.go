@@ -50,9 +50,9 @@ func (r *Repository) GetOAuthClient(ctx context.Context, id string) (*models.OAu
 // CreateOAuthCode stores the hash of an authorization code the user approved.
 func (r *Repository) CreateOAuthCode(ctx context.Context, codeHash string, c models.OAuthCode, expiresAt time.Time) error {
 	_, err := r.pool.Exec(ctx, `
-		INSERT INTO oauth_codes (code_hash, client_id, user_id, redirect_uri, code_challenge, scope, expires_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7);`,
-		codeHash, c.ClientID, c.UserID, c.RedirectURI, c.CodeChallenge, c.Scope, expiresAt)
+		INSERT INTO oauth_codes (code_hash, client_id, user_id, redirect_uri, code_challenge, scope, expires_at, vehicle_ids)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8::uuid[]);`,
+		codeHash, c.ClientID, c.UserID, c.RedirectURI, c.CodeChallenge, c.Scope, expiresAt, c.VehicleIDs)
 	if err != nil {
 		return fmt.Errorf("failed to store oauth code: %w", err)
 	}
@@ -64,8 +64,8 @@ func (r *Repository) ConsumeOAuthCode(ctx context.Context, codeHash string) (*mo
 	var c models.OAuthCode
 	err := r.pool.QueryRow(ctx, `
 		DELETE FROM oauth_codes WHERE code_hash = $1 AND expires_at > NOW()
-		RETURNING client_id, user_id, redirect_uri, code_challenge, scope;`, codeHash).
-		Scan(&c.ClientID, &c.UserID, &c.RedirectURI, &c.CodeChallenge, &c.Scope)
+		RETURNING client_id, user_id, redirect_uri, code_challenge, scope, vehicle_ids::text[];`, codeHash).
+		Scan(&c.ClientID, &c.UserID, &c.RedirectURI, &c.CodeChallenge, &c.Scope, &c.VehicleIDs)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -82,6 +82,8 @@ type OAuthGrant struct {
 	AccessExpiresAt               time.Time
 	RefreshHash                   string
 	RefreshExpiresAt              time.Time
+	// VehicleIDs limits the grant to these vehicles; nil is every vehicle the account can see.
+	VehicleIDs []string
 }
 
 // IssueOAuthGrant stores a new grant. A client holds one grant per user: authorizing again replaces the earlier one.
@@ -95,9 +97,9 @@ func (r *Repository) IssueOAuthGrant(ctx context.Context, g OAuthGrant) error {
 		return fmt.Errorf("failed to replace oauth grant: %w", err)
 	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO api_tokens (user_id, name, scope, token_hash, token_prefix, expires_at, oauth_client_id, refresh_hash, refresh_expires_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
-		g.UserID, g.Name, g.Scope, g.AccessHash, g.AccessPrefix, g.AccessExpiresAt, g.ClientID, g.RefreshHash, g.RefreshExpiresAt); err != nil {
+		INSERT INTO api_tokens (user_id, name, scope, token_hash, token_prefix, expires_at, oauth_client_id, refresh_hash, refresh_expires_at, vehicle_ids)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::uuid[]);`,
+		g.UserID, g.Name, g.Scope, g.AccessHash, g.AccessPrefix, g.AccessExpiresAt, g.ClientID, g.RefreshHash, g.RefreshExpiresAt, g.VehicleIDs); err != nil {
 		return fmt.Errorf("failed to store oauth grant: %w", err)
 	}
 	return tx.Commit(ctx)

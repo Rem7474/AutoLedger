@@ -43,7 +43,7 @@ type MCPHandler struct {
 func NewMCPHandler(read *IntegrationReadHandler, tokens middleware.APITokenValidator, baseURL, version string) *MCPHandler {
 	h := &MCPHandler{read: read, tokens: tokens, issuer: trimTrailingSlash(baseURL)}
 	h.server = mcp.NewServer(&mcp.Implementation{Name: "autoledger", Version: version}, &mcp.ServerOptions{Instructions: mcpInstructions, CompletionHandler: h.complete})
-	h.server.AddReceivingMiddleware(guardToolCalls)
+	h.server.AddReceivingMiddleware(guardToolCalls, limitToGrantedVehicles)
 	h.addTools()
 	h.addResources()
 	h.addPrompts()
@@ -92,11 +92,31 @@ func (h *MCPHandler) verifyToken(ctx context.Context, token string, _ *http.Requ
 	if !appAuth.IsAPIToken(token) {
 		return nil, auth.ErrInvalidToken
 	}
-	userID, _, scope, err := h.tokens.ValidateAPIToken(ctx, appAuth.HashAPIToken(token))
+	grant, err := middleware.ValidateTokenGrant(ctx, h.tokens, appAuth.HashAPIToken(token))
 	if err != nil {
 		return nil, auth.ErrInvalidToken
 	}
-	return &auth.TokenInfo{UserID: userID, Scopes: []string{scope}}, nil
+	info := &auth.TokenInfo{UserID: grant.UserID, Scopes: []string{grant.Scope}}
+	if len(grant.VehicleIDs) > 0 {
+		info.Extra = map[string]any{mcpVehicleIDsExtra: grant.VehicleIDs}
+	}
+	return info, nil
+}
+
+// mcpVehicleIDsExtra is the key of TokenInfo.Extra that carries the vehicles a grant is limited to.
+const mcpVehicleIDsExtra = "vehicle_ids"
+
+// limitToGrantedVehicles carries the vehicles the token is limited to into the context of every request (tools,
+// resources, prompts and completions), where the read views enforce it.
+func limitToGrantedVehicles(next mcp.MethodHandler) mcp.MethodHandler {
+	return func(ctx context.Context, method string, req mcp.Request) (mcp.Result, error) {
+		if extra := req.GetExtra(); extra != nil && extra.TokenInfo != nil {
+			if ids, ok := extra.TokenInfo.Extra[mcpVehicleIDsExtra].([]string); ok {
+				ctx = middleware.WithVehicleScope(ctx, ids)
+			}
+		}
+		return next(ctx, method, req)
+	}
 }
 
 // logToolCalls writes one line per tool call: which tool, for which account, how it ended and how long it took. The
@@ -288,6 +308,9 @@ func mcpFailure(ctx context.Context, tool string, err error, fallback string) er
 	}
 	if errors.Is(err, errIntegrationVehicleNotFound) {
 		return errors.New("vehicle not found: use list_vehicles to get a valid vehicle_id")
+	}
+	if errors.Is(err, errIntegrationVehiclesLimited) {
+		return errors.New("this connection is limited to some vehicles, so the view that adds up every vehicle is unavailable: call get_vehicle_costs for each vehicle from list_vehicles")
 	}
 	if apiErr, ok := apierror.As(err); ok {
 		return errors.New(apiErr.Error())
