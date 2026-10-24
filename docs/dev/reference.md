@@ -70,7 +70,8 @@ An amount never has an assumed currency. A write either carries its currency, ta
 |---|---|---|
 | `POST /vehicles` | `vehicles.currency` | Required, ISO 4217 code, fixed at creation. No default: the repository refuses a vehicle without one, and the column default only fills rows that predate the column. |
 | Tariff plans, public charging presets | own `currency` column | Required and validated on create; validated when changed on a plan update. No default. |
-| Comparison scenario in projection mode | `comparison_scenarios.currency` | Required. A retrospective scenario takes the currency of its vehicle. |
+| Comparison scenario in projection mode | `comparison_scenarios.currency` | Required. A request without one takes the currency shared by every vehicle of the account (a client that predates the field, an offline write queued before the update); when the vehicles differ or there are none, it is refused with `comparison.currency_required`. A retrospective scenario takes the currency of its vehicle. |
+| Comparison form prefill (`GET /comparison-scenarios/defaults`) | none stored | The built-in prices are written for the euro only: they are returned for `currency=EUR` and dropped for any other currency or when none is given. |
 | Charges and expenses entered by hand | `charge_logs.currency`, `drive_expenses.currency`, `maintenance_expenses.currency` | Optional on the request: the vehicle's currency when absent. Another currency needs an `fx_rate` to the vehicle's. |
 | Fuel logs, tires, ownership (purchase, loan, lease), carpool trips, legs and payments | none: the vehicle's | These tables hold amounts in the currency of their vehicle, never another. |
 | Automatic toll estimate | `drive_expenses.currency = 'EUR'` | The toll dataset is priced in euros. On a vehicle in another currency the expense has no `fx_rate`, so the vehicle-currency sums leave it out. |

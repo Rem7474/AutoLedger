@@ -61,10 +61,11 @@ type ComparisonDefaults struct {
 const indicativeCurrency = "EUR"
 
 // ForCurrency drops the indicative prices (fuel, electricity, maintenance, insurance) when the
-// vehicle's currency is not the one they are written for: a euro figure shown as another currency
-// would be wrong, so the form asks for them instead. Consumption figures do not depend on a currency.
+// vehicle's currency is not the one they are written for, or is not known yet: a euro figure shown as
+// another currency would be wrong, so the form asks for them instead. Consumption figures do not depend
+// on a currency.
 func (d *ComparisonDefaults) ForCurrency(currency string) {
-	if currency == "" || strings.EqualFold(currency, indicativeCurrency) {
+	if strings.EqualFold(currency, indicativeCurrency) {
 		return
 	}
 	d.IndicativePrices = false
