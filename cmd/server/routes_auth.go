@@ -44,6 +44,7 @@ func (h *apiHandlers) registerSessionAuthRoutes(r chi.Router) {
 	r.Route("/api/auth/tokens", func(r chi.Router) {
 		r.Get("/", h.token.ListTokens)
 		r.Post("/", h.token.CreateToken)
+		r.Get("/{tokenId}/calls", h.token.ListTokenCalls)
 		r.Delete("/{tokenId}", h.token.RevokeToken)
 	})
 }

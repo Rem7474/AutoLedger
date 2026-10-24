@@ -35,6 +35,17 @@ type APITokenCreatedResponse struct {
 // TokenGrant is what a valid API token lets its holder do.
 type TokenGrant struct {
 	UserID, Email, Scope string
+	// TokenID identifies the token, to attach what it does to it.
+	TokenID string
 	// VehicleIDs are the only vehicles the token can read; nil is every vehicle the account can see.
 	VehicleIDs []string
+}
+
+// APITokenCall is one call an assistant made with a token. It holds no argument and no answer.
+type APITokenCall struct {
+	At         time.Time `json:"at"`
+	Tool       string    `json:"tool"`
+	VehicleID  *string   `json:"vehicle_id"`
+	Outcome    string    `json:"outcome"` // "ok" or "error"
+	DurationMS int       `json:"duration_ms"`
 }

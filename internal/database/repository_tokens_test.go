@@ -3,8 +3,11 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/teslacost/teslacost/internal/models"
 )
 
 func TestAPITokens(t *testing.T) {
@@ -90,5 +93,74 @@ func TestAPITokens(t *testing.T) {
 	}
 	if _, _, _, err := repo.ValidateAPIToken(ctx, "hash-live"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("revoked token: err = %v, want ErrNotFound", err)
+	}
+}
+
+func TestAPITokenCallsKeepTheLatestOnly(t *testing.T) {
+	pool := sourcesTestPool(t)
+	ctx := context.Background()
+	if err := (&DB{Pool: pool}).Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(pool)
+	owner, err := repo.CreateUser(ctx, "calls-owner@example.com", "x")
+	if err != nil {
+		t.Fatal(err)
+	}
+	other, err := repo.CreateUser(ctx, "calls-other@example.com", "x")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tok, err := repo.CreateAPIToken(ctx, owner.ID, "assistant", "read", "hash-calls", "al_calls", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if calls, err := repo.ListAPITokenCalls(ctx, owner.ID, tok.ID); err != nil || calls == nil || len(calls) != 0 {
+		t.Fatalf("a token without call lists an empty, non-nil slice: %+v, %v", calls, err)
+	}
+	for i := 0; i < apiTokenCallsKept+5; i++ {
+		outcome := "ok"
+		if i%2 == 1 {
+			outcome = "error"
+		}
+		if err := repo.RecordAPITokenCall(ctx, tok.ID, models.APITokenCall{Tool: fmt.Sprintf("tool_%d", i), Outcome: outcome, DurationMS: i}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	calls, err := repo.ListAPITokenCalls(ctx, owner.ID, tok.ID)
+	if err != nil || len(calls) != apiTokenCallsKept {
+		t.Fatalf("calls = %d, %v; want %d", len(calls), err, apiTokenCallsKept)
+	}
+	if last := apiTokenCallsKept + 4; calls[0].Tool != fmt.Sprintf("tool_%d", last) || calls[0].DurationMS != last || calls[0].Outcome != "ok" {
+		t.Errorf("the most recent call comes first, with its outcome: %+v", calls[0])
+	}
+	if calls[len(calls)-1].Tool != "tool_5" {
+		t.Errorf("the oldest calls are dropped: %+v", calls[len(calls)-1])
+	}
+
+	// A second token keeps its own log.
+	second, err := repo.CreateAPIToken(ctx, owner.ID, "other assistant", "read", "hash-calls-2", "al_calls2", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.RecordAPITokenCall(ctx, second.ID, models.APITokenCall{Tool: "list_vehicles", Outcome: "ok"}); err != nil {
+		t.Fatal(err)
+	}
+	if calls, _ := repo.ListAPITokenCalls(ctx, owner.ID, tok.ID); len(calls) != apiTokenCallsKept {
+		t.Errorf("another token's call does not push this log: %d", len(calls))
+	}
+
+	if _, err := repo.ListAPITokenCalls(ctx, other.ID, tok.ID); !errors.Is(err, ErrNotFound) {
+		t.Errorf("another account: err = %v, want ErrNotFound", err)
+	}
+
+	// The calls go with the token.
+	if err := repo.RevokeAPIToken(ctx, owner.ID, tok.ID); err != nil {
+		t.Fatal(err)
+	}
+	var left int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM api_token_calls WHERE token_id = $1;`, tok.ID).Scan(&left); err != nil || left != 0 {
+		t.Errorf("calls left after revocation: %d, %v", left, err)
 	}
 }

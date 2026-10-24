@@ -56,6 +56,6 @@ func mcpResultSize(result *mcp.CallToolResult) int {
 }
 
 // guardToolCalls is the middleware of the tool calls: the log line covers the outcome of the size cap too.
-func guardToolCalls(next mcp.MethodHandler) mcp.MethodHandler {
-	return logToolCalls(capToolResults(next))
+func (h *MCPHandler) guardToolCalls(next mcp.MethodHandler) mcp.MethodHandler {
+	return h.logToolCalls(capToolResults(next))
 }

@@ -151,7 +151,7 @@ Everything a tool returns becomes part of the conversation, so it is sent to the
 - VINs, plates, GPS positions and documents are never served.
 - A grant limited to some vehicles serves those vehicles only, and refuses the views that add up the whole account.
 - Nothing is changed by an assistant: the endpoint only reads, and a token that can push events is refused.
-- The server logs the tool, the account, the outcome and the duration of each call, never the arguments or the answers.
+- The server logs the tool, the account, the outcome and the duration of each call, never the arguments or the answers. The API tokens of the account page list the last 50 calls of each access with the same facts, plus the vehicle when the call named one by id.
 
 Delete the access in the API tokens of the account page to end it at once.
 
@@ -182,5 +182,5 @@ The tool names, the arguments and the fields of the answers are a contract with 
 - The endpoint is stateless: every request carries its own token and nothing is kept between requests.
 - Requests are limited to 120 per minute and access token, and to 600 per minute and address.
 - A tool result is limited to 100 KB. A larger one is replaced by an error that asks for less (a shorter period, a filter, a lower `limit`); the lists have their own caps and say when they are cut.
-- The server log has one line per tool call (tool, account, outcome, duration); the arguments and the answers are not logged.
+- The server log has one line per tool call (tool, account, outcome, duration); the arguments and the answers are not logged. The account page keeps the last 50 calls of each access (tool, vehicle named by id, time, outcome, duration); revoking the access deletes them.
 - A read-only demo instance (`AUTOLEDGER_DEMO`) refuses the requests the endpoint needs.

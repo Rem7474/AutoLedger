@@ -60,7 +60,7 @@ test('an assistant gets a read-only token once the user approves, and the user c
   await page.goto('/account')
   const row = page.locator('li', { hasText: 'Test assistant' })
   await expect(row.getByText('Connected app')).toBeVisible()
-  await row.getByRole('button').click()
+  await row.getByRole('button', { name: 'Revoke' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Revoke' }).click()
   await expect(row).toHaveCount(0)
   expect((await request.get('/api/integrations/v1/vehicles', { headers: bearer })).status()).toBe(401)

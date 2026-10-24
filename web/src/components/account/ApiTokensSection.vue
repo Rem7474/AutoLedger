@@ -9,6 +9,7 @@ import { t } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { coveredVehicles } from '@/utils/oauthVehicles'
 import LoadError from '@/components/LoadError.vue'
+import TokenCallLog from '@/components/account/TokenCallLog.vue'
 
 const { showConfirm } = useConfirm()
 const vehicleStore = useVehicleStore()
@@ -167,8 +168,9 @@ onMounted(() => {
       <li
         v-for="tok in tokens"
         :key="tok.id"
-        class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3"
+        class="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
       >
+        <div class="flex items-center justify-between gap-3">
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold text-white truncate">{{ tok.name }}</span>
@@ -208,6 +210,8 @@ onMounted(() => {
         >
           <Trash2 class="h-4 w-4" />
         </button>
+        </div>
+        <TokenCallLog v-if="tok.scope === 'read'" :token-id="tok.id" />
       </li>
     </ul>
 

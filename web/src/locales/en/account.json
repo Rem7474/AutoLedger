@@ -96,7 +96,13 @@
     "oauthBadge": "Connected app",
     "oauthHelp": "Connected through OAuth. The access renews itself while the application is used; this is when it lapses otherwise.",
     "vehiclesLimited": "Vehicles: {names}",
-    "vehiclesMissing": "{count} no longer in your account"
+    "vehiclesMissing": "{count} no longer in your account",
+    "activity": "Recent activity",
+    "activityHide": "Hide activity",
+    "activityHelp": "The last 50 calls made with this access: which tool, when, and whether it worked. What was asked and answered is not kept.",
+    "activityEmpty": "No call yet.",
+    "activityOk": "Served",
+    "activityError": "Refused or failed"
   },
   "sso": {
     "link": "Link {provider}",

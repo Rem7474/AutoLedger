@@ -543,6 +543,7 @@ export const api = {
 
   // API Tokens (Home Assistant & Automations)
   getAPITokens: () => request<{ tokens: APITokenInfo[] }>('/auth/tokens'),
+  getAPITokenCalls: (tokenId: string) => request<{ calls: APITokenCall[] }>(`/auth/tokens/${tokenId}/calls`),
   createAPIToken: (data: { name: string; scope: APITokenScope; expires_at?: string | null }) =>
     request<APITokenCreatedResponse>('/auth/tokens', { method: 'POST', body: JSON.stringify(data) }),
   previewOAuthAuthorization: (params: OAuthAuthorizeParams) =>
@@ -672,6 +673,16 @@ export interface APITokenInfo {
   last_used_at: string | null
   expires_at: string | null
   created_at: string
+}
+
+/** One call an assistant made with an access. What was asked and answered is not kept. */
+export interface APITokenCall {
+  at: string
+  tool: string
+  /** Set when the call named a vehicle by id. */
+  vehicle_id: string | null
+  outcome: 'ok' | 'error'
+  duration_ms: number
 }
 
 export interface APITokenCreatedResponse {
