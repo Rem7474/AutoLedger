@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 	"image"
-	_ "image/jpeg" // registers the decoders image.DecodeConfig needs for the annex
-	_ "image/png"
+	_ "image/jpeg" // registers the decoder image.DecodeConfig needs for the annex
+	"image/png"
 	"sort"
 	"strings"
 	"time"
@@ -21,6 +21,10 @@ import (
 
 // fixedCostCategories are the recurring costs kept out of the service book: they are not work done on the car.
 var fixedCostCategories = map[string]bool{"INSURANCE": true, "SUBSCRIPTION": true, "TAX": true, "FINANCING": true}
+
+// maxServiceBookPNGPixels bounds the picture a PNG proof may declare: the PDF writer inflates a PNG without any output
+// limit, so the annex decodes it here (memory follows the declared size) and embeds a re-encoded copy instead.
+const maxServiceBookPNGPixels = 16_000_000
 
 // ServiceBookAttachment is a proof file loaded for the annex.
 type ServiceBookAttachment struct {
@@ -286,7 +290,25 @@ func embedServiceBookImage(pdf *fpdf.Fpdf, tr func(string) string, d ServiceBook
 		note()
 		return
 	}
-	pdf.RegisterImageOptionsReader(id, fpdf.ImageOptions{ImageType: imgType}, bytes.NewReader(a.Data))
+	data := a.Data
+	if imgType == "PNG" {
+		if int64(cfg.Width)*int64(cfg.Height) > maxServiceBookPNGPixels {
+			note()
+			return
+		}
+		img, err := png.Decode(bytes.NewReader(a.Data))
+		if err != nil {
+			note()
+			return
+		}
+		var clean bytes.Buffer
+		if err := png.Encode(&clean, img); err != nil {
+			note()
+			return
+		}
+		data = clean.Bytes()
+	}
+	pdf.RegisterImageOptionsReader(id, fpdf.ImageOptions{ImageType: imgType}, bytes.NewReader(data))
 	if pdf.Err() {
 		pdf.ClearError()
 		note()
