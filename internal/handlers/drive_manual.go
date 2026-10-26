@@ -124,6 +124,9 @@ func (h *DriveHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
 		return
 	}
+	if !h.driverBelongs(w, r, vehicleID, req.DriverID) {
+		return
+	}
 
 	if !req.StartTime.IsZero() {
 		existing.StartTime = req.StartTime
