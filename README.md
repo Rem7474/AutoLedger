@@ -329,7 +329,7 @@ To restore the pre-upgrade state, stop the stack, empty the data volume, and ext
 | `APP_TIMEZONE` | - | IANA timezone for reports and aggregations | `Europe/Paris` |
 | `GEOCODING_ENABLED` | - | Resolve the coordinates sent by integrations (Home Assistant trips) into addresses through OpenStreetMap Nominatim. Off by default: the coordinates are sent to the geocoding service | `false` |
 | `GEOCODING_URL` / `GEOCODING_USER_AGENT` | - | Nominatim instance to use (a self-hosted one avoids sending coordinates to a third party) and the User-Agent sent to it | Public OSM instance / `AutoLedger (+https://github.com/Rem7474/AutoLedger)` |
-| `DISABLE_REGISTRATION` | - | Set to `true` to disable public user registration | `false` |
+| `DISABLE_REGISTRATION` | - | Set to `true` to close the local sign-up form. It does not apply to SSO: an identity the provider vouches for still gets an account, so limit who may sign in with `OIDC_ALLOWED_EMAILS` | `false` |
 | `AUTOLEDGER_DEMO` | - | Read-only public demo: every write except sign-in is refused, registration is closed | `false` |
 | `AUTOLEDGER_DEMO_EMAIL` / `AUTOLEDGER_DEMO_PASSWORD` | - | Demo account offered by the "Try the demo" button on the sign-in page (public by design) | - |
 | `AUTOLEDGER_MCP_ENABLED` | - | Lets an assistant ask for read-only access to the account through an authorization page ([OAuth](docs/oauth.md)) and serves the [MCP endpoint](docs/mcp.md) `/mcp`. Off by default | `false` |
