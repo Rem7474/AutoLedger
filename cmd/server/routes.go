@@ -18,8 +18,11 @@ import (
 	"github.com/teslacost/teslacost/web"
 )
 
-// maxJSONBodyBytes caps the body of API requests; uploads have their own limit in their handler.
+// maxJSONBodyBytes caps the body of API requests; uploads have their own, tighter limit in their handler.
 const maxJSONBodyBytes = 1 << 20
+
+// maxUploadBodyBytes caps a multipart request: the largest upload (a 15 MB document) plus its multipart framing.
+const maxUploadBodyBytes = 16 << 20
 
 // contentSecurityPolicy is the policy sent with every response: the built-in one, a custom one from the
 // environment, or none ("off").
@@ -48,7 +51,7 @@ func newRouter(cfg *config.Config, trustedProxies []netip.Prefix) *chi.Mux {
 	if cfg.SecurityHeaders {
 		r.Use(appMiddleware.SecurityHeaders(contentSecurityPolicy(cfg)))
 	}
-	r.Use(appMiddleware.BodyLimit(maxJSONBodyBytes))
+	r.Use(appMiddleware.BodyLimit(maxJSONBodyBytes, maxUploadBodyBytes))
 	if cfg.Demo {
 		r.Use(appMiddleware.DemoReadOnly)
 	}

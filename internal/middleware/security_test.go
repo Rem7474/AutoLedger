@@ -98,7 +98,7 @@ func TestBodyLimit(t *testing.T) {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	})
-	h := BodyLimit(10)(read)
+	h := BodyLimit(10, 50)(read)
 
 	small := httptest.NewRecorder()
 	h.ServeHTTP(small, httptest.NewRequest(http.MethodPost, "/", strings.NewReader("12345")))
@@ -110,12 +110,20 @@ func TestBodyLimit(t *testing.T) {
 	if big.Code != http.StatusRequestEntityTooLarge {
 		t.Errorf("oversized JSON body: %d", big.Code)
 	}
-	upload := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(strings.Repeat("x", 100)))
+	upload := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(strings.Repeat("x", 40)))
 	upload.Header.Set("Content-Type", "multipart/form-data; boundary=x")
 	up := httptest.NewRecorder()
 	h.ServeHTTP(up, upload)
 	if up.Code != http.StatusNoContent {
-		t.Errorf("multipart is left to its handler, got %d", up.Code)
+		t.Errorf("a multipart body within the upload cap must pass, got %d", up.Code)
+	}
+	// The Content-Type is client-chosen: declaring multipart must not lift the cap.
+	huge := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(strings.Repeat("x", 100)))
+	huge.Header.Set("Content-Type", "Multipart/Form-Data; boundary=x")
+	hugeRec := httptest.NewRecorder()
+	h.ServeHTTP(hugeRec, huge)
+	if hugeRec.Code != http.StatusRequestEntityTooLarge {
+		t.Errorf("an oversized body declared as multipart must still be refused, got %d", hugeRec.Code)
 	}
 }
 
