@@ -1,9 +1,8 @@
 import { onScopeDispose, watch } from 'vue'
 import type { Ref } from 'vue'
-import { readGesture, releaseVelocity, sheetOffset, shouldDismiss } from '@/utils/sheetDrag'
+import { createSheetGesture } from '@/utils/sheetDrag'
 
 const NO_DRAG = 'input, textarea, select, [contenteditable="true"], [data-no-sheet-drag]'
-const SAMPLE_WINDOW_MS = 100
 const SETTLE_MS = 200
 
 /** The scrolling element the finger is on, inside the panel: where a pull down scrolls rather than closes. */
@@ -25,43 +24,25 @@ export function useSheetSwipe(panel: Ref<HTMLElement | null>, dismiss: () => voi
   let detach = () => {}
 
   function attach(el: HTMLElement) {
-    let startX = 0
-    let startY = 0
-    let scrollTop = 0
-    let mode: 'idle' | 'wait' | 'drag' | 'scroll' = 'idle'
-    let samples: Array<{ y: number; t: number }> = []
+    const gesture = createSheetGesture()
 
     const isSheet = () => window.matchMedia(`(max-width: ${maxWidth}px)`).matches
     const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     function onStart(e: TouchEvent) {
-      mode = 'idle'
-      if (e.touches.length !== 1 || !isSheet()) return
       const target = e.target instanceof Element ? e.target : null
-      if (target?.closest(NO_DRAG)) return
-      startX = e.touches[0].clientX
-      startY = e.touches[0].clientY
-      scrollTop = scrollerUnder(e.target, el)?.scrollTop ?? 0
-      samples = [{ y: startY, t: e.timeStamp }]
-      mode = 'wait'
+      if (e.touches.length !== 1 || !isSheet() || target?.closest(NO_DRAG)) return gesture.ignore()
+      const touch = e.touches[0]
+      gesture.start(touch.clientX, touch.clientY, e.timeStamp, scrollerUnder(e.target, el)?.scrollTop ?? 0)
     }
 
     function onMove(e: TouchEvent) {
-      if (mode === 'idle' || mode === 'scroll') return
       const touch = e.touches[0]
-      const dx = touch.clientX - startX
-      const dy = touch.clientY - startY
-      if (mode === 'wait') {
-        const read = readGesture(dx, dy, scrollTop)
-        if (read === 'wait') return
-        mode = read
-        if (mode === 'scroll') return
-        el.style.transition = 'none'
-      }
+      const move = gesture.move(touch.clientX, touch.clientY, e.timeStamp)
+      if (!move) return
+      if (move.began) el.style.transition = 'none'
       if (e.cancelable) e.preventDefault()
-      samples.push({ y: touch.clientY, t: e.timeStamp })
-      samples = samples.filter((s) => e.timeStamp - s.t <= SAMPLE_WINDOW_MS)
-      el.style.transform = `translateY(${sheetOffset(dy)}px)`
+      el.style.transform = `translateY(${move.offset}px)`
     }
 
     function settle(transform: string, then?: () => void) {
@@ -81,20 +62,14 @@ export function useSheetSwipe(panel: Ref<HTMLElement | null>, dismiss: () => voi
     }
 
     function onEnd(e: TouchEvent) {
-      if (mode !== 'drag') {
-        mode = 'idle'
-        return
-      }
-      mode = 'idle'
       const touch = e.changedTouches[0]
-      const dy = touch ? touch.clientY - startY : 0
-      const height = el.getBoundingClientRect().height
-      if (e.type !== 'touchcancel' && shouldDismiss(dy, releaseVelocity(samples), height)) {
+      const end = gesture.end(touch ? touch.clientY : 0, el.getBoundingClientRect().height, e.type === 'touchcancel')
+      if (end === 'dismiss') {
         settle('translateY(100%)', () => {
           dismiss()
           el.style.transform = ''
         })
-      } else {
+      } else if (end === 'settle') {
         settle('')
       }
     }

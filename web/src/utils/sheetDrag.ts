@@ -38,3 +38,53 @@ export function releaseVelocity(samples: ReadonlyArray<{ y: number; t: number }>
   const dt = last.t - first.t
   return dt > 0 ? (last.y - first.y) / dt : 0
 }
+
+/** Window, in ms, of the last movements the release speed is read from. */
+export const SAMPLE_WINDOW_MS = 100
+
+export type SheetDragMove = { offset: number; began: boolean }
+export type SheetDragEnd = 'dismiss' | 'settle' | 'none'
+
+/**
+ * The state of one touch on a sheet, free of the DOM: the binding feeds it positions and applies what it answers.
+ * `move` answers null while the touch is not dragging the sheet (still undecided, or left to the scroll).
+ */
+export function createSheetGesture() {
+  let mode: 'idle' | GestureStart = 'idle'
+  let startX = 0
+  let startY = 0
+  let scrollTop = 0
+  let samples: Array<{ y: number; t: number }> = []
+
+  return {
+    start(x: number, y: number, t: number, scrolled: number) {
+      startX = x
+      startY = y
+      scrollTop = scrolled
+      samples = [{ y, t }]
+      mode = 'wait'
+    },
+    /** A touch the sheet does not handle (a second finger, a field). */
+    ignore() {
+      mode = 'idle'
+    },
+    move(x: number, y: number, t: number): SheetDragMove | null {
+      if (mode === 'idle' || mode === 'scroll') return null
+      let began = false
+      if (mode === 'wait') {
+        mode = readGesture(x - startX, y - startY, scrollTop)
+        if (mode !== 'drag') return null
+        began = true
+      }
+      samples.push({ y, t })
+      samples = samples.filter((s) => t - s.t <= SAMPLE_WINDOW_MS)
+      return { offset: sheetOffset(y - startY), began }
+    },
+    end(y: number, sheetHeight: number, cancelled: boolean): SheetDragEnd {
+      const dragging = mode === 'drag'
+      mode = 'idle'
+      if (!dragging) return 'none'
+      return !cancelled && shouldDismiss(y - startY, releaseVelocity(samples), sheetHeight) ? 'dismiss' : 'settle'
+    },
+  }
+}
