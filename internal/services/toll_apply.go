@@ -10,6 +10,7 @@ import (
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 	"github.com/teslacost/teslacost/internal/servertext"
+	"github.com/teslacost/teslacost/internal/tolldata"
 )
 
 // TollDatasetCurrency is the currency the toll dataset (French autoroutes, OpenTollData) is priced in. An estimate is
@@ -106,14 +107,19 @@ func sumEstimatedPrice(segments []models.TollSegment) (money.Cents, bool) {
 func autoTollNotes(lang string, segments []models.TollSegment) string {
 	parts := make([]string, 0, len(segments))
 	for _, s := range segments {
+		part := ""
 		switch {
 		case s.Type == "close" && s.Exit != nil:
-			parts = append(parts, s.Entry+" → "+*s.Exit)
+			part = s.Entry + " → " + *s.Exit
 		case s.Type == "close":
-			parts = append(parts, s.Entry+" "+servertext.Text(lang, "toll.unidentified_exit"))
+			part = s.Entry + " " + servertext.Text(lang, "toll.unidentified_exit")
 		default:
-			parts = append(parts, servertext.Text(lang, "toll.barrier")+" "+s.Entry)
+			part = servertext.Text(lang, "toll.barrier") + " " + s.Entry
 		}
+		if s.Spans > 1 {
+			part += " " + servertext.Text(lang, "toll.shared")
+		}
+		parts = append(parts, part)
 	}
 	return servertext.Text(lang, "toll.auto_prefix") + strings.Join(parts, ", ")
 }
@@ -130,6 +136,37 @@ func (s *TollDetectionService) language(ctx context.Context, userID string) stri
 		return "en"
 	}
 	return "fr"
+}
+
+// sharedTicketPaidByHand reports whether a ticket of the drive that also runs over other drives of its journey has a
+// toll entered by hand (or for a trip group) on one of them: the owner already recorded that journey, and an
+// automatic share on this drive would count it twice.
+func (s *TollDetectionService) sharedTicketPaidByHand(ctx context.Context, vehicle *models.Vehicle, chain *tollChain) (bool, error) {
+	for i, other := range chain.drives {
+		if i == chain.target || !sharesATicket(chain.targetSegs, chain.result.PerDrive[i]) {
+			continue
+		}
+		existing, err := s.repo.GetDriveExpensesByDriveID(ctx, vehicle.ID, other.ID, "en")
+		if err != nil {
+			return false, err
+		}
+		if action, _ := decideTollAction(existing); action == tollActionSkipManual || action == tollActionSkipGroup {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// sharesATicket reports whether both drives carry a ticket spanning several drives at the same place on the trace.
+func sharesATicket(a, b []tolldata.DriveSegment) bool {
+	for _, x := range a {
+		for _, y := range b {
+			if x.Spans > 1 && y.Spans > 1 && x.StartMeters == y.StartMeters && x.EndMeters == y.EndMeters {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // ApplyTollEstimate re-detects the drive's tolls and records the estimated total as an
@@ -161,13 +198,23 @@ func (s *TollDetectionService) ApplyTollEstimate(ctx context.Context, vehicle *m
 		return res, nil
 	}
 
-	detection, err := s.DetectTolls(ctx, vehicle, driveID)
+	chain, err := s.detectChain(ctx, vehicle, driveID)
 	if err != nil {
 		if errors.Is(err, ErrNoGPSTrace) {
 			res.Status = ApplySkippedNoGPS
 			return res, nil
 		}
 		return res, err
+	}
+	detection := chain.persisted
+
+	covered, err := s.sharedTicketPaidByHand(ctx, vehicle, chain)
+	if err != nil {
+		return res, err
+	}
+	if covered {
+		res.Status = ApplySkippedManual
+		return res, nil
 	}
 
 	total, ok := sumEstimatedPrice(detection.Segments)

@@ -81,14 +81,19 @@ func (d Drive) IsHighway() bool {
 
 // TollSegment is a single toll crossing detected on a drive: either a closed-network
 // entry/exit pair, a single open barrier, or a closed-network entry with no exit found
-// on this drive's trace (end of trace, GPS gap, ...).
+// on this drive's trace (end of trace, GPS gap, ...). A ticket whose entry and exit are on
+// different drives (a stop in a service area splits the journey) appears on each of them, with
+// the drive's share as its estimated price.
 type TollSegment struct {
 	Network        string       `json:"network,omitempty"` // OpenTollData network_name (closed networks only)
 	Operator       string       `json:"operator,omitempty"`
 	Type           string       `json:"type"` // "open" or "close"
 	Entry          string       `json:"entry"`
 	Exit           *string      `json:"exit,omitempty"`
-	EstimatedPrice *money.Cents `json:"estimated_price,omitempty"` // class 1 (light vehicle) estimate
+	EstimatedPrice *money.Cents `json:"estimated_price,omitempty"` // class 1 (light vehicle) estimate, this drive's share of a ticket spanning several drives
+	// FullPrice is the price of the whole ticket, only set when it spans several drives (Spans > 1).
+	FullPrice *money.Cents `json:"full_price,omitempty"`
+	Spans     int          `json:"spans,omitempty"` // number of drives the ticket covers, omitted for one
 }
 
 // TollDetection is the result of matching a drive's GPS trace against the toll station

@@ -28,6 +28,14 @@ When the detection is not active:
 - the motorway drives are not counted in the completeness score of the dashboard;
 - manual tolls, the "With toll" filter and the toll line of the cost breakdown stay available, and the tolls already detected are kept.
 
+## Stops on a motorway
+
+A stop at a service area, or a move to a charger, splits a journey into several drives: the entry is on one, the exit on another. The detection reads the drives around the one it analyses together as soon as a closed-network ticket stays open at its edge (an entry with no exit at its end, or a gate with no entry at its start). A neighbouring drive joins when it follows the stop by less than 3 hours and begins within 300 m of where the previous one ended, up to 5 drives in all.
+
+The ticket is then priced as a whole and its price is shared between the drives it covers, along the distance travelled on each, so that the shares add up to the fare. Each drive records its own share as an automatic toll, and the detail of the drive shows the full price of the ticket next to its share. When a neighbouring drive cannot be read, the drive keeps an entry with no identified exit.
+
+If a toll was entered by hand, or for a trip group, on another drive of the same ticket, the automatic toll is not recorded: the journey is already accounted for.
+
 ## History
 
 The Tolls tab opens on the history of what was paid for tolls, parking and other travel expenses: the total and the monthly average of a period (1, 3, 6 or 12 months, the whole history, or a range of days), the 12-month average, and a chart of the amount paid per month with the 12-month average drawn over it. A range of days counts the months it covers entirely. The Maintenance and Fixed costs tabs show the same history for their own expenses; a recurring expense counts once for each month it was due.

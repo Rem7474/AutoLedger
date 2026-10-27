@@ -363,13 +363,18 @@ watch(
           </span>
         </div>
         <div v-if="showTollSegments" class="space-y-1">
-          <div v-for="(seg, idx) in tollDetection.segments" :key="idx" class="text-slate-300 flex items-center justify-between gap-2">
-            <span v-if="seg.type === 'close' && seg.exit">
-              {{ seg.operator ? `${seg.operator}${$t('drives.driveCostModal.operatorSeparator')}` : '' }}{{ seg.entry }} → {{ seg.exit }}
-            </span>
-            <span v-else-if="seg.type === 'close'">{{ $t('drives.driveCostModal.entryDetectedExitNotIdentified', { entry: seg.entry }) }}</span>
-            <span v-else>{{ $t('drives.driveCostModal.tollGate', { entry: seg.entry }) }}</span>
-            <span v-if="seg.estimated_price != null" class="text-warning-400 font-mono shrink-0">{{ formatAmount(seg.estimated_price, 'EUR') }}</span>
+          <div v-for="(seg, idx) in tollDetection.segments" :key="idx" class="text-slate-300">
+            <div class="flex items-center justify-between gap-2">
+              <span v-if="seg.type === 'close' && seg.exit">
+                {{ seg.operator ? `${seg.operator}${$t('drives.driveCostModal.operatorSeparator')}` : '' }}{{ seg.entry }} → {{ seg.exit }}
+              </span>
+              <span v-else-if="seg.type === 'close'">{{ $t('drives.driveCostModal.entryDetectedExitNotIdentified', { entry: seg.entry }) }}</span>
+              <span v-else>{{ $t('drives.driveCostModal.tollGate', { entry: seg.entry }) }}</span>
+              <span v-if="seg.estimated_price != null" class="text-warning-400 font-mono shrink-0">{{ formatAmount(seg.estimated_price, 'EUR') }}</span>
+            </div>
+            <div v-if="seg.spans > 1 && seg.full_price != null" class="text-slate-500">
+              {{ $t('drives.driveCostModal.tollTicketShare', { amount: formatAmount(seg.full_price, 'EUR'), count: seg.spans }) }}
+            </div>
           </div>
         </div>
       </template>
