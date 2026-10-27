@@ -50,3 +50,30 @@ func (r *Repository) GetTollDetectionByDrive(ctx context.Context, vehicleID, dri
 
 	return &td, nil
 }
+
+// GetNeighbourTeslaMateDrive returns the TeslaMate drive of the vehicle that follows (later) or precedes the given
+// drive, or ErrNotFound when there is none. A stop in a service area splits one journey into such neighbours.
+func (r *Repository) GetNeighbourTeslaMateDrive(ctx context.Context, vehicleID string, from *models.Drive, later bool) (*models.Drive, error) {
+	query := `
+		SELECT id::text FROM drives
+		WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL AND teslamate_drive_id IS NOT NULL
+		  AND id::text <> $3 AND end_time <= $2
+		ORDER BY end_time DESC LIMIT 1;`
+	at := from.StartTime
+	if later {
+		query = `
+		SELECT id::text FROM drives
+		WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL AND teslamate_drive_id IS NOT NULL
+		  AND id::text <> $3 AND start_time >= $2
+		ORDER BY start_time ASC LIMIT 1;`
+		at = from.EndTime
+	}
+	var id string
+	if err := r.pool.QueryRow(ctx, query, vehicleID, at, from.ID).Scan(&id); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return r.GetDriveByID(ctx, id, vehicleID)
+}

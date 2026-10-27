@@ -146,6 +146,7 @@
     "totalEstimate": "Total estimate",
     "tollGate": "Toll gate: {entry}",
     "entryDetectedExitNotIdentified": "Entry detected: {entry} (exit not identified)",
+    "tollTicketShare": "Share of a {amount} ticket over {count} drives",
     "notesEGA6Beaune": "Notes (e.g. A6 Beaune toll)",
     "amount": "Amount ({cur})",
     "ferry": "Ferry",

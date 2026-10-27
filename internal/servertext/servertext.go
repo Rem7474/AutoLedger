@@ -39,6 +39,7 @@ var catalog = map[string]map[string]string{
 	"toll.auto_prefix":       {"en": "Auto toll: ", "fr": "Péage auto : "},
 	"toll.unidentified_exit": {"en": "(exit not identified)", "fr": "(sortie non identifiée)"},
 	"toll.barrier":           {"en": "Barrier", "fr": "Barrière"},
+	"toll.shared":            {"en": "(share of the whole journey)", "fr": "(part du trajet complet)"},
 	"toll.trip_not_found":    {"en": "Trip not found", "fr": "Trajet introuvable"},
 	"toll.detection_failed":  {"en": "Detection or save failed", "fr": "Échec de la détection ou de l'enregistrement"},
 

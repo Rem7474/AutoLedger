@@ -146,6 +146,7 @@
     "totalEstimate": "Estimation totale",
     "tollGate": "Barrière : {entry}",
     "entryDetectedExitNotIdentified": "Entrée détectée : {entry} (sortie non identifiée)",
+    "tollTicketShare": "Part d'un ticket de {amount} sur {count} trajets",
     "notesEGA6Beaune": "Notes (ex: Péage A6 Beaune)",
     "amount": "Montant ({cur})",
     "ferry": "Ferry",

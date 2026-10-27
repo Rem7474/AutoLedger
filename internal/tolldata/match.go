@@ -85,6 +85,12 @@ func DetectCrossings(trace []LatLon, speedsKmh []float64, stations []Station, th
 	return matches
 }
 
+// CumulativeMeters returns, for each trace point, the haversine length of the trace up to it.
+func CumulativeMeters(trace []LatLon) []float64 { return cumulativeMeters(trace) }
+
+// DistanceMeters returns the great-circle distance between two points, in meters.
+func DistanceMeters(a, b LatLon) float64 { return haversineMeters(a, b) }
+
 // cumulativeMeters returns, for each trace point, the haversine length of the trace up to it.
 func cumulativeMeters(trace []LatLon) []float64 {
 	out := make([]float64, len(trace))
@@ -198,6 +204,10 @@ type Segment struct {
 	Entry          string
 	Exit           *string
 	EstimatedPrice *money.Cents // class 1 (light vehicle) estimate, nil if unavailable
+	// StartMeters and EndMeters locate the crossing along the trace, as the distance from its start to the
+	// first and the last station of the segment (equal for a barrier or an entry with no exit).
+	StartMeters float64
+	EndMeters   float64
 }
 
 // BuildSegments groups chronologically-ordered matched stations into toll segments and prices
@@ -211,7 +221,7 @@ func (d *Dataset) BuildSegments(matches []MatchedStation) []Segment {
 		st := matches[i].Station
 
 		if st.Type != "close" {
-			seg := Segment{Type: st.Type, Operator: st.Operator, Entry: st.Name}
+			seg := Segment{Type: st.Type, Operator: st.Operator, Entry: st.Name, StartMeters: matches[i].TraceMeters, EndMeters: matches[i].TraceMeters}
 			d.priceSegment(&seg)
 			segments = append(segments, seg)
 			i++
@@ -257,24 +267,33 @@ func withoutDriveBys(matches []MatchedStation) []MatchedStation {
 func (d *Dataset) closedRunSegments(network string, run []MatchedStation) []Segment {
 	if run[0].MinSpeedKmh == nil {
 		var exit *Station
+		last := run[0].TraceMeters
 		if len(run) > 1 {
 			exit = &run[len(run)-1].Station
+			last = run[len(run)-1].TraceMeters
 		}
-		return []Segment{d.closedSegment(network, run[0].Station, exit)}
+		return []Segment{d.closedSegment(network, run[0].Station, exit, run[0].TraceMeters, last)}
 	}
 	return d.pairPassages(network, groupPassages(run))
 }
 
+// passage is the gates crossed at once and where along the trace.
+type passage struct {
+	stations []Station
+	meters   float64
+}
+
 // groupPassages groups stations matched within MinRevisitGapMeters of each other along the
 // trace into one passage: co-located gates (a barrier and its slip road) crossed at once.
-func groupPassages(run []MatchedStation) [][]Station {
-	var passages [][]Station
+func groupPassages(run []MatchedStation) []passage {
+	var passages []passage
 	lastMeters := 0.0
 	for k, m := range run {
 		if k > 0 && m.TraceMeters-lastMeters < MinRevisitGapMeters {
-			passages[len(passages)-1] = append(passages[len(passages)-1], m.Station)
+			last := &passages[len(passages)-1]
+			last.stations = append(last.stations, m.Station)
 		} else {
-			passages = append(passages, []Station{m.Station})
+			passages = append(passages, passage{stations: []Station{m.Station}, meters: m.TraceMeters})
 		}
 		lastMeters = m.TraceMeters
 	}
@@ -291,7 +310,7 @@ const (
 // coming back on it later is two tickets), choosing, when the price table says so, to read a
 // passage as both an exit and the next entry (a barrier in the middle of the network) and
 // which gate of a co-located passage was used.
-func (d *Dataset) pairPassages(network string, passages [][]Station) []Segment {
+func (d *Dataset) pairPassages(network string, passages []passage) []Segment {
 	n := len(passages)
 	type step struct {
 		cost  int
@@ -302,10 +321,10 @@ func (d *Dataset) pairPassages(network string, passages [][]Station) []Segment {
 	best := make([]step, n+1)
 	for i := n - 1; i >= 0; i-- {
 		if i == n-1 {
-			best[i] = step{cost: costUnpriced, next: n, entry: passages[i][0]}
+			best[i] = step{cost: costUnpriced, next: n, entry: passages[i].stations[0]}
 			continue
 		}
-		entry, exit, cost := d.bestPair(passages[i], passages[i+1])
+		entry, exit, cost := d.bestPair(passages[i].stations, passages[i+1].stations)
 		best[i] = step{cost: cost + best[i+2].cost, next: i + 2, entry: entry, exit: &exit}
 		if i+1 < n-1 && cost+costChain+best[i+1].cost < best[i].cost {
 			best[i] = step{cost: cost + costChain + best[i+1].cost, next: i + 1, entry: entry, exit: &exit}
@@ -314,7 +333,11 @@ func (d *Dataset) pairPassages(network string, passages [][]Station) []Segment {
 
 	var segments []Segment
 	for i := 0; i < n; i = best[i].next {
-		segments = append(segments, d.closedSegment(network, best[i].entry, best[i].exit))
+		end := passages[i].meters
+		if best[i].exit != nil {
+			end = passages[i+1].meters
+		}
+		segments = append(segments, d.closedSegment(network, best[i].entry, best[i].exit, passages[i].meters, end))
 	}
 	return segments
 }
@@ -332,8 +355,8 @@ func (d *Dataset) bestPair(from, to []Station) (Station, Station, int) {
 }
 
 // closedSegment builds and prices a closed-network ticket, exit nil when none was found.
-func (d *Dataset) closedSegment(network string, entry Station, exit *Station) Segment {
-	seg := Segment{Network: network, Operator: entry.Operator, Type: "close", Entry: entry.Name}
+func (d *Dataset) closedSegment(network string, entry Station, exit *Station, startMeters, endMeters float64) Segment {
+	seg := Segment{Network: network, Operator: entry.Operator, Type: "close", Entry: entry.Name, StartMeters: startMeters, EndMeters: endMeters}
 	if exit != nil {
 		name := exit.Name
 		seg.Exit = &name
