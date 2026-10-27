@@ -156,7 +156,8 @@ func dedicatedDatabaseURL(t *testing.T, baseURL, suffix string) string {
 
 // shape reduces a JSON value to its structure: the keys, the type of each value, whether it is null, and whether a
 // list is empty. The demo data is dated from the day it is seeded, so the figures change with the clock while the
-// shape of an answer is the contract a client codes against.
+// shape of an answer is the contract a client codes against. A list shows the union of its elements: a field that is
+// null on some records and filled on others reads as filled, whichever record comes first.
 func shape(v any) any {
 	switch x := v.(type) {
 	case map[string]any:
@@ -169,7 +170,11 @@ func shape(v any) any {
 		if len(x) == 0 {
 			return []any{}
 		}
-		return []any{shape(x[0])}
+		merged := shape(x[0])
+		for _, el := range x[1:] {
+			merged = mergeShapes(merged, shape(el))
+		}
+		return []any{merged}
 	case string:
 		return "string"
 	case float64:
@@ -182,6 +187,41 @@ func shape(v any) any {
 	return fmt.Sprintf("%T", v)
 }
 
+// mergeShapes combines the shapes of two records of a list: the keys of both, and the type of a field wherever one of
+// them knows it.
+func mergeShapes(a, b any) any {
+	if a == nil {
+		return b
+	}
+	if b == nil {
+		return a
+	}
+	am, aok := a.(map[string]any)
+	bm, bok := b.(map[string]any)
+	if aok && bok {
+		out := map[string]any{}
+		for k, v := range am {
+			out[k] = v
+		}
+		for k, v := range bm {
+			out[k] = mergeShapes(out[k], v)
+		}
+		return out
+	}
+	al, aok := a.([]any)
+	bl, bok := b.([]any)
+	if aok && bok {
+		switch {
+		case len(al) == 0:
+			return bl
+		case len(bl) == 0:
+			return al
+		}
+		return []any{mergeShapes(al[0], bl[0])}
+	}
+	return a
+}
+
 // toolArguments gives a tool the arguments the contract calls it with: the vehicle, nothing else.
 func toolArguments(t *testing.T, tool *mcp.Tool, vehicleID string) map[string]any {
 	t.Helper()
@@ -192,7 +232,7 @@ func toolArguments(t *testing.T, tool *mcp.Tool, vehicleID string) map[string]an
 	}
 	_ = json.Unmarshal(schema, &parsed)
 	args := map[string]any{}
-	extra := map[string]any{"month": time.Now().UTC().Format("2006-01"), "category": "energy", "energy_kwh": 10, "duration_minutes": 60}
+	extra := map[string]any{"month": time.Now().UTC().AddDate(0, -1, 0).Format("2006-01"), "category": "energy", "energy_kwh": 10, "duration_minutes": 60}
 	for _, name := range parsed.Required {
 		value, ok := extra[name]
 		if name == "vehicle_id" {

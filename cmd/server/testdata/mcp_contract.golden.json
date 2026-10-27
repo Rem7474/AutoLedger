@@ -799,7 +799,7 @@
         },
         "full_cost_rank": "number",
         "kwh_per_100km": "number",
-        "litres_per_100km": null,
+        "litres_per_100km": "number",
         "make": "string",
         "model": "string",
         "name": "string",
@@ -1117,7 +1117,10 @@
         },
         "in_progress": "boolean",
         "month": "string",
-        "scheduled": null
+        "scheduled": {
+          "amount": "string",
+          "currency": "string"
+        }
       }
     ],
     "total": {
@@ -2626,7 +2629,7 @@
         "kind": "string",
         "kwh": "number",
         "litres": null,
-        "note": null,
+        "note": "string",
         "place": "string",
         "place_category": "string",
         "recurring": "boolean"
@@ -2660,11 +2663,11 @@
         },
         "category": "string",
         "date": "string",
-        "has_receipt": null,
+        "has_receipt": "boolean",
         "kind": "string",
         "kwh": null,
         "litres": "number",
-        "note": null,
+        "note": "string",
         "place": null,
         "place_category": null,
         "recurring": "boolean"
@@ -2701,8 +2704,8 @@
         "has_receipt": "boolean",
         "kind": "string",
         "kwh": "number",
-        "litres": null,
-        "note": null,
+        "litres": "number",
+        "note": "string",
         "place": "string",
         "place_category": "string",
         "recurring": "boolean"
