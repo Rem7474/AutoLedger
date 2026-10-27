@@ -40,6 +40,7 @@ var catalog = map[string]map[string]string{
 	"toll.unidentified_exit": {"en": "(exit not identified)", "fr": "(sortie non identifiée)"},
 	"toll.barrier":           {"en": "Barrier", "fr": "Barrière"},
 	"toll.shared":            {"en": "(share of the whole journey)", "fr": "(part du trajet complet)"},
+	"toll.shared_ticket":     {"en": "(share of a %s € ticket over %d drives)", "fr": "(part d'un ticket de %s € sur %d trajets)"},
 	"toll.trip_not_found":    {"en": "Trip not found", "fr": "Trajet introuvable"},
 	"toll.detection_failed":  {"en": "Detection or save failed", "fr": "Échec de la détection ou de l'enregistrement"},
 
