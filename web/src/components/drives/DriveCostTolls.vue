@@ -9,6 +9,7 @@ import { useConfirm } from '@/composables/useConfirm'
 import { mergeExpensesByDrive, tollApplyStatusLabel } from '@/utils/drives'
 import { currencySymbol, formatAmount } from '@/currency'
 import { formatPercent } from '@/utils/numbers'
+import { sharedTollSegments } from '@/utils/tolls'
 import { distanceUnit, perDistance } from '@/units'
 
 // The tolls and road costs of a drive or of a trip: the expenses attached to it (edit, delete, add one), the GPS toll
@@ -72,6 +73,8 @@ async function loadTollDetection(drive: any) {
   }
 }
 
+// Tickets whose entry and exit are on different drives: the estimate holds only this drive's part of them
+const sharedSegments = computed(() => sharedTollSegments(tollDetection.value?.segments))
 const existingTollExpense = computed(() => driveExpenses.value.find((e: any) => e.type === 'TOLL'))
 const canApplyTollEstimate = computed(
   () =>
@@ -362,6 +365,11 @@ watch(
             </button>
           </span>
         </div>
+        <!-- The estimate above is this drive's part of a ticket that runs over several drives: say so, with the whole ticket -->
+        <p v-for="(seg, idx) in sharedSegments" :key="`share-${idx}`" class="text-slate-400">
+          <span v-if="sharedSegments.length > 1" class="text-slate-300">{{ seg.entry }}{{ seg.exit ? ` → ${seg.exit}` : '' }} : </span>
+          {{ $t('drives.driveCostModal.tollTicketShare', { amount: formatAmount(seg.full_price, 'EUR'), count: seg.spans }) }}
+        </p>
         <div v-if="showTollSegments" class="space-y-1">
           <div v-for="(seg, idx) in tollDetection.segments" :key="idx" class="text-slate-300">
             <div class="flex items-center justify-between gap-2">
@@ -371,9 +379,6 @@ watch(
               <span v-else-if="seg.type === 'close'">{{ $t('drives.driveCostModal.entryDetectedExitNotIdentified', { entry: seg.entry }) }}</span>
               <span v-else>{{ $t('drives.driveCostModal.tollGate', { entry: seg.entry }) }}</span>
               <span v-if="seg.estimated_price != null" class="text-warning-400 font-mono shrink-0">{{ formatAmount(seg.estimated_price, 'EUR') }}</span>
-            </div>
-            <div v-if="seg.spans > 1 && seg.full_price != null" class="text-slate-500">
-              {{ $t('drives.driveCostModal.tollTicketShare', { amount: formatAmount(seg.full_price, 'EUR'), count: seg.spans }) }}
             </div>
           </div>
         </div>

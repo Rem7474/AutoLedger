@@ -211,11 +211,16 @@ func TestSharesATicket(t *testing.T) {
 }
 
 func TestAutoTollNotesMarksAShareOfTheJourney(t *testing.T) {
-	segs := []models.TollSegment{{Type: "close", Entry: "A", Exit: strPtr("B"), Spans: 2}}
-	if got, want := autoTollNotes("en", segs), "Auto toll: A → B (share of the whole journey)"; got != want {
+	full := money.Cents(1240)
+	segs := []models.TollSegment{{Type: "close", Entry: "A", Exit: strPtr("B"), Spans: 2, FullPrice: &full}}
+	if got, want := autoTollNotes("en", segs), "Auto toll: A → B (share of a 12.40 € ticket over 2 drives)"; got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
-	if got := autoTollNotes("fr", segs); got != "Péage auto : A → B (part du trajet complet)" {
+	if got := autoTollNotes("fr", segs); got != "Péage auto : A → B (part d'un ticket de 12,40 € sur 2 trajets)" {
 		t.Errorf("got %q", got)
+	}
+	unpriced := []models.TollSegment{{Type: "close", Entry: "A", Exit: strPtr("B"), Spans: 2}}
+	if got, want := autoTollNotes("en", unpriced), "Auto toll: A → B (share of the whole journey)"; got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }

@@ -32,7 +32,7 @@ Quand la détection n'est pas active :
 
 Un arrêt sur une aire, ou un déplacement vers une borne de recharge, découpe un parcours en plusieurs trajets : l'entrée est sur l'un, la sortie sur un autre. La détection lit ensemble les trajets voisins de celui qu'elle analyse dès qu'un ticket de réseau fermé reste ouvert à sa limite (une entrée sans sortie à la fin, ou une barrière sans entrée au début). Un trajet voisin est joint quand il suit l'arrêt de moins de 3 heures et commence à moins de 300 m de la fin du précédent, dans la limite de 5 trajets.
 
-Le ticket est alors tarifé en entier et son prix est réparti entre les trajets qu'il couvre, selon la distance parcourue sur chacun, de sorte que les parts totalisent le tarif. Chaque trajet enregistre sa part comme péage automatique, et le détail du trajet affiche le prix complet du ticket à côté de sa part. Quand un trajet voisin n'est pas lisible, le trajet garde une entrée sans sortie identifiée.
+Le ticket est alors tarifé en entier et son prix est réparti entre les trajets qu'il couvre, selon la distance parcourue sur chacun, de sorte que les parts totalisent le tarif. Chaque trajet enregistre sa part comme péage automatique, et le détail du trajet (sous l'estimation) comme la note de ce péage indiquent le prix complet du ticket et le nombre de trajets qu'il couvre. Quand un trajet voisin n'est pas lisible, le trajet garde une entrée sans sortie identifiée.
 
 Si un péage a été saisi à la main, ou pour un groupe de trajets, sur un autre trajet du même ticket, le péage automatique n'est pas enregistré : le parcours est déjà compté.
 

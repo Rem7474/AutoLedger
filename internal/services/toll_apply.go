@@ -116,7 +116,14 @@ func autoTollNotes(lang string, segments []models.TollSegment) string {
 		default:
 			part = servertext.Text(lang, "toll.barrier") + " " + s.Entry
 		}
-		if s.Spans > 1 {
+		switch {
+		case s.Spans > 1 && s.FullPrice != nil:
+			amount := s.FullPrice.String()
+			if lang == "fr" {
+				amount = strings.Replace(amount, ".", ",", 1)
+			}
+			part += " " + servertext.Text(lang, "toll.shared_ticket", amount, s.Spans)
+		case s.Spans > 1:
 			part += " " + servertext.Text(lang, "toll.shared")
 		}
 		parts = append(parts, part)
