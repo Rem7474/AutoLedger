@@ -14,6 +14,7 @@ import QuickExpenseForm from './QuickExpenseForm.vue'
 import QuickFuelForm from './QuickFuelForm.vue'
 import QuickPendingCosts from './QuickPendingCosts.vue'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
 const route = useRoute()
 const router = useRouter()
@@ -192,6 +193,8 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 useEscapeToClose(() => quickAdd.isOpen, () => quickAdd.close())
+// The sheet is a bottom sheet below the md breakpoint
+useSheetSwipe(panel, () => quickAdd.close(), 767)
 
 onMounted(() => document.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => {
