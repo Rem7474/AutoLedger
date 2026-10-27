@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, type Component } from 'vue'
+import { computed, ref, type Component } from 'vue'
 import { X } from 'lucide-vue-next'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import { useSheetSwipe } from '@/composables/useSheetSwipe'
 import { modalFooterClass, modalLayerClass, modalWidthClass, type ModalSize } from '@/utils/modal'
 
 // The frame every modal shares: backdrop on its own layer, a panel of one of three widths, a header with its title, an
 // optional icon and the close button, a scrolling body and an optional footer. A click on the backdrop and Escape close it;
 // v-dialog on the panel keeps the focus inside and protects what has been typed. Extra attributes land on the panel.
-// On a phone the panel is a bottom sheet: full width, anchored to the bottom edge, rounded on top, sliding up.
+// On a phone the panel is a bottom sheet: full width, anchored to the bottom edge, rounded on top, sliding up, and pulled
+// down by its handle, its header or its content (scrolled to the top) to close.
 defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
@@ -24,6 +26,8 @@ const props = withDefaults(
 )
 const open = defineModel<boolean>('open', { required: true })
 useEscapeToClose(open, () => (open.value = false))
+const panel = ref<HTMLElement | null>(null)
+useSheetSwipe(panel, () => (open.value = false))
 
 const layer = computed(() => modalLayerClass(props.nested))
 const width = computed(() => modalWidthClass(props.size))
@@ -37,11 +41,11 @@ const footer = computed(() => modalFooterClass(props.footerClass))
     :class="layer"
     @click.self="open = false"
   >
-    <div v-dialog v-bind="$attrs" class="modal-panel bg-slate-900 border border-slate-800 max-sm:border-b-0 rounded-t-2xl sm:rounded-2xl w-full max-sm:max-w-none max-h-[92dvh] sm:max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden sm:my-auto" :class="width">
-      <div class="flex justify-center pt-2 sm:hidden shrink-0 bg-slate-900/95" aria-hidden="true">
+    <div ref="panel" v-dialog v-bind="$attrs" class="modal-panel bg-slate-900 border border-slate-800 max-sm:border-b-0 rounded-t-2xl sm:rounded-2xl w-full max-sm:max-w-none max-h-[92dvh] sm:max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden sm:my-auto" :class="width">
+      <div class="flex justify-center pt-2 pb-1 sm:hidden shrink-0 bg-slate-900/95 touch-none" aria-hidden="true">
         <span class="h-1 w-10 rounded-full bg-slate-700"></span>
       </div>
-      <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between gap-3 shrink-0 bg-slate-900/95">
+      <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between gap-3 shrink-0 bg-slate-900/95 max-sm:touch-none">
         <slot name="title">
           <h3 class="text-base font-bold text-white flex items-center gap-2 min-w-0">
             <component :is="icon" v-if="icon" class="w-5 h-5 shrink-0" :class="iconClass" aria-hidden="true" />

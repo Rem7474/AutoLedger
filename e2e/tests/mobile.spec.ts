@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { useVehicle, vehicles, type Vehicle } from './helpers'
 
 // A phone: touch pointer, so the 44px hit areas and the 16px fields of main.css apply.
@@ -71,4 +71,50 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await page.locator('div.rounded-2xl', { hasText: title }).getByRole('button', { name: 'Delete', exact: true }).first().click()
   await page.getByRole('dialog').last().getByRole('button', { name: 'Delete', exact: true }).click()
   await expect(page.getByText(title)).toHaveCount(0)
+})
+
+// A finger on the screen: Playwright has no swipe, so the touch is dispatched through the browser's input domain.
+async function swipeDown(page: Page, x: number, y: number, distance: number, steps = 10) {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+  for (let i = 1; i <= steps; i++) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y + (distance * i) / steps }] })
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+}
+
+test('a sheet is closed by pulling it down by its handle, and a short pull lets it settle back', async ({ page }) => {
+  await useVehicle(page, ev.id, '/expenses')
+  await page.getByRole('button', { name: /^Add/ }).first().click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(400) // the slide-up animation
+  const box = (await dialog.boundingBox())!
+
+  await swipeDown(page, box.x + box.width / 2, box.y + 10, 20)
+  await expect(dialog).toBeVisible()
+  await expect.poll(async () => (await dialog.boundingBox())!.y).toBeCloseTo(box.y, 0)
+
+  await swipeDown(page, box.x + box.width / 2, box.y + 10, 300)
+  await expect(dialog).toBeHidden()
+})
+
+test('a sheet is also closed by pulling its content down, but not from a field', async ({ page }) => {
+  await useVehicle(page, ev.id, '/expenses')
+  await page.getByRole('button', { name: /^Add/ }).first().click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(400)
+  const box = (await dialog.boundingBox())!
+
+  // A field keeps its own gestures (selecting text, moving the caret)
+  const field = (await dialog.locator('input:visible').first().boundingBox())!
+  await swipeDown(page, field.x + field.width / 2, field.y + field.height / 2, 300)
+  await page.waitForTimeout(500)
+  await expect(dialog).toBeVisible()
+  expect((await dialog.boundingBox())!.y).toBeCloseTo(box.y, 0)
+
+  // The content, scrolled to the top, follows the finger like the handle does
+  await swipeDown(page, box.x + 40, box.y + box.height - 120, 300)
+  await expect(dialog).toBeHidden()
 })

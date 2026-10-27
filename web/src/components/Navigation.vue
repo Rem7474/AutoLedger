@@ -26,6 +26,7 @@ import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
 import { groupNavItems } from '@/utils/navigation'
+import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
 const route = useRoute()
 const router = useRouter()
@@ -73,6 +74,9 @@ const moreActive = computed(() => secondaryItems.value.some((item) => item.name 
 
 const canQuickAdd = computed(() => !!vehicleStore.activeVehicle && vehicleStore.canEdit)
 const showMore = ref(false)
+const moreSheet = ref<HTMLElement | null>(null)
+// The "More" sheet is a bottom sheet below the md breakpoint
+useSheetSwipe(moreSheet, () => (showMore.value = false), 767)
 
 watch(() => route.path, () => {
   showMore.value = false
@@ -234,6 +238,7 @@ function handleLogout() {
     @click.self="showMore = false"
   >
     <div
+      ref="moreSheet"
       v-dialog="() => (showMore = false)"
       role="dialog"
       aria-modal="true"
