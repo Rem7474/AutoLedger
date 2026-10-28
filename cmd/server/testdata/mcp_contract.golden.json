@@ -243,7 +243,7 @@
   "get_charging_places / empty": {
     "currency": "string",
     "home_savings": null,
-    "home_savings_unavailable": "string",
+    "home_savings_unavailable": null,
     "months": "number",
     "places": [],
     "unplaced_locations": [],
@@ -251,25 +251,7 @@
   },
   "get_charging_places / ev": {
     "currency": "string",
-    "home_savings": {
-      "at_home_price": {
-        "amount": "string",
-        "currency": "string"
-      },
-      "away_cost": {
-        "amount": "string",
-        "currency": "string"
-      },
-      "away_sessions": "number",
-      "home_price_per_kwh": {
-        "amount": "string",
-        "currency": "string"
-      },
-      "savings": {
-        "amount": "string",
-        "currency": "string"
-      }
-    },
+    "home_savings": null,
     "home_savings_unavailable": null,
     "months": "number",
     "places": [
@@ -300,7 +282,7 @@
   "get_charging_places / ice": {
     "currency": "string",
     "home_savings": null,
-    "home_savings_unavailable": "string",
+    "home_savings_unavailable": null,
     "months": "number",
     "places": [],
     "unplaced_locations": [],
@@ -309,7 +291,7 @@
   "get_charging_places / layout": {
     "currency": "string",
     "home_savings": null,
-    "home_savings_unavailable": "string",
+    "home_savings_unavailable": null,
     "months": "number",
     "places": [
       {
@@ -1117,10 +1099,7 @@
         },
         "in_progress": "boolean",
         "month": "string",
-        "scheduled": {
-          "amount": "string",
-          "currency": "string"
-        }
+        "scheduled": null
       }
     ],
     "total": {
@@ -2173,27 +2152,7 @@
       }
     ],
     "start_odometer_missing": "boolean",
-    "suspicious_entries": [
-      {
-        "amount": null,
-        "category": "string",
-        "date": "string",
-        "highest_other_price": {
-          "amount": "string",
-          "currency": "string"
-        },
-        "kind": "string",
-        "lowest_other_price": {
-          "amount": "string",
-          "currency": "string"
-        },
-        "unit_price": {
-          "amount": "string",
-          "currency": "string"
-        },
-        "usual_amount": null
-      }
-    ],
+    "suspicious_entries": [],
     "truncated": "boolean",
     "unconverted_expenses": "number",
     "unqualified_drives": "number",
