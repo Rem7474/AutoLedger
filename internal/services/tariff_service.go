@@ -170,6 +170,25 @@ func (s *TariffService) CalculateSessionCost(plan *models.TariffPlan, startTime,
 	return pricing.Cost, err
 }
 
+// maxSampledSessionMinutes is how much of a session is walked to find its bands: a year, which is far beyond any
+// charge and keeps the walk at about 105,000 steps whatever the period asked for.
+const maxSampledSessionMinutes = 366 * 24 * 60
+
+// sessionSampling says how a session of totalMinutes is walked to find its bands: every minute up to a day, every 5
+// minutes beyond, and only over the first maxSampledSessionMinutes. The shares are scaled to the whole duration by the
+// caller, and the bound matters because the period comes straight from the request.
+func sessionSampling(totalMinutes int) (step, sampled int) {
+	step = 1
+	if totalMinutes > 1440 {
+		step = 5
+	}
+	sampled = totalMinutes
+	if sampled > maxSampledSessionMinutes {
+		sampled = maxSampledSessionMinutes
+	}
+	return step, sampled
+}
+
 // PriceSession is CalculateSessionCost with the bands the session was priced in.
 func (s *TariffService) PriceSession(plan *models.TariffPlan, startTime, endTime time.Time, kwh float64) (SessionPricing, error) {
 	if plan == nil || kwh <= 0 {
@@ -196,15 +215,11 @@ func (s *TariffService) PriceSession(plan *models.TariffPlan, startTime, endTime
 	}
 	parsed := parseRules(rules)
 
-	// Sessions longer than a day are sampled every 5 minutes to bound the loop
-	step := 1
-	if totalMinutes > 1440 {
-		step = 5
-	}
+	step, sampled := sessionSampling(totalMinutes)
 
 	minutesByBand := map[string]int{}
 	evaluated := 0
-	for m := 0; m < totalMinutes; m += step {
+	for m := 0; m < sampled; m += step {
 		curr := startTime.Add(time.Duration(m) * time.Minute)
 		mod := curr.Hour()*60 + curr.Minute()
 		band := defaultBand
