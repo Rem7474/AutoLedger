@@ -329,7 +329,7 @@ Pour revenir à l'état d'avant la mise à niveau, arrêter la pile, vider le vo
 | `APP_TIMEZONE` | - | Fuseau horaire IANA pour les rapports et agrégations | `Europe/Paris` |
 | `GEOCODING_ENABLED` | - | Résoudre en adresses, par OpenStreetMap Nominatim, les coordonnées envoyées par les intégrations (trajets Home Assistant). Désactivé par défaut : les coordonnées sont transmises au service de géocodage | `false` |
 | `GEOCODING_URL` / `GEOCODING_USER_AGENT` | - | Instance Nominatim à utiliser (une instance auto-hébergée évite d'envoyer les coordonnées à un tiers) et User-Agent qui lui est envoyé | Instance OSM publique / `AutoLedger (+https://github.com/Rem7474/AutoLedger)` |
-| `DISABLE_REGISTRATION` | - | Définir à `true` pour désactiver l'inscription publique | `false` |
+| `DISABLE_REGISTRATION` | - | Définir à `true` pour fermer le formulaire d'inscription local. Cela ne s'applique pas au SSO : une identité garantie par le fournisseur obtient quand même un compte, donc limitez qui peut se connecter avec `OIDC_ALLOWED_EMAILS` | `false` |
 | `AUTOLEDGER_DEMO` | - | Démo publique en lecture seule : toute écriture sauf la connexion est refusée, l'inscription est fermée | `false` |
 | `AUTOLEDGER_DEMO_EMAIL` / `AUTOLEDGER_DEMO_PASSWORD` | - | Compte de démo proposé par le bouton « Essayer la démo » de la page de connexion (public par conception) | - |
 | `AUTOLEDGER_MCP_ENABLED` | - | Permet à un assistant de demander un accès en lecture seule au compte depuis une page d'autorisation ([OAuth](docs/oauth.fr.md)) et sert le [point d'accès MCP](docs/mcp.fr.md) `/mcp`. Désactivé par défaut | `false` |
