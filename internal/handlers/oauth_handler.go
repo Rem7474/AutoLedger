@@ -318,6 +318,7 @@ func (h *OAuthHandler) DecideAuthorization(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		query.Set("code", code)
+		withholdFromIdempotency(r) // a one-minute, single-use code has no business in the replay store
 	default:
 		writeAPIError(w, http.StatusBadRequest, apierror.New("oauth.invalid_request", "The authorization request is invalid"))
 		return

@@ -79,6 +79,8 @@ func (h *TokenHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The token is shown once and stored hashed: a copy kept for idempotent replay would defeat that.
+	withholdFromIdempotency(r)
 	writeJSON(w, http.StatusCreated, models.APITokenCreatedResponse{
 		Token: rawToken,
 		Info:  *tokenInfo,
