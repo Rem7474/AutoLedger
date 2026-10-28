@@ -87,12 +87,18 @@ func OriginCheck(allowed []string) func(http.Handler) http.Handler {
 }
 
 // BodyLimit caps request bodies so a client cannot make the server buffer an arbitrarily large JSON document.
-// Multipart uploads are left to their handler, which applies its own, larger limit.
-func BodyLimit(maxBytes int64) func(http.Handler) http.Handler {
+// A multipart request gets the larger maxUploadBytes, which must cover the biggest upload plus its framing; the upload
+// handlers apply their own, tighter limit. The Content-Type is chosen by the client, so it never lifts the cap: a JSON
+// handler reading a body declared as multipart is still bounded.
+func BodyLimit(maxBytes, maxUploadBytes int64) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Body != nil && !strings.HasPrefix(strings.ToLower(r.Header.Get("Content-Type")), "multipart/") {
-				r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
+			if r.Body != nil {
+				limit := maxBytes
+				if strings.HasPrefix(strings.ToLower(r.Header.Get("Content-Type")), "multipart/") {
+					limit = maxUploadBytes
+				}
+				r.Body = http.MaxBytesReader(w, r.Body, limit)
 			}
 			next.ServeHTTP(w, r)
 		})
