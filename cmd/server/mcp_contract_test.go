@@ -88,7 +88,7 @@ func contractServer(t *testing.T) (string, *demoseed.Client, string, map[string]
 	}
 	names := map[string]string{"empty": "Empty"}
 	for _, key := range []string{"ev", "ice", "layout"} {
-		ds, err := demodata.Build(key, time.Now())
+		ds, err := demodata.Build(key, contractSeedDay(time.Now()))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,6 +165,7 @@ func shape(v any) any {
 		for k, val := range x {
 			out[k] = shape(val)
 		}
+		dropDayDependentParts(x, out)
 		return out
 	case []any:
 		if len(x) == 0 {
@@ -185,6 +186,31 @@ func shape(v any) any {
 		return nil
 	}
 	return fmt.Sprintf("%T", v)
+}
+
+// dropDayDependentParts levels out the fields whose presence follows the day the test runs on, through what the demo
+// data holds in each window (the month in progress, the last months): the contract checks their type where they are
+// always present, and these are not. Their own tools are covered by the integration tests of their package.
+func dropDayDependentParts(answer, shaped map[string]any) {
+	// An amount that falls due later in the month, null from the last days of it
+	if _, ok := answer["scheduled"]; ok {
+		shaped["scheduled"] = nil
+	}
+	// A saving at home needs a priced charge away from home within the period; the reason is given otherwise
+	if _, ok := answer["home_savings"]; ok {
+		shaped["home_savings"] = nil
+		shaped["home_savings_unavailable"] = nil
+	}
+	// Entries whose price stands out from the others of the period
+	if _, ok := answer["suspicious_entries"]; ok {
+		shaped["suspicious_entries"] = []any{}
+	}
+	// A warning carries the amount it measured only for some of its codes
+	if _, ok := answer["code"]; ok {
+		if params, ok := shaped["params"].(map[string]any); ok {
+			delete(params, "amount")
+		}
+	}
 }
 
 // mergeShapes combines the shapes of two records of a list: the keys of both, and the type of a field wherever one of
@@ -232,7 +258,7 @@ func toolArguments(t *testing.T, tool *mcp.Tool, vehicleID string) map[string]an
 	}
 	_ = json.Unmarshal(schema, &parsed)
 	args := map[string]any{}
-	extra := map[string]any{"month": time.Now().UTC().AddDate(0, -1, 0).Format("2006-01"), "category": "energy", "energy_kwh": 10, "duration_minutes": 60}
+	extra := map[string]any{"month": previousMonth(time.Now()), "category": "energy", "energy_kwh": 10, "duration_minutes": 60}
 	for _, name := range parsed.Required {
 		value, ok := extra[name]
 		if name == "vehicle_id" {
@@ -375,7 +401,7 @@ func checkDashboardParity(t *testing.T, c *demoseed.Client, session *mcp.ClientS
 
 // The records get_month_breakdown lists add up to the figure get_monthly_costs gives for the same month.
 func checkMonthBreakdownParity(t *testing.T, session *mcp.ClientSession, ids map[string]string) {
-	month := time.Now().UTC().AddDate(0, -1, 0).Format("2006-01")
+	month := previousMonth(time.Now())
 	for label, id := range ids {
 		series, isErr := callTool(t, session, "get_monthly_costs", map[string]any{"vehicle_id": id, "from": month, "to": month})
 		months, _ := series["months"].([]any)
@@ -401,4 +427,18 @@ func checkMonthBreakdownParity(t *testing.T, session *mcp.ClientSession, ids map
 			}
 		}
 	}
+}
+
+// contractSeedDay is the latest Sunday on or before now. The demo data follows the weekday of its last day (which
+// days carry a charge, a trip, a journey), and so does the structure of some answers (a home saving needs a priced
+// charge away from home): seeding from a fixed weekday keeps the contract the same whatever day it runs.
+func contractSeedDay(now time.Time) time.Time {
+	now = now.UTC()
+	return now.AddDate(0, 0, -int(now.Weekday()))
+}
+
+// previousMonth is the month before now's as "2006-01": AddDate(0, -1, 0) from the 31st lands in the current month.
+func previousMonth(now time.Time) string {
+	now = now.UTC()
+	return time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
 }
