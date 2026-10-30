@@ -127,7 +127,7 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
             <span v-else-if="m.amortization_mode === 'HYBRID'" class="text-xs px-2 py-0.5 rounded-full font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
               {{ $t('expenses.maintenancePanel.mixedSmoothingKmMonths', { unit: distanceUnit(), coverage_km: m.coverage_km ? formatDistanceValue(m.coverage_km) : formatDistanceValue(50000), coverage_months: m.coverage_months || 24 }) }}
             </span>
-            <span v-if="m.closes_maintenance_id" class="text-xs px-2 py-0.5 rounded-full font-medium bg-warning-500/10 text-warning-400 border border-warning-500/20 shrink-0">
+            <span v-if="m.closes_maintenance_id" class="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-800 text-slate-300 border border-slate-700/60 shrink-0">
               {{ $t('expenses.maintenancePanel.closesThePreviousService') }}
             </span>
             <button
@@ -143,7 +143,7 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
           <p class="text-sm font-semibold text-slate-200 truncate">{{ m.description }}</p>
         </div>
         <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-          <div class="text-lg font-extrabold" :class="kind === 'fixed' ? 'text-warning-400' : 'text-white'">
+          <div class="text-lg font-extrabold text-white">
             {{ formatAmount(m.amount, m.currency || vehicleStore.currency) }}
           </div>
           <div v-if="vehicleStore.canEdit" class="flex items-center gap-1.5">

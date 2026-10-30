@@ -242,7 +242,7 @@ export function buildLeaseSummary(tco: any, now = new Date()) {
   }
 
   // Status
-  let status = { label: t('dashboard.lease.inProgress'), class: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' }
+  let status = { label: t('dashboard.lease.inProgress'), class: 'bg-slate-700/50 text-slate-200 border-slate-600/40' }
   if (c.option_exercised_date) {
     status = { label: t('dashboard.lease.optionExercised'), class: 'bg-success-500/15 text-success-400 border-success-500/30' }
   } else if (isEnded) {
