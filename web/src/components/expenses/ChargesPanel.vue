@@ -6,12 +6,13 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Zap, Pencil, Trash2, AlertTriangle, Paperclip } from 'lucide-vue-next'
+import { Zap, Pencil, Trash2, AlertTriangle, Paperclip, ExternalLink } from 'lucide-vue-next'
 import { groupChargesByMonth } from '@/utils/expenses'
 import { formatChargeWindow } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { formatNumber } from '@/utils/numbers'
 import { chargeDeletable, chargeOrigin, chargeOriginKey } from '@/utils/chargeProvenance'
+import { teslamateChargeCostUrl, teslamateChargeUrl } from '@/utils/teslamateCharges'
 import { distanceUnit, formatPerDistanceValue, perDistance } from '@/units'
 import { hasEnergyEstimate } from '@/utils/vehicles'
 
@@ -125,8 +126,28 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
             <span v-else class="text-xs font-bold text-warning-400 flex items-center gap-1">
               <AlertTriangle class="w-3.5 h-3.5" /> {{ $t('expenses.chargesPanel.missingCost') }}
             </span>
+            <a
+              v-if="teslamateChargeCostUrl(vehicleStore.activeVehicle, c)"
+              :href="teslamateChargeCostUrl(vehicleStore.activeVehicle, c)!"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="mt-0.5 inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium"
+              :title="$t('expenses.teslamateLinks.setCostHint')"
+            >
+              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.setCost') }}
+            </a>
           </div>
           <div v-if="vehicleStore.canEdit" class="flex items-center gap-0.5 sm:gap-1 shrink-0">
+            <a
+              v-if="teslamateChargeUrl(vehicleStore.activeVehicle, c)"
+              :href="teslamateChargeUrl(vehicleStore.activeVehicle, c)!"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-info-400 rounded-xl transition-colors border border-slate-700/60"
+              :title="$t('expenses.teslamateLinks.details')" :aria-label="$t('expenses.teslamateLinks.details')"
+            >
+              <ExternalLink class="w-3.5 h-3.5" />
+            </a>
             <button
               @click="emit('edit', c)"
               class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors border border-slate-700/60"

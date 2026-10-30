@@ -7,7 +7,7 @@ import { api, type ExpenseDocumentHeader } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDocumentAttach } from '@/composables/useDocumentAttach'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Zap, Paperclip, FileText, Eye, UploadCloud, Calculator } from 'lucide-vue-next'
+import { Zap, Paperclip, FileText, Eye, UploadCloud, Calculator, ExternalLink } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { currencyPayload, formatDate, toLocalDateTimeInput } from '@/utils/expenses'
 import ModalShell from '@/components/ModalShell.vue'
@@ -18,6 +18,7 @@ import { useSubmit } from '@/composables/useSubmit'
 import { useSessionTariffCost } from '@/composables/useSessionTariffCost'
 import { sessionPriceRequest } from '@/utils/tariffSession'
 import { chargeFieldAccess, chargeOriginKey } from '@/utils/chargeProvenance'
+import { teslamateChargeCostUrl, teslamateChargeUrl } from '@/utils/teslamateCharges'
 
 // Records a charge, or edits `editing`: the facts reported by TeslaMate are read-only, the cost and the notes are AutoLedger's.
 const props = defineProps<{ vehicleId: string; editing: any | null; documents: ExpenseDocumentHeader[]; currentOdometer: number }>()
@@ -148,6 +149,9 @@ async function handleSaveChargeAction() {
   }
 }
 const handleSaveCharge = () => runOnce(handleSaveChargeAction)
+
+const detailsUrl = computed(() => teslamateChargeUrl(vehicleStore.activeVehicle, editingCharge.value))
+const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehicle, editingCharge.value))
 </script>
 
 <template>
@@ -161,6 +165,14 @@ const handleSaveCharge = () => runOnce(handleSaveChargeAction)
           <p v-if="editingCharge" class="text-xs text-slate-400 mt-1">
             <span class="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">{{ $t(chargeOriginKey(editingCharge)) }}</span>
             <span v-if="sourceLocked" class="ml-1.5">{{ $t('expenses.chargeModal.sourceLocked') }}</span>
+          </p>
+          <p v-if="detailsUrl || setCostUrl" class="text-xs mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+            <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-info-400 hover:text-info-300 font-medium">
+              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
+            </a>
+            <a v-if="setCostUrl" :href="setCostUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-info-400 hover:text-info-300 font-medium" :title="$t('expenses.teslamateLinks.setCostHint')">
+              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.setCost') }}
+            </a>
           </p>
         </div>
     </template>

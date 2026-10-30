@@ -43,6 +43,8 @@
     "addsAnOpenInTeslamate": "Adds an “Open in TeslaMate” link in the detail of each drive (Drive Details dashboard).",
     "eGHttp192168": "e.g. http://192.168.1.50:3000",
     "teslamateGrafanaUrlOptional": "TeslaMate Grafana URL (optional)",
+    "teslamateUrlOptional": "TeslaMate URL (optional)",
+    "addsASetTheCost": "Adds a “Set the cost in TeslaMate” link on a charge whose cost is unknown. The cost entered there is read again by the next synchronisation.",
     "eGHttp1921682": "e.g. http://192.168.1.50:8080 or http://host.docker.internal:8080",
     "teslamateapiBaseUrl": "teslamateapi base URL",
     "teslamateapiConnectionOptional": "TeslaMateApi connection (optional)",

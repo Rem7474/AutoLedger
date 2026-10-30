@@ -39,6 +39,11 @@
     "fixedCosts": "Frais fixes",
     "fillUps": "Pleins"
   },
+  "teslamateLinks": {
+    "details": "Détails dans TeslaMate",
+    "setCost": "Définir le coût dans TeslaMate",
+    "setCostHint": "Le coût saisi dans TeslaMate est relu à la prochaine synchronisation."
+  },
   "chargeModal": {
     "pdfOrImageSuperchargerReceipt": "PDF ou image (reçu Superchargeur, borne publique, etc.).",
     "attachAnExistingInvoice": "-- Associer une facture existante --",
