@@ -60,7 +60,7 @@ function baseOptions(canvas: () => HTMLCanvasElement | null, chart: () => Chart 
       tooltip: { callbacks: { label: (context: any) => tooltipLabel(Number(context.raw)) } },
     },
     scales: {
-      x: { grid: { color: GRID }, ticks: { color: AXIS } },
+      x: { grid: { color: GRID }, ticks: { color: AXIS, maxRotation: 0, autoSkipPadding: 8 } },
       y: { beginAtZero: true, grid: { color: GRID }, ticks: { color: AXIS, callback: (v: any) => tick(Number(v)) } },
     },
   }

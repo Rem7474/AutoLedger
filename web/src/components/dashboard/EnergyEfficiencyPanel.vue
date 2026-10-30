@@ -274,7 +274,7 @@ onBeforeUnmount(() => {
         :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
         term="fullChargeCost"
         :value="fmtMoney(stats?.summary.cost_per_full_charge ?? undefined, currency)"
-        unit=" (0 → 100 %)"
+        unit=" (0 → 100 %)"
       />
     </div>
 

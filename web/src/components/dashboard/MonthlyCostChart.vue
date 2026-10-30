@@ -98,7 +98,22 @@ function renderChart() {
         }
       },
       plugins: {
-        legend: { position: 'top', labels: { color: '#94a3b8', font: { size: 11 } } },
+        legend: {
+          position: 'top',
+          labels: {
+            color: '#94a3b8',
+            font: { size: 11 },
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 10,
+            // The currency is already in the chart title: the legend names only the series
+            generateLabels: (chart) =>
+              Chart.defaults.plugins.legend.labels.generateLabels(chart).map((item) => ({
+                ...item,
+                text: seriesLabel(series[item.datasetIndex ?? 0].key),
+              })),
+          },
+        },
         tooltip: {
           callbacks: {
             label: (context) => {
@@ -121,7 +136,7 @@ function renderChart() {
         },
       },
       scales: {
-        x: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#64748b' } },
+        x: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxRotation: 0, autoSkipPadding: 8 } },
         y: {
           stacked: true,
           beginAtZero: true,
