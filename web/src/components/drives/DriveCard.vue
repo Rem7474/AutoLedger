@@ -6,6 +6,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { MapPin, Clock, Users, Coins, Pencil, Trash2 } from 'lucide-vue-next'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
+import { hasTeslaMate } from '@/utils/vehicles'
 import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { formatAmount } from '@/currency'
@@ -27,6 +28,8 @@ const router = useRouter()
 const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
 const formatDate = formatDayTime
+// A vehicle fed by TeslaMate mixes synced and manual drives: the badge tells them apart. Without TeslaMate every drive is manual.
+const showManualBadge = computed(() => hasTeslaMate(vehicleStore.activeVehicle))
 const carpoolSummary = computed(() => summarizeDriveCarpools(props.d.carpools))
 
 // One carpool opens it directly; several open the drive's cost breakdown, which lists them
@@ -48,7 +51,7 @@ function openCarpool() {
       <label
         v-if="vehicleStore.canEdit"
         :for="'drive-select-' + d.id"
-        class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
+        class="absolute right-1 top-1 z-10 tap p-1 flex items-center cursor-pointer sm:relative sm:right-auto sm:top-auto sm:mt-0.5 sm:-ml-1 sm:shrink-0"
         :title="$t('drives.driveCard.selectThisDrive')"
       >
         <span class="sr-only">{{ $t('drives.driveCard.selectThisDrive') }}</span>
@@ -62,7 +65,7 @@ function openCarpool() {
       </label>
 
       <!-- Drive Details -->
-      <div class="min-w-0 flex-1">
+      <div class="min-w-0 flex-1" :class="{ 'pr-10 sm:pr-0': vehicleStore.canEdit }">
         <div class="flex items-center gap-x-2 gap-y-1 flex-wrap mb-1">
           <span class="text-xs font-semibold text-slate-400 shrink-0">{{ formatDate(d.start_time) }}</span>
           <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60 shrink-0">
@@ -93,8 +96,8 @@ function openCarpool() {
             {{ $t('drives.driveCard.personal') }}
           </span>
           <span
-            v-if="d.is_manual"
-            class="text-xs px-2 py-0.5 rounded-full font-bold bg-warning-500/20 text-warning-300 border border-warning-500/40 shrink-0"
+            v-if="d.is_manual && showManualBadge"
+            class="text-xs px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700/60 shrink-0"
           >
             {{ $t('drives.drivesView.manual') }}
           </span>
