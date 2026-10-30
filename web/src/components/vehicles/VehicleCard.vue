@@ -53,7 +53,7 @@ function clearCardTestResult() {
               v-if="v.role"
               class="px-2 py-0.5 text-xs font-semibold rounded-full uppercase tracking-wider"
               :class="{
-                'bg-warning-500/10 text-warning-400 border border-warning-500/20': v.role === 'OWNER',
+                'bg-slate-700/60 text-slate-200 border border-slate-600/40': v.role === 'OWNER',
                 'bg-info-500/10 text-info-400 border border-info-500/20': v.role === 'EDITOR',
                 'bg-slate-700/50 text-slate-400 border border-slate-600/30': v.role === 'VIEWER',
               }"

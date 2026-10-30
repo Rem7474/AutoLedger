@@ -52,7 +52,7 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       >
         <div class="space-y-1.5 min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-warning-500/10 text-warning-400 border border-warning-500/20 shrink-0">
+            <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700/60 shrink-0">
               {{ expenseTypeLabel(e.type) }}
             </span>
             <span class="text-xs text-slate-400 shrink-0">{{ formatDate(e.date) }}</span>
@@ -75,7 +75,7 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
           <p v-if="e.notes" class="text-sm text-slate-300">{{ e.notes }}</p>
         </div>
         <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-          <div class="text-lg font-extrabold text-warning-400">
+          <div class="text-lg font-extrabold text-white">
             {{ formatAmount(e.amount, e.currency || vehicleStore.currency) }}
           </div>
           <div v-if="vehicleStore.canEdit" class="flex items-center gap-1.5">
@@ -90,7 +90,7 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
             </button>
             <button
               @click="emit('edit', e)"
-              class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-warning-400 rounded-xl transition-colors border border-slate-700/60"
+              class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors border border-slate-700/60"
               :title="$t('expenses.tollsPanel.editThisToll')" :aria-label="$t('expenses.tollsPanel.editThisToll')"
             >
               <Pencil class="w-3.5 h-3.5" />

@@ -260,7 +260,7 @@ async function handleRemoveMember(m: any) {
           <div class="flex items-center gap-3 min-w-0">
             <div
               class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
-              :class="m.role === 'OWNER' ? 'bg-warning-500/10 text-warning-400 border border-warning-500/20' : 'bg-slate-800 text-slate-300 border border-transparent'"
+              :class="m.role === 'OWNER' ? 'bg-slate-700/60 text-slate-100 border border-slate-600/40' : 'bg-slate-800 text-slate-300 border border-transparent'"
             >
               {{ (m.user_email || '?').charAt(0).toUpperCase() }}
             </div>
