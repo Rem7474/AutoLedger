@@ -20,7 +20,7 @@ const range = defineModel<import('@/utils/dashboard').MonthlyRangeKey>({ require
       @click="range = opt.key; emit('pick', opt.key)"
       :aria-pressed="!custom && range === opt.key"
       :class="[
-        'tap-text justify-center px-2.5 text-xs font-semibold rounded-md transition-colors pointer-coarse:min-w-11',
+        'tap-text flex-1 justify-center whitespace-nowrap px-2 text-xs font-semibold rounded-md transition-colors sm:flex-none sm:px-2.5 pointer-coarse:min-w-11',
         !custom && range === opt.key ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white',
       ]"
     >

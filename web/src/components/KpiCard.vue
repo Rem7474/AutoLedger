@@ -24,6 +24,9 @@ const props = withDefaults(defineProps<{
   tinted?: boolean
   // The dense tile of a panel inside a disclosure: no icon, smaller figure, a darker background.
   compact?: boolean
+  // Lines the header, the figure and the rest up with the cards of the same grid row. The grid must give each card
+  // three rows (`row-span-3`'s subgrid); a label that wraps on a phone then no longer pushes its figure down.
+  aligned?: boolean
   delta?: KpiDelta
   actionLabel?: string
   to?: string
@@ -41,8 +44,9 @@ const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text
 
 <template>
   <div
-    class="relative flex flex-col"
+    class="relative"
     :class="[
+      aligned ? 'row-span-3 grid grid-rows-subgrid gap-y-0' : 'flex flex-col',
       compact ? 'rounded-xl border p-3' : 'rounded-2xl border p-4 shadow-sm transition-colors hover:border-slate-600',
       tintClass ?? (compact ? 'border-slate-800 bg-slate-950/60' : 'border-slate-800 bg-slate-900'),
     ]"
@@ -63,9 +67,11 @@ const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text
       <template v-if="unknown">—</template>
       <template v-else>{{ value }}<span v-if="unit" class="font-normal text-slate-300" :class="compact ? 'text-xs font-medium text-slate-400' : 'text-sm'">{{ unit }}</span></template>
     </div>
-    <p v-if="delta" class="mt-1 text-xs font-semibold" :class="deltaTones[delta.tone ?? 'neutral']">{{ delta.text }}</p>
-    <slot />
-    <router-link v-if="actionLabel && to" :to="to" :class="actionClass">{{ actionLabel }}</router-link>
-    <button v-else-if="actionLabel" type="button" :class="actionClass" @click="emit('action')">{{ actionLabel }}</button>
+    <div class="flex flex-1 flex-col">
+      <p v-if="delta" class="mt-1 text-xs font-semibold" :class="deltaTones[delta.tone ?? 'neutral']">{{ delta.text }}</p>
+      <slot />
+      <router-link v-if="actionLabel && to" :to="to" :class="actionClass">{{ actionLabel }}</router-link>
+      <button v-else-if="actionLabel" type="button" :class="actionClass" @click="emit('action')">{{ actionLabel }}</button>
+    </div>
   </div>
 </template>

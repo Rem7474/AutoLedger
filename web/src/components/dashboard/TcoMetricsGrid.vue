@@ -57,6 +57,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <!-- Economic cost per km -->
       <KpiCard
+        aligned
         :label="rolling ? $t('dashboard.tcoMetricsGrid.economicPerKm', { unit: distanceUnit() }) : $t('dashboard.tcoMetricsGrid.fullCostPerKm', { unit: distanceUnit() })"
         :period="windowLabel"
         term="economicCost"
@@ -78,6 +79,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
 
       <!-- Cash paid -->
       <KpiCard
+        aligned
         :label="rolling ? $t('dashboard.tcoMetricsGrid.cashPaid') : $t('dashboard.tcoMetricsGrid.totalCost')"
         :period="windowLabel"
         term="cashPaid"
@@ -94,6 +96,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
 
       <!-- Current month -->
       <KpiCard
+        aligned
         :label="month ? $t('dashboard.tcoMetricsGrid.currentMonth', { month: formatMonthName(month.month) }) : $t('dashboard.tcoMetricsGrid.currentMonthShort')"
         :icon="Calendar"
         :value="month ? headline(month.total - month.scheduled) : null"
@@ -114,6 +117,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
 
       <!-- Energy -->
       <KpiCard
+        aligned
         :label="energyLabel"
         :period="windowLabel"
         :icon="Zap"

@@ -66,6 +66,17 @@ describe('KpiCard', () => {
     expect(await render({ label: 'Saving', value: '5 €', icon })).not.toContain('mr-1.5')
   })
 
+  it('takes its rows from the grid only when asked to line up with its neighbours', async () => {
+    const lined = await render({ label: 'Economic cost', value: '0,142', aligned: true }, 'secondary line')
+    expect(lined).toContain('grid-rows-subgrid')
+    expect(lined).toContain('row-span-3')
+    // The secondary lines stay together in the last row
+    expect(lined.indexOf('secondary line')).toBeGreaterThan(lined.indexOf('0,142'))
+    const alone = await render({ label: 'Economic cost', value: '0,142' })
+    expect(alone).not.toContain('subgrid')
+    expect(alone).toContain('flex flex-col')
+  })
+
   it('adds the definition tip when a glossary term is given', async () => {
     setLocale('en')
     const html = await render({ label: 'Cash paid', value: '1 200 €', term: 'cashPaid' })

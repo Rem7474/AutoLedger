@@ -129,7 +129,7 @@
     },
     "consumption": "Consommation",
     "threeMonthAverage": "Moyenne sur 3 mois",
-    "chargingEfficiencyEmpty": "Le rendement compare l'énergie stockée dans la batterie à l'énergie tirée du réseau (compteur ou borne). Les recharges synchronisées par TeslaMate ou une intégration la portent ; sans elle, il reste inconnu.",
+    "chargingEfficiencyEmpty": "Nécessite l'énergie tirée du réseau, fournie par TeslaMate ou une intégration.",
     "chargingEfficiencyAction": "Voir les recharges",
     "noData": "Pas encore de données d'efficacité",
     "seeEnergy": "Voir l'énergie",
