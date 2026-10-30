@@ -32,6 +32,7 @@ func (r *Repository) CreateVehicle(ctx context.Context, v *models.Vehicle) error
 		v.TeslaMateCarID = nil
 		v.TeslaMateAPIURL = nil
 		v.TeslaMateGrafanaURL = nil
+		v.TeslaMateURL = nil
 	} else if v.TeslaMateCarID == nil && v.TeslaMateAPIURL != nil && strings.TrimSpace(*v.TeslaMateAPIURL) != "" {
 		var nextCarID int
 		err := tx.QueryRow(ctx, `

@@ -18,6 +18,7 @@ type teslaMateSourceConfig struct {
 	AuthType   models.AuthMode `json:"auth_type,omitempty"`
 	CarID      *int            `json:"car_id,omitempty"`
 	GrafanaURL *string         `json:"grafana_url,omitempty"`
+	WebURL     *string         `json:"web_url,omitempty"`
 	BasicUser  *string         `json:"basic_user,omitempty"`
 }
 
@@ -25,7 +26,7 @@ func nonBlank(s *string) bool { return s != nil && strings.TrimSpace(*s) != "" }
 
 // hasTeslaMateConfig reports whether the vehicle carries any TeslaMate setting worth keeping as a source.
 func hasTeslaMateConfig(v *models.Vehicle) bool {
-	return nonBlank(v.TeslaMateAPIURL) || nonBlank(v.TeslaMateGrafanaURL) || v.TeslaMateCarID != nil ||
+	return nonBlank(v.TeslaMateAPIURL) || nonBlank(v.TeslaMateGrafanaURL) || nonBlank(v.TeslaMateURL) || v.TeslaMateCarID != nil ||
 		nonBlank(v.TeslaMateBasicUser) || nonBlank(v.TeslaMateAPIKeyEncrypted) || nonBlank(v.TeslaMateBasicPassEnc) ||
 		(v.TeslaMateAuthType != "" && v.TeslaMateAuthType != models.AuthModeNone)
 }
@@ -42,7 +43,7 @@ func saveTeslaMateSource(ctx context.Context, q querier, v *models.Vehicle) erro
 	}
 	cfg, err := json.Marshal(teslaMateSourceConfig{
 		APIURL: v.TeslaMateAPIURL, AuthType: v.TeslaMateAuthType, CarID: v.TeslaMateCarID,
-		GrafanaURL: v.TeslaMateGrafanaURL, BasicUser: v.TeslaMateBasicUser,
+		GrafanaURL: v.TeslaMateGrafanaURL, WebURL: v.TeslaMateURL, BasicUser: v.TeslaMateBasicUser,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to encode the TeslaMate source: %w", err)
@@ -102,6 +103,7 @@ func (r *Repository) loadTeslaMateSources(ctx context.Context, vehicles []*model
 	for _, v := range vehicles {
 		s := byVehicle[v.ID]
 		v.TeslaMateAPIURL, v.TeslaMateCarID, v.TeslaMateGrafanaURL, v.TeslaMateBasicUser = s.cfg.APIURL, s.cfg.CarID, s.cfg.GrafanaURL, s.cfg.BasicUser
+		v.TeslaMateURL = s.cfg.WebURL
 		v.TeslaMateAuthType = s.cfg.AuthType
 		if v.TeslaMateAuthType == "" {
 			v.TeslaMateAuthType = models.AuthModeNone

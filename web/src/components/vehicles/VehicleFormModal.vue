@@ -62,6 +62,7 @@ const existingConnectedVehicles = computed(() => {
 function copyConnectionFrom(source: any) {
   form.value.teslamate_api_url = source.teslamate_api_url || ''
   form.value.teslamate_grafana_url = source.teslamate_grafana_url || ''
+  form.value.teslamate_url = source.teslamate_url || ''
   form.value.teslamate_auth_type = source.teslamate_auth_type || 'NONE'
   form.value.teslamate_basic_user = source.teslamate_basic_user || ''
 }
@@ -103,6 +104,7 @@ async function handleSaveAction() {
       payload.teslamate_car_id = null
       payload.teslamate_api_url = ''
       payload.teslamate_grafana_url = ''
+      payload.teslamate_url = ''
       payload.teslamate_api_key = ''
       payload.teslamate_basic_user = ''
       payload.teslamate_basic_pass = ''
@@ -114,6 +116,7 @@ async function handleSaveAction() {
       payload.teslamate_car_id = null
       payload.teslamate_api_url = ''
       payload.teslamate_grafana_url = ''
+      payload.teslamate_url = ''
       payload.teslamate_api_key = ''
       payload.teslamate_basic_user = ''
       payload.teslamate_basic_pass = ''
@@ -309,6 +312,18 @@ async function testModalConnection() {
             class="field"
           />
           <p class="text-xs text-slate-400 mt-1">{{ $t('vehicles.vehicleFormModal.addsAnOpenInTeslamate') }}</p>
+        </div>
+
+        <div>
+          <label for="vehicle-teslamate-url" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.teslamateUrlOptional') }}</label>
+          <input
+            id="vehicle-teslamate-url"
+            v-model="form.teslamate_url"
+            type="url"
+            :placeholder="$t('vehicles.vehicleFormModal.eGHttp192168')"
+            class="field"
+          />
+          <p class="text-xs text-slate-400 mt-1">{{ $t('vehicles.vehicleFormModal.addsASetTheCost') }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
