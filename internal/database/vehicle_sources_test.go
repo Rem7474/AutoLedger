@@ -183,8 +183,18 @@ func TestVehicleSourcesBackfill(t *testing.T) {
 		t.Errorf("source after update: %+v", again.TeslaMateAPIURL)
 	}
 
+	// The web application URL is part of the source.
+	webURL := "https://tm.example.com"
+	v.TeslaMateURL = &webURL
+	if err := repo.UpdateVehicle(ctx, v); err != nil {
+		t.Fatal(err)
+	}
+	if again, _ := repo.GetVehicleByIDInternal(ctx, bearer); again.TeslaMateURL == nil || *again.TeslaMateURL != webURL {
+		t.Errorf("web URL after update: %+v", again.TeslaMateURL)
+	}
+
 	// Clearing every TeslaMate setting removes the source.
-	v.TeslaMateAPIURL, v.TeslaMateGrafanaURL, v.TeslaMateCarID = nil, nil, nil
+	v.TeslaMateAPIURL, v.TeslaMateGrafanaURL, v.TeslaMateURL, v.TeslaMateCarID = nil, nil, nil, nil
 	v.TeslaMateAPIKeyEncrypted, v.TeslaMateAuthType = nil, models.AuthModeNone
 	if err := repo.UpdateVehicle(ctx, v); err != nil {
 		t.Fatal(err)

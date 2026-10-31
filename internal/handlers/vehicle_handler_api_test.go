@@ -101,6 +101,10 @@ func TestVehicleCreateValidation(t *testing.T) {
 		"grafana creds":    `{"name":"x","currency":"EUR","teslamate_grafana_url":"http://u:p@g"}`,
 		"grafana query":    `{"name":"x","currency":"EUR","teslamate_grafana_url":"http://g/?a=1"}`,
 		"grafana too long": `{"name":"x","currency":"EUR","teslamate_grafana_url":"http://` + strings.Repeat("a", 300) + `"}`,
+		"web invalid":      `{"name":"x","currency":"EUR","teslamate_url":"ftp://t"}`,
+		"web creds":        `{"name":"x","currency":"EUR","teslamate_url":"http://u:p@t"}`,
+		"web query":        `{"name":"x","currency":"EUR","teslamate_url":"http://t/?a=1"}`,
+		"web too long":     `{"name":"x","currency":"EUR","teslamate_url":"http://` + strings.Repeat("a", 300) + `"}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) { a.do(a.ownerID, http.StatusBadRequest, "POST", "/", body) })
@@ -112,8 +116,9 @@ func TestVehicleLifecycle(t *testing.T) {
 
 	created := decodeObj(t, a.do(a.other, http.StatusCreated, "POST", "/",
 		`{"name":" Ioniq ","currency":"usd","powertrain":"EV","make":" Hyundai ","model":"Ioniq 5","teslamate_car_id":0,`+
-			`"teslamate_api_key":"secret","teslamate_basic_pass":"pw","teslamate_grafana_url":"https://g.example.com/"}`))
-	if created["currency"] != "USD" || created["make"] != "Hyundai" || created["teslamate_grafana_url"] != "https://g.example.com" {
+			`"teslamate_api_key":"secret","teslamate_basic_pass":"pw","teslamate_grafana_url":"https://g.example.com/","teslamate_url":"https://tm.example.com/"}`))
+	if created["currency"] != "USD" || created["make"] != "Hyundai" || created["teslamate_grafana_url"] != "https://g.example.com" ||
+		created["teslamate_url"] != "https://tm.example.com" {
 		t.Fatalf("unexpected created vehicle: %v", created)
 	}
 	if created["teslamate_car_id"] != nil {
@@ -145,18 +150,22 @@ func TestVehicleLifecycle(t *testing.T) {
 	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{`)
 	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","powertrain":"WAT"}`)
 	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","currency":"EUR","teslamate_grafana_url":"nope"}`)
+	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","currency":"EUR","teslamate_url":"nope"}`)
 	a.do(a.other, http.StatusBadRequest, "PUT", "/"+id, `{"name":"x","default_driver_id":"00000000-0000-0000-0000-000000000000"}`)
 
 	updated := decodeObj(t, a.do(a.other, http.StatusOK, "PUT", "/"+id,
 		`{"name":"Ioniq 6","current_odometer":4200,"teslamate_api_url":"http://tm:8080","teslamate_car_id":2,`+
 			`"teslamate_auth_type":"API_KEY","teslamate_api_key":"new","teslamate_basic_user":"u","teslamate_basic_pass":"p",`+
 			`"estimated_kwh_100km":15.5,"estimated_price_per_kwh":0.2,"make":"","model":"Six","is_home_charger_default":true,`+
-			`"teslamate_grafana_url":""}`))
+			`"teslamate_grafana_url":"","teslamate_url":""}`))
 	if updated["name"] != "Ioniq 6" || updated["current_odometer"].(float64) != 4200 || updated["make"] != "" || updated["model"] != "Six" {
 		t.Fatalf("unexpected updated vehicle: %v", updated)
 	}
 	if updated["teslamate_grafana_url"] != nil {
 		t.Fatalf("an empty Grafana URL clears it: %v", updated["teslamate_grafana_url"])
+	}
+	if updated["teslamate_url"] != nil {
+		t.Fatalf("an empty TeslaMate URL clears it: %v", updated["teslamate_url"])
 	}
 	// Non-positive car id clears the link; an omitted odometer keeps the stored one.
 	cleared := decodeObj(t, a.do(a.other, http.StatusOK, "PUT", "/"+id, `{"name":"Ioniq 6","teslamate_car_id":-1}`))

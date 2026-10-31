@@ -50,6 +50,7 @@ type SaveVehicleRequest struct {
 	Make                 *string         `json:"make"`                  // Free text; omitted keeps it on update, empty clears it
 	Model                *string         `json:"model"`                 // Free text; omitted keeps it on update, empty clears it
 	TeslaMateGrafanaURL  *string         `json:"teslamate_grafana_url"` // Optional; empty clears it
+	TeslaMateURL         *string         `json:"teslamate_url"`         // Optional; empty clears it
 	DefaultDriverID      *string         `json:"default_driver_id"`
 	TariffPlanID         *string         `json:"tariff_plan_id"`
 	IsHomeChargerDefault bool            `json:"is_home_charger_default"`
@@ -76,9 +77,28 @@ func trimmedText(s *string) string {
 	return strings.TrimSpace(*s)
 }
 
-// normalizeGrafanaURL validates the base URL of the Grafana serving the TeslaMate dashboards.
+// baseURLErrors are the errors of a base URL setting, one set per setting so each has its own codes.
+type baseURLErrors struct {
+	tooLong, invalid, credentials, notBase *apierror.Error
+}
+
+var grafanaURLErrors = baseURLErrors{
+	tooLong:     apierror.New("vehicle.grafana_url_too_long", "Grafana URL too long (300 characters maximum)"),
+	invalid:     apierror.New("vehicle.grafana_url_invalid", "Invalid Grafana URL (http:// or https:// required)"),
+	credentials: apierror.New("vehicle.grafana_url_credentials", "The Grafana URL must not contain credentials"),
+	notBase:     apierror.New("vehicle.grafana_url_base", "The Grafana URL must be a base address, without parameters"),
+}
+
+var teslaMateURLErrors = baseURLErrors{
+	tooLong:     apierror.New("vehicle.teslamate_url_too_long", "TeslaMate URL too long (300 characters maximum)"),
+	invalid:     apierror.New("vehicle.teslamate_url_invalid", "Invalid TeslaMate URL (http:// or https:// required)"),
+	credentials: apierror.New("vehicle.teslamate_url_credentials", "The TeslaMate URL must not contain credentials"),
+	notBase:     apierror.New("vehicle.teslamate_url_base", "The TeslaMate URL must be a base address, without parameters"),
+}
+
+// normalizeBaseURL validates the base address of a web application linked from the UI.
 // It returns nil for an empty value, and the URL without trailing slash otherwise.
-func normalizeGrafanaURL(raw *string) (*string, error) {
+func normalizeBaseURL(raw *string, errs baseURLErrors) (*string, error) {
 	if raw == nil {
 		return nil, nil
 	}
@@ -87,20 +107,30 @@ func normalizeGrafanaURL(raw *string) (*string, error) {
 		return nil, nil
 	}
 	if len(value) > 300 {
-		return nil, apierror.New("vehicle.grafana_url_too_long", "Grafana URL too long (300 characters maximum)")
+		return nil, errs.tooLong
 	}
 	u, err := url.Parse(value)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return nil, apierror.New("vehicle.grafana_url_invalid", "Invalid Grafana URL (http:// or https:// required)")
+		return nil, errs.invalid
 	}
 	if u.User != nil {
-		return nil, apierror.New("vehicle.grafana_url_credentials", "The Grafana URL must not contain credentials")
+		return nil, errs.credentials
 	}
 	if u.RawQuery != "" || u.Fragment != "" {
-		return nil, apierror.New("vehicle.grafana_url_base", "The Grafana URL must be a base address, without parameters")
+		return nil, errs.notBase
 	}
 	out := strings.TrimRight(u.String(), "/")
 	return &out, nil
+}
+
+// normalizeGrafanaURL validates the base URL of the Grafana serving the TeslaMate dashboards.
+func normalizeGrafanaURL(raw *string) (*string, error) {
+	return normalizeBaseURL(raw, grafanaURLErrors)
+}
+
+// normalizeTeslaMateURL validates the base URL of the TeslaMate web application.
+func normalizeTeslaMateURL(raw *string) (*string, error) {
+	return normalizeBaseURL(raw, teslaMateURLErrors)
 }
 
 // normalizeVehicleCurrency validates and uppercases a currency that is chosen, never assumed: a vehicle's base
@@ -186,6 +216,11 @@ func (h *VehicleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, err)
 		return
 	}
+	teslaMateURL, err := normalizeTeslaMateURL(req.TeslaMateURL)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err)
+		return
+	}
 
 	var encKey, encPass *string
 	if req.TeslaMateAPIKey != nil && *req.TeslaMateAPIKey != "" {
@@ -210,6 +245,7 @@ func (h *VehicleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		req.TeslaMateCarID = nil
 		req.TeslaMateAPIURL = nil
 		req.TeslaMateGrafanaURL = nil
+		req.TeslaMateURL = nil
 		req.TeslaMateAPIKey = nil
 		req.TeslaMateBasicUser = nil
 		req.TeslaMateBasicPass = nil
@@ -238,6 +274,7 @@ func (h *VehicleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Make:                     trimmedText(req.Make),
 		Model:                    trimmedText(req.Model),
 		TeslaMateGrafanaURL:      grafanaURL,
+		TeslaMateURL:             teslaMateURL,
 		DefaultDriverID:          req.DefaultDriverID,
 		TariffPlanID:             req.TariffPlanID,
 		IsHomeChargerDefault:     req.IsHomeChargerDefault,
@@ -309,6 +346,14 @@ func (h *VehicleHandler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 		existing.TeslaMateGrafanaURL = grafanaURL
 	}
+	if req.TeslaMateURL != nil {
+		teslaMateURL, err := normalizeTeslaMateURL(req.TeslaMateURL)
+		if err != nil {
+			writeErr(w, http.StatusBadRequest, err)
+			return
+		}
+		existing.TeslaMateURL = teslaMateURL
+	}
 
 	existing.Name = req.Name
 	existing.Vin = req.Vin
@@ -316,6 +361,7 @@ func (h *VehicleHandler) Update(w http.ResponseWriter, r *http.Request) {
 		existing.TeslaMateCarID = nil
 		existing.TeslaMateAPIURL = nil
 		existing.TeslaMateGrafanaURL = nil
+		existing.TeslaMateURL = nil
 		existing.TeslaMateAuthType = models.AuthModeNone
 		existing.TeslaMateAPIKeyEncrypted = nil
 		existing.TeslaMateBasicUser = nil

@@ -65,7 +65,7 @@ flowchart LR
 - **Saisie manuelle / PWA** : application web progressive hors ligne d'abord, avec une saisie rapide pour trajets, recharges, carburant, péages et entretien, une progression intelligente de l'odomètre, des photos de justificatifs et une file d'attente IndexedDB.
 - **CSV** : détection du séparateur, association des colonnes avec aperçu en direct, dédoublonnage sur les horodatages et les coordonnées.
 - **Sources qui envoient** : voir l'[API d'ingestion](docs/ingestion-api.fr.md) ([EN](docs/ingestion-api.md)), les [recettes wallbox](docs/wallbox-recipes.fr.md) ([EN](docs/wallbox-recipes.md)) et l'[import et export CSV](docs/csv-import.fr.md) ([EN](docs/csv-import.md)).
-- **TeslaMate** : import complet reprenable, relecture glissante sur 30 jours, rapprochement des trajets et recharges supprimés, panneaux batterie et température. Rien d'autre dans AutoLedger n'en dépend.
+- **TeslaMate** : import complet reprenable, relecture glissante sur 30 jours, rapprochement des trajets et recharges supprimés, panneaux batterie et température, et raccourcis d'un trajet ou d'une recharge vers sa page de détail TeslaMate (avec l'URL Grafana) et, pour une recharge sans coût, vers la page où TeslaMate le définit (avec l'URL TeslaMate ; le coût est relu à la prochaine synchronisation). Rien d'autre dans AutoLedger n'en dépend.
 
 ### Compatibilité
 

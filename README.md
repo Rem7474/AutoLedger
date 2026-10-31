@@ -65,7 +65,7 @@ flowchart LR
 - **Manual / PWA**: offline-first progressive web app with a quick-add modal for drives, charges, fuel, tolls and maintenance, smart odometer progression, photo receipts and an IndexedDB queue.
 - **CSV**: separator detection, column mapping with live preview, deduplication on timestamps and coordinates.
 - **Push sources**: see the [ingestion API](docs/ingestion-api.md) ([FR](docs/ingestion-api.fr.md)), the [wallbox recipes](docs/wallbox-recipes.md) ([FR](docs/wallbox-recipes.fr.md)) and [CSV import and export](docs/csv-import.md) ([FR](docs/csv-import.fr.md)).
-- **TeslaMate**: resumable full import, sliding 30-day re-read, reconciliation of deleted drives and charges, battery and temperature panels. Nothing else in AutoLedger depends on it.
+- **TeslaMate**: resumable full import, sliding 30-day re-read, reconciliation of deleted drives and charges, battery and temperature panels, and shortcuts from a drive or a charge to its TeslaMate detail page (with a Grafana URL) and, for a charge without a cost, to the page where TeslaMate sets it (with the TeslaMate URL; the cost is read back by the next synchronisation). Nothing else in AutoLedger depends on it.
 
 ### Compatibility
 
