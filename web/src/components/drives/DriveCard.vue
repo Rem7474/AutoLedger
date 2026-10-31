@@ -122,7 +122,7 @@ function openCarpool() {
     </div>
 
     <!-- The row opens the breakdown; the other actions sit in its menu -->
-    <RowMenu v-if="vehicleStore.canEdit" :label="$t('common.moreActions')">
+    <RowMenu v-if="vehicleStore.canEdit" :label="$t('common.moreActions')" :heading="formatDate(d.start_time)">
       <button type="button" role="menuitem" class="menu-item" @click="emit('carpool', d)">
         <Users class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.driveCard.carpool') }}
       </button>
