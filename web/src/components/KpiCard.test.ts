@@ -36,6 +36,12 @@ describe('KpiCard', () => {
     expect(html).toContain('text-slate-400')
   })
 
+  it('tints a tile with the danger tone', async () => {
+    const html = await render({ label: 'Most worn', value: '85 %', tone: 'danger', tinted: true })
+    expect(html).toContain('bg-danger-500/5')
+    expect(html).toContain('text-danger-400')
+  })
+
   it('has a dense variant for the panels inside a disclosure', async () => {
     const html = await render({ label: 'Consumption', value: '15,2', unit: ' kWh/100 km', compact: true })
     expect(html).toContain('bg-slate-950/60')

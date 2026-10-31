@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<{
   period?: string
   term?: string
   icon?: Component
-  tone?: 'default' | 'sky' | 'success' | 'warning'
+  tone?: 'default' | 'sky' | 'success' | 'warning' | 'danger'
   // A status tile (good or worse than expected): the tone also tints the border and the background, and a compact
   // tile shows its icon in front of the label.
   tinted?: boolean
@@ -35,9 +35,9 @@ const emit = defineEmits<{ action: [] }>()
 // The app's own unknown marker, as returned by the amount and number formatters, reads as unknown too
 const unknown = computed(() => props.value == null || props.value === UNKNOWN_AMOUNT)
 
-const valueTones = { default: 'text-white', sky: 'text-sky-400', success: 'text-success-400', warning: 'text-warning-400' }
-const tints = { success: 'border-success-500/30 bg-success-500/5', warning: 'border-warning-500/30 bg-warning-500/5' }
-const tintClass = computed(() => (props.tinted ? tints[props.tone as 'success' | 'warning'] : undefined))
+const valueTones = { default: 'text-white', sky: 'text-sky-400', success: 'text-success-400', warning: 'text-warning-400', danger: 'text-danger-400' }
+const tints = { success: 'border-success-500/30 bg-success-500/5', warning: 'border-warning-500/30 bg-warning-500/5', danger: 'border-danger-500/30 bg-danger-500/5' }
+const tintClass = computed(() => (props.tinted ? tints[props.tone as keyof typeof tints] : undefined))
 const deltaTones = { good: 'text-success-400', warning: 'text-warning-400', bad: 'text-danger-400', neutral: 'text-slate-300' }
 const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text-sky-400 underline after:absolute after:inset-0 after:content-['']"
 </script>
