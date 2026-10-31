@@ -270,7 +270,7 @@ async function testModalConnection() {
       <!-- 3. Paramètres de télémétrie connectée (Visible UNIQUEMENT si EV et CONNECTED) -->
       <div v-if="canLinkTeslaMate(form.powertrain) && connectTeslaMate" class="pt-3 border-t border-slate-800 space-y-3">
         <div class="flex items-center justify-between">
-          <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wider">{{ $t('vehicles.vehicleFormModal.telemetrySettings') }}</h4>
+          <h4 class="text-xs font-bold text-rose-400">{{ $t('vehicles.vehicleFormModal.telemetrySettings') }}</h4>
           <span class="text-xs px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">TeslaMate</span>
         </div>
 

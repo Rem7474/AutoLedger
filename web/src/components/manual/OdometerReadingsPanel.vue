@@ -163,7 +163,7 @@ onMounted(() => {
 
     <form v-if="canEdit" class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-4" @submit.prevent="save">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">
+        <span class="text-xs font-bold text-sky-400">
           {{ editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new') }}
         </span>
         <button v-if="editingId" type="button" class="text-xs text-slate-400 hover:text-white" @click="resetForm">
@@ -210,7 +210,7 @@ onMounted(() => {
 
     <div class="space-y-3">
       <div class="flex items-center justify-between">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider">{{ $t('manual.odometerReadingsPanel.historyOfRecordedReadings') }}</h4>
+        <h4 class="text-xs font-bold text-white">{{ $t('manual.odometerReadingsPanel.historyOfRecordedReadings') }}</h4>
         <span class="text-xs text-slate-400">{{ $t('manual.odometerReadingsPanel.pointS', { length: history.length }) }}</span>
       </div>
 
@@ -232,8 +232,8 @@ onMounted(() => {
             <div class="min-w-0">
               <div class="flex items-center gap-2">
                 <span class="text-sm font-bold text-white font-mono">{{ formatDistance(r.odometer) }}</span>
-                <span v-if="r.kind === 'FUEL'" class="text-xs font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700" :title="$t('manual.odometerReadingsPanel.fromFillUpHint')">{{ $t('manual.odometerReadingsPanel.fromFillUp') }}</span>
-                <span v-else-if="r.source === 'HA'" class="text-xs font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30" :title="$t('manual.odometerReadingsPanel.fromHomeAssistantHint')">{{ $t('manual.odometerReadingsPanel.fromHomeAssistant') }}</span>
+                <span v-if="r.kind === 'FUEL'" class="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700" :title="$t('manual.odometerReadingsPanel.fromFillUpHint')">{{ $t('manual.odometerReadingsPanel.fromFillUp') }}</span>
+                <span v-else-if="r.source === 'HA'" class="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30" :title="$t('manual.odometerReadingsPanel.fromHomeAssistantHint')">{{ $t('manual.odometerReadingsPanel.fromHomeAssistant') }}</span>
                 <span class="text-xs text-slate-400">
                   {{ $t('manual.odometerReadingsPanel.onDate', { date: new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }) }}
                 </span>

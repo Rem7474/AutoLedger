@@ -89,7 +89,7 @@ async function handleCopyHistorySubmit() {
   >
     <!-- Source selection -->
     <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2">
-      <label for="copy-history-source-select" class="text-xs text-sky-400 font-semibold uppercase tracking-wider block">{{ $t('tires.tireCopyHistoryModal.sourceTireToClone') }}</label>
+      <label for="copy-history-source-select" class="text-xs text-sky-400 font-semibold block">{{ $t('tires.tireCopyHistoryModal.sourceTireToClone') }}</label>
       <select
         id="copy-history-source-select"
         :value="copyHistorySourceTire.id"

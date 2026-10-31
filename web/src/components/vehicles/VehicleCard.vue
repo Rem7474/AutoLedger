@@ -51,7 +51,7 @@ function clearCardTestResult() {
             <h3 class="text-base font-bold text-white">{{ v.name }}</h3>
             <span
               v-if="v.role"
-              class="px-2 py-0.5 text-xs font-semibold rounded-full uppercase tracking-wider"
+              class="px-2 py-0.5 text-xs font-semibold rounded-full"
               :class="{
                 'bg-slate-700/60 text-slate-200 border border-slate-600/40': v.role === 'OWNER',
                 'bg-info-500/10 text-info-400 border border-info-500/20': v.role === 'EDITOR',

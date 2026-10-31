@@ -110,7 +110,7 @@ const open = defineModel<boolean>('open', { required: true })
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <Zap class="w-4 h-4 text-warning-400" />
-          <h4 class="text-xs font-bold text-white uppercase tracking-wider">{{ $t('tires.tireHistoryModal.teslamateDrivingTelemetry') }}</h4>
+          <h4 class="text-xs font-bold text-white">{{ $t('tires.tireHistoryModal.teslamateDrivingTelemetry') }}</h4>
         </div>
         <span
           class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
@@ -128,19 +128,19 @@ const open = defineModel<boolean>('open', { required: true })
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase">{{ $t('tires.tireHistoryModal.peakAcceleration') }}</div>
+          <div class="text-xs text-slate-400">{{ $t('tires.tireHistoryModal.peakAcceleration') }}</div>
           <div class="font-bold text-rose-400 text-sm mt-0.5">+{{ formatNumber(selectedTireStats.avg_power_max_kw, 0) }} kW</div>
         </div>
         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase">{{ $t('tires.tireHistoryModal.peakRegeneration') }}</div>
+          <div class="text-xs text-slate-400">{{ $t('tires.tireHistoryModal.peakRegeneration') }}</div>
           <div class="font-bold text-success-400 text-sm mt-0.5">{{ formatNumber(selectedTireStats.avg_power_min_kw, 0) }} kW</div>
         </div>
         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase">{{ $t('tires.tireHistoryModal.averageConsumption') }}</div>
+          <div class="text-xs text-slate-400">{{ $t('tires.tireHistoryModal.averageConsumption') }}</div>
           <div class="font-bold text-info-400 text-sm mt-0.5">{{ $t('tires.tireHistoryModal.kwh', { unit: distanceUnit(), avg_consumption_kwh_100km: formatPerDistanceValue(Number(selectedTireStats.avg_consumption_kwh_100km)) }) }}</div>
         </div>
         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase">{{ $t('tires.tireHistoryModal.adjustedLongevity') }}</div>
+          <div class="text-xs text-slate-400">{{ $t('tires.tireHistoryModal.adjustedLongevity') }}</div>
           <div class="font-bold text-sky-300 text-sm mt-0.5">~{{ formatDistance(selectedTireStats.dynamic_lifespan_km || selectedTire.estimated_lifespan_km) }}</div>
         </div>
       </div>

@@ -305,7 +305,7 @@ onMounted(() => {
             <div class="min-w-0">
               <p class="flex flex-wrap items-center gap-2 text-sm font-semibold text-white">
                 {{ describeUserAgent(s.user_agent) }}
-                <span v-if="s.current" class="rounded-full bg-success-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-success-300">{{ $t('account.accountView.thisDevice') }}</span>
+                <span v-if="s.current" class="rounded-full bg-success-500/15 px-2 py-0.5 text-xs font-bold text-success-300">{{ $t('account.accountView.thisDevice') }}</span>
               </p>
               <p class="text-xs text-slate-400">
                 {{ $t('account.accountView.active', { value: describeRelativeTime(s.last_used_at) }) }}<template v-if="s.ip"> · {{ s.ip }}</template>

@@ -131,7 +131,7 @@ function handleLogout() {
         :aria-labelledby="section.headingKey ? 'nav-section-' + index : undefined"
         class="space-y-0.5"
       >
-        <p v-if="section.headingKey" :id="'nav-section-' + index" class="px-3 pb-0.5 pt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <p v-if="section.headingKey" :id="'nav-section-' + index" class="px-3 pb-0.5 pt-3 text-xs font-semibold text-slate-400">
           {{ $t(section.headingKey) }}
         </p>
         <router-link

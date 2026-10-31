@@ -28,7 +28,7 @@ const vehicleStore = useVehicleStore()
     <CardOpenButton :label="$t('tires.openTire', { name: `${stat.tire.brand} ${stat.tire.model}` })" @click="emit('open', stat)" />
     <div class="flex items-start justify-between">
       <div>
-        <label :for="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id" class="relative z-10 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-danger-400 hover:text-danger-300 cursor-pointer" :title="selected ? $t('tires.tireWheelCard.removeFromSelection') : $t('tires.tireWheelCard.selectForBulk')">
+        <label :for="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id" class="relative z-10 flex items-center gap-2 text-xs font-bold text-danger-400 hover:text-danger-300 cursor-pointer" :title="selected ? $t('tires.tireWheelCard.removeFromSelection') : $t('tires.tireWheelCard.selectForBulk')">
           <input
             :id="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id"
             type="checkbox"

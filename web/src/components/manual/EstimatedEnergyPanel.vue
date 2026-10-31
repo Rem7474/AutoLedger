@@ -101,7 +101,7 @@ onMounted(() => {
             <Zap class="w-4 h-4" />
           </div>
           <div>
-            <h4 class="text-xs font-bold text-info-400 uppercase tracking-wider">{{ $t('manual.estimatedEnergyPanel.energyEstimate') }}</h4>
+            <h4 class="text-xs font-bold text-info-400">{{ $t('manual.estimatedEnergyPanel.energyEstimate') }}</h4>
             <p class="text-xs text-slate-400">{{ $t('manual.estimatedEnergyPanel.automaticallyFillInTheEnergy') }}</p>
           </div>
         </div>

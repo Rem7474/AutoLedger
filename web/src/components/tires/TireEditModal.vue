@@ -211,7 +211,7 @@ const handleSaveTireEdit = () => runOnce(handleSaveTireEditAction)
       </div>
 
       <div v-if="editIncludesMounted" class="space-y-2 pt-3 border-t border-slate-800">
-        <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wider">{{ $t('tires.tireEditModal.currentlyFitted') }}</h4>
+        <h4 class="text-xs font-bold text-rose-400">{{ $t('tires.tireEditModal.currentlyFitted') }}</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="tire-edit-mounted-date" class="block text-xs text-slate-400 mb-1 font-semibold">{{ $t('tires.tireEditModal.fittingDate') }}</label>

@@ -176,7 +176,7 @@ async function handleRemoveMember(m: any) {
     >
       <div class="flex items-center gap-2">
         <UserPlus class="w-4 h-4 text-sky-400" />
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider">{{ $t('vehicles.vehicleMembersModal.addAMember') }}</h4>
+        <h4 class="text-xs font-bold text-white">{{ $t('vehicles.vehicleMembersModal.addAMember') }}</h4>
       </div>
       <p class="text-xs text-slate-400">
         {{ $t('vehicles.vehicleMembersModal.inviteACoDriverOr') }}
@@ -239,7 +239,7 @@ async function handleRemoveMember(m: any) {
     <!-- Members List -->
     <div class="space-y-3">
       <div class="flex items-center justify-between">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider">{{ $t('vehicles.vehicleMembersModal.authorizedMembers') }}</h4>
+        <h4 class="text-xs font-bold text-white">{{ $t('vehicles.vehicleMembersModal.authorizedMembers') }}</h4>
         <span class="text-xs text-slate-400">{{ $t('vehicles.vehicleMembersModal.memberS', { length: members.length }) }}</span>
       </div>
 
@@ -276,7 +276,7 @@ async function handleRemoveMember(m: any) {
               </div>
               <div class="flex items-center gap-1.5 mt-0.5">
                 <span
-                  class="text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider"
+                  class="text-xs px-2 py-0.5 rounded-full font-semibold"
                   :class="{
                     'bg-warning-500/10 text-warning-400 border border-warning-500/20': m.role === 'OWNER',
                     'bg-info-500/10 text-info-400 border border-info-500/20': m.role === 'EDITOR',
@@ -334,7 +334,7 @@ async function handleRemoveMember(m: any) {
     <!-- Drivers: people who drive the vehicle, with or without an account -->
     <div class="space-y-3">
       <div>
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider">{{ $t('vehicles.vehicleMembersModal.drivers') }}</h4>
+        <h4 class="text-xs font-bold text-white">{{ $t('vehicles.vehicleMembersModal.drivers') }}</h4>
         <p class="text-xs text-slate-400 mt-1">{{ $t('vehicles.vehicleMembersModal.driversHint') }}</p>
       </div>
 

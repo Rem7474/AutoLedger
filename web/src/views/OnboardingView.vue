@@ -203,7 +203,7 @@ async function addFirstEntry() {
 
         <form @submit.prevent="handleStep1Submit" class="space-y-4">
           <div>
-            <label for="onboarding-admin-email" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.administratorEmail') }}</label>
+            <label for="onboarding-admin-email" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.administratorEmail') }}</label>
             <input id="onboarding-admin-email"
               v-model="adminEmail"
               type="email"
@@ -215,7 +215,7 @@ async function addFirstEntry() {
           </div>
 
           <div>
-            <label for="onboarding-admin-password" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.password8CharactersMin') }}</label>
+            <label for="onboarding-admin-password" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.password8CharactersMin') }}</label>
             <div class="relative">
               <input id="onboarding-admin-password"
                 v-model="adminPassword"
@@ -243,7 +243,7 @@ async function addFirstEntry() {
           </div>
 
           <div>
-            <label for="onboarding-admin-confirm-password" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.confirmThePassword') }}</label>
+            <label for="onboarding-admin-confirm-password" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.confirmThePassword') }}</label>
             <input id="onboarding-admin-confirm-password"
               v-model="adminConfirmPassword"
               :type="showAdminPassword ? 'text' : 'password'"
@@ -283,7 +283,7 @@ async function addFirstEntry() {
           <!-- Make & Model Inputs -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label for="onboarding-vehicle-make" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.make') }}</label>
+              <label for="onboarding-vehicle-make" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.make') }}</label>
               <input id="onboarding-vehicle-make"
                 v-model="vehicleMake"
                 @input="updateVehicleNameDefault"
@@ -293,7 +293,7 @@ async function addFirstEntry() {
               />
             </div>
             <div>
-              <label for="onboarding-vehicle-model" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.model') }}</label>
+              <label for="onboarding-vehicle-model" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.model') }}</label>
               <input id="onboarding-vehicle-model"
                 v-model="vehicleModel"
                 @input="updateVehicleNameDefault"
@@ -305,7 +305,7 @@ async function addFirstEntry() {
           </div>
 
           <div>
-            <label for="onboarding-vehicle-name" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.vehicleName') }}</label>
+            <label for="onboarding-vehicle-name" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.vehicleName') }}</label>
             <input id="onboarding-vehicle-name"
               v-model="vehicleName"
               @input="vehicleNameEdited = true"
@@ -317,7 +317,7 @@ async function addFirstEntry() {
           </div>
 
           <div>
-            <label for="onboarding-vehicle-powertrain" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.powertrain') }}</label>
+            <label for="onboarding-vehicle-powertrain" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.powertrain') }}</label>
             <select id="onboarding-vehicle-powertrain"
               v-model="vehiclePowertrain"
               class="field"
@@ -328,14 +328,14 @@ async function addFirstEntry() {
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
             <div class="sm:col-span-2">
-              <label for="onboarding-vehicle-currency" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.currency') }}</label>
+              <label for="onboarding-vehicle-currency" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.currency') }}</label>
               <select id="onboarding-vehicle-currency" v-model="vehicleCurrency" class="field">
                 <option v-for="c in CURRENCIES" :key="c" :value="c">{{ c }}</option>
               </select>
               <p class="mt-1 text-xs text-slate-400">{{ $t('onboarding.onboardingView.currencyHelp') }}</p>
             </div>
             <div>
-              <label for="onboarding-vehicle-odometer" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.currentOdometerKm', { unit: distanceUnit() }) }}</label>
+              <label for="onboarding-vehicle-odometer" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.currentOdometerKm', { unit: distanceUnit() }) }}</label>
               <DistanceInput id="onboarding-vehicle-odometer"
                 v-model="vehicleOdometer"
                 min="0"
@@ -345,7 +345,7 @@ async function addFirstEntry() {
               />
             </div>
             <div>
-              <label for="onboarding-vehicle-vin" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.vinOptional') }}</label>
+              <label for="onboarding-vehicle-vin" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.vinOptional') }}</label>
               <input id="onboarding-vehicle-vin"
                 v-model="vehicleVin"
                 type="text"

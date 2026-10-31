@@ -52,7 +52,7 @@ const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text
     ]"
   >
     <div class="flex items-start justify-between gap-2" :class="compact ? '' : 'mb-2 min-h-8'">
-      <span class="text-xs" :class="[compact ? 'font-medium' : 'font-semibold uppercase tracking-wider', tinted ? valueTones[tone] : 'text-slate-400']">
+      <span class="text-xs" :class="[compact ? 'font-medium' : 'font-semibold', tinted ? valueTones[tone] : 'text-slate-400']">
         <component :is="icon" v-if="icon && compact" class="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" aria-hidden="true" />
         {{ label }}
         <span v-if="term" class="relative z-10"><GlossaryTip :term="term" /></span>

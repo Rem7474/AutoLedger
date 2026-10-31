@@ -261,7 +261,7 @@ onBeforeUnmount(() => {
     <!-- Monthly budget -->
     <div v-if="summary" class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ t('fleet.budget.title') }}</span>
+        <span class="text-xs font-medium text-slate-400">{{ t('fleet.budget.title') }}</span>
         <div v-if="!editingBudget" class="flex items-center gap-3 text-xs font-semibold">
           <button type="button" @click="startEditBudget" class="tap-text px-2 text-rose-400 hover:text-rose-300">
             {{ summary.monthly_budget ? t('fleet.budget.edit') : t('fleet.budget.set') }}
@@ -325,10 +325,10 @@ onBeforeUnmount(() => {
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <p class="truncate font-semibold text-white">{{ v.name }}</p>
-              <p v-if="cheapestPerKmIdSet.has(v.vehicle_id)" class="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold uppercase text-success-400">
+              <p v-if="cheapestPerKmIdSet.has(v.vehicle_id)" class="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-success-400">
                 <Award class="w-3 h-3" />{{ t('fleet.compare.cheapest') }}
               </p>
-              <p v-else-if="!v.comparable" class="mt-0.5 text-xs uppercase text-slate-300">{{ v.depreciation_known === false ? t('fleet.compare.depreciationMissing') : t('fleet.compare.indicative') }}</p>
+              <p v-else-if="!v.comparable" class="mt-0.5 text-xs text-slate-300">{{ v.depreciation_known === false ? t('fleet.compare.depreciationMissing') : t('fleet.compare.indicative') }}</p>
             </div>
             <div class="shrink-0 text-right">
               <p class="text-lg font-bold tabular-nums text-white">{{ formatAmountOrUnknown(v.full_cost_per_km == null ? null : perDistance(v.full_cost_per_km), v.currency) }}</p>
@@ -375,7 +375,7 @@ onBeforeUnmount(() => {
       <div class="hidden overflow-x-auto md:block">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-xs uppercase tracking-wider text-slate-400">
+            <tr class="text-left text-xs text-slate-400">
               <th class="py-2 pr-4 font-medium">{{ t('fleet.compare.vehicle') }}</th>
               <th class="py-2 pr-4 font-medium text-right">{{ t('fleet.compare.runningPerDistance', { unit: distanceUnitLabel }) }} <GlossaryTip term="cashPaid" /></th>
               <th class="py-2 pr-4 font-medium text-right">{{ t('fleet.compare.fullPerDistance', { unit: distanceUnitLabel }) }}</th>
@@ -391,10 +391,10 @@ onBeforeUnmount(() => {
             <tr v-for="v in rankedVehicles" :key="v.vehicle_id" class="border-t border-slate-800/60">
               <td class="py-2 pr-4">
                 <span class="font-semibold text-white">{{ v.name }}</span>
-                <span v-if="cheapestPerKmIdSet.has(v.vehicle_id)" class="ml-2 inline-flex items-center gap-1 text-xs font-semibold uppercase text-success-400">
+                <span v-if="cheapestPerKmIdSet.has(v.vehicle_id)" class="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-success-400">
                   <Award class="w-3 h-3" />{{ t('fleet.compare.cheapest') }}
                 </span>
-                <span v-else-if="!v.comparable" class="ml-2 text-xs uppercase text-slate-300">{{ v.depreciation_known === false ? t('fleet.compare.depreciationMissing') : t('fleet.compare.indicative') }}</span>
+                <span v-else-if="!v.comparable" class="ml-2 text-xs text-slate-300">{{ v.depreciation_known === false ? t('fleet.compare.depreciationMissing') : t('fleet.compare.indicative') }}</span>
               </td>
               <td class="py-2 pr-4 text-right tabular-nums">{{ formatAmountOrUnknown(v.running_cost_per_km == null ? null : perDistance(v.running_cost_per_km), v.currency) }}</td>
               <td class="py-2 pr-4 text-right tabular-nums font-semibold text-white">{{ formatAmountOrUnknown(v.full_cost_per_km == null ? null : perDistance(v.full_cost_per_km), v.currency) }}</td>
