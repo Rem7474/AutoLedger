@@ -203,14 +203,15 @@ interface MaintenanceLike {
 }
 
 /** Recurring costs of owning the car, listed apart from servicing and repairs. */
+// Category colours identify a category and nothing else: none is green, amber, red or rose, which keep their status and brand meaning.
 const CATEGORY_STYLES: Record<string, { badge: string; accent: string }> = {
-  INSURANCE: { badge: 'bg-purple-500/10 text-purple-300 border-purple-500/30', accent: 'border-l-purple-500' },
+  INSURANCE: { badge: 'bg-violet-500/10 text-violet-300 border-violet-500/30', accent: 'border-l-violet-500' },
   SUBSCRIPTION: { badge: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30', accent: 'border-l-cyan-500' },
-  TAX: { badge: 'bg-amber-500/10 text-amber-300 border-amber-500/30', accent: 'border-l-amber-500' },
-  FINANCING: { badge: 'bg-orange-500/10 text-orange-300 border-orange-500/30', accent: 'border-l-orange-500' },
-  MAINTENANCE: { badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', accent: 'border-l-emerald-500' },
-  REPAIR: { badge: 'bg-rose-500/10 text-rose-300 border-rose-500/30', accent: 'border-l-rose-500' },
-  ACCESSORY: { badge: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30', accent: 'border-l-indigo-500' },
+  TAX: { badge: 'bg-blue-500/10 text-blue-300 border-blue-500/30', accent: 'border-l-blue-500' },
+  FINANCING: { badge: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30', accent: 'border-l-indigo-500' },
+  MAINTENANCE: { badge: 'bg-teal-500/10 text-teal-300 border-teal-500/30', accent: 'border-l-teal-500' },
+  REPAIR: { badge: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30', accent: 'border-l-fuchsia-500' },
+  ACCESSORY: { badge: 'bg-lime-500/10 text-lime-300 border-lime-500/30', accent: 'border-l-lime-500' },
 }
 const NEUTRAL_STYLE = { badge: 'bg-slate-800 text-slate-300 border-slate-700', accent: 'border-l-slate-600' }
 
