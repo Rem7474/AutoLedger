@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import ListSkeleton from '@/components/ListSkeleton.vue'
+import CardOpenButton from '@/components/CardOpenButton.vue'
+import RowMenu from '@/components/RowMenu.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import EmptySourceHints from '@/components/EmptySourceHints.vue'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Zap, Pencil, Trash2, AlertTriangle, Paperclip, ExternalLink } from 'lucide-vue-next'
+import { Zap, Trash2, AlertTriangle, Paperclip, ExternalLink } from 'lucide-vue-next'
 import { groupChargesByMonth } from '@/utils/expenses'
 import { formatChargeWindow } from '@/utils/dates'
 import { formatAmount } from '@/currency'
@@ -92,9 +94,15 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
         <div
           v-for="c in month.charges"
           :key="c.id"
-          class="bg-slate-900 border p-3 rounded-2xl flex items-center gap-2 sm:gap-3"
+          class="relative bg-slate-900 border hover:border-slate-700/90 p-3 rounded-2xl flex items-center gap-2 sm:gap-3 transition-colors"
           :class="c.cost === null ? 'border-warning-500/40' : 'border-slate-800'"
         >
+          <!-- The row opens the charge; the receipt and the TeslaMate links above it keep their own click -->
+          <CardOpenButton
+            v-if="vehicleStore.canEdit"
+            :label="chargeDeletable(c) ? $t('expenses.chargesPanel.editThisCharge') : $t('expenses.chargesPanel.fixCost')"
+            @click="emit('edit', c)"
+          />
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-x-1.5 gap-y-1 sm:gap-x-2 flex-wrap">
               <span class="text-sm font-bold text-info-400 shrink-0">
@@ -105,7 +113,7 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
               <button
                 v-if="c.document_id"
                 @click="emit('view-document', c.document_id, c.document_filename, false)"
-                class="text-xs px-2 py-0.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 flex items-center gap-1 transition-colors max-w-[200px] truncate"
+                class="relative z-10 text-xs px-2 py-0.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 flex items-center gap-1 transition-colors max-w-[200px] truncate"
                 :title="$t('expenses.chargesPanel.viewTheReceipt')"
               >
                 <Paperclip class="w-3 h-3 shrink-0" />
@@ -131,39 +139,31 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
               :href="teslamateChargeCostUrl(vehicleStore.activeVehicle, c)!"
               target="_blank"
               rel="noopener noreferrer"
-              class="mt-0.5 inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium"
+              class="relative z-10 mt-0.5 inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium"
               :title="$t('expenses.teslamateLinks.setCostHint')"
             >
               <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.setCost') }}
             </a>
           </div>
-          <div v-if="vehicleStore.canEdit" class="flex items-center gap-0.5 sm:gap-1 shrink-0">
+          <RowMenu
+            v-if="vehicleStore.canEdit && (teslamateChargeUrl(vehicleStore.activeVehicle, c) || chargeDeletable(c))"
+            :label="$t('common.moreActions')"
+            :heading="formatChargeWindow(c.date, c.end_date)"
+          >
             <a
               v-if="teslamateChargeUrl(vehicleStore.activeVehicle, c)"
               :href="teslamateChargeUrl(vehicleStore.activeVehicle, c)!"
               target="_blank"
               rel="noopener noreferrer"
-              class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-info-400 rounded-xl transition-colors border border-slate-700/60"
-              :title="$t('expenses.teslamateLinks.details')" :aria-label="$t('expenses.teslamateLinks.details')"
+              role="menuitem"
+              class="menu-item"
             >
-              <ExternalLink class="w-3.5 h-3.5" />
+              <ExternalLink class="w-3.5 h-3.5 text-slate-400" />{{ $t('expenses.teslamateLinks.details') }}
             </a>
-            <button
-              @click="emit('edit', c)"
-              class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors border border-slate-700/60"
-              :title="chargeDeletable(c) ? $t('expenses.chargesPanel.editThisCharge') : $t('expenses.chargesPanel.fixCost')" :aria-label="chargeDeletable(c) ? $t('expenses.chargesPanel.editThisCharge') : $t('expenses.chargesPanel.fixCost')"
-            >
-              <Pencil class="w-3.5 h-3.5" />
+            <button v-if="chargeDeletable(c)" type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', c)">
+              <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
             </button>
-            <button
-              v-if="chargeDeletable(c)"
-              @click="emit('delete', c)"
-              class="tap p-1.5 bg-slate-800 hover:bg-rose-900/40 text-rose-400/80 hover:text-rose-300 focus-visible:text-rose-300 rounded-xl transition-colors border border-slate-700/60 hover:border-rose-500/40"
-              :title="$t('expenses.chargesPanel.deleteThisCharge')" :aria-label="$t('expenses.chargesPanel.deleteThisCharge')"
-            >
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
-          </div>
+          </RowMenu>
         </div>
       </section>
       <div class="flex items-center justify-between text-xs text-slate-400 px-1">

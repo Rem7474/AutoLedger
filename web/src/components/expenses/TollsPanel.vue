@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import CardOpenButton from '@/components/CardOpenButton.vue'
+import RowMenu from '@/components/RowMenu.vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Navigation, Layers, Users, Pencil, Trash2, Paperclip, Plus, Receipt } from 'lucide-vue-next'
+import { Navigation, Layers, Users, Trash2, Paperclip, Plus, Receipt } from 'lucide-vue-next'
 import ListSummary from '@/components/ListSummary.vue'
 import CostHistory from '@/components/costs/CostHistory.vue'
 import { formatDate } from '@/utils/expenses'
@@ -48,8 +50,9 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       <div
         v-for="e in driveExpenses"
         :key="e.id"
-        class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors"
       >
+        <CardOpenButton v-if="vehicleStore.canEdit" :label="$t('expenses.tollsPanel.editThisToll')" @click="emit('edit', e)" />
         <div class="space-y-1.5 min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700/60 shrink-0">
@@ -65,7 +68,7 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
             <button
               v-if="e.document_id"
               @click="emit('view-document', e.document_id, e.document_filename, false)"
-              class="text-xs px-2 py-0.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 flex items-center gap-1 transition-colors max-w-[200px] truncate"
+              class="relative z-10 text-xs px-2 py-0.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 flex items-center gap-1 transition-colors max-w-[200px] truncate"
               :title="$t('expenses.tollsPanel.viewTheReceipt')"
             >
               <Paperclip class="w-3 h-3 shrink-0" />
@@ -74,35 +77,25 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
           </div>
           <p v-if="e.notes" class="text-sm text-slate-300">{{ e.notes }}</p>
         </div>
-        <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+        <div class="flex items-center justify-end gap-2 shrink-0">
           <div class="text-lg font-extrabold text-white">
             {{ formatAmount(e.amount, e.currency || vehicleStore.currency) }}
           </div>
-          <div v-if="vehicleStore.canEdit" class="flex items-center gap-1.5">
+          <RowMenu v-if="vehicleStore.canEdit" :label="$t('common.moreActions')" :heading="formatDate(e.date)">
             <button
               v-if="e.drive_id || e.trip_group_id"
-              @click="router.push({ path: '/carpools', query: e.drive_id ? { new_drive_id: e.drive_id } : { new_trip_group_id: e.trip_group_id } })"
-              class="btn btn-secondary"
+              type="button"
+              role="menuitem"
+              class="menu-item"
               :title="$t('expenses.tollsPanel.createACarpoolForThis')"
+              @click="router.push({ path: '/carpools', query: e.drive_id ? { new_drive_id: e.drive_id } : { new_trip_group_id: e.trip_group_id } })"
             >
-              <Users class="w-3.5 h-3.5 text-sky-400" />
-              <span>{{ $t('expenses.tollsPanel.carpool') }}</span>
+              <Users class="w-3.5 h-3.5 text-slate-400" />{{ $t('expenses.tollsPanel.carpool') }}
             </button>
-            <button
-              @click="emit('edit', e)"
-              class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors border border-slate-700/60"
-              :title="$t('expenses.tollsPanel.editThisToll')" :aria-label="$t('expenses.tollsPanel.editThisToll')"
-            >
-              <Pencil class="w-3.5 h-3.5" />
+            <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', e)">
+              <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
             </button>
-            <button
-              @click="emit('delete', e)"
-              class="tap p-1.5 bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 rounded-xl transition-colors border border-slate-700/60"
-              :title="$t('expenses.tollsPanel.deleteThisToll')" :aria-label="$t('expenses.tollsPanel.deleteThisToll')"
-            >
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
-          </div>
+          </RowMenu>
         </div>
       </div>
     </div>
