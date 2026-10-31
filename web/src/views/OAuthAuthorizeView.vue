@@ -92,7 +92,7 @@ async function decide(decision: 'approve' | 'deny') {
         </p>
 
         <div>
-          <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{{ t('oauth.authorize.canTitle') }}</h2>
+          <h2 class="text-xs font-semibold text-slate-400 mb-2">{{ t('oauth.authorize.canTitle') }}</h2>
           <ul class="space-y-1.5 text-sm text-slate-200">
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canVehicles') }}</li>
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canCosts') }}</li>
@@ -101,7 +101,7 @@ async function decide(decision: 'approve' | 'deny') {
           </ul>
         </div>
         <fieldset v-if="canChoose" class="space-y-2 min-w-0">
-          <legend class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{{ t('oauth.authorize.vehiclesTitle') }}</legend>
+          <legend class="text-xs font-semibold text-slate-400 mb-2">{{ t('oauth.authorize.vehiclesTitle') }}</legend>
           <label class="flex items-start gap-2 text-sm text-slate-200">
             <input v-model="vehicleMode" type="radio" name="vehicle-mode" value="all" class="mt-1 shrink-0" />
             <span>{{ t('oauth.authorize.vehiclesAll') }}</span>
@@ -122,7 +122,7 @@ async function decide(decision: 'approve' | 'deny') {
           <p v-if="!approvable" class="text-xs text-warning-400" role="status">{{ t('oauth.authorize.vehiclesNone') }}</p>
         </fieldset>
         <div>
-          <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{{ t('oauth.authorize.cannotTitle') }}</h2>
+          <h2 class="text-xs font-semibold text-slate-400 mb-2">{{ t('oauth.authorize.cannotTitle') }}</h2>
           <ul class="space-y-1.5 text-sm text-slate-200">
             <li class="flex items-start gap-2"><X class="w-4 h-4 text-danger-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.cannotWrite') }}</li>
             <li class="flex items-start gap-2"><X class="w-4 h-4 text-danger-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.cannotPrivate') }}</li>

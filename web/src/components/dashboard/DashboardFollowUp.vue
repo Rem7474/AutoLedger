@@ -12,7 +12,7 @@ const open = ref(typeof window === 'undefined' || typeof window.matchMedia !== '
   <section>
     <button
       type="button"
-      class="flex w-full items-center justify-between gap-2 rounded-xl px-1 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-200"
+      class="flex w-full items-center justify-between gap-2 rounded-xl px-1 py-1.5 text-left text-xs font-semibold text-slate-400 hover:text-slate-200"
       :aria-expanded="open"
       aria-controls="dashboard-follow-up"
       @click="open = !open"

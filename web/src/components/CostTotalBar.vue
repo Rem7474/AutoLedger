@@ -23,11 +23,11 @@ withDefaults(defineProps<{
   >
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <span class="text-xs font-semibold text-success-400 uppercase tracking-wider">{{ totalLabel }}</span>
+        <span class="text-xs font-semibold text-success-400">{{ totalLabel }}</span>
         <div class="text-2xl font-black text-white" data-testid="cost-total">{{ total }}</div>
       </div>
       <div class="text-right shrink-0">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ perDistanceLabel }}</span>
+        <span class="text-xs font-semibold text-slate-400">{{ perDistanceLabel }}</span>
         <div class="text-lg font-extrabold text-success-400 font-mono" data-testid="cost-per-distance">{{ perDistance }}</div>
       </div>
     </div>

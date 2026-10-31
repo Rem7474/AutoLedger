@@ -129,13 +129,13 @@ async function handleSubmit() {
         <!-- Times -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="manual-drive-start-time" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-start-time" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.dateStart') }}
             </label>
             <AppDatePicker id="manual-drive-start-time" v-model="startTime" enable-time-picker required />
           </div>
           <div>
-            <label for="manual-drive-end-time" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-end-time" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.dateEnd') }}
             </label>
             <AppDatePicker id="manual-drive-end-time" v-model="endTime" enable-time-picker />
@@ -145,7 +145,7 @@ async function handleSubmit() {
         <!-- Distance & Energy -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="manual-drive-distance" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-distance" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.distance', { unit: distanceUnit() }) }}
             </label>
             <DistanceInput
@@ -158,7 +158,7 @@ async function handleSubmit() {
             />
           </div>
           <div>
-            <label for="manual-drive-energy" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-energy" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.energy') }}
             </label>
             <NumberInput
@@ -174,7 +174,7 @@ async function handleSubmit() {
         <!-- Locations -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="manual-drive-start-address" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-start-address" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.origin') }}
             </label>
             <input
@@ -186,7 +186,7 @@ async function handleSubmit() {
             />
           </div>
           <div>
-            <label for="manual-drive-end-address" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-end-address" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.destination') }}
             </label>
             <input
@@ -202,7 +202,7 @@ async function handleSubmit() {
         <!-- Odometers -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="manual-drive-start-odo" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-start-odo" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.startOdo', { unit: distanceUnit() }) }}
             </label>
             <DistanceInput
@@ -214,7 +214,7 @@ async function handleSubmit() {
             />
           </div>
           <div>
-            <label for="manual-drive-end-odo" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+            <label for="manual-drive-end-odo" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.endOdo', { unit: distanceUnit() }) }}
             </label>
             <DistanceInput
@@ -229,7 +229,7 @@ async function handleSubmit() {
 
         <!-- Tag (Pro / Perso) -->
         <div v-if="prefs.proPersoEnabled">
-          <span class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+          <span class="block text-xs font-semibold text-slate-300 mb-1.5">
             {{ $t('drives.manualModal.tag') }}
           </span>
           <div class="flex items-center gap-2">

@@ -73,7 +73,7 @@ function formatLast(iso?: string) {
       <template v-else-if="summary">
         <div v-if="canCharge(vehicle?.powertrain)" class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3">
           <div class="flex items-center justify-between gap-2">
-            <h4 class="font-bold text-white uppercase tracking-wider">{{ $t('vehicles.vehicleDataSourcesModal.teslamate') }}</h4>
+            <h4 class="font-bold text-white">{{ $t('vehicles.vehicleDataSourcesModal.teslamate') }}</h4>
             <span class="font-semibold" :class="summary.teslamate_configured ? 'text-success-400' : 'text-slate-400'">
               {{ !isOwner ? $t('vehicles.vehicleCard.managedByAdmin') : summary.teslamate_configured ? $t('vehicles.vehicleCard.configured') : $t('vehicles.vehicleCard.notConfigured') }}
             </span>
@@ -106,7 +106,7 @@ function formatLast(iso?: string) {
         </div>
 
         <div>
-          <h4 class="font-bold text-white uppercase tracking-wider mb-2">{{ $t('vehicles.vehicleDataSourcesModal.activity') }}</h4>
+          <h4 class="font-bold text-white mb-2">{{ $t('vehicles.vehicleDataSourcesModal.activity') }}</h4>
           <ul class="space-y-2">
             <li v-for="r in rows" :key="r.origin" class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
               <div class="flex items-center justify-between gap-2">

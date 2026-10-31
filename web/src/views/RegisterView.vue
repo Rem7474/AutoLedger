@@ -88,7 +88,7 @@ async function handleSubmit() {
 
       <form v-else @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label for="register-email" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('auth.registerView.email') }}</label>
+          <label for="register-email" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('auth.registerView.email') }}</label>
           <div class="relative">
             <Mail class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input id="register-email"
@@ -102,7 +102,7 @@ async function handleSubmit() {
         </div>
 
         <div>
-          <label for="register-password" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('auth.registerView.password8CharactersMin') }}</label>
+          <label for="register-password" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('auth.registerView.password8CharactersMin') }}</label>
           <div class="relative">
             <Lock class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input id="register-password"
@@ -116,7 +116,7 @@ async function handleSubmit() {
         </div>
 
         <div>
-          <label for="register-confirm-password" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('auth.registerView.confirmThePassword') }}</label>
+          <label for="register-confirm-password" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('auth.registerView.confirmThePassword') }}</label>
           <div class="relative">
             <Lock class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input id="register-confirm-password"

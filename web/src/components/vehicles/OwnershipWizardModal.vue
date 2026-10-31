@@ -256,7 +256,7 @@ async function deleteOwnershipAction() {
     <div v-show="currentOwnershipStep === 2" class="space-y-4">
       <!-- Purchase terms -->
       <div v-if="isPurchase" class="space-y-3">
-        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+        <h4 class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
           <Wallet class="w-4 h-4" />
           <span>{{ $t('vehicles.ownershipWizardModal.purchaseTerms') }}</span>
         </h4>
@@ -278,7 +278,7 @@ async function deleteOwnershipAction() {
 
       <!-- Loan specific terms -->
       <div v-if="ownershipForm.acquisition_type === 'LOAN'" class="space-y-3 pt-3 border-t border-slate-800">
-        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+        <h4 class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
           <CreditCard class="w-4 h-4" />
           <span>{{ $t('vehicles.ownershipWizardModal.loanTerms') }}</span>
         </h4>
@@ -324,7 +324,7 @@ async function deleteOwnershipAction() {
 
       <!-- Lease specific terms -->
       <div v-if="isLease" class="space-y-3">
-        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+        <h4 class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
           <RefreshCw class="w-4 h-4" />
           <span>{{ $t('vehicles.ownershipWizardModal.leaseTerms', { acquisition_type: ownershipForm.acquisition_type }) }}</span>
         </h4>
@@ -373,7 +373,7 @@ async function deleteOwnershipAction() {
     <div v-show="currentOwnershipStep === 3" class="space-y-4">
       <!-- Lease Conditions & Buyout -->
       <div v-if="isLease" class="space-y-3">
-        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.mileageAllowanceAndInclusions') }}</h4>
+        <h4 class="text-xs font-bold text-sky-400">{{ $t('vehicles.ownershipWizardModal.mileageAllowanceAndInclusions') }}</h4>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label for="own-lease-allowance" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.mileageAllowanceKmYear', { unit: distanceUnit() }) }}</label>
@@ -437,7 +437,7 @@ async function deleteOwnershipAction() {
 
       <!-- Depreciation for owned vehicles -->
       <div v-if="isOwnedPhase" class="space-y-3 pt-3 border-t border-slate-800">
-        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.depreciationAndPlannedHolding') }}</h4>
+        <h4 class="text-xs font-bold text-sky-400">{{ $t('vehicles.ownershipWizardModal.depreciationAndPlannedHolding') }}</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="own-resale" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.estimatedPlannedResale', { cur: currencySymbol(currency) }) }}</label>
@@ -454,7 +454,7 @@ async function deleteOwnershipAction() {
 
       <!-- Clôture / End of Contract -->
       <div class="space-y-3 pt-3 border-t border-slate-800">
-        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider">{{ $t('vehicles.ownershipWizardModal.actualClosingIfFinished') }}</h4>
+        <h4 class="text-xs font-bold text-sky-400">{{ $t('vehicles.ownershipWizardModal.actualClosingIfFinished') }}</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="own-end-date" class="block text-xs font-semibold text-slate-300 mb-1">

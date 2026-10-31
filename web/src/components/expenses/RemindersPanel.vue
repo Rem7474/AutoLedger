@@ -127,7 +127,7 @@ const groups = computed(() => groupRemindersByDue(props.reminders))
     <div v-else class="space-y-5">
       <section v-for="g in groups" :key="g.key" class="space-y-2">
         <h4
-          class="flex items-center gap-2 text-xs font-bold uppercase tracking-wide"
+          class="flex items-center gap-2 text-xs font-bold"
           :class="g.key === 'overdue' ? 'text-rose-300' : g.key === 'soon' ? 'text-warning-300' : 'text-slate-400'"
         >
           <AlertTriangle v-if="g.key === 'overdue'" class="w-3.5 h-3.5" />

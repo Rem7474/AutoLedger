@@ -311,7 +311,7 @@ async function handleExecute() {
 
       <!-- File selection -->
       <div>
-        <label for="csv-file-input" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+        <label for="csv-file-input" class="block text-xs font-semibold text-slate-300 mb-1.5">
           {{ $t('import.selectFile') }}
         </label>
         <div class="flex items-center gap-3">
@@ -337,7 +337,7 @@ async function handleExecute() {
       <!-- Type and options -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label for="csv-type-select" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+          <label for="csv-type-select" class="block text-xs font-semibold text-slate-300 mb-1.5">
             {{ $t('import.typeLabel') }}
           </label>
           <select

@@ -71,7 +71,7 @@ async function testConnection() {
 
       <div v-if="supportsTeslaMate(powertrain) && teslamate.enabled" class="p-4 bg-slate-800/40 border border-slate-800 rounded-2xl space-y-4">
         <div>
-          <label for="onboarding-teslamate-url" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.teslamateApiUrl') }}</label>
+          <label for="onboarding-teslamate-url" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.teslamateApiUrl') }}</label>
           <input id="onboarding-teslamate-url"
             v-model="teslamate.url"
             type="url"
@@ -81,7 +81,7 @@ async function testConnection() {
         </div>
 
         <div>
-          <label for="onboarding-teslamate-auth-type" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.authenticationMode') }}</label>
+          <label for="onboarding-teslamate-auth-type" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.authenticationMode') }}</label>
           <select id="onboarding-teslamate-auth-type"
             v-model="teslamate.authType"
             class="field"
@@ -93,7 +93,7 @@ async function testConnection() {
         </div>
 
         <div>
-          <label for="onboarding-teslamate-car-id" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('vehicles.vehicleFormModal.carIdInTeslamate') }}</label>
+          <label for="onboarding-teslamate-car-id" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('vehicles.vehicleFormModal.carIdInTeslamate') }}</label>
           <input id="onboarding-teslamate-car-id"
             v-model.number="teslamate.carId"
             type="number"
@@ -104,7 +104,7 @@ async function testConnection() {
         </div>
 
         <div v-if="teslamate.authType === 'BEARER'">
-          <label for="onboarding-teslamate-api-key" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.apiToken') }}</label>
+          <label for="onboarding-teslamate-api-key" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.apiToken') }}</label>
           <input id="onboarding-teslamate-api-key"
             v-model="teslamate.apiKey"
             type="password"
@@ -115,7 +115,7 @@ async function testConnection() {
 
         <div v-if="teslamate.authType === 'BASIC'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label for="onboarding-teslamate-user" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.user') }}</label>
+            <label for="onboarding-teslamate-user" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.user') }}</label>
             <input id="onboarding-teslamate-user"
               v-model="teslamate.user"
               type="text"
@@ -124,7 +124,7 @@ async function testConnection() {
             />
           </div>
           <div>
-            <label for="onboarding-teslamate-pass" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">{{ $t('onboarding.onboardingView.password') }}</label>
+            <label for="onboarding-teslamate-pass" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.password') }}</label>
             <input id="onboarding-teslamate-pass"
               v-model="teslamate.pass"
               type="password"

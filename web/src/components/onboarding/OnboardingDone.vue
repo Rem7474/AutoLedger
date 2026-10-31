@@ -37,7 +37,7 @@ async function copy(field: 'token' | 'snippet') {
       <p class="text-xs text-slate-400">{{ $t('onboarding.webhookReadyHint') }}</p>
       <div>
         <div class="flex items-center justify-between mb-1">
-          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">{{ $t('onboarding.webhookToken') }}</span>
+          <span class="text-xs font-semibold text-slate-300">{{ $t('onboarding.webhookToken') }}</span>
           <button type="button" @click="copy('token')" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
             <Copy class="w-3.5 h-3.5" />{{ copiedField === 'token' ? $t('onboarding.copied') : $t('onboarding.copy') }}
           </button>
@@ -46,7 +46,7 @@ async function copy(field: 'token' | 'snippet') {
       </div>
       <div>
         <div class="flex items-center justify-between mb-1">
-          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">{{ $t('onboarding.webhookExample') }}</span>
+          <span class="text-xs font-semibold text-slate-300">{{ $t('onboarding.webhookExample') }}</span>
           <button type="button" @click="copy('snippet')" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
             <Copy class="w-3.5 h-3.5" />{{ copiedField === 'snippet' ? $t('onboarding.copied') : $t('onboarding.copy') }}
           </button>
