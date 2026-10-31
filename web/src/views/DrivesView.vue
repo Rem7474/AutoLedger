@@ -533,6 +533,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       <div class="flex items-center justify-between text-xs text-slate-400 px-2">
         <SelectAllToggle
           v-if="vehicleStore.canEdit"
+          :class="{ 'max-sm:hidden': !selectedDriveIds.length }"
           :checked="allPageSelected"
           :indeterminate="somePageSelected"
           :label="allPageSelected ? $t('drives.drivesView.deselectPage') : $t('drives.drivesView.selectPage')"
@@ -547,6 +548,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
         :key="d.id"
         :d="d"
         :selected="selectedDriveIds.includes(d.id)"
+        :selecting="selectedDriveIds.length > 0"
         @open="openCostModal"
         @toggle="toggleSelectDrive"
         @toll-entry="openTollEntry"
