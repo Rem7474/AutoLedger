@@ -19,6 +19,7 @@
     "energyCost": "Énergie",
     "otherCost": "Autres dépenses",
     "fleetCurrencyOnly": "Véhicules en {currency} uniquement",
+    "scaleCut": "Échelle coupée : {months} est très au-dessus des autres mois, survolez sa barre pour le montant.",
     "month": "Mois"
   },
   "drivers": {
