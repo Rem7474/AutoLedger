@@ -18,8 +18,4 @@ describe('BulkSelectionBar', () => {
     expect(html).toContain('sm:sticky')
     expect(html).toContain('Act')
   })
-
-  it('leaves room under the list for the docked bar', async () => {
-    expect(await render({ count: 1 })).toContain('h-24 sm:hidden')
-  })
 })

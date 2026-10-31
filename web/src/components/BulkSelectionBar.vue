@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { X, MoreHorizontal } from 'lucide-vue-next'
 import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 import { useIsMobile } from '@/composables/useIsMobile'
@@ -28,6 +28,13 @@ const emit = defineEmits<{
 // On a phone the bar sits at the bottom edge over the navigation, in reach of the thumb: the counter and a close button
 // on top, the actions in one scrolling row, and "More" opens a bottom sheet.
 const isMobile = useIsMobile()
+// While the bar is docked, the page scrolls with room under it (see `.has-bulk-bar` in main.css)
+watch(
+  () => props.count > 0 && isMobile.value,
+  (docked) => document.body.classList.toggle('has-bulk-bar', docked),
+  { immediate: typeof document !== 'undefined' },
+)
+onUnmounted(() => document.body.classList.remove('has-bulk-bar'))
 
 // The "More" popover holds the occasional actions, so the bar keeps one primary action and a few secondary ones
 const moreOpen = ref(false)
@@ -63,6 +70,7 @@ onUnmounted(() => {
 
 <template>
   <template v-if="count > 0">
+    <Teleport to="body" :disabled="!isMobile">
     <div
       class="fixed inset-x-0 bottom-0 z-[55] flex flex-col gap-2 rounded-t-2xl border border-b-0 border-slate-700/80 bg-slate-800/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-md transition-all sm:sticky sm:inset-x-auto sm:bottom-auto sm:top-16 sm:z-30 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:rounded-2xl sm:border-b sm:p-3"
     >
@@ -137,8 +145,7 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
-    <!-- Keeps the end of the list clear of the bar -->
-    <div class="h-24 sm:hidden" aria-hidden="true"></div>
+    </Teleport>
 
     <Teleport v-if="isMobile" to="body">
       <ModalShell v-model:open="moreOpen" :title="$t('shell.bulkSelectionBar.more')" size="sm">
