@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useSelectableRow } from '@/composables/useSelectableRow'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -7,22 +9,36 @@ import { distanceUnit, formatDistanceValue } from '@/units'
 import { formatPercent } from '@/utils/numbers'
 
 // A tire that was disposed of: its cost stays in the TCO
-defineProps<{ t: any; selected: boolean; dismount?: { date: string; odometer: number | null } | null }>()
+const props = defineProps<{ t: any; selected: boolean; selecting?: boolean; dismount?: { date: string; odometer: number | null } | null }>()
 const emit = defineEmits<{ open: [stat: any]; toggle: [tireId: string] }>()
 const vehicleStore = useVehicleStore()
+const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
+  enabled: computed(() => vehicleStore.canEdit),
+  selecting: computed(() => !!props.selecting),
+  toggle: () => emit('toggle', props.t.tire.id),
+  open: () => emit('open', props.t),
+})
 const day = (iso: string) => new Date(iso).toLocaleDateString(intlLocale(), { dateStyle: 'medium', timeZone: 'UTC' })
 </script>
 
 <template>
   <div
-    class="relative bg-slate-900/60 border border-slate-800 hover:border-rose-500/40 rounded-2xl p-4 space-y-2 transition-all group"
+    class="relative bg-slate-900/60 border border-slate-800 hover:border-rose-500/40 rounded-2xl p-4 space-y-2 transition-all group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
     :class="{ 'ring-2 ring-rose-500/50 border-rose-500/60': selected }"
   >
-    <CardOpenButton :label="$t('tires.openTire', { name: `${t.tire.brand} ${t.tire.model}` })" @click="emit('open', t)" />
+    <CardOpenButton
+      :label="$t('tires.openTire', { name: `${t.tire.brand} ${t.tire.model}` })"
+      @click="onRowClick()"
+      @pointerdown="onPointerdown($event)"
+      @pointermove="press.onPointermove"
+      @pointerup="press.onPointerup"
+      @pointercancel="press.onPointercancel"
+      @contextmenu="press.onContextmenu"
+    />
     <div class="flex items-start justify-between">
       <div>
         <h4 class="text-sm font-bold text-slate-300 group-hover:text-rose-300 transition-colors flex items-center gap-1.5">
-          <label :for="'disposed-select-' + t.tire.id" class="relative z-10 cursor-pointer flex items-center" :title="$t('tires.tireDisposedCard.selectForABulkAction')">
+          <label v-if="showBox" :for="'disposed-select-' + t.tire.id" class="relative z-10 cursor-pointer flex items-center" :title="$t('tires.tireDisposedCard.selectForABulkAction')">
             <input
               :id="'disposed-select-' + t.tire.id"
               type="checkbox"

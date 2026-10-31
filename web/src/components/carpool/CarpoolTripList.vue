@@ -2,6 +2,7 @@
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import { computed } from 'vue'
+import { useSelectableRow } from '@/composables/useSelectableRow'
 import { formatDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
@@ -11,7 +12,8 @@ import { formatDate, hasLinkedLegs } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 
 // The carpool trips as compact cards (the legs, passengers and costs are in the detail, opened by a click), and the
-// selection actions (recalculate, export)
+// selection actions (recalculate, export). On a phone the checkboxes are hidden at rest: a long press selects a carpool and
+// starts the selection, where the boxes show and a tap toggles the row instead of opening it.
 const props = defineProps<{ trips: any[]; selectedTripIds: string[]; recalculating: boolean }>()
 const emit = defineEmits<{
   clear: []
@@ -30,6 +32,12 @@ const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 
 // A carpool made from drives follows their cost on its own: only the ones entered by distance are recalculated
 const recalculable = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id) && !hasLinkedLegs(tr)))
+const { showBox, press, onPointerdown, onRowClick } = useSelectableRow<any>({
+  enabled: computed(() => vehicleStore.canEdit),
+  selecting: computed(() => props.selectedTripIds.length > 0),
+  toggle: (trip) => emit('toggle', trip.id),
+  open: (trip) => emit('open', trip),
+})
 const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTripIds.length === props.trips.length)
 </script>
 
@@ -79,13 +87,21 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
     <div
       v-for="trip in trips"
       :key="trip.id"
-      class="relative bg-slate-900 border rounded-2xl p-3 sm:p-4 transition-all flex items-start gap-3"
+      class="relative bg-slate-900 border rounded-2xl p-3 sm:p-4 transition-all flex items-start gap-3 max-sm:select-none max-sm:[-webkit-touch-callout:none]"
       :class="selectedTripIds.includes(trip.id) ? 'border-rose-500/50 bg-rose-500/[0.02]' : 'border-slate-800 hover:border-slate-700'"
     >
-      <CardOpenButton :label="$t('common.openItem', { item: trip.title })" @click="emit('open', trip)" />
+      <CardOpenButton
+        :label="$t('common.openItem', { item: trip.title })"
+        @click="onRowClick(trip)"
+        @pointerdown="onPointerdown($event, trip)"
+        @pointermove="press.onPointermove"
+        @pointerup="press.onPointerup"
+        @pointercancel="press.onPointercancel"
+        @contextmenu="press.onContextmenu"
+      />
       <!-- Select Checkbox -->
       <label
-        v-if="vehicleStore.canEdit"
+        v-if="showBox"
         :for="'carpool-select-' + trip.id"
         class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
         :title="$t('carpool.carpoolTripList.selectThisCarpool')"

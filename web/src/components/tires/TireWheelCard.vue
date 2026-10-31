@@ -10,26 +10,43 @@ import TireForecastLine from '@/components/tires/TireForecastLine.vue'
 import TireMeasuredWear from '@/components/tires/TireMeasuredWear.vue'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
+import { useSelectableRow } from '@/composables/useSelectableRow'
+import { computed } from 'vue'
 import { distanceUnit, formatDistance, formatDistanceValue, perDistance } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 
 // One wheel of the chassis view: the mounted tire with its wear, or a placeholder when the wheel is empty
-defineProps<{ pos: string; label: string; stat: any | null; selected: boolean; canMount?: boolean }>()
+const props = defineProps<{ pos: string; label: string; stat: any | null; selected: boolean; selecting?: boolean; canMount?: boolean }>()
 const emit = defineEmits<{ open: [stat: any]; toggle: [tireId: string]; mount: [] }>()
 const vehicleStore = useVehicleStore()
+const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
+  enabled: computed(() => vehicleStore.canEdit),
+  selecting: computed(() => !!props.selecting),
+  toggle: () => emit('toggle', props.stat?.tire.id),
+  open: () => emit('open', props.stat),
+})
 </script>
 
 <template>
   <div
     v-if="stat"
-    class="relative bg-slate-900 border border-slate-800 hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3 sm:space-y-4 shadow-sm transition-all group"
+    class="relative bg-slate-900 border border-slate-800 hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 space-y-3 sm:space-y-4 shadow-sm transition-all group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
     :class="{ 'ring-2 ring-rose-500/50 border-rose-500/60': selected }"
   >
-    <CardOpenButton :label="$t('tires.openTire', { name: `${stat.tire.brand} ${stat.tire.model}` })" @click="emit('open', stat)" />
+    <CardOpenButton
+      :label="$t('tires.openTire', { name: `${stat.tire.brand} ${stat.tire.model}` })"
+      @click="onRowClick()"
+      @pointerdown="onPointerdown($event)"
+      @pointermove="press.onPointermove"
+      @pointerup="press.onPointerup"
+      @pointercancel="press.onPointercancel"
+      @contextmenu="press.onContextmenu"
+    />
     <div class="flex items-start justify-between">
       <div>
-        <label :for="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id" class="relative z-10 flex items-center gap-2 text-xs font-bold text-danger-400 hover:text-danger-300 cursor-pointer" :title="selected ? $t('tires.tireWheelCard.removeFromSelection') : $t('tires.tireWheelCard.selectForBulk')">
+        <label :for="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id" :class="showBox ? 'relative z-10 cursor-pointer' : ''" class="flex items-center gap-2 text-xs font-bold text-danger-400 hover:text-danger-300" :title="selected ? $t('tires.tireWheelCard.removeFromSelection') : $t('tires.tireWheelCard.selectForBulk')">
           <input
+            v-if="showBox"
             :id="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id"
             type="checkbox"
             :checked="selected"
