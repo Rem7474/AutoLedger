@@ -16,13 +16,14 @@ const replacement = computed(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
     <KpiCard
       :label="$t('tires.tireSetSummary.fitted')"
       :value="String(summary.fitted)"
       :unit="` / ${MOUNTED_POSITIONS.length}`"
     />
     <KpiCard
+      class="order-last col-span-2 sm:order-none sm:col-span-1"
       :label="$t('tires.tireSetSummary.mostWorn')"
       :value="summary.mostWorn ? formatPercent(summary.mostWorn.pct) : null"
       :unit="summary.mostWorn ? ` ${$t('tires.tireSetSummary.ofLifespan')}` : undefined"
