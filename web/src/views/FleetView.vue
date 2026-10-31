@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { scaleCut, type ScaleCut } from '@/utils/fleetChart'
 import GlossaryTip from '@/components/GlossaryTip.vue'
 import LoadError from '@/components/LoadError.vue'
 import KpiCard from '@/components/KpiCard.vue'
@@ -26,6 +27,7 @@ const loading = ref(false)
 const loadError = ref<string | null>(null)
 const summary = ref<FleetSummaryResponse | null>(null)
 const chartCanvas = ref<HTMLCanvasElement | null>(null)
+const cut = ref<ScaleCut | null>(null)
 let chartInstance: Chart | null = null
 
 const distanceUnitLabel = computed(() => currentDistanceUnit())
@@ -122,6 +124,7 @@ function renderChart() {
   const months = summary.value.monthly_costs.map((m) => m.month)
   const energyCosts = summary.value.monthly_costs.map((m) => m.energy_cost)
   const otherCosts = summary.value.monthly_costs.map((m) => m.other_cost)
+  cut.value = scaleCut(energyCosts.map((e, i) => e + otherCosts[i]))
 
   chartInstance = new Chart(chartCanvas.value, {
     type: 'bar',
@@ -174,6 +177,7 @@ function renderChart() {
         },
         y: {
           stacked: true,
+          max: cut.value?.ceiling,
           grid: { color: 'rgba(51, 65, 85, 0.3)' },
           ticks: {
             color: '#94a3b8',
@@ -390,11 +394,11 @@ onBeforeUnmount(() => {
           <tbody>
             <tr v-for="v in rankedVehicles" :key="v.vehicle_id" class="border-t border-slate-800/60">
               <td class="py-2 pr-4">
-                <span class="font-semibold text-white">{{ v.name }}</span>
-                <span v-if="cheapestPerKmIdSet.has(v.vehicle_id)" class="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-success-400">
+                <span class="block font-semibold text-white">{{ v.name }}</span>
+                <span v-if="cheapestPerKmIdSet.has(v.vehicle_id)" class="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-success-400">
                   <Award class="w-3 h-3" />{{ t('fleet.compare.cheapest') }}
                 </span>
-                <span v-else-if="!v.comparable" class="ml-2 text-xs text-slate-300">{{ v.depreciation_known === false ? t('fleet.compare.depreciationMissing') : t('fleet.compare.indicative') }}</span>
+                <span v-else-if="!v.comparable" class="mt-0.5 block text-xs text-slate-300">{{ v.depreciation_known === false ? t('fleet.compare.depreciationMissing') : t('fleet.compare.indicative') }}</span>
               </td>
               <td class="py-2 pr-4 text-right tabular-nums">{{ formatAmountOrUnknown(v.running_cost_per_km == null ? null : perDistance(v.running_cost_per_km), v.currency) }}</td>
               <td class="py-2 pr-4 text-right tabular-nums font-semibold text-white">{{ formatAmountOrUnknown(v.full_cost_per_km == null ? null : perDistance(v.full_cost_per_km), v.currency) }}</td>
@@ -424,6 +428,9 @@ onBeforeUnmount(() => {
         <div class="h-64 relative">
           <canvas ref="chartCanvas" role="img" :aria-label="t('fleet.chart.monthlyCostHistory')"></canvas>
         </div>
+        <p v-if="cut" class="text-xs text-slate-400" data-testid="fleet-chart-cut">
+          {{ t('fleet.chart.scaleCut', { months: cut.cutIndexes.map((i) => formatMonthLabel(summary!.monthly_costs[i].month)).join(', ') }) }}
+        </p>
         <ChartTable
           :caption="t('fleet.chart.monthlyCostHistory')"
           :headers="[t('fleet.chart.month'), t('fleet.chart.energyCost'), t('fleet.chart.otherCost')]"
