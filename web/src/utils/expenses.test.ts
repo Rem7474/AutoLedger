@@ -278,4 +278,8 @@ describe('categoryStyle', () => {
     expect(new Set(known).size).toBe(known.length)
     expect(categoryStyle('OTHER').accent).toBe('border-l-slate-600')
   })
+  it('never uses a status or brand hue for a category', () => {
+    const known = ['INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING', 'MAINTENANCE', 'REPAIR', 'ACCESSORY'].map((c) => categoryStyle(c))
+    for (const s of known) expect(`${s.badge} ${s.accent}`).not.toMatch(/emerald|green|amber|orange|red|rose|yellow/)
+  })
 })
