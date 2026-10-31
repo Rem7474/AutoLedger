@@ -41,6 +41,12 @@ describe('KpiCard', () => {
     expect(await render({ label: 'Economic cost', value: '0,142' })).not.toContain('text-4xl')
   })
 
+  it('tints a tile with the danger tone', async () => {
+    const html = await render({ label: 'Most worn', value: '85 %', tone: 'danger', tinted: true })
+    expect(html).toContain('bg-danger-500/5')
+    expect(html).toContain('text-danger-400')
+  })
+
   it('has a dense variant for the panels inside a disclosure', async () => {
     const html = await render({ label: 'Consumption', value: '15,2', unit: ' kWh/100 km', compact: true })
     expect(html).toContain('bg-slate-950/60')
