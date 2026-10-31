@@ -211,7 +211,7 @@ export function validateTireForm(f: TireFormInput): Partial<Record<TireFormField
 export interface TireSetSummary {
   fitted: number
   /** The most worn fitted tire: its wear share of the estimated lifespan and the wheel it sits on. */
-  mostWorn: { pct: number; position: string; name: string } | null
+  mostWorn: { pct: number; position: string; name: string; tone: WearTone } | null
   /** The earliest predicted replacement date (YYYY-MM-DD) among the fitted tires. */
   nextReplacement: string | null
 }
@@ -226,7 +226,7 @@ export function summarizeFittedTires(mounted: Record<string, any | null>): TireS
     fitted++
     const pct = Number(stat.life_progress_pct)
     if (Number.isFinite(pct) && (!mostWorn || pct > mostWorn.pct)) {
-      mostWorn = { pct, position, name: `${stat.tire.brand} ${stat.tire.model}`.trim() }
+      mostWorn = { pct, position, name: `${stat.tire.brand} ${stat.tire.model}`.trim(), tone: wearTone(pct, stat.condition) }
     }
     const date = stat.replacement_forecast?.replacement_date as string | undefined
     if (date && (!nextReplacement || date < nextReplacement)) nextReplacement = date

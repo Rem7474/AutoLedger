@@ -268,8 +268,14 @@ describe('summarizeFittedTires', () => {
       RR: stat(55),
     })
     expect(s.fitted).toBe(3)
-    expect(s.mostWorn).toEqual({ pct: 72, position: 'FR', name: 'Nokian Pilot' })
+    expect(s.mostWorn).toEqual({ pct: 72, position: 'FR', name: 'Nokian Pilot', tone: 'ok' })
     expect(s.nextReplacement).toBe('2026-11-15')
+  })
+
+  it('gives the most worn tire the tone of its wear: the lifespan used, or the tread condition when it is worse', () => {
+    expect(summarizeFittedTires({ FL: stat(85) }).mostWorn?.tone).toBe('danger')
+    expect(summarizeFittedTires({ FL: { ...stat(40), condition: 'WARNING' } }).mostWorn?.tone).toBe('warning')
+    expect(summarizeFittedTires({ FL: { ...stat(40), condition: 'CRITICAL' } }).mostWorn?.tone).toBe('danger')
   })
 
   it('leaves the figures unknown without a fitted tire or a forecast', () => {
