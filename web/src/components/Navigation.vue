@@ -26,6 +26,7 @@ import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
 import { groupNavItems } from '@/utils/navigation'
+import SheetGrabber from '@/components/SheetGrabber.vue'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
 const route = useRoute()
@@ -245,6 +246,7 @@ function handleLogout() {
       :aria-label="$t('shell.navigation.otherPages')"
       class="w-full rounded-t-3xl border border-slate-800 bg-slate-900 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl"
     >
+      <SheetGrabber class="-mt-2 mb-2" />
       <div class="mb-2 flex items-center justify-between">
         <p class="truncate text-xs text-slate-400">{{ authStore.user?.email }}</p>
         <button type="button" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white" :aria-label="$t('common.close')" @click="showMore = false">

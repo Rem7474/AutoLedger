@@ -14,6 +14,7 @@ import QuickExpenseForm from './QuickExpenseForm.vue'
 import QuickFuelForm from './QuickFuelForm.vue'
 import QuickPendingCosts from './QuickPendingCosts.vue'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import SheetGrabber from '@/components/SheetGrabber.vue'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
 const route = useRoute()
@@ -218,7 +219,8 @@ onBeforeUnmount(() => {
       class="fixed inset-x-0 flex w-full flex-col overflow-hidden rounded-t-3xl border border-slate-800 bg-slate-900 shadow-2xl md:static md:max-h-[85dvh] md:max-w-md md:rounded-2xl"
       :style="panelStyle"
     >
-      <div class="flex shrink-0 items-start justify-between gap-3 px-4 pt-4">
+      <SheetGrabber class="pt-2 md:hidden" />
+      <div class="flex shrink-0 items-start justify-between gap-3 px-4 pt-2">
         <div class="min-w-0">
           <h2 id="quick-add-title" class="text-lg font-bold text-white">{{ $t('quickadd.quickAddSheet.quickAdd') }}</h2>
           <p class="truncate text-xs text-slate-400">{{ vehicle.name }}</p>

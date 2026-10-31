@@ -2,6 +2,7 @@
 import { computed, ref, type Component } from 'vue'
 import { X } from 'lucide-vue-next'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import SheetGrabber from '@/components/SheetGrabber.vue'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 import { modalFooterClass, modalLayerClass, modalWidthClass, type ModalSize } from '@/utils/modal'
 
@@ -42,9 +43,7 @@ const footer = computed(() => modalFooterClass(props.footerClass))
     @click.self="open = false"
   >
     <div ref="panel" v-dialog v-bind="$attrs" class="modal-panel bg-slate-900 border border-slate-800 max-sm:border-b-0 rounded-t-2xl sm:rounded-2xl w-full max-sm:max-w-none max-h-[92dvh] sm:max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden sm:my-auto" :class="width">
-      <div class="flex justify-center pt-2 pb-1 sm:hidden shrink-0 bg-slate-900/95 touch-none" aria-hidden="true">
-        <span class="h-1 w-10 rounded-full bg-slate-700"></span>
-      </div>
+      <SheetGrabber class="pt-2 pb-1 sm:hidden bg-slate-900/95" />
       <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between gap-3 shrink-0 bg-slate-900/95 max-sm:touch-none">
         <slot name="title">
           <h3 class="text-base font-bold text-white flex items-center gap-2 min-w-0">
