@@ -6,6 +6,8 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { MapPin, Clock, Users, Pencil, Trash2 } from 'lucide-vue-next'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
+import { useIsMobile } from '@/composables/useIsMobile'
+import { useLongPress } from '@/composables/useLongPress'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
 import { hasTeslaMate } from '@/utils/vehicles'
 import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
@@ -15,7 +17,9 @@ import { distanceUnit, formatDistance, formatPerDistanceValue } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 
 // One drive of the list: click opens its cost breakdown.
-const props = defineProps<{ d: any; selected: boolean }>()
+// On a phone there are no checkboxes at rest: a long press selects the drive and starts the selection (`selecting`), where
+// the boxes show and a tap on a row toggles it instead of opening it.
+const props = defineProps<{ d: any; selected: boolean; selecting?: boolean }>()
 const emit = defineEmits<{
   open: [drive: any]
   toggle: [drive: any]
@@ -29,6 +33,15 @@ const router = useRouter()
 const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
 const formatDate = formatDayTime
+const isMobile = useIsMobile()
+const showBox = computed(() => vehicleStore.canEdit && (!isMobile.value || !!props.selecting))
+const press = useLongPress(() => {
+  if (vehicleStore.canEdit && isMobile.value) emit('toggle', props.d)
+})
+function onRowClick() {
+  if (isMobile.value && props.selecting) emit('toggle', props.d)
+  else emit('open', props.d)
+}
 // A vehicle fed by TeslaMate mixes synced and manual drives: the badge tells them apart. Without TeslaMate every drive is manual.
 const showManualBadge = computed(() => hasTeslaMate(vehicleStore.activeVehicle))
 const carpoolSummary = computed(() => summarizeDriveCarpools(props.d.carpools))
@@ -43,13 +56,21 @@ function openCarpool() {
 
 <template>
   <div
-    class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-3 sm:p-4 rounded-2xl transition-all flex items-start gap-3 group"
+    class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-3 sm:p-4 rounded-2xl transition-all flex items-start gap-3 group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
     :class="{ 'border-rose-500/40 bg-slate-800/40 shadow-lg shadow-rose-950/20': selected }"
   >
-    <CardOpenButton :label="$t('drives.driveCard.openBreakdown', { date: formatDate(d.start_time) })" @click="emit('open', d)" />
+    <CardOpenButton
+      :label="$t('drives.driveCard.openBreakdown', { date: formatDate(d.start_time) })"
+      @click="onRowClick"
+      @pointerdown="press.onPointerdown"
+      @pointermove="press.onPointermove"
+      @pointerup="press.onPointerup"
+      @pointercancel="press.onPointercancel"
+      @contextmenu="press.onContextmenu"
+    />
     <!-- Selection checkbox -->
     <label
-      v-if="vehicleStore.canEdit"
+      v-if="showBox"
       :for="'drive-select-' + d.id"
       class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
       :title="$t('drives.driveCard.selectThisDrive')"
