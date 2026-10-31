@@ -42,10 +42,10 @@
     "receivedOfShare": "received / fair share"
   },
   "carpoolTripList": {
-    "netSurplus": "Net surplus: +{net_cost}",
-    "leftToTheDriver": "Left to the driver:",
+    "leftToTheDriverShort": "Left to the driver",
+    "netSurplusShort": "Net surplus",
+    "recalculate": "Recalculate",
     "driverSShare": "Driver's share:",
-    "actualCost": "Actual cost:",
     "share": "Share: {cost_share}",
     "passengers": "Passengers ({length})",
     "legs": "Legs ({length})",

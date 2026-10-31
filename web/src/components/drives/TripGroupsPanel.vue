@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
+import RowMenu from '@/components/RowMenu.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { intlLocale } from '@/i18n'
 import { distanceUnit, formatDistance, perDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Layers, X, Users, Coins, Pencil, Trash2 } from 'lucide-vue-next'
+import { Layers, X, Users, ChevronDown, Pencil, Trash2 } from 'lucide-vue-next'
 import { formatTripDates } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { formatAmount } from '@/currency'
@@ -39,95 +40,59 @@ const formatDate = formatDayTime
       :key="tg.id"
     >
       <div
-        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-4 rounded-2xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 group"
+        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-3 sm:p-4 rounded-2xl transition-all flex items-start gap-3 group"
       >
         <CardOpenButton :label="$t('common.openItem', { item: tg.name })" @click="emit('open-cost', tg)" />
-        <div class="flex items-start gap-3 min-w-0 flex-1">
-          <!-- Icon indicator -->
-          <div class="mt-1 p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
-            <Layers class="w-4 h-4" />
-          </div>
-
-          <!-- Voyage Details (matching Drive details structure) -->
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2 flex-wrap mb-1.5">
-              <span class="text-xs font-semibold text-slate-400 shrink-0">{{ formatTripDates(tg) }}</span>
-              <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60 shrink-0">
-                {{ formatDistance(tg.distance_km) }}
-              </span>
-              <span class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30 shrink-0">
-                {{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}
-              </span>
-              <span v-if="tg.carpool_count" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/30 shrink-0">
-                {{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}
-              </span>
+        <div class="min-w-0 flex-1">
+          <!-- What matters: which trip, and what it cost -->
+          <div class="flex items-start justify-between gap-3">
+            <div class="text-sm text-white flex items-center gap-1.5 min-w-0">
+              <Layers class="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span class="font-semibold truncate" :title="tg.name">{{ tg.name }}</span>
             </div>
-
-            <!-- Voyage Title & Notes (matching Route address line) -->
-            <div class="text-sm text-slate-200 flex items-center gap-2 flex-wrap min-w-0">
-              <span class="font-bold text-white truncate max-w-sm sm:max-w-md" :title="tg.name">{{ tg.name }}</span>
-              <span v-if="tg.notes" class="text-xs text-slate-400 truncate max-w-xs">• {{ tg.notes }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Side: Cost Badge & Actions (matching Drive right-side) -->
-        <div class="relative z-10 flex items-center gap-2 sm:gap-2.5 self-start lg:self-auto flex-wrap justify-start lg:justify-end shrink-0">
-          <!-- Real Cost Badge -->
-          <div
-            class="px-3 py-1.5 bg-slate-800/80 border border-slate-700/70 rounded-xl flex items-center gap-2 text-left shadow-sm"
-            :title="$t('drives.tripGroupsPanel.consolidatedCostOfTheTrip')"
-          >
-            <div class="p-1 rounded-lg bg-success-500/10 text-success-400">
-              <Coins class="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <div class="text-xs font-extrabold text-white flex items-center gap-1.5">
-                <span>{{ Number(tg.tolls_total || 0) > 0 ? $t('drives.tripGroupsPanel.costsAmount', { amount: formatAmount(Number(tg.tolls_total), vehicleStore.currency) }) : $t('drives.tripGroupsPanel.costDetail') }}</span>
-                <span v-if="tg.distance_km > 0 && tg.tolls_total" class="text-xs font-normal text-success-400 font-mono">
-                  {{ formatAmount(perDistance(Number(tg.tolls_total) / tg.distance_km), vehicleStore.currency, 3) }}/{{ distanceUnit() }}
-                </span>
+            <div class="shrink-0 text-right" :title="$t('drives.tripGroupsPanel.consolidatedCostOfTheTrip')">
+              <div class="text-sm font-extrabold text-white">
+                {{ Number(tg.tolls_total || 0) > 0 ? $t('drives.tripGroupsPanel.costsAmount', { amount: formatAmount(Number(tg.tolls_total), vehicleStore.currency) }) : $t('drives.tripGroupsPanel.costDetail') }}
+              </div>
+              <div v-if="tg.distance_km > 0 && tg.tolls_total" class="text-xs font-mono text-slate-400">
+                {{ formatAmount(perDistance(Number(tg.tolls_total) / tg.distance_km), vehicleStore.currency, 3) }}/{{ distanceUnit() }}
               </div>
             </div>
           </div>
 
-          <!-- Details toggle button -->
-          <button
-            @click="emit('toggle-details', tg)"
-            class="btn btn-secondary"
-          >
-            {{ expandedTripId === tg.id ? $t('drives.tripGroupsPanel.hide') : $t('drives.tripGroupsPanel.legs') }}
-          </button>
-
-          <!-- Quick Carpool Button -->
-          <button
-            v-if="vehicleStore.canEdit"
-            @click="emit('carpool', tg)"
-            class="btn btn-secondary hover:text-rose-400 hover:border-rose-500/40"
-            :title="$t('drives.tripGroupsPanel.carpoolThisTrip')"
-          >
-            <Users class="w-3.5 h-3.5 text-rose-500" />
-            <span class="hidden md:inline">{{ $t('drives.tripGroupsPanel.carpool') }}</span>
-          </button>
-
-          <!-- Edit & Delete -->
-          <template v-if="vehicleStore.canEdit">
+          <!-- The rest, in one quiet line: when, how far, how many legs, carpools, and the legs toggle -->
+          <div class="mt-1 flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-slate-400">
+            <span class="font-semibold">{{ formatTripDates(tg) }}</span>
+            <span class="px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60">{{ formatDistance(tg.distance_km) }}</span>
+            <span class="px-2 py-0.5 rounded-full font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30">{{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}</span>
+            <span v-if="tg.carpool_count" class="px-2 py-0.5 rounded-full font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 flex items-center gap-1">
+              <Users class="w-3 h-3" />{{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}
+            </span>
+            <span v-if="tg.notes" class="truncate max-w-full">{{ tg.notes }}</span>
             <button
-              @click="emit('edit', tg)"
-              class="tap p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-sky-400 rounded-lg border border-slate-700/60 transition-colors"
-              :title="$t('drives.tripGroupsPanel.renameTheTrip')" :aria-label="$t('drives.tripGroupsPanel.renameTheTrip')"
+              type="button"
+              @click="emit('toggle-details', tg)"
+              class="relative z-10 flex items-center gap-1 font-semibold text-sky-400 hover:text-sky-300"
+              :aria-expanded="expandedTripId === tg.id"
             >
-              <Pencil class="w-3.5 h-3.5" />
+              {{ expandedTripId === tg.id ? $t('drives.tripGroupsPanel.hide') : $t('drives.tripGroupsPanel.legs') }}
+              <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expandedTripId === tg.id }" />
             </button>
-            <button
-              @click="emit('delete', tg)"
-              class="tap p-1.5 bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 rounded-lg border border-slate-700/60 transition-colors"
-              :title="$t('drives.tripGroupsPanel.deleteTheTrip')" :aria-label="$t('drives.tripGroupsPanel.deleteTheTrip')"
-            >
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
-          </template>
+          </div>
         </div>
+
+        <!-- The row opens the cost breakdown; the other actions sit in its menu -->
+        <RowMenu v-if="vehicleStore.canEdit" :label="$t('common.moreActions')" :heading="tg.name">
+          <button type="button" role="menuitem" class="menu-item" :title="$t('drives.tripGroupsPanel.carpoolThisTrip')" @click="emit('carpool', tg)">
+            <Users class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.carpool') }}
+          </button>
+          <button type="button" role="menuitem" class="menu-item" @click="emit('edit', tg)">
+            <Pencil class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.renameTheTrip') }}
+          </button>
+          <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', tg)">
+            <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.deleteTheTrip') }}
+          </button>
+        </RowMenu>
       </div>
       <!-- Expanded drives drawer -->
       <div v-if="expandedTripId === tg.id" class="space-y-1.5 bg-slate-950/40 border border-slate-800/80 rounded-2xl p-3 -mt-1 ml-4 mr-4">

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
+import RowMenu from '@/components/RowMenu.vue'
 import { computed } from 'vue'
 import { formatDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
-import { Users, Trash2, Edit2, Calendar, Navigation, RotateCw, Download, ChevronRight, Link2, Lock } from 'lucide-vue-next'
+import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock } from 'lucide-vue-next'
 import { formatDate, hasLinkedLegs } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 
@@ -78,92 +79,75 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
     <div
       v-for="trip in trips"
       :key="trip.id"
-      class="relative bg-slate-900 border rounded-2xl p-4 transition-all shadow-sm space-y-3"
+      class="relative bg-slate-900 border rounded-2xl p-3 sm:p-4 transition-all flex items-start gap-3"
       :class="selectedTripIds.includes(trip.id) ? 'border-rose-500/50 bg-rose-500/[0.02]' : 'border-slate-800 hover:border-slate-700'"
     >
       <CardOpenButton :label="$t('common.openItem', { item: trip.title })" @click="emit('open', trip)" />
-      <!-- Trip Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-start gap-3 min-w-0 flex-1">
-          <!-- Select Checkbox -->
-          <label
-            v-if="vehicleStore.canEdit"
-            :for="'carpool-select-' + trip.id"
-            class="relative z-10 mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
-            :title="$t('carpool.carpoolTripList.selectThisCarpool')"
-          >
-            <span class="sr-only">{{ $t('carpool.carpoolTripList.selectThisCarpool') }}</span>
-            <input
-              :id="'carpool-select-' + trip.id"
-              type="checkbox"
-              :checked="selectedTripIds.includes(trip.id)"
-              @change="emit('toggle', trip.id)"
-              class="select-box"
-            />
-          </label>
+      <!-- Select Checkbox -->
+      <label
+        v-if="vehicleStore.canEdit"
+        :for="'carpool-select-' + trip.id"
+        class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
+        :title="$t('carpool.carpoolTripList.selectThisCarpool')"
+      >
+        <span class="sr-only">{{ $t('carpool.carpoolTripList.selectThisCarpool') }}</span>
+        <input
+          :id="'carpool-select-' + trip.id"
+          type="checkbox"
+          :checked="selectedTripIds.includes(trip.id)"
+          @change="emit('toggle', trip.id)"
+          class="select-box"
+        />
+      </label>
 
-          <div class="space-y-1 min-w-0 flex-1">
-            <div class="flex items-center gap-2.5 flex-wrap min-w-0">
-              <h3 class="text-base font-bold text-white truncate max-w-sm sm:max-w-md" :title="trip.title">{{ trip.title }}</h3>
-              <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700/60 font-medium shrink-0">{{ formatDistance(trip.distance_km, 1) }}</span>
-              <span
-                v-if="hasLinkedLegs(trip)"
-                class="inline-flex items-center gap-1 text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700/60 font-medium shrink-0"
-                :title="trip.costs_frozen_at ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint')"
-              >
-                <Lock v-if="trip.costs_frozen_at" class="w-3 h-3" />
-                <Link2 v-else class="w-3 h-3" />
-                {{ trip.costs_frozen_at ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}
-              </span>
-              <span
-                class="text-xs px-2.5 py-0.5 rounded-full font-semibold border shrink-0"
-                :class="trip.net_cost <= 0 ? 'bg-success-500/15 text-success-400 border-success-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'"
-              >
-                {{ trip.net_cost <= 0 ? $t('carpool.carpoolTripList.fullyRecovered') : $t('carpool.carpoolTripList.recovered', { percent: trip.total_cost > 0 ? Math.min(100, Math.round((trip.total_revenue / trip.total_cost) * 100)) : 0 }) }}
-              </span>
-            </div>
-            <div class="flex items-center gap-2 text-xs text-slate-400 min-w-0">
-              <Calendar class="w-3.5 h-3.5 shrink-0" />
-              <span class="shrink-0">{{ formatDate(trip.date) }}</span>
-              <span v-if="trip.notes" class="text-slate-400 truncate">• {{ trip.notes }}</span>
-            </div>
+      <div class="min-w-0 flex-1">
+        <!-- What matters: which carpool, and what is left to the driver -->
+        <div class="flex items-start justify-between gap-3">
+          <h3 class="text-sm font-semibold text-white truncate min-w-0" :title="trip.title">{{ trip.title }}</h3>
+          <div class="shrink-0 text-right">
+            <div v-if="trip.net_cost > 0" class="text-sm font-extrabold text-white">{{ fmt(trip.net_cost) }}</div>
+            <div v-else class="text-sm font-extrabold text-success-400">+{{ fmt(Math.abs(trip.net_cost)) }}</div>
+            <div class="text-xs text-slate-400">{{ trip.net_cost > 0 ? $t('carpool.carpoolTripList.leftToTheDriverShort') : $t('carpool.carpoolTripList.netSurplusShort') }}</div>
           </div>
         </div>
-        <div v-if="vehicleStore.canEdit" class="relative z-10 flex items-center gap-1 sm:gap-2 shrink-0 self-end sm:self-auto">
-          <button
-            v-if="!hasLinkedLegs(trip)"
-            @click="emit('recalculate', trip)"
-            :disabled="recalculating"
-            class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-            :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')" :aria-label="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')"
+
+        <!-- The rest, in one quiet line -->
+        <div class="mt-1 flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-slate-400">
+          <span class="font-semibold">{{ formatDate(trip.date) }}</span>
+          <span class="px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60">{{ formatDistance(trip.distance_km, 1) }}</span>
+          <span class="flex items-center gap-1"><Navigation class="w-3 h-3 text-sky-400" />{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
+          <span class="flex items-center gap-1"><Users class="w-3 h-3 text-sky-400" />{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
+          <span
+            class="px-2 py-0.5 rounded-full font-semibold border"
+            :class="trip.net_cost <= 0 ? 'bg-success-500/15 text-success-400 border-success-500/30' : 'bg-warning-500/10 text-warning-400 border-warning-500/20'"
           >
-            <RotateCw class="w-4 h-4" />
-          </button>
-          <button @click="emit('edit', trip)" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" :title="$t('common.edit')" :aria-label="$t('common.edit')">
-            <Edit2 class="w-4 h-4" />
-          </button>
-          <button @click="emit('delete', trip)" class="p-2 text-slate-400 hover:text-danger-400 hover:bg-danger-500/10 rounded-lg transition-colors" :title="$t('common.delete')" :aria-label="$t('common.delete')">
-            <Trash2 class="w-4 h-4" />
-          </button>
+            {{ trip.net_cost <= 0 ? $t('carpool.carpoolTripList.fullyRecovered') : $t('carpool.carpoolTripList.recovered', { percent: trip.total_cost > 0 ? Math.min(100, Math.round((trip.total_revenue / trip.total_cost) * 100)) : 0 }) }}
+          </span>
+          <span
+            v-if="hasLinkedLegs(trip)"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-slate-800 text-slate-300 border border-slate-700/60"
+            :title="trip.costs_frozen_at ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint')"
+          >
+            <Lock v-if="trip.costs_frozen_at" class="w-3 h-3" />
+            <Link2 v-else class="w-3 h-3" />
+            {{ trip.costs_frozen_at ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}
+          </span>
+          <span v-if="trip.notes" class="truncate max-w-full">{{ trip.notes }}</span>
         </div>
       </div>
 
-      <!-- One line: what it covers and what it cost; the rest is in the detail -->
-      <div class="flex items-center justify-between gap-3 text-xs text-slate-400 flex-wrap">
-        <div class="flex items-center gap-x-3 gap-y-1 flex-wrap">
-          <span class="flex items-center gap-1.5"><Navigation class="w-3.5 h-3.5 text-sky-400" />{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
-          <span class="flex items-center gap-1.5"><Users class="w-3.5 h-3.5 text-blue-400" />{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
-          <span>{{ $t('carpool.carpoolTripList.actualCost') }} <strong class="text-slate-200">{{ fmt(trip.total_cost) }}</strong></span>
-          <span class="text-success-400 font-semibold">+{{ fmt(trip.total_revenue) }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span v-if="trip.net_cost > 0" class="font-semibold text-slate-200">
-            {{ $t('carpool.carpoolTripList.leftToTheDriver') }} {{ fmt(trip.net_cost) }}
-          </span>
-          <span v-else class="font-semibold text-success-400">{{ $t('carpool.carpoolTripList.netSurplus', { net_cost: fmt(Math.abs(trip.net_cost)) }) }}</span>
-          <ChevronRight class="w-4 h-4 text-slate-400" />
-        </div>
-      </div>
+      <!-- The row opens the detail; the other actions sit in its menu -->
+      <RowMenu v-if="vehicleStore.canEdit" :label="$t('common.moreActions')" :heading="trip.title">
+        <button v-if="!hasLinkedLegs(trip)" type="button" role="menuitem" class="menu-item" :disabled="recalculating" :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')" @click="emit('recalculate', trip)">
+          <RotateCw class="w-3.5 h-3.5 text-slate-400" />{{ $t('carpool.carpoolTripList.recalculate') }}
+        </button>
+        <button type="button" role="menuitem" class="menu-item" @click="emit('edit', trip)">
+          <Pencil class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.edit') }}
+        </button>
+        <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', trip)">
+          <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
+        </button>
+      </RowMenu>
     </div>
   </div>
 </template>
