@@ -318,6 +318,7 @@ async function testModalConnection() {
               id="vehicle-teslamate-car-id"
               v-model.number="form.teslamate_car_id"
               type="number"
+              inputmode="numeric"
               min="1"
               class="field"
             />

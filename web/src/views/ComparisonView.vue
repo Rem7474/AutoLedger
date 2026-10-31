@@ -383,7 +383,7 @@ onMounted(async () => {
           </div>
           <div>
             <label for="cmp-years" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('comparison.comparisonView.durationYears') }}</label>
-            <input id="cmp-years" v-model.number="form.years" type="number" min="1" max="15" class="field" />
+            <input id="cmp-years" v-model.number="form.years" type="number" inputmode="numeric" min="1" max="15" class="field" />
           </div>
         </div>
       </template>

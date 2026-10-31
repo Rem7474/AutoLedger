@@ -293,7 +293,7 @@ async function deleteOwnershipAction() {
           </div>
           <div>
             <label for="own-loan-duration" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.durationMonths') }} <span class="text-rose-400">*</span></label>
-            <input id="own-loan-duration" v-model.number="ownershipForm.loan_duration_months" type="number" min="1" max="360" required :placeholder="$t('common.example', { value: '60' })" class="field" />
+            <input id="own-loan-duration" v-model.number="ownershipForm.loan_duration_months" type="number" inputmode="numeric" min="1" max="360" required :placeholder="$t('common.example', { value: '60' })" class="field" />
           </div>
           <div>
             <label for="own-loan-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.arrangementFees', { cur: currencySymbol(currency) }) }}</label>
@@ -339,7 +339,7 @@ async function deleteOwnershipAction() {
           </div>
           <div>
             <label for="own-lease-duration" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.durationMonths') }} <span class="text-rose-400">*</span></label>
-            <input id="own-lease-duration" v-model.number="ownershipForm.lease_duration_months" type="number" min="1" max="360" required :placeholder="$t('common.example', { value: '36' })" class="field" />
+            <input id="own-lease-duration" v-model.number="ownershipForm.lease_duration_months" type="number" inputmode="numeric" min="1" max="360" required :placeholder="$t('common.example', { value: '36' })" class="field" />
           </div>
           <div>
             <label for="own-lease-fees" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.arrangementFees', { cur: currencySymbol(currency) }) }}</label>
@@ -447,7 +447,7 @@ async function deleteOwnershipAction() {
             <label for="own-holding" class="block text-xs font-semibold text-slate-300 mb-1">
               {{ ownershipForm.acquisition_type === 'LOA' && ownershipForm.option_exercised_date ? $t('vehicles.ownershipWizardModal.holdingAfterBuyout') : $t('vehicles.ownershipWizardModal.holdingTotal') }}
             </label>
-            <input id="own-holding" v-model.number="ownershipForm.expected_holding_months" type="number" min="1" max="360" :placeholder="$t('common.example', { value: '48' })" class="field" />
+            <input id="own-holding" v-model.number="ownershipForm.expected_holding_months" type="number" inputmode="numeric" min="1" max="360" :placeholder="$t('common.example', { value: '48' })" class="field" />
           </div>
         </div>
       </div>

@@ -265,6 +265,7 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
         <input id="tire-add-tire-price"
           v-model.number="priceModel"
           type="number"
+          inputmode="decimal"
           min="0"
           :step="isTotalPrice ? 10 : 5"
           placeholder="0"
