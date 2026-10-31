@@ -669,6 +669,18 @@ func TestIntegrationOdometerContinuity(t *testing.T) {
 	}
 }
 
+// monthsBefore steps back whole months and stays in the target month: on the 31st, AddDate(0, -6, 0) lands on the
+// 1st of the following month when that month is shorter, which shifts a monthly schedule by a day and a premium.
+func monthsBefore(t time.Time, months int) time.Time {
+	first := time.Date(t.Year(), t.Month()-time.Month(months), 1, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
+	lastDay := first.AddDate(0, 1, -1).Day()
+	day := t.Day()
+	if day > lastDay {
+		day = lastDay
+	}
+	return time.Date(first.Year(), first.Month(), day, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
+}
+
 func TestIntegrationOwnershipLoanLeaseAndInsuranceShare(t *testing.T) {
 	db, repo := setupIntegrationDB(t, false)
 	ctx := context.Background()
@@ -769,7 +781,7 @@ func TestIntegrationOwnershipLoanLeaseAndInsuranceShare(t *testing.T) {
 	insured := mustVehicle(t, repo, "insured@example.com")
 	interval := 1
 	if err := repo.CreateMaintenanceExpense(ctx, &models.MaintenanceExpense{VehicleID: insured.ID, Category: "INSURANCE", Amount: 6000,
-		Currency: "EUR", Date: now.AddDate(0, -6, 0).Add(-time.Hour), IsRecurring: true, RecurrenceIntervalMonths: &interval,
+		Currency: "EUR", Date: monthsBefore(now, 6).Add(-time.Hour), IsRecurring: true, RecurrenceIntervalMonths: &interval,
 		Description: "Prime mensuelle"}); err != nil {
 		t.Fatal(err)
 	}
