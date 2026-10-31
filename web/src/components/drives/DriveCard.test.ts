@@ -32,13 +32,18 @@ describe('DriveCard', () => {
     expect(await render({ ...drive, is_manual: false })).not.toContain('bg-slate-800 text-slate-300 border border-slate-700/60')
   })
 
-  it('puts the selection box in the corner of the card on a phone and keeps the text clear of it', async () => {
-    const editable = await render()
-    expect(editable).toContain('absolute right-1 top-1')
-    expect(editable).toContain('pr-10 sm:pr-0')
+  it('leaves the selection box and the menu out of a read-only list', async () => {
+    expect(await render()).toContain('drive-select-')
     vehicleStore.canEdit = false
     const readOnly = await render()
     expect(readOnly).not.toContain('drive-select-')
-    expect(readOnly).not.toContain('pr-10')
+    expect(readOnly).not.toContain('aria-haspopup="menu"')
+  })
+
+  it('opens the breakdown from the whole row: the cost sits under the open button, not above it', async () => {
+    const html = await render()
+    expect(html).toContain('inset-0')
+    const cost = html.slice(html.indexOf('€5.26') - 300, html.indexOf('€5.26'))
+    expect(cost).not.toContain('z-10')
   })
 })
