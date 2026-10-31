@@ -350,6 +350,7 @@ async function onLogSaved() {
           :label="$t(w.labelKey)"
           :stat="mountedTires[w.pos]"
           :selected="!!mountedTires[w.pos] && selectedTireIds.includes(mountedTires[w.pos].tire.id)"
+          :selecting="selectedTireIds.length > 0"
           :can-mount="vehicleStore.canEdit"
           @open="openHistoryModal"
           @toggle="toggleTireSelection"
@@ -409,6 +410,7 @@ async function onLogSaved() {
             :key="t.tire.id"
             :t="t"
             :selected="selectedTireIds.includes(t.tire.id)"
+            :selecting="selectedTireIds.length > 0"
             @open="openHistoryModal"
             @toggle="toggleTireSelection"
           />
@@ -429,6 +431,7 @@ async function onLogSaved() {
         :key="t.tire.id"
         :t="t"
         :selected="selectedTireIds.includes(t.tire.id)"
+        :selecting="selectedTireIds.length > 0"
         :dismount="getLastDismountInfo(tires, t.tire.id)"
         @open="openHistoryModal"
         @toggle="toggleTireSelection"
