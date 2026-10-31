@@ -68,7 +68,8 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect(dialog).toHaveCount(0)
   await expect(page.getByText(title).first()).toBeVisible()
 
-  await page.locator('div.rounded-2xl', { hasText: title }).getByRole('button', { name: 'Delete', exact: true }).first().click()
+  await page.locator('div.rounded-2xl', { hasText: title }).getByRole('button', { name: 'More actions' }).first().click()
+  await page.getByRole('menuitem', { name: 'Delete', exact: true }).click()
   await page.getByRole('dialog').last().getByRole('button', { name: 'Delete', exact: true }).click()
   await expect(page.getByText(title)).toHaveCount(0)
 })
