@@ -36,6 +36,11 @@ describe('KpiCard', () => {
     expect(html).toContain('text-slate-400')
   })
 
+  it('sets the lead figure larger than the others', async () => {
+    expect(await render({ label: 'Economic cost', value: '0,142', lead: true })).toContain('text-4xl')
+    expect(await render({ label: 'Economic cost', value: '0,142' })).not.toContain('text-4xl')
+  })
+
   it('has a dense variant for the panels inside a disclosure', async () => {
     const html = await render({ label: 'Consumption', value: '15,2', unit: ' kWh/100 km', compact: true })
     expect(html).toContain('bg-slate-950/60')

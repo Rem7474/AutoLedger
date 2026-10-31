@@ -24,6 +24,8 @@ const props = withDefaults(defineProps<{
   tinted?: boolean
   // The dense tile of a panel inside a disclosure: no icon, smaller figure, a darker background.
   compact?: boolean
+  // The figure the page is read for: set larger than its neighbours
+  lead?: boolean
   // Lines the header, the figure and the rest up with the cards of the same grid row. The grid must give each card
   // three rows (`row-span-3`'s subgrid); a label that wraps on a phone then no longer pushes its figure down.
   aligned?: boolean
@@ -63,7 +65,7 @@ const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text
         <component :is="icon" class="h-4 w-4" aria-hidden="true" />
       </span>
     </div>
-    <div class="font-extrabold tabular-nums" :class="[compact ? 'mt-1 text-xl font-bold' : 'text-2xl', unknown ? 'text-slate-400' : valueTones[tone]]">
+    <div class="font-extrabold tabular-nums" :class="[compact ? 'mt-1 text-xl font-bold' : lead ? 'text-4xl' : 'text-2xl', unknown ? 'text-slate-400' : valueTones[tone]]">
       <template v-if="unknown">—</template>
       <template v-else>{{ value }}<span v-if="unit" class="font-normal text-slate-300" :class="compact ? 'text-xs font-medium text-slate-400' : 'text-sm'">{{ unit }}</span></template>
     </div>
