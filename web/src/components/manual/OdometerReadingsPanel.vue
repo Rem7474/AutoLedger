@@ -2,8 +2,10 @@
 import { intlLocale, t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch, onMounted } from 'vue'
-import { Fuel, Gauge, Edit2, Trash2 } from 'lucide-vue-next'
+import { Fuel, Gauge, Trash2 } from 'lucide-vue-next'
 import EmptyState from '@/components/EmptyState.vue'
+import CardOpenButton from '@/components/CardOpenButton.vue'
+import RowMenu from '@/components/RowMenu.vue'
 import KpiCard from '@/components/KpiCard.vue'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
@@ -222,8 +224,13 @@ onMounted(() => {
         <div
           v-for="r in history"
           :key="r.key"
-          class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between gap-3"
+          class="relative bg-slate-950/70 border border-slate-800/80 hover:border-slate-700/90 rounded-xl p-3.5 flex items-center justify-between gap-3 transition-colors"
         >
+          <CardOpenButton
+            v-if="canEdit && r.kind !== 'FUEL' && r.source !== 'HA'"
+            :label="$t('manual.odometerReadingsPanel.editReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })"
+            @click="startEdit(r)"
+          />
           <div class="flex items-center gap-3 min-w-0">
             <div class="p-2 bg-slate-800/80 rounded-lg shrink-0" :class="r.kind === 'FUEL' ? 'text-slate-400' : 'text-sky-400'">
               <Fuel v-if="r.kind === 'FUEL'" class="w-4 h-4" />
@@ -242,17 +249,14 @@ onMounted(() => {
             </div>
           </div>
 
-          <router-link v-if="r.kind === 'FUEL'" to="/energy?tab=FUEL" class="tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">
+          <router-link v-if="r.kind === 'FUEL'" to="/energy?tab=FUEL" class="relative z-10 tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">
             <Fuel class="w-4 h-4" />
           </router-link>
-          <div v-else-if="canEdit" class="flex items-center gap-1.5 shrink-0">
-            <button v-if="r.source !== 'HA'" type="button" class="tap p-1.5 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded-lg transition-colors" :aria-label="$t('manual.odometerReadingsPanel.editReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })" @click="startEdit(r)">
-              <Edit2 class="w-4 h-4" />
+          <RowMenu v-else-if="canEdit" :label="$t('common.moreActions')" :heading="new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' })">
+            <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" :aria-label="$t('manual.odometerReadingsPanel.deleteReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })" @click="remove(r)">
+              <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
             </button>
-            <button type="button" class="tap p-1.5 text-slate-400 hover:text-danger-400 hover:bg-slate-800 rounded-lg transition-colors" :aria-label="$t('manual.odometerReadingsPanel.deleteReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })" @click="remove(r)">
-              <Trash2 class="w-4 h-4" />
-            </button>
-          </div>
+          </RowMenu>
         </div>
       </div>
     </div>

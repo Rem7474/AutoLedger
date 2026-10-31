@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import NumberInput from '@/components/NumberInput.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import CardOpenButton from '@/components/CardOpenButton.vue'
+import RowMenu from '@/components/RowMenu.vue'
 import { intlLocale, t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
-import { Fuel, Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Fuel, Plus, Trash2 } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
@@ -227,7 +229,8 @@ onMounted(load)
       {{ $t('manual.fuelLogsPanel.noFillUpHint', { unit: distanceUnit() }) }}
     </EmptyState>
     <ul v-else class="space-y-2">
-      <li v-for="log in logs" :key="log.id" class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-3">
+      <li v-for="log in logs" :key="log.id" class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors">
+        <CardOpenButton v-if="canEdit" :label="$t('manual.fuelLogsPanel.editFillUp', { date: fmtDate(log.date) })" @click="openEdit(log)" />
         <div class="min-w-0">
           <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
             {{ fmtDate(log.date) }}
@@ -243,14 +246,11 @@ onMounted(load)
             <template v-if="log.cost_per_km"> · {{ fmtMoney(perDistance(log.cost_per_km), 3) }}/{{ distanceUnit() }}</template>
           </div>
         </div>
-        <div v-if="canEdit" class="flex items-center gap-1.5 shrink-0">
-          <button type="button" :aria-label="$t('manual.fuelLogsPanel.editFillUp', { date: fmtDate(log.date) })" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" @click="openEdit(log)">
-            <Pencil class="w-4 h-4" />
+        <RowMenu v-if="canEdit" :label="$t('common.moreActions')" :heading="fmtDate(log.date)">
+          <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" :aria-label="$t('manual.fuelLogsPanel.deleteFillUp', { date: fmtDate(log.date) })" @click="remove(log)">
+            <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
           </button>
-          <button type="button" :aria-label="$t('manual.fuelLogsPanel.deleteFillUp', { date: fmtDate(log.date) })" class="p-2 rounded-lg bg-slate-800 hover:bg-red-900/60 text-red-300" @click="remove(log)">
-            <Trash2 class="w-4 h-4" />
-          </button>
-        </div>
+        </RowMenu>
       </li>
     </ul>
 
