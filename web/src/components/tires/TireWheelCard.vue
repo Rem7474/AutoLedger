@@ -53,7 +53,7 @@ const vehicleStore = useVehicleStore()
     <div class="grid grid-cols-2 gap-2">
       <KpiCard compact :label="$t('tires.tireWheelCard.totalDriven')" :value="formatDistance(stat.total_distance_km)" />
       <div :title="Number(stat.tire.purchase_price) > 0 ? undefined : $t('tires.costPerKmUnset')">
-        <KpiCard compact :label="$t('tires.tireWheelCard.costKm', { unit: distanceUnit() })" tone="warning" :value="formatCostPerDistance(stat.cost_per_km, vehicleStore.currency, 4)" />
+        <KpiCard compact :label="$t('tires.tireWheelCard.costKm', { unit: distanceUnit() })" :value="formatCostPerDistance(stat.cost_per_km, vehicleStore.currency, 4)" />
       </div>
     </div>
 
