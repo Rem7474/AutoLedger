@@ -58,6 +58,8 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
       <!-- Economic cost per km -->
       <KpiCard
         aligned
+        lead
+        class="col-span-2 lg:col-span-1"
         :label="rolling ? $t('dashboard.tcoMetricsGrid.economicPerKm', { unit: distanceUnit() }) : $t('dashboard.tcoMetricsGrid.fullCostPerKm', { unit: distanceUnit() })"
         :period="windowLabel"
         term="economicCost"
@@ -118,6 +120,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
       <!-- Energy -->
       <KpiCard
         aligned
+        class="col-span-2 lg:col-span-1"
         :label="energyLabel"
         :period="windowLabel"
         :icon="Zap"

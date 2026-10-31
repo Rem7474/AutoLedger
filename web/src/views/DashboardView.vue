@@ -133,7 +133,7 @@ onMounted(() => {
 
       <!-- Charts Skeletons -->
       <!-- One period for the monthly cost and mileage charts below; pinned only where there is room for it -->
-      <div class="sm:sticky sm:top-[4.25rem] z-30 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-900/95 px-4 py-2 backdrop-blur-md">
+      <div class="sm:sticky sm:top-[4.25rem] z-30 flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 py-2 backdrop-blur-md">
         <span class="text-xs font-semibold text-slate-300 max-sm:sr-only">{{ $t('dashboard.dashboardView.chartsPeriod') }}</span>
         <MonthlyRangeSelector
           class="w-full sm:w-auto"
@@ -176,7 +176,7 @@ onMounted(() => {
       </DashboardFollowUp>
 
       <!-- One period for the charts and the energy summary below; pinned only where there is room for it -->
-      <div class="sm:sticky sm:top-[4.25rem] z-30 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-900/95 px-4 py-2 backdrop-blur-md">
+      <div class="sm:sticky sm:top-[4.25rem] z-30 flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 py-2 backdrop-blur-md">
         <span class="text-xs font-semibold text-slate-300 max-sm:sr-only">{{ $t('dashboard.dashboardView.chartsPeriod') }}</span>
         <MonthlyRangeSelector
           class="w-full sm:w-auto"
