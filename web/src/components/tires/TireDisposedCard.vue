@@ -12,7 +12,7 @@ import { formatPercent } from '@/utils/numbers'
 const props = defineProps<{ t: any; selected: boolean; selecting?: boolean; dismount?: { date: string; odometer: number | null } | null }>()
 const emit = defineEmits<{ open: [stat: any]; toggle: [tireId: string] }>()
 const vehicleStore = useVehicleStore()
-const { showBox, press, onRowClick } = useSelectableRow({
+const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
   enabled: computed(() => vehicleStore.canEdit),
   selecting: computed(() => !!props.selecting),
   toggle: () => emit('toggle', props.t.tire.id),
@@ -28,8 +28,8 @@ const day = (iso: string) => new Date(iso).toLocaleDateString(intlLocale(), { da
   >
     <CardOpenButton
       :label="$t('tires.openTire', { name: `${t.tire.brand} ${t.tire.model}` })"
-      @click="onRowClick"
-      @pointerdown="press.onPointerdown"
+      @click="onRowClick()"
+      @pointerdown="onPointerdown($event)"
       @pointermove="press.onPointermove"
       @pointerup="press.onPointerup"
       @pointercancel="press.onPointercancel"

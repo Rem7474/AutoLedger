@@ -19,7 +19,7 @@ import { formatCostPerDistance } from '@/utils/costPerDistance'
 const props = defineProps<{ pos: string; label: string; stat: any | null; selected: boolean; selecting?: boolean; canMount?: boolean }>()
 const emit = defineEmits<{ open: [stat: any]; toggle: [tireId: string]; mount: [] }>()
 const vehicleStore = useVehicleStore()
-const { showBox, press, onRowClick } = useSelectableRow({
+const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
   enabled: computed(() => vehicleStore.canEdit),
   selecting: computed(() => !!props.selecting),
   toggle: () => emit('toggle', props.stat?.tire.id),
@@ -35,8 +35,8 @@ const { showBox, press, onRowClick } = useSelectableRow({
   >
     <CardOpenButton
       :label="$t('tires.openTire', { name: `${stat.tire.brand} ${stat.tire.model}` })"
-      @click="onRowClick"
-      @pointerdown="press.onPointerdown"
+      @click="onRowClick()"
+      @pointerdown="onPointerdown($event)"
       @pointermove="press.onPointermove"
       @pointerup="press.onPointerup"
       @pointercancel="press.onPointercancel"

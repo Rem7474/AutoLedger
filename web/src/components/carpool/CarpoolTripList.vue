@@ -2,8 +2,7 @@
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import { computed } from 'vue'
-import { useIsMobile } from '@/composables/useIsMobile'
-import { useLongPress } from '@/composables/useLongPress'
+import { useSelectableRow } from '@/composables/useSelectableRow'
 import { formatDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
@@ -33,21 +32,12 @@ const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 
 // A carpool made from drives follows their cost on its own: only the ones entered by distance are recalculated
 const recalculable = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id) && !hasLinkedLegs(tr)))
-const isMobile = useIsMobile()
-const selecting = computed(() => props.selectedTripIds.length > 0)
-const showBox = computed(() => vehicleStore.canEdit && (!isMobile.value || selecting.value))
-let pressed: any = null
-const press = useLongPress(() => {
-  if (vehicleStore.canEdit && isMobile.value && pressed) emit('toggle', pressed.id)
+const { showBox, press, onPointerdown, onRowClick } = useSelectableRow<any>({
+  enabled: computed(() => vehicleStore.canEdit),
+  selecting: computed(() => props.selectedTripIds.length > 0),
+  toggle: (trip) => emit('toggle', trip.id),
+  open: (trip) => emit('open', trip),
 })
-function onPointerdown(e: PointerEvent, trip: any) {
-  pressed = trip
-  press.onPointerdown(e)
-}
-function onRowClick(trip: any) {
-  if (isMobile.value && selecting.value) emit('toggle', trip.id)
-  else emit('open', trip)
-}
 const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTripIds.length === props.trips.length)
 </script>
 

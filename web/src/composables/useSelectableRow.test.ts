@@ -48,3 +48,38 @@ describe('useSelectableRow', () => {
     expect(s.open).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('useSelectableRow on a list', () => {
+  beforeEach(() => {
+    mobile.value = true
+  })
+
+  it('hands the item of the pressed or tapped row to toggle and open', () => {
+    vi.useFakeTimers()
+    const toggle = vi.fn()
+    const open = vi.fn()
+    const row = useSelectableRow<{ id: string }>({ enabled: ref(true), selecting: ref(false), toggle, open })
+    row.onRowClick({ id: 'a' })
+    expect(open).toHaveBeenCalledWith({ id: 'a' })
+
+    row.onPointerdown({ pointerType: 'touch', clientX: 0, clientY: 0 } as PointerEvent, { id: 'b' })
+    vi.advanceTimersByTime(500)
+    expect(toggle).toHaveBeenCalledWith({ id: 'b' })
+    vi.useRealTimers()
+  })
+
+  it('ignores a long press on a desktop and from someone who cannot edit', () => {
+    vi.useFakeTimers()
+    const toggle = vi.fn()
+    mobile.value = false
+    const desktop = useSelectableRow({ enabled: ref(true), selecting: ref(false), toggle, open: vi.fn() })
+    desktop.onPointerdown({ pointerType: 'touch', clientX: 0, clientY: 0 } as PointerEvent)
+    vi.advanceTimersByTime(600)
+    mobile.value = true
+    const reader = useSelectableRow({ enabled: ref(false), selecting: ref(false), toggle, open: vi.fn() })
+    reader.onPointerdown({ pointerType: 'touch', clientX: 0, clientY: 0 } as PointerEvent)
+    vi.advanceTimersByTime(600)
+    expect(toggle).not.toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+})
