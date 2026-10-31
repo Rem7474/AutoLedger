@@ -42,10 +42,10 @@
     "receivedOfShare": "reçu / part due"
   },
   "carpoolTripList": {
-    "netSurplus": "Excédent net : +{net_cost}",
-    "leftToTheDriver": "Reste à charge conducteur :",
+    "leftToTheDriverShort": "Reste à charge conducteur",
+    "netSurplusShort": "Excédent net",
+    "recalculate": "Recalculer",
     "driverSShare": "Part du conducteur :",
-    "actualCost": "Coût réel :",
     "share": "Part : {cost_share}",
     "passengers": "Passagers ({length})",
     "legs": "Étapes ({length})",
