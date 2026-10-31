@@ -19,6 +19,7 @@
     "energyCost": "Energy",
     "otherCost": "Other Expenses",
     "fleetCurrencyOnly": "{currency} vehicles only",
+    "scaleCut": "Scale cut: {months} is far above the other months, hover its bar for the amount.",
     "month": "Month"
   },
   "drivers": {
