@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
-import { MapPin, Users, Pencil, Trash2 } from 'lucide-vue-next'
+import { MapPin, Clock, Users, Pencil, Trash2 } from 'lucide-vue-next'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
@@ -62,7 +62,7 @@ function openCarpool() {
       <!-- What matters: where, and what it cost -->
       <div class="flex items-start justify-between gap-3">
         <div class="text-sm text-white flex items-center gap-1.5 flex-wrap min-w-0">
-          <MapPin class="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <MapPin class="w-3.5 h-3.5 text-rose-400 shrink-0" />
           <span class="truncate max-w-[140px] sm:max-w-[220px] md:max-w-xs font-semibold" :title="d.start_address">{{ d.start_address || $t('drives.driveCard.unknownStart') }}</span>
           <span class="text-slate-400 shrink-0">→</span>
           <span class="truncate max-w-[140px] sm:max-w-[220px] md:max-w-xs font-semibold" :title="d.end_address">{{ d.end_address || $t('drives.driveCard.unknownEnd') }}</span>
@@ -75,16 +75,17 @@ function openCarpool() {
 
       <!-- The rest, in one quiet line: when, how far, how long, how much energy, and the tags that apply -->
       <div class="mt-1 flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-slate-400">
-        <span>{{ formatDate(d.start_time) }}</span>
-        <span class="text-slate-300">{{ formatDistance(d.distance_km, 1) }}</span>
-        <template v-if="d.duration_min">
-            <span>{{ $t('drives.driveCard.min', { duration_min: d.duration_min }) }}</span>
-        </template>
-        <template v-if="d.consumption_kwh_100km">
-            <span :title="d.energy_estimated ? $t('drives.driveCard.estimatedConsumption') : undefined">
-            {{ $t(d.energy_estimated ? 'drives.driveCard.kwh100kmEstimated' : 'drives.driveCard.kwh100km', { unit: distanceUnit(), consumption_kwh_100km: formatPerDistanceValue(d.consumption_kwh_100km) }) }}
-          </span>
-        </template>
+        <span class="font-semibold">{{ formatDate(d.start_time) }}</span>
+        <span class="px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60">{{ formatDistance(d.distance_km, 1) }}</span>
+        <span v-if="d.duration_min" class="flex items-center gap-1"><Clock class="w-3 h-3" />{{ $t('drives.driveCard.min', { duration_min: d.duration_min }) }}</span>
+        <span
+          v-if="d.consumption_kwh_100km"
+          class="font-mono"
+          :class="d.energy_estimated ? 'text-slate-400' : 'text-info-400'"
+          :title="d.energy_estimated ? $t('drives.driveCard.estimatedConsumption') : undefined"
+        >
+          {{ $t(d.energy_estimated ? 'drives.driveCard.kwh100kmEstimated' : 'drives.driveCard.kwh100km', { unit: distanceUnit(), consumption_kwh_100km: formatPerDistanceValue(d.consumption_kwh_100km) }) }}
+        </span>
         <span
           v-if="prefs.proPersoEnabled && d.tags?.includes('Pro')"
           class="px-2 py-0.5 rounded-full font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30"
