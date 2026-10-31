@@ -150,7 +150,7 @@ const marker = computed(() => {
           <p class="text-slate-400">{{ $t('dashboard.resale.advancedHint') }}</p>
           <div class="flex flex-wrap items-end gap-3">
             <label class="text-slate-400">{{ $t('dashboard.resale.kmShare') }}
-              <input v-model="kmShare" type="number" min="0" max="100" step="5" class="mt-1 block w-24 field" @change="load" />
+              <input v-model="kmShare" type="number" inputmode="numeric" min="0" max="100" step="5" class="mt-1 block w-24 field" @change="load" />
             </label>
             <label v-if="hasBattery" for="residual-health-weight" class="text-slate-400">{{ $t('dashboard.resale.healthWeight') }}
               <NumberInput id="residual-health-weight" text v-model="healthWeight" min="0" max="2" class="mt-1 block w-24 field" @change="load" />

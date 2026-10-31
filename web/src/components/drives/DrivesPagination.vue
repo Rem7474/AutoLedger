@@ -115,6 +115,7 @@ const paginationPages = computed(() => buildPaginationPages(props.page, props.to
         <input
           id="drives-jump-page"
           type="number"
+          inputmode="numeric"
           min="1"
           :max="totalPages"
           v-model="jumpInput"

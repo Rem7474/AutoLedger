@@ -389,6 +389,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
             id="maint-coverage-months"
             v-model.number="maintForm.coverage_months"
             type="number"
+            inputmode="numeric"
             min="1"
             max="120"
             placeholder="24"
@@ -424,7 +425,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
         <div v-if="maintForm.is_recurring" class="pt-1 grid grid-cols-2 gap-3">
           <div>
             <label for="maint-form-recurrence-interval-months" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.maintenanceModal.intervalMonths') }}</label>
-            <input id="maint-form-recurrence-interval-months" v-model.number="maintForm.recurrence_interval_months" type="number" min="1" max="120" required class="field" />
+            <input id="maint-form-recurrence-interval-months" v-model.number="maintForm.recurrence_interval_months" type="number" inputmode="numeric" min="1" max="120" required class="field" />
           </div>
           <div>
             <label for="maint-form-recurrence-end-date" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.maintenanceModal.endOptional') }}</label>
