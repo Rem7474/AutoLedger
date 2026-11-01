@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { X, MoreHorizontal } from 'lucide-vue-next'
 import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 import { useIsMobile } from '@/composables/useIsMobile'
@@ -25,16 +25,9 @@ const emit = defineEmits<{
   (e: 'clear'): void
 }>()
 
-// On a phone the bar sits at the bottom edge over the navigation, in reach of the thumb: the counter and a close button
-// on top, the actions in one scrolling row, and "More" opens a bottom sheet.
+// On a phone the bar is a contextual app bar that takes the place of the header while something is selected: the
+// close button and the counter first, the actions in one scrolling row under them, and "More" opens a bottom sheet.
 const isMobile = useIsMobile()
-// While the bar is docked, the page scrolls with room under it (see `.has-bulk-bar` in main.css)
-watch(
-  () => props.count > 0 && isMobile.value,
-  (docked) => document.body.classList.toggle('has-bulk-bar', docked),
-  { immediate: typeof document !== 'undefined' },
-)
-onUnmounted(() => document.body.classList.remove('has-bulk-bar'))
 
 // The "More" popover holds the occasional actions, so the bar keeps one primary action and a few secondary ones
 const moreOpen = ref(false)
@@ -72,14 +65,15 @@ onUnmounted(() => {
   <template v-if="count > 0">
     <Teleport to="body" :disabled="!isMobile">
     <div
-      class="fixed inset-x-0 bottom-0 z-[55] flex flex-col gap-2 rounded-t-2xl border border-b-0 border-slate-700/80 bg-slate-800/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-md transition-all sm:sticky sm:inset-x-auto sm:bottom-auto sm:top-16 sm:z-30 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:rounded-2xl sm:border-b sm:p-3"
+      class="fixed inset-x-0 top-0 z-[55] flex flex-col gap-1 rounded-b-2xl border border-t-0 border-slate-800 bg-slate-900 px-3 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] shadow-2xl shadow-black/40 transition-all sm:sticky sm:inset-x-auto sm:bottom-auto sm:top-16 sm:z-30 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:rounded-2xl sm:border-t sm:border-slate-700/80 sm:bg-slate-800/95 sm:p-3 sm:shadow-2xl sm:backdrop-blur-md"
     >
       <!-- Left info & summary -->
       <div class="flex items-center gap-2.5 min-w-0" aria-live="polite">
-        <span class="px-2.5 py-0.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg border border-rose-500/30">
+        <span class="px-2.5 py-0.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg border border-rose-500/30 max-sm:hidden">
           {{ count }}
         </span>
-        <span class="text-xs sm:text-sm font-semibold text-slate-200">
+        <span class="text-base font-semibold text-white sm:text-sm sm:text-slate-200">
+          <span class="sm:hidden">{{ count }}</span>
           {{ $t(`shell.bulkSelectionBar.selected.${noun}`, count) }}
         </span>
 
@@ -98,7 +92,7 @@ onUnmounted(() => {
 
         <button
           type="button"
-          class="tap ml-auto rounded-lg p-1.5 text-slate-300 hover:bg-slate-700 sm:hidden"
+          class="tap -ml-2 order-first rounded-full p-1.5 text-slate-300 hover:bg-slate-800 sm:hidden"
           :disabled="disabled"
           :aria-label="$t('shell.bulkSelectionBar.clearTheSelectionEsc')"
           @click="emit('clear')"
