@@ -53,7 +53,7 @@ const footer = computed(() => modalFooterClass(props.footerClass))
         </slot>
         <div class="flex items-center gap-1.5 shrink-0">
           <slot name="actions" />
-          <button type="button" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors" :aria-label="$t('common.close')" @click="open = false">
+          <button type="button" class="tap text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors max-sm:sr-only" :aria-label="$t('common.close')" @click="open = false">
             <X class="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
