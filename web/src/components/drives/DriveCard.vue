@@ -3,14 +3,14 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
-import { MapPin, Clock, Users, Pencil, Trash2 } from 'lucide-vue-next'
+import { MapPin, Clock, Users, Pencil, Trash2, ExternalLink } from 'lucide-vue-next'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
 import { useLongPress } from '@/composables/useLongPress'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
 import { hasTeslaMate } from '@/utils/vehicles'
-import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
+import { needsTollQualification, summarizeDriveCarpools, teslamateDriveUrl } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistance, formatPerDistanceValue } from '@/units'
@@ -144,6 +144,16 @@ function openCarpool() {
 
     <!-- The row opens the breakdown; the other actions sit in its menu -->
     <RowMenu v-if="vehicleStore.canEdit" :label="$t('common.moreActions')" :heading="formatDate(d.start_time)">
+      <a
+        v-if="teslamateDriveUrl(vehicleStore.activeVehicle, d)"
+        :href="teslamateDriveUrl(vehicleStore.activeVehicle, d)!"
+        target="_blank"
+        rel="noopener noreferrer"
+        role="menuitem"
+        class="menu-item"
+      >
+        <ExternalLink class="w-3.5 h-3.5 text-slate-400" />{{ $t('expenses.teslamateLinks.details') }}
+      </a>
       <button type="button" role="menuitem" class="menu-item" @click="emit('carpool', d)">
         <Users class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.driveCard.carpool') }}
       </button>
