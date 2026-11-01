@@ -2,7 +2,7 @@
   "authorize": {
     "title": "Autoriser une application",
     "intro": "{name} demande à lire vos données AutoLedger.",
-    "introWrite": "{name} demande à lire vos données AutoLedger et à enregistrer des covoiturages.",
+    "introWrite": "{name} demande à lire vos données AutoLedger et à enregistrer et modifier des covoiturages.",
     "vehiclesTitle": "Véhicules qu'elle pourra lire",
     "vehiclesAll": "Tous mes véhicules, y compris ceux que j'ajouterai plus tard",
     "vehiclesSome": "Seulement les véhicules que je choisis",
@@ -17,10 +17,10 @@
     "canCosts": "Lire ce que coûte chaque véhicule : les 12 derniers mois et depuis l'achat, par catégorie.",
     "canGaps": "Voir ce qui manque à vos données (trous de compteur, charges sans coût).",
     "canNames": "Voir les noms et lieux que vous avez saisis : adresses des trajets, lieux de recharge, conducteurs et passagers de covoiturage, étiquettes, notes et forfaits d'électricité.",
-    "canWrite": "Regrouper des trajets existants en covoiturage et y ajouter les passagers et ce qu'ils ont payé. Elle ne peut pas créer de trajet.",
+    "canWrite": "Regrouper des trajets existants en covoiturage, et en modifier le titre, les notes, les passagers et ce qu'ils ont payé. Elle ne peut pas créer de trajet.",
     "cannotTitle": "Elle ne pourra pas",
     "cannotWrite": "Modifier, ajouter ou supprimer quoi que ce soit.",
-    "cannotEdit": "Modifier ou supprimer quoi que ce soit de ce qui existe déjà.",
+    "cannotEdit": "Supprimer quoi que ce soit, ou modifier autre chose que des covoiturages.",
     "cannotPrivate": "Voir les VIN, plaques, positions GPS ni documents.",
     "returnTo": "Après votre choix, vous revenez sur {host}.",
     "unverified": "Le nom est donné par l'application et n'est pas vérifié : n'approuvez qu'une application que vous venez de lancer.",
@@ -32,6 +32,6 @@
     "invalid": "Cette demande d'autorisation n'est pas valide.",
     "failed": "La décision n'a pas pu être enregistrée. Réessayez.",
     "writeTitle": "Enregistrement",
-    "writeAllow": "Lui permettre aussi de regrouper des trajets que j'ai déjà en un covoiturage, avec ses passagers et ce qu'ils ont payé."
+    "writeAllow": "Lui permettre aussi de regrouper des trajets que j'ai déjà en un covoiturage et de modifier des covoiturages, avec leurs passagers et ce qu'ils ont payé."
   }
 }

@@ -94,7 +94,7 @@
     "scopeBadge": {
       "ingest": "Send and read",
       "read": "Read only",
-      "write": "Read and record carpools"
+      "write": "Read, record and edit carpools"
     },
     "oauthBadge": "Connected app",
     "oauthHelp": "Connected through OAuth. The access renews itself while the application is used; this is when it lapses otherwise.",
