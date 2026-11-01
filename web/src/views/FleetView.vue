@@ -12,7 +12,7 @@ import { Car, Zap, Gauge, Users, RefreshCw, Award, TrendingDown } from 'lucide-v
 import { Chart, registerables } from 'chart.js'
 import { api, type FleetSummaryResponse } from '@/services/api'
 import { formatAmount, formatAmountOrUnknown } from '@/currency'
-import { budgetUsage, parseBudgetInput } from '@/utils/fleetBudget'
+import { budgetTone, budgetUsage, parseBudgetInput } from '@/utils/fleetBudget'
 import { cheapestPerKmIds, rankFleetVehicles } from '@/utils/fleetRanking'
 import { useConfirm } from '@/composables/useConfirm'
 import { formatDistance, currentDistanceUnit, perDistance, formatPerDistanceValue, formatFuelConsumptionValue, fuelConsumptionUnit } from '@/units'
@@ -39,6 +39,8 @@ const savingBudget = ref(false)
 // A budget is compared with the month's cost only in its own currency: it is not converted when the first vehicle changes
 const budgetInFleetCurrency = computed(() => !!summary.value?.monthly_budget && summary.value.budget_currency === summary.value.currency)
 const usage = computed(() => (summary.value?.monthly_budget && budgetInFleetCurrency.value ? budgetUsage(summary.value.current_month_cost, summary.value.monthly_budget) : null))
+// The month's cost takes the verdict of the budget, when there is one
+const costTone = computed(() => (usage.value ? budgetTone(usage.value.status) : 'default'))
 
 function startEditBudget() {
   budgetInput.value = summary.value?.monthly_budget ? String(summary.value.monthly_budget) : ''
@@ -235,6 +237,8 @@ onBeforeUnmount(() => {
         :period="formatMonthName(summary.current_month)"
         :icon="TrendingDown"
         :value="formatAmount(summary.current_month_cost, summary.currency)"
+        :tone="costTone"
+        :tinted="costTone !== 'default'"
       >
         <p v-for="tot in otherTotals" :key="tot.currency" class="text-lg font-bold text-white tabular-nums" data-testid="fleet-currency-total">
           {{ formatAmount(tot.current_month_cost, tot.currency) }}

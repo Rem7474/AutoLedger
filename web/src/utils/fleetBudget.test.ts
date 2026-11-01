@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { budgetUsage, parseBudgetInput } from './fleetBudget'
+import { budgetTone, budgetUsage, parseBudgetInput } from './fleetBudget'
 
 describe('budgetUsage', () => {
   it('is ok below the warning threshold', () => {
@@ -24,5 +24,13 @@ describe('parseBudgetInput', () => {
   })
   it('refuses empty, zero, negative and non numeric input', () => {
     for (const bad of ['', '0', '-5', 'abc', 'Infinity']) expect(parseBudgetInput(bad)).toBeNull()
+  })
+})
+
+describe('budgetTone', () => {
+  it('maps each budget status to a verdict tone', () => {
+    expect(budgetTone('ok')).toBe('success')
+    expect(budgetTone('warning')).toBe('warning')
+    expect(budgetTone('over')).toBe('danger')
   })
 })
