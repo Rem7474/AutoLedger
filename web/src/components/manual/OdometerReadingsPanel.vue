@@ -140,9 +140,10 @@ onMounted(() => {
       {{ $t('manual.odometerReadingsPanel.odometerReadingsSpreadTheUntracked') }}
     </p>
 
-    <div v-if="!loading" class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+    <div v-if="!loading" class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
       <KpiCard
         compact
+        class="col-span-2 sm:col-span-1"
         :label="$t('manual.odometerReadingsPanel.currentReading')"
         :value="vehicle?.current_odometer ? formatDistanceValue(vehicle.current_odometer) : null"
         :unit="` ${distanceUnit()}`"

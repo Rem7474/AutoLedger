@@ -32,7 +32,7 @@ const netCostPerDistance = computed(() =>
 </script>
 
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+  <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
     <KpiCard
       :label="$t('carpool.carpoolSummaryGrid.carpooledTrips')"
       :period="period"
@@ -78,6 +78,7 @@ const netCostPerDistance = computed(() =>
     </KpiCard>
 
     <KpiCard
+      class="col-span-2 lg:col-span-1"
       :label="$t('carpool.carpoolSummaryGrid.driverSNetCost')"
       :period="period"
       :icon="Receipt"
