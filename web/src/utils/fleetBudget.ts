@@ -17,6 +17,11 @@ export function budgetUsage(spent: number, budget: number): BudgetUsage {
   return { percent, status, remaining: budget - spent }
 }
 
+/** The tone of a KpiCard for a budget status: within budget is good, close to it a warning, over it a danger. */
+export function budgetTone(status: BudgetStatus): 'success' | 'warning' | 'danger' {
+  return status === 'over' ? 'danger' : status === 'warning' ? 'warning' : 'success'
+}
+
 /** Parses a typed budget ("250", "250,5"); null when it is not a positive amount. */
 export function parseBudgetInput(raw: string): number | null {
   const value = Number(raw.trim().replace(',', '.'))

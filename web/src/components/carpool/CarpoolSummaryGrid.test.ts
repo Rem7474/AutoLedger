@@ -64,4 +64,18 @@ describe('carpool summary grid', () => {
     expect(none).not.toContain('€0.0')
     expect(none).toMatch(/Driver&#39;s net cost[\s\S]*?—/)
   })
+
+  it('tints the received total with its verdict, only when there are passengers\' shares to cover', async () => {
+    expect(await render({})).toContain('border-warning-500/30')
+    const covered = await render({ total_revenue: 80 })
+    expect(covered).toContain('border-success-500/30')
+    expect(covered).not.toContain('border-warning-500/30')
+    expect(await render({ total_passengers_share: 0, total_revenue: 0 })).not.toMatch(/border-(success|warning)-500\/30/)
+  })
+
+  it('tints the recovery rate only once the whole cost is recovered', async () => {
+    expect(await render({})).not.toContain('border-success-500/30')
+    expect(await render({ coverage_rate_pct: 100 })).toContain('border-success-500/30')
+    expect(await render({ coverage_rate_pct: null })).not.toContain('border-success-500/30')
+  })
 })
