@@ -342,6 +342,15 @@ label:has(> .select-box) {
   .select-box:indeterminate {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M4 8h8'/%3E%3C/svg%3E");
   }
+  /* On a touch screen the selection mark is a round 24px check, like the contextual bar it opens */
+  @media (pointer: coarse) {
+    .select-box {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 9999px;
+      background-size: 1rem;
+    }
+  }
 }
 
 /* The compact date pickers (the month navigator of a toolbar) trade the 16px of touch fields for a size that fits their width. */
@@ -431,9 +440,3 @@ select option:disabled {
   }
 }
 
-/* The selection bar docked at the bottom edge of a phone covers the navigation: the page scrolls with room under it */
-@media (max-width: 639px) {
-  .has-bulk-bar .app-scroll {
-    padding-bottom: calc(9.5rem + env(safe-area-inset-bottom));
-  }
-}

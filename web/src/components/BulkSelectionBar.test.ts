@@ -14,9 +14,9 @@ describe('BulkSelectionBar', () => {
     expect(html).not.toContain('<div')
   })
 
-  it('docks at the bottom edge on a phone and sticks to the top from the sm breakpoint', async () => {
+  it('is a contextual bar at the top edge on a phone and sticks under the header from the sm breakpoint', async () => {
     const html = await render({ count: 2, noun: 'drive' })
-    expect(html).toContain('fixed inset-x-0 bottom-0')
+    expect(html).toContain('fixed inset-x-0 top-0')
     expect(html).toContain('sm:sticky')
     expect(html).toContain('Act')
   })
