@@ -3,6 +3,11 @@ import NumberInput from '@/components/NumberInput.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
+import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
+import RowSelectBox from '@/components/RowSelectBox.vue'
+import SelectionHint from '@/components/SelectionHint.vue'
+import { useRowSelection } from '@/composables/useRowSelection'
+import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import { intlLocale, t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
@@ -174,6 +179,30 @@ async function remove(log: any) {
   }
 }
 
+async function removeMany(items: any[]) {
+  if (items.length === 1) return remove(items[0])
+  const ok = await showConfirm({
+    title: t('manual.fuelLogsPanel.deleteTitle'),
+    message: t('manual.fuelLogsPanel.deleteManyMessage', { count: items.length }),
+    confirmText: t('common.delete'),
+    type: 'danger',
+  })
+  if (!ok) return
+  try {
+    for (const item of items) await api.deleteFuelLog(props.vehicleId, item.id)
+  } catch (err: any) {
+    await showAlert(err?.message || t('manual.fuelLogsPanel.deleteFailed'), t('shell.confirm.error'), 'danger')
+  }
+  await load()
+}
+
+const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(
+  logs,
+  computed(() => props.canEdit),
+  openEdit,
+)
+const actions = computed<SelectionAction[]>(() => editDeleteActions(selected.value, { edit: openEdit, remove: removeMany }))
+
 watch(() => props.vehicleId, load)
 onMounted(load)
 </script>
@@ -228,9 +257,27 @@ onMounted(load)
     <EmptyState v-else-if="logs.length === 0" :icon="Fuel" :title="$t('manual.fuelLogsPanel.noFillUpRecordedEnter')">
       {{ $t('manual.fuelLogsPanel.noFillUpHint', { unit: distanceUnit() }) }}
     </EmptyState>
-    <ul v-else class="space-y-2">
-      <li v-for="log in logs" :key="log.id" class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors">
-        <CardOpenButton v-if="canEdit" :label="$t('manual.fuelLogsPanel.editFillUp', { date: fmtDate(log.date) })" @click="openEdit(log)" />
+    <template v-else>
+    <BulkSelectionBar v-if="canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
+    <SelectionHint v-if="canEdit" />
+    <ul class="space-y-2">
+      <li
+        v-for="log in logs"
+        :key="log.id"
+        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(log) }"
+      >
+        <CardOpenButton
+          v-if="canEdit"
+          :label="$t('manual.fuelLogsPanel.editFillUp', { date: fmtDate(log.date) })"
+          @click="onRowClick(log)"
+          @pointerdown="onPointerdown($event, log)"
+          @pointermove="press.onPointermove"
+          @pointerup="press.onPointerup"
+          @pointercancel="press.onPointercancel"
+          @contextmenu="press.onContextmenu"
+        />
+        <RowSelectBox v-if="showBox" :id="log.id" :checked="isSelected(log)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(log)" />
         <div class="min-w-0">
           <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
             {{ fmtDate(log.date) }}
@@ -253,6 +300,7 @@ onMounted(load)
         </RowMenu>
       </li>
     </ul>
+    </template>
 
     <!-- Add / edit modal -->
     <ModalShell v-model:open="showForm" size="sm" :title="editingId ? $t('manual.fuelLogsPanel.edit') : $t('manual.fuelLogsPanel.new')">

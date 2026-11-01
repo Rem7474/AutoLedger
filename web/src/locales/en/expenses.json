@@ -37,7 +37,8 @@
     "energyTitle": "Energy",
     "energySubtitle": "Consumption, charging sessions and fill-ups",
     "fixedCosts": "Fixed costs",
-    "fillUps": "Fill-ups"
+    "fillUps": "Fill-ups",
+    "deleteManyMessage": "Delete these {count} entries?"
   },
   "teslamateLinks": {
     "details": "Details in TeslaMate",
@@ -89,7 +90,8 @@
     "at": "at",
     "monthSummary": "{count} · {kwh} kWh · {cost}",
     "averagePrice": "{price}/kWh on average",
-    "monthCount": "{count} charge | {count} charges"
+    "monthCount": "{count} charge | {count} charges",
+    "syncedCannotDelete": "Synced from TeslaMate, cannot be deleted"
   },
   "completeReminderModal": {
     "confirmTheMaintenance": "Confirm the maintenance",

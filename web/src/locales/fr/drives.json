@@ -49,7 +49,8 @@
     "carpooled": "Covoiturés",
     "carpooledDrivesTitle": "Trajets partagés dans un covoiturage",
     "notCarpooled": "Non covoiturés",
-    "notCarpooledTitle": "Trajets jamais partagés dans un covoiturage"
+    "notCarpooledTitle": "Trajets jamais partagés dans un covoiturage",
+    "deleteDrivesMessage": "Supprimer ces {count} trajets manuels ?"
   },
   "addToTripModal": {
     "add": "Ajouter",
@@ -75,7 +76,9 @@
     "carpoolMany": "Covoiturer ({count})",
     "carpool": "Covoiturer",
     "applying": "Application...",
-    "autoToll": "Péage auto ({count})"
+    "autoToll": "Péage auto ({count})",
+    "syncedCannotEdit": "Synchronisé depuis TeslaMate, non modifiable",
+    "syncedCannotDelete": "Synchronisé depuis TeslaMate, suppression impossible"
   },
   "driveCard": {
     "carpool": "Covoiturer",

@@ -109,6 +109,27 @@ async function handleDeleteManualDrive(drive: any) {
   }
 }
 
+// The delete of the contextual bar: one confirmation for the whole selection, the drives entered by hand only
+async function handleDeleteManualDrives(list: any[]) {
+  const vehicle = vehicleStore.activeVehicle
+  const manual = list.filter((d) => d.is_manual)
+  if (!vehicle || manual.length === 0) return
+  const ok = await showConfirm({
+    title: t('drives.drivesView.deleteDriveTitle'),
+    message: manual.length === 1 ? t('drives.drivesView.deleteDriveMessage') : t('drives.drivesView.deleteDrivesMessage', { count: manual.length }),
+    confirmText: t('common.delete'),
+    type: 'danger',
+  })
+  if (!ok) return
+  try {
+    for (const d of manual) await api.deleteDrive(vehicle.id, d.id)
+  } catch (err: any) {
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+  }
+  clearSelection()
+  await loadDrives()
+}
+
 // Period / month and address filters (edited in the toolbar)
 const periodMode = ref<PeriodMode>('ALL')
 const selectedMonth = ref(currentYearMonth())
@@ -492,6 +513,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
     <!-- Sticky Bulk Selection Bar -->
     <DriveBulkActions
       :selected-drive-ids="selectedDriveIds"
+      :selected-drives="selectedList"
       :selected-off-page="selectedOffPage"
       :selected-summary-metrics="selectedSummaryMetrics"
       :bulk-applying-toll="bulkApplyingToll"
@@ -505,6 +527,8 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       @driver="handleBatchDriver"
       @export="exportSelectedDrives"
       @add-to-trip="openAddToTrip"
+      @edit="openManualDriveModal"
+      @delete="handleDeleteManualDrives"
     />
 
     <template v-if="viewMode === 'DRIVES'">

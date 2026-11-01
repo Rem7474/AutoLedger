@@ -11,16 +11,44 @@ import CostHistory from '@/components/costs/CostHistory.vue'
 import { formatDate } from '@/utils/expenses'
 import { formatAmount } from '@/currency'
 import { t } from '@/i18n'
+import { computed } from 'vue'
+import { Pencil } from 'lucide-vue-next'
+import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
+import RowSelectBox from '@/components/RowSelectBox.vue'
+import SelectionHint from '@/components/SelectionHint.vue'
+import { useRowSelection } from '@/composables/useRowSelection'
+import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 
-defineProps<{ vehicleId: string; driveExpenses: any[]; loading: boolean }>()
+const props = defineProps<{ vehicleId: string; driveExpenses: any[]; loading: boolean }>()
 const emit = defineEmits<{
   add: []
   edit: [expense: any]
   delete: [expense: any]
+  'delete-many': [expenses: any[]]
   'view-document': [docId: string | null | undefined, filename?: string | null, download?: boolean]
 }>()
 const router = useRouter()
 const vehicleStore = useVehicleStore()
+
+const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(
+  computed(() => props.driveExpenses),
+  computed(() => vehicleStore.canEdit),
+  (e) => emit('edit', e),
+)
+// A toll tied to a drive or a trip can start a carpool
+const actions = computed<SelectionAction[]>(() => {
+  const list = editDeleteActions(selected.value, { edit: (e) => emit('edit', e), remove: (items) => emit('delete-many', items) })
+  const one = selected.value.length === 1 ? selected.value[0] : null
+  if (one && (one.drive_id || one.trip_group_id)) {
+    list.push({
+      key: 'carpool',
+      label: t('expenses.tollsPanel.carpool'),
+      icon: Users,
+      run: () => router.push({ path: '/carpools', query: one.drive_id ? { new_drive_id: one.drive_id } : { new_trip_group_id: one.trip_group_id } }),
+    })
+  }
+  return list
+})
 
 const TYPE_LABEL_KEYS: Record<string, string> = {
   TOLL: 'expenses.tollModal.toll',
@@ -43,6 +71,8 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       </template>
     </EmptyState>
     <div v-else class="space-y-3">
+      <BulkSelectionBar v-if="vehicleStore.canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
+      <SelectionHint v-if="vehicleStore.canEdit" />
       <CostHistory :vehicle-id="vehicleId" kind="tolls" :currency="vehicleStore.currency" :sync-key="driveExpenses" />
       <ListSummary :chips="[]">
         {{ $t('expenses.tollsPanel.count', { count: driveExpenses.length }, driveExpenses.length) }}
@@ -50,9 +80,20 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       <div
         v-for="e in driveExpenses"
         :key="e.id"
-        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors"
+        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(e) }"
       >
-        <CardOpenButton v-if="vehicleStore.canEdit" :label="$t('expenses.tollsPanel.editThisToll')" @click="emit('edit', e)" />
+        <CardOpenButton
+          v-if="vehicleStore.canEdit"
+          :label="$t('expenses.tollsPanel.editThisToll')"
+          @click="onRowClick(e)"
+          @pointerdown="onPointerdown($event, e)"
+          @pointermove="press.onPointermove"
+          @pointerup="press.onPointerup"
+          @pointercancel="press.onPointercancel"
+          @contextmenu="press.onContextmenu"
+        />
+        <RowSelectBox v-if="showBox" :id="e.id" :checked="isSelected(e)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(e)" />
         <div class="space-y-1.5 min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700/60 shrink-0">

@@ -9,6 +9,12 @@ import { useRouter } from 'vue-router'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { Zap, Trash2, AlertTriangle, Paperclip, ExternalLink } from 'lucide-vue-next'
+import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
+import RowSelectBox from '@/components/RowSelectBox.vue'
+import SelectionHint from '@/components/SelectionHint.vue'
+import { useRowSelection } from '@/composables/useRowSelection'
+import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
+import { t } from '@/i18n'
 import { groupChargesByMonth } from '@/utils/expenses'
 import { formatChargeWindow } from '@/utils/dates'
 import { formatAmount } from '@/currency'
@@ -32,10 +38,28 @@ const emit = defineEmits<{
   'load-more': []
   edit: [charge: any]
   delete: [charge: any]
+  'delete-many': [charges: any[]]
   'view-document': [docId: string | null | undefined, filename?: string | null, download?: boolean]
 }>()
 const router = useRouter()
 const vehicleStore = useVehicleStore()
+
+const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(
+  computed(() => props.charges),
+  computed(() => vehicleStore.canEdit),
+  (c) => emit('edit', c),
+)
+const actions = computed<SelectionAction[]>(() => {
+  const list = editDeleteActions(selected.value, {
+    edit: (c) => emit('edit', c),
+    remove: (items) => emit('delete-many', items),
+    deletable: chargeDeletable,
+    lockedReason: t('expenses.chargesPanel.syncedCannotDelete'),
+  })
+  const url = selected.value.length === 1 ? teslamateChargeUrl(vehicleStore.activeVehicle, selected.value[0]) : null
+  if (url) list.push({ key: 'teslamate', label: t('expenses.teslamateLinks.details'), icon: ExternalLink, run: () => window.open(url, '_blank', 'noopener,noreferrer'), overflow: true })
+  return list
+})
 
 // The charges loaded so far, which is the whole list until "load more" is needed.
 const months = computed(() => groupChargesByMonth(props.charges, vehicleStore.currency))
@@ -44,6 +68,8 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
 
 <template>
   <div class="space-y-3">
+    <BulkSelectionBar v-if="vehicleStore.canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
+    <SelectionHint v-if="vehicleStore.canEdit && charges.length" />
     <!-- Energy estimate banner if configured -->
     <div
       v-if="hasEnergyEstimate(vehicleStore.activeVehicle)"
@@ -94,15 +120,21 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
         <div
           v-for="c in month.charges"
           :key="c.id"
-          class="relative bg-slate-900 border hover:border-slate-700/90 p-3 rounded-2xl flex items-center gap-2 sm:gap-3 transition-colors"
-          :class="c.cost === null ? 'border-warning-500/40' : 'border-slate-800'"
+          class="relative bg-slate-900 border hover:border-slate-700/90 p-3 rounded-2xl flex items-center gap-2 sm:gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+          :class="isSelected(c) ? 'border-rose-500/40 bg-slate-800/40' : c.cost === null ? 'border-warning-500/40' : 'border-slate-800'"
         >
           <!-- The row opens the charge; the receipt and the TeslaMate links above it keep their own click -->
           <CardOpenButton
             v-if="vehicleStore.canEdit"
             :label="chargeDeletable(c) ? $t('expenses.chargesPanel.editThisCharge') : $t('expenses.chargesPanel.fixCost')"
-            @click="emit('edit', c)"
+            @click="onRowClick(c)"
+            @pointerdown="onPointerdown($event, c)"
+            @pointermove="press.onPointermove"
+            @pointerup="press.onPointerup"
+            @pointercancel="press.onPointercancel"
+            @contextmenu="press.onContextmenu"
           />
+          <RowSelectBox v-if="showBox" :id="c.id" :checked="isSelected(c)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(c)" />
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-x-1.5 gap-y-1 sm:gap-x-2 flex-wrap">
               <span class="text-sm font-bold text-info-400 shrink-0">

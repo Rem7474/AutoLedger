@@ -181,6 +181,27 @@ async function handleDelete(trip: any) {
   }
 }
 
+// The delete of the contextual bar: one confirmation for the whole selection
+async function handleDeleteMany(list: any[]) {
+  const vehicle = vehicleStore.activeVehicle
+  if (!vehicle || list.length === 0) return
+  if (list.length === 1) return handleDelete(list[0])
+  const ok = await showConfirm({
+    title: t('carpool.carpoolView.deleteTitle'),
+    message: t('carpool.carpoolView.deleteManyMessage', { count: list.length }),
+    confirmText: t('common.delete'),
+    type: 'danger',
+  })
+  if (!ok) return
+  try {
+    for (const trip of list) await api.deleteCarpool(vehicle.id, trip.id)
+  } catch (err: any) {
+    void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+  }
+  clearTripSelection()
+  await loadData()
+}
+
 async function handleRecalculateSingle(trip: any) {
   if (!vehicleStore.activeVehicle) return
   recalculating.value = true
@@ -359,6 +380,7 @@ onMounted(async () => {
       @open="openDetail"
       @edit="openEditModal"
       @delete="handleDelete"
+      @delete-many="handleDeleteMany"
     />
 
     <CarpoolDetailModal
