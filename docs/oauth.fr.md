@@ -1,6 +1,6 @@
 # Autoriser un assistant (OAuth)
 
-Un assistant, ou toute application qui parle OAuth 2.1, peut demander un accès en lecture à un compte, et le droit d'enregistrer des covoiturages sans que l'utilisateur ait à recopier un jeton. L'instance doit l'activer avec `AUTOLEDGER_MCP_ENABLED=true` (désactivé par défaut). L'assistant appelle ensuite le [point d'accès MCP](mcp.fr.md). English: [oauth.md](oauth.md).
+Un assistant, ou toute application qui parle OAuth 2.1, peut demander un accès en lecture à un compte, et le droit d'enregistrer et de modifier des covoiturages sans que l'utilisateur ait à recopier un jeton. L'instance doit l'activer avec `AUTOLEDGER_MCP_ENABLED=true` (désactivé par défaut). L'assistant appelle ensuite le [point d'accès MCP](mcp.fr.md). English: [oauth.md](oauth.md).
 
 ## Ce que voit l'utilisateur
 
@@ -8,7 +8,7 @@ L'application envoie le navigateur vers `/oauth/authorize` sur l'instance. Aprè
 
 - Elle peut voir les véhicules (nom, marque, modèle, motorisation, devise, compteur), ce que chacun coûte sur les 12 derniers mois et depuis l'achat, et ce qui manque aux données. Elle voit aussi les noms et lieux saisis : adresses des trajets, lieux de recharge, conducteurs et passagers de covoiturage, étiquettes, notes et forfaits d'électricité.
 - Quand le compte a plusieurs véhicules, l'utilisateur choisit si l'application les voit tous (y compris ceux ajoutés plus tard) ou seulement ceux qu'il coche. Une autorisation limitée affiche ces véhicules dans la liste des jetons d'API, et les autres véhicules n'existent pas pour elle : ils sont absents des listes et refusés par identifiant. Approuver demande au moins un véhicule.
-- Elle ne peut rien modifier, ajouter ni supprimer, et ne voit jamais les VIN, plaques, positions GPS ni documents. L'exception est une application qui demande à écrire : la page affiche alors une case décochée, et seulement si l'utilisateur la coche l'application peut aussi regrouper des trajets qui existent déjà en covoiturage, avec ses passagers et ce qu'ils ont payé (elle ne crée aucun trajet et ne modifie ni ne supprime rien).
+- Elle ne peut rien modifier, ajouter ni supprimer, et ne voit jamais les VIN, plaques, positions GPS ni documents. L'exception est une application qui demande à écrire : la page affiche alors une case décochée, et seulement si l'utilisateur la coche l'application peut aussi regrouper des trajets qui existent déjà en covoiturage, avec ses passagers et ce qu'ils ont payé, et modifier des covoiturages (elle ne crée aucun trajet et ne supprime rien).
 
 Le nom de l'application est donné par l'application elle-même et n'est pas vérifié : n'approuvez qu'une application que vous venez de lancer. La page indique où l'utilisateur est renvoyé.
 

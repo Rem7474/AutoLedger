@@ -23,7 +23,7 @@ import (
 
 // mcpInstructions is what a client shows its model about the server. It states the conventions every tool's output
 // follows, so a model does not have to infer them from field names.
-const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools read; create_carpool_from_drives is the only one that writes, and only on a connection the owner allowed to.
+const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools read; create_carpool_from_drives and update_carpool are the only ones that write, and only on a connection the owner allowed to. Nothing deletes.
 Amounts are decimal strings in the currency of their vehicle and are never converted between currencies: do not add amounts of different currencies together.
 Distances are in kilometres. A null value means the figure is unknown, not zero.
 Costs are the cash spent, the purchase of the vehicle excluded. Call get_vehicle_data_gaps before drawing conclusions from a vehicle's costs: it says what the records are missing.
@@ -33,7 +33,7 @@ A list that is cut says so (truncated, matching or next_cursor): never present i
 
 // MCPHandler serves the Model Context Protocol endpoint (Streamable HTTP, stateless) on top of the read API: the same
 // narrow views, so an assistant sees no more than a read token does through /api/integrations/v1. It reads, except for the
-// tools that need a grant allowed to write (create_carpool_from_drives).
+// tools that need a grant allowed to write (create_carpool_from_drives, update_carpool).
 type MCPHandler struct {
 	read    *IntegrationReadHandler
 	tokens  middleware.APITokenValidator
@@ -234,6 +234,7 @@ func (h *MCPHandler) addTools() {
 	h.addComparisonTools(readOnly)
 	h.addTariffTools(readOnly)
 	h.addCarpoolWriteTools()
+	h.addCarpoolUpdateTools()
 
 	mcp.AddTool(h.server, &mcp.Tool{
 		Name:        "list_vehicles",

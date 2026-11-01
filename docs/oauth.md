@@ -1,6 +1,6 @@
 # Authorizing an assistant (OAuth)
 
-An assistant or any other application that speaks OAuth 2.1 can ask for read access to an account, and for the right to record carpools without the user copying a token around. The instance has to enable it with `AUTOLEDGER_MCP_ENABLED=true` (off by default). The assistant then calls the [MCP endpoint](mcp.md). Français : [oauth.fr.md](oauth.fr.md).
+An assistant or any other application that speaks OAuth 2.1 can ask for read access to an account, and for the right to record and edit carpools without the user copying a token around. The instance has to enable it with `AUTOLEDGER_MCP_ENABLED=true` (off by default). The assistant then calls the [MCP endpoint](mcp.md). Français : [oauth.fr.md](oauth.fr.md).
 
 ## What the user sees
 
@@ -8,7 +8,7 @@ The application sends the browser to `/oauth/authorize` on the instance. After s
 
 - It can see the vehicles (name, make, model, powertrain, currency, odometer), what each one costs over the last 12 months and since purchase, and what is missing from the records. It also sees the names and places recorded: trip addresses, charging places, drivers and carpool passengers, tags, notes and tariff plans.
 - When the account has several vehicles, the user chooses whether the application sees all of them (including the ones added later) or only the ones ticked. A limited grant lists those vehicles in the API tokens list, and the other vehicles do not exist for it: they are absent from the lists and refused by id. Approving needs at least one vehicle.
-- It cannot change, add or delete anything, and it never sees VINs, plates, GPS positions or documents. The exception is an application that asks to write: the page then shows an unticked box, and only when the user ticks it the application can also group drives that already exist into a carpool, with its passengers and what they paid (it creates no drive and edits or deletes nothing).
+- It cannot change, add or delete anything, and it never sees VINs, plates, GPS positions or documents. The exception is an application that asks to write: the page then shows an unticked box, and only when the user ticks it the application can also group drives that already exist into a carpool, with its passengers and what they paid, and edit carpools (it creates no drive and deletes nothing).
 
 The application name is given by the application itself and is not verified: approve only an application you just started. The page shows where the user is sent back to.
 

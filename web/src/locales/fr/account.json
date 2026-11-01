@@ -94,7 +94,7 @@
     "scopeBadge": {
       "ingest": "Envoi et lecture",
       "read": "Lecture seule",
-      "write": "Lecture et saisie de covoiturages"
+      "write": "Lecture, saisie et modification de covoiturages"
     },
     "oauthBadge": "Application connectée",
     "oauthHelp": "Connectée par OAuth. L'accès se renouvelle tant que l'application est utilisée ; voici quand il expire sinon.",
