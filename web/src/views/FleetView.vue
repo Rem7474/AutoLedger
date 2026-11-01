@@ -227,7 +227,7 @@ onBeforeUnmount(() => {
     <ListSkeleton v-else-if="loading && !summary" :rows="3" />
 
     <!-- KPI Grid -->
-    <div v-if="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div v-if="summary" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <KpiCard :label="t('fleet.kpi.vehicles')" :icon="Car" :value="String(summary.total_vehicles)">
         <p class="mt-1 text-xs text-slate-400">{{ t('fleet.kpi.activeVehicles') }}</p>
       </KpiCard>
