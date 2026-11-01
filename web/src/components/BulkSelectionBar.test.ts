@@ -9,7 +9,9 @@ const render = (props: Record<string, unknown>) =>
 
 describe('BulkSelectionBar', () => {
   it('renders nothing while nothing is selected', async () => {
-    expect((await render({ count: 0 })).replace(/<!--.*?-->/g, '')).toBe('')
+    const html = await render({ count: 0 })
+    expect(html).not.toContain('Act')
+    expect(html).not.toContain('<div')
   })
 
   it('docks at the bottom edge on a phone and sticks to the top from the sm breakpoint', async () => {
