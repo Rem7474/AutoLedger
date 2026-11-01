@@ -256,7 +256,8 @@ func TestOAuthAuthorizationRequestIsCheckedAgainstTheRegisteredClient(t *testing
 		"no PKCE":                 {map[string]string{"code_challenge": "", "code_challenge_method": ""}, "oauth.invalid_request"},
 		"plain PKCE":              {map[string]string{"code_challenge_method": "plain"}, "oauth.invalid_request"},
 		"implicit grant":          {map[string]string{"response_type": "token"}, "oauth.invalid_request"},
-		"write scope":             {map[string]string{"scope": "read write"}, "oauth.invalid_scope"},
+		"unknown scope":           {map[string]string{"scope": "read admin"}, "oauth.invalid_scope"},
+		"ingest scope":            {map[string]string{"scope": "ingest"}, "oauth.invalid_scope"},
 		"token for another place": {map[string]string{"resource": "https://other.example/mcp"}, "oauth.invalid_resource"},
 		"unknown decision":        {map[string]string{"decision": "maybe"}, "oauth.invalid_request"},
 	} {
@@ -403,15 +404,59 @@ func TestOAuthMetadataAdvertisesOnlyWhatIsSupported(t *testing.T) {
 		"code_challenge_methods_supported":      "S256",
 		"token_endpoint_auth_methods_supported": "none",
 		"response_types_supported":              "code",
-		"scopes_supported":                      "read",
 	} {
 		list, _ := got[key].([]any)
 		if len(list) != 1 || list[0] != want {
 			t.Errorf("%s = %v, want only %q", key, got[key], want)
 		}
 	}
+	if scopes, _ := got["scopes_supported"].([]any); len(scopes) != 2 || scopes[0] != "read" || scopes[1] != "write" {
+		t.Errorf("scopes_supported = %v", got["scopes_supported"])
+	}
 	if h.Resource() != "https://ledger.example/mcp" {
 		t.Errorf("resource %q", h.Resource())
+	}
+}
+
+// An application that asks to write gets a write grant only when the user ticks the box: approving alone gives read.
+func TestOAuthWriteScopeIsGrantedOnlyWhenTheUserAllowsIt(t *testing.T) {
+	f := newOAuthFixture(t)
+	clientID := f.register("Claude Desktop", callbackURI)
+	grant := func(asked string, allowWrite bool) string {
+		t.Helper()
+		body := map[string]any{
+			"client_id": clientID, "redirect_uri": callbackURI, "response_type": "code", "code_challenge": pkceChallenge,
+			"code_challenge_method": "S256", "decision": "approve", "scope": asked, "allow_write": allowWrite,
+		}
+		raw, _ := json.Marshal(body)
+		rec := f.do(http.MethodPost, "/api/oauth/authorize", "application/json", string(raw))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("approve: %d %s", rec.Code, rec.Body.String())
+		}
+		target, _ := url.Parse(decode[struct {
+			RedirectURL string `json:"redirect_url"`
+		}](t, rec).RedirectURL)
+		tok := decode[tokens](t, f.exchange(clientID, target.Query().Get("code"), pkceVerifier))
+		scope, err := f.validate(tok.AccessToken)
+		if err != nil || scope != tok.Scope {
+			t.Fatalf("the token response and the stored grant agree: %q %q %v", scope, tok.Scope, err)
+		}
+		return scope
+	}
+	if got := grant("read write", false); got != auth.ScopeRead {
+		t.Errorf("write asked, not allowed: %q", got)
+	}
+	if got := grant("read write", true); got != auth.ScopeWrite {
+		t.Errorf("write asked and allowed: %q", got)
+	}
+	if got := grant("read", true); got != auth.ScopeRead {
+		t.Errorf("allowing write cannot widen what the application asked: %q", got)
+	}
+
+	preview := f.do(http.MethodGet, "/api/oauth/authorize?client_id="+clientID+"&redirect_uri="+url.QueryEscape(callbackURI)+
+		"&response_type=code&code_challenge="+pkceChallenge+"&code_challenge_method=S256&scope=read+write", "", "")
+	if got := decode[map[string]any](t, preview); got["scope"] != "write" {
+		t.Errorf("the consent page learns that writing is asked: %v", got)
 	}
 }
 

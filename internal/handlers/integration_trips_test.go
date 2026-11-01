@@ -53,7 +53,7 @@ func (f *mcpFixture) trips(t *testing.T, session *mcp.ClientSession, args map[st
 	return out, res
 }
 
-func TestMCPTripsCarryAddressesButNoPositionNorIdentifier(t *testing.T) {
+func TestMCPTripsCarryAddressesAndTheirDriveIDButNoPosition(t *testing.T) {
 	f := newMCPFixture(t)
 	f.tripFixture(t)
 	session := f.connect(t, f.readTok)
@@ -69,9 +69,14 @@ func TestMCPTripsCarryAddressesButNoPositionNorIdentifier(t *testing.T) {
 			t.Errorf("the trips leaked %q: %s", leak, body)
 		}
 	}
-	for _, d := range []string{`"id"`, `"drive_id"`, `"latitude"`} {
+	for _, d := range []string{`"id"`, `"latitude"`} {
 		if strings.Contains(body, d) {
-			t.Errorf("a trip carries no identifier or position, found %s", d)
+			t.Errorf("a trip carries no position and no other identifier than its drive_id, found %s", d)
+		}
+	}
+	for _, trip := range all.Trips {
+		if !vehicleIDPattern.MatchString(trip.DriveID) || trip.CarpoolIDs == nil {
+			t.Errorf("a trip names its drive, which create_carpool_from_drives takes: %+v", trip)
 		}
 	}
 

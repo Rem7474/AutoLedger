@@ -91,8 +91,11 @@
     "scopeRead": "Lecture seule",
     "scopeIngestHelp": "Peut envoyer des sessions de charge et lire les véhicules et leurs indicateurs.",
     "scopeReadHelp": "Peut seulement lire. Il ne peut pas envoyer d'événements. L'accès ne se modifie pas ensuite : générez un autre jeton pour en changer.",
-    "scopeBadgeIngest": "Envoi et lecture",
-    "scopeBadgeRead": "Lecture seule",
+    "scopeBadge": {
+      "ingest": "Envoi et lecture",
+      "read": "Lecture seule",
+      "write": "Lecture et saisie de covoiturages"
+    },
     "oauthBadge": "Application connectée",
     "oauthHelp": "Connectée par OAuth. L'accès se renouvelle tant que l'application est utilisée ; voici quand il expire sinon.",
     "vehiclesLimited": "Véhicules : {names}",

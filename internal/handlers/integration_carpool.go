@@ -55,6 +55,7 @@ type IntegrationCarpoolPassenger struct {
 
 // IntegrationCarpoolTrip is one shared trip with its costs, stops and passengers.
 type IntegrationCarpoolTrip struct {
+	ID         string                        `json:"id" jsonschema:"the id of the carpool trip; empty for a carpool that was only previewed"`
 	Title      string                        `json:"title" jsonschema:"the trip's title, user text"`
 	Date       string                        `json:"date" jsonschema:"RFC 3339 instant of the trip"`
 	Distance   IntegrationDistance           `json:"distance" jsonschema:"distance of the trip"`
@@ -108,6 +109,24 @@ func noteOf(n *string) *string {
 	return &text
 }
 
+// integrationCarpoolTrip is the view of a trip whose shares are computed.
+func integrationCarpoolTrip(t models.CarpoolTripWithPassengers, currency string) IntegrationCarpoolTrip {
+	stops := carpoolStops(t.Legs)
+	item := IntegrationCarpoolTrip{
+		ID: t.ID, Title: t.Title, Date: t.Date.UTC().Format(time.RFC3339), Distance: kilometres(t.DistanceKm), Stops: stops,
+		TotalCost: amountOf(t.TotalCost, currency), Energy: amountOf(t.ElectricityCost, currency), Tolls: amountOf(t.TollsCost, currency),
+		Revenue: amountOf(t.TotalRevenue, currency), NetCost: amountOf(t.NetCost, currency), DriverCost: amountOf(t.DriverCostShare, currency),
+		Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes),
+	}
+	for _, p := range t.Passengers {
+		item.Passengers = append(item.Passengers, IntegrationCarpoolPassenger{
+			Name: p.PassengerName, Seats: p.Seats, BoardsAt: stopAt(stops, p.BoardStopIndex), AlightsAt: stopAt(stops, p.AlightStopIndex),
+			Paid: amountOf(p.AmountPaid, currency), CostShare: amountOf(p.CostShare, currency), Balance: amountOf(p.Balance, currency), Notes: noteOf(p.Notes),
+		})
+	}
+	return item
+}
+
 func buildIntegrationCarpool(vehicleID, currency string, trips []models.CarpoolTripWithPassengers, sum models.CarpoolSummary, limit int) IntegrationCarpool {
 	// The fair shares of the summary add up the ones of every trip
 	for i := range trips {
@@ -130,20 +149,7 @@ func buildIntegrationCarpool(vehicleID, currency string, trips []models.CarpoolT
 		if i >= limit {
 			break
 		}
-		stops := carpoolStops(t.Legs)
-		item := IntegrationCarpoolTrip{
-			Title: t.Title, Date: t.Date.UTC().Format(time.RFC3339), Distance: kilometres(t.DistanceKm), Stops: stops,
-			TotalCost: amountOf(t.TotalCost, currency), Energy: amountOf(t.ElectricityCost, currency), Tolls: amountOf(t.TollsCost, currency),
-			Revenue: amountOf(t.TotalRevenue, currency), NetCost: amountOf(t.NetCost, currency), DriverCost: amountOf(t.DriverCostShare, currency),
-			Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes),
-		}
-		for _, p := range t.Passengers {
-			item.Passengers = append(item.Passengers, IntegrationCarpoolPassenger{
-				Name: p.PassengerName, Seats: p.Seats, BoardsAt: stopAt(stops, p.BoardStopIndex), AlightsAt: stopAt(stops, p.AlightStopIndex),
-				Paid: amountOf(p.AmountPaid, currency), CostShare: amountOf(p.CostShare, currency), Balance: amountOf(p.Balance, currency), Notes: noteOf(p.Notes),
-			})
-		}
-		out.Trips = append(out.Trips, item)
+		out.Trips = append(out.Trips, integrationCarpoolTrip(t, currency))
 	}
 	return out
 }

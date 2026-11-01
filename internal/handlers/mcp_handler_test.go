@@ -64,7 +64,7 @@ func newMCPFixture(t *testing.T) *mcpFixture {
 	f.readTok = f.newToken(t, owner.ID, auth.ScopeRead)
 	f.otherTok = f.newToken(t, other.ID, auth.ScopeRead)
 
-	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo)).WithComparison(services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC"))).WithMileage(services.NewMileageService(repo, "UTC"), "UTC").WithTariffs(services.NewTariffServiceIn("UTC"))
+	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo)).WithComparison(services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC"))).WithMileage(services.NewMileageService(repo, "UTC"), "UTC").WithTariffs(services.NewTariffServiceIn("UTC")).WithCarpool(services.NewCarpoolService(repo.Pool(), repo))
 	f.server = httptest.NewServer(NewMCPHandler(read, repo, "https://ledger.example/", "test").Endpoint())
 	t.Cleanup(f.server.Close)
 	return f
@@ -152,7 +152,8 @@ func TestMCPEndpointOnlyOpensToAReadTokenAndSaysWhereToAuthorize(t *testing.T) {
 	}
 }
 
-func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *testing.T) {
+// Writing tools are named here on purpose: one added later fails this test until it is reviewed.
+func TestMCPToolsAreReadOnlyExceptTheWritingOnesAndServeTheAccountsVehiclesWithoutIdentifiers(t *testing.T) {
 	f := newMCPFixture(t)
 	ctx := context.Background()
 	session := f.connect(t, f.readTok)
@@ -164,11 +165,17 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 	var names []string
 	for _, tool := range tools.Tools {
 		names = append(names, tool.Name)
+		if tool.Name == "create_carpool_from_drives" {
+			if tool.Annotations == nil || tool.Annotations.ReadOnlyHint || tool.Annotations.DestructiveHint == nil || *tool.Annotations.DestructiveHint {
+				t.Errorf("%s adds records and deletes none: %+v", tool.Name, tool.Annotations)
+			}
+			continue
+		}
 		if tool.Annotations == nil || !tool.Annotations.ReadOnlyHint {
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "create_carpool_from_drives,estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles" {
 		t.Errorf("tools: %v", names)
 	}
 

@@ -186,6 +186,9 @@ type authorizeRequest struct {
 	// VehicleIDs limits the grant to these vehicles (POST only). Absent or null grants every vehicle of the account;
 	// an empty list is refused rather than read as "none".
 	VehicleIDs []string `json:"vehicle_ids"`
+	// AllowWrite grants the write scope when the application asked for it (POST only); left out, an application that
+	// asked to write gets a read-only grant.
+	AllowWrite bool `json:"allow_write"`
 }
 
 func authorizeRequestFromQuery(q url.Values) authorizeRequest {
@@ -311,6 +314,9 @@ func (h *OAuthHandler) DecideAuthorization(w http.ResponseWriter, r *http.Reques
 		if apiErr != nil {
 			writeAPIError(w, http.StatusBadRequest, apiErr)
 			return
+		}
+		if !p.AllowWrite {
+			scope = auth.ScopeRead
 		}
 		stored := models.OAuthCode{ClientID: client.ID, UserID: middleware.GetUserID(r.Context()), RedirectURI: p.RedirectURI, CodeChallenge: p.CodeChallenge, Scope: scope, VehicleIDs: vehicleIDs}
 		if err := h.repo.CreateOAuthCode(r.Context(), hash, stored, time.Now().Add(oauth.CodeTTL)); err != nil {

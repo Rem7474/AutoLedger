@@ -2,6 +2,7 @@
   "authorize": {
     "title": "Authorize an application",
     "intro": "{name} asks to read your AutoLedger data.",
+    "introWrite": "{name} asks to read your AutoLedger data and to record carpools.",
     "vehiclesTitle": "Vehicles it can read",
     "vehiclesAll": "All my vehicles, including the ones I add later",
     "vehiclesSome": "Only the vehicles I choose",
@@ -16,8 +17,10 @@
     "canCosts": "Read what each vehicle costs: the last 12 months and since purchase, by category.",
     "canGaps": "See what is missing from your records (odometer gaps, charges without a cost).",
     "canNames": "See the names and places you recorded: trip addresses, charging places, drivers and carpool passengers, tags, notes and tariff plans.",
+    "canWrite": "Group existing drives into a carpool and add its passengers and what they paid. It cannot create drives.",
     "cannotTitle": "It will not be able to",
     "cannotWrite": "Change, add or delete anything.",
+    "cannotEdit": "Change or delete anything that already exists.",
     "cannotPrivate": "See VINs, plates, GPS positions or documents.",
     "returnTo": "After your choice you are sent back to {host}.",
     "unverified": "The name is given by the application and is not verified: approve only an application you just started.",
@@ -27,6 +30,8 @@
     "approved": "Access approved. You can return to the application.",
     "denied": "Access denied. You can close this page.",
     "invalid": "This authorization request is not valid.",
-    "failed": "The decision could not be recorded. Try again."
+    "failed": "The decision could not be recorded. Try again.",
+    "writeTitle": "Recording",
+    "writeAllow": "Also let it group drives I already have into a carpool, with its passengers and what they paid."
   }
 }

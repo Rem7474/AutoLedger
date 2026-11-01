@@ -37,21 +37,23 @@ const (
 	MaxClientNameLength = 100
 )
 
-// Scopes are what a grant may do. Only reading exists.
-var Scopes = []string{auth.ScopeRead}
+// Scopes are what a grant may do: read the figures, or also record carpools (write includes read).
+var Scopes = []string{auth.ScopeRead, auth.ScopeWrite}
 
-// NormalizeScope returns the scope a request asks for: read when none is given, and false for anything else.
+// NormalizeScope returns the scope a request asks for: read when none is given, write when write is among them (it
+// includes read), and false for anything else.
 func NormalizeScope(raw string) (string, bool) {
-	fields := strings.Fields(raw)
-	if len(fields) == 0 {
-		return auth.ScopeRead, true
-	}
-	for _, f := range fields {
-		if f != auth.ScopeRead {
+	scope := auth.ScopeRead
+	for _, f := range strings.Fields(raw) {
+		switch f {
+		case auth.ScopeRead:
+		case auth.ScopeWrite:
+			scope = auth.ScopeWrite
+		default:
 			return "", false
 		}
 	}
-	return auth.ScopeRead, true
+	return scope, true
 }
 
 // forbiddenSchemes can run script or reach local content from a redirect, so no client may register them.

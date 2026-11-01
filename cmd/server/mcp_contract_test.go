@@ -315,6 +315,10 @@ func checkStructure(t *testing.T, session *mcp.ClientSession, ids map[string]str
 
 	got := map[string]any{}
 	for _, tool := range listed.Tools {
+		if tool.Annotations == nil || !tool.Annotations.ReadOnlyHint {
+			// A tool that writes has no figures to compare; its own tests call it
+			continue
+		}
 		for _, vehicle := range vehicles {
 			args := toolArguments(t, tool, ids[vehicle])
 			if _, perVehicle := args["vehicle_id"]; !perVehicle && vehicle != vehicles[0] {

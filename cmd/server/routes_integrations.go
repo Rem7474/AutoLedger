@@ -19,7 +19,7 @@ func (h *apiHandlers) registerIntegrationRoutes(r chi.Router) {
 		r.Get("/api/integrations/homeassistant/vehicles/{vehicleId}/metrics", h.ha.GetVehicleMetrics)
 	})
 	r.Group(func(r chi.Router) {
-		r.Use(appMiddleware.RequireTokenScope(auth.ScopeRead))
+		r.Use(appMiddleware.RequireTokenScope(auth.ScopeRead, auth.ScopeWrite))
 		r.Get("/api/integrations/v1/vehicles", h.integrationRead.ListVehicles)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}", h.integrationRead.GetVehicle)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/costs", h.integrationRead.GetCosts)

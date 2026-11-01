@@ -11,13 +11,19 @@ import (
 const TokenPrefix = "al_live_"
 
 // What an API token may do. Ingest is the original behaviour (push events and read the Home Assistant views);
-// Read only reads. A session is not scoped.
+// Read only reads; Write reads and also records what the MCP write tools offer (grouping drives into a carpool). Only
+// an assistant's grant (OAuth) can hold Write: it is not a scope a token created from the account page can have. A
+// session is not scoped.
 const (
 	ScopeIngest = "ingest"
 	ScopeRead   = "read"
+	ScopeWrite  = "write"
 )
 
-// ValidScope reports whether scope names an API token scope.
+// CanRead reports whether a token of this scope may read the integration views.
+func CanRead(scope string) bool { return scope == ScopeRead || scope == ScopeWrite }
+
+// ValidScope reports whether scope names a scope a token can be created with from the account page.
 func ValidScope(scope string) bool {
 	return scope == ScopeIngest || scope == ScopeRead
 }
