@@ -189,7 +189,7 @@ onUnmounted(() => {
 
     <!-- Phone: every action, the ones that do not apply greyed with the reason -->
     <Teleport v-if="isMobile" to="body">
-      <ModalShell v-model:open="moreOpen" :title="$t(`shell.bulkSelectionBar.selected.${noun}`, count)" size="sm">
+      <ModalShell v-model:open="moreOpen" :title="`${count} ${$t(`shell.bulkSelectionBar.selected.${noun}`, count)}`" size="sm">
         <div role="menu" class="space-y-1 [&_.menu-item]:min-h-12 [&_.menu-item]:gap-4 [&_.menu-item]:px-4 [&_.menu-item]:text-base [&_.menu-item_svg]:h-5 [&_.menu-item_svg]:w-5" @click="closeOnAction" @change="moreOpen = false">
           <button
             v-for="a in actions"
