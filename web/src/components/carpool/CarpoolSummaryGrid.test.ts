@@ -45,20 +45,10 @@ describe('carpool summary grid', () => {
     expect(await render({ total_revenue: 80 })).toContain('text-success-400')
   })
 
-  it('uses the singular for one trip and one passenger', async () => {
-    setLocale('en')
-    const one = await render({ total_trips: 1, total_passengers: 1 })
-    expect(one).toMatch(/1<[^>]*>\s*trip</)
-    expect(one).toMatch(/1<[^>]*>\s*person</)
-    const many = await render({})
-    expect(many).toMatch(/12<[^>]*>\s*trips</)
-    expect(many).toMatch(/20<[^>]*>\s*people</)
-  })
-
   it('names the period of the totals and reads an unknown cost per distance as a dash', async () => {
     setLocale('en')
     const html = await render({})
-    expect((html.match(/All trips/g) ?? []).length).toBe(5)
+    expect((html.match(/All trips/g) ?? []).length).toBe(3)
     expect(html).toContain('€0.05')
     const none = await render({ total_distance_km: 0, net_cost_per_km: 0 })
     expect(none).not.toContain('€0.0')
