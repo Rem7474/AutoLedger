@@ -82,6 +82,29 @@ func (s *TCOService) monthlyCosts(ctx context.Context, vehicleID string, ownersh
 		return nil, 0, 0, err
 	}
 
+	revRows, err := s.pool.Query(ctx, `
+		SELECT TO_CHAR(date AT TIME ZONE $2, 'YYYY-MM') AS m, COALESCE(SUM(total_revenue), 0)
+		FROM carpool_trips WHERE vehicle_id = $1 GROUP BY m;
+	`, vehicleID, s.timezone)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	for revRows.Next() {
+		var m string
+		var revenue money.Cents
+		if err := revRows.Scan(&m, &revenue); err != nil {
+			revRows.Close()
+			return nil, 0, 0, err
+		}
+		if revenue != 0 {
+			get(m).CarpoolRevenue += revenue
+		}
+	}
+	revRows.Close()
+	if err := revRows.Err(); err != nil {
+		return nil, 0, 0, err
+	}
+
 	distRows, err := s.pool.Query(ctx, `
 		SELECT TO_CHAR(start_time AT TIME ZONE $2, 'YYYY-MM') AS m, COALESCE(SUM(distance_km), 0)
 		FROM drives WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL GROUP BY m;
@@ -218,6 +241,10 @@ func (s *TCOService) monthlyCosts(ctx context.Context, vehicleID string, ownersh
 		// A month with distance but no cost recorded has an unknown cost per km, not a free one.
 		if costForPerKm != 0 {
 			mc.CostPerKm = perKm(costForPerKm, mc.DistanceKm)
+		}
+		mc.NetTotal = mc.Total - mc.CarpoolRevenue
+		if costForPerKm != 0 || mc.CarpoolRevenue != 0 {
+			mc.CostPerKmNet = perKm(costForPerKm-mc.CarpoolRevenue, mc.DistanceKm)
 		}
 		monthlyCosts = append(monthlyCosts, *mc)
 	}
