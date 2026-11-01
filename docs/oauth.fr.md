@@ -1,6 +1,6 @@
 # Autoriser un assistant (OAuth)
 
-Un assistant, ou toute application qui parle OAuth 2.1, peut demander un accès en lecture seule à un compte sans que l'utilisateur ait à recopier un jeton. L'instance doit l'activer avec `AUTOLEDGER_MCP_ENABLED=true` (désactivé par défaut). L'assistant appelle ensuite le [point d'accès MCP](mcp.fr.md). English: [oauth.md](oauth.md).
+Un assistant, ou toute application qui parle OAuth 2.1, peut demander un accès en lecture à un compte, et le droit d'enregistrer des covoiturages sans que l'utilisateur ait à recopier un jeton. L'instance doit l'activer avec `AUTOLEDGER_MCP_ENABLED=true` (désactivé par défaut). L'assistant appelle ensuite le [point d'accès MCP](mcp.fr.md). English: [oauth.md](oauth.md).
 
 ## Ce que voit l'utilisateur
 
@@ -8,7 +8,7 @@ L'application envoie le navigateur vers `/oauth/authorize` sur l'instance. Aprè
 
 - Elle peut voir les véhicules (nom, marque, modèle, motorisation, devise, compteur), ce que chacun coûte sur les 12 derniers mois et depuis l'achat, et ce qui manque aux données. Elle voit aussi les noms et lieux saisis : adresses des trajets, lieux de recharge, conducteurs et passagers de covoiturage, étiquettes, notes et forfaits d'électricité.
 - Quand le compte a plusieurs véhicules, l'utilisateur choisit si l'application les voit tous (y compris ceux ajoutés plus tard) ou seulement ceux qu'il coche. Une autorisation limitée affiche ces véhicules dans la liste des jetons d'API, et les autres véhicules n'existent pas pour elle : ils sont absents des listes et refusés par identifiant. Approuver demande au moins un véhicule.
-- Elle ne peut rien modifier, ajouter ni supprimer, et ne voit jamais les VIN, plaques, positions GPS ni documents.
+- Elle ne peut rien modifier, ajouter ni supprimer, et ne voit jamais les VIN, plaques, positions GPS ni documents. L'exception est une application qui demande à écrire : la page affiche alors une case décochée, et seulement si l'utilisateur la coche l'application peut aussi regrouper des trajets qui existent déjà en covoiturage, avec ses passagers et ce qu'ils ont payé (elle ne crée aucun trajet et ne modifie ni ne supprime rien).
 
 Le nom de l'application est donné par l'application elle-même et n'est pas vérifié : n'approuvez qu'une application que vous venez de lancer. La page indique où l'utilisateur est renvoyé.
 
@@ -16,7 +16,7 @@ Approuver crée une autorisation qui apparaît dans la liste des jetons d'API de
 
 ## Ce que reçoit l'application
 
-Un jeton d'accès de la forme `al_live_...` avec la portée `read`, valable une heure, et un jeton de rafraîchissement (`al_refresh_...`) valable 90 jours, prolongé à chaque utilisation. Le jeton d'accès ouvre l'[API de lecture](ingestion-api.fr.md#api-de-lecture) et rien d'autre. Il y a une autorisation par utilisateur et par application : autoriser de nouveau remplace la précédente.
+Un jeton d'accès de la forme `al_live_...` avec la portée `read` (ou `write`, qui inclut `read`, quand l'utilisateur a autorisé l'écriture), valable une heure, et un jeton de rafraîchissement (`al_refresh_...`) valable 90 jours, prolongé à chaque utilisation. Le jeton d'accès ouvre l'[API de lecture](ingestion-api.fr.md#api-de-lecture) et rien d'autre. Il y a une autorisation par utilisateur et par application : autoriser de nouveau remplace la précédente.
 
 Un jeton de rafraîchissement ne sert qu'une fois. Présenter un jeton déjà utilisé révoque toute l'autorisation, de sorte qu'une copie volée ne peut pas servir discrètement à côté de l'originale.
 
@@ -33,7 +33,7 @@ Un jeton de rafraîchissement ne sert qu'une fois. Présenter un jeton déjà ut
 Règles appliquées par le serveur :
 
 - Flux par code d'autorisation avec PKCE, méthode `S256` uniquement. Le code est valable 60 secondes et ne sert qu'une fois.
-- Clients publics uniquement (`token_endpoint_auth_method` `none`) ; la seule portée est `read`.
+- Clients publics uniquement (`token_endpoint_auth_method` `none`) ; les portées sont `read` et `write` ; une application qui demande `write` reçoit `read` si l'utilisateur ne coche pas la case d'écriture.
 - Une URI de redirection est en `https`, une adresse de boucle locale avec un port quelconque (`http://127.0.0.1:port/...`), ou un schéma privé d'application de bureau (`cursor://...`). Les fragments, jokers et identifiants dans l'URI sont refusés, ainsi que `javascript:`, `data:` et `file:`.
 - Si la requête porte un paramètre `resource` (RFC 8707), il doit être l'URL MCP de l'instance, `<URL de base>/mcp`.
 - La redirection porte un paramètre `iss` (RFC 9207) avec l'URL de l'instance.

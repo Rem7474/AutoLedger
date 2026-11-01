@@ -34,6 +34,8 @@ type IntegrationTripsQuery struct {
 // IntegrationTrip is one drive. It carries the addresses the account recorded, so an assistant can talk about "the
 // trip to Lyon", but no position and no identifier: an address stored as coordinates is reported as unknown.
 type IntegrationTrip struct {
+	DriveID     string               `json:"drive_id" jsonschema:"the id of the trip, to name it in create_carpool_from_drives"`
+	CarpoolIDs  []string             `json:"carpool_ids" jsonschema:"the ids of the carpool trips this trip is a leg of, as get_carpool lists them; empty when it is in none"`
 	StartTime   string               `json:"start_time" jsonschema:"RFC 3339 instant the trip began"`
 	EndTime     string               `json:"end_time" jsonschema:"RFC 3339 instant the trip ended"`
 	From        *string              `json:"from" jsonschema:"departure address as the owner wrote or looked it up, user text; null when unknown"`
@@ -105,16 +107,24 @@ func (h *IntegrationReadHandler) Trips(ctx context.Context, userID, vehicleID st
 		return nil, err
 	}
 
+	carpools, err := h.repo.GetCarpoolsForDrives(ctx, vehicle.ID, ids)
+	if err != nil {
+		return nil, err
+	}
 	trips := make([]IntegrationTrip, 0, len(drives))
 	for _, d := range drives {
-		trips = append(trips, integrationTrip(d, vehicle.Currency, expenses))
+		trip := integrationTrip(d, vehicle.Currency, expenses)
+		for _, c := range carpools[d.ID] {
+			trip.CarpoolIDs = append(trip.CarpoolIDs, c.ID)
+		}
+		trips = append(trips, trip)
 	}
 	return &IntegrationTrips{VehicleID: vehicle.ID, Trips: trips, Matching: total, Truncated: total > len(trips)}, nil
 }
 
 func integrationTrip(d models.Drive, currency string, expenses map[string]money.Cents) IntegrationTrip {
 	trip := IntegrationTrip{
-		StartTime: d.StartTime.UTC().Format(time.RFC3339), EndTime: d.EndTime.UTC().Format(time.RFC3339),
+		DriveID: d.ID, CarpoolIDs: []string{}, StartTime: d.StartTime.UTC().Format(time.RFC3339), EndTime: d.EndTime.UTC().Format(time.RFC3339),
 		From: publicAddress(d.StartAddress), To: publicAddress(d.EndAddress),
 		DurationMin: d.DurationMin, EnergyKwh: d.EnergyConsumedKwh, Tags: d.Tags, Driver: noteOf(d.DriverName),
 	}

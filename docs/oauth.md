@@ -1,6 +1,6 @@
 # Authorizing an assistant (OAuth)
 
-An assistant or any other application that speaks OAuth 2.1 can ask for read-only access to an account without the user copying a token around. The instance has to enable it with `AUTOLEDGER_MCP_ENABLED=true` (off by default). The assistant then calls the [MCP endpoint](mcp.md). Français : [oauth.fr.md](oauth.fr.md).
+An assistant or any other application that speaks OAuth 2.1 can ask for read access to an account, and for the right to record carpools without the user copying a token around. The instance has to enable it with `AUTOLEDGER_MCP_ENABLED=true` (off by default). The assistant then calls the [MCP endpoint](mcp.md). Français : [oauth.fr.md](oauth.fr.md).
 
 ## What the user sees
 
@@ -8,7 +8,7 @@ The application sends the browser to `/oauth/authorize` on the instance. After s
 
 - It can see the vehicles (name, make, model, powertrain, currency, odometer), what each one costs over the last 12 months and since purchase, and what is missing from the records. It also sees the names and places recorded: trip addresses, charging places, drivers and carpool passengers, tags, notes and tariff plans.
 - When the account has several vehicles, the user chooses whether the application sees all of them (including the ones added later) or only the ones ticked. A limited grant lists those vehicles in the API tokens list, and the other vehicles do not exist for it: they are absent from the lists and refused by id. Approving needs at least one vehicle.
-- It cannot change, add or delete anything, and it never sees VINs, plates, GPS positions or documents.
+- It cannot change, add or delete anything, and it never sees VINs, plates, GPS positions or documents. The exception is an application that asks to write: the page then shows an unticked box, and only when the user ticks it the application can also group drives that already exist into a carpool, with its passengers and what they paid (it creates no drive and edits or deletes nothing).
 
 The application name is given by the application itself and is not verified: approve only an application you just started. The page shows where the user is sent back to.
 
@@ -16,7 +16,7 @@ Approving creates a grant that appears in the API tokens list of the account pag
 
 ## What the application gets
 
-An access token of the form `al_live_...` with the `read` scope, valid for one hour, and a refresh token (`al_refresh_...`) valid for 90 days, renewed at every use. The access token opens the [read API](ingestion-api.md#read-api) and nothing else. There is one grant per user and application: authorizing again replaces the previous one.
+An access token of the form `al_live_...` with the `read` scope (or `write`, which includes `read`, when the user allowed writing), valid for one hour, and a refresh token (`al_refresh_...`) valid for 90 days, renewed at every use. The access token opens the [read API](ingestion-api.md#read-api) and nothing else. There is one grant per user and application: authorizing again replaces the previous one.
 
 A refresh token works once. Presenting an already used refresh token revokes the whole grant, so a stolen copy cannot be used quietly alongside the real one.
 
@@ -33,7 +33,7 @@ A refresh token works once. Presenting an already used refresh token revokes the
 Rules enforced by the server:
 
 - Authorization code flow with PKCE, method `S256` only. The code is valid for 60 seconds and is used once.
-- Public clients only (`token_endpoint_auth_method` `none`); the only scope is `read`.
+- Public clients only (`token_endpoint_auth_method` `none`); the scopes are `read` and `write`; an application that asks for `write` is given `read` unless the user ticks the writing box.
 - A redirect URI is `https`, a loopback address with any port (`http://127.0.0.1:port/...`), or a private-use scheme of a desktop application (`cursor://...`). Fragments, wildcards and credentials in the URI are refused, and so are `javascript:`, `data:` and `file:`.
 - When the request carries a `resource` parameter (RFC 8707), it must be the instance's MCP URL, `<base URL>/mcp`.
 - The redirect carries an `iss` parameter (RFC 9207) with the instance URL.

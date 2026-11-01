@@ -1,6 +1,409 @@
 [
   {
     "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Records a carpool made of drives the owner already has: the drives become its legs (priced as the app prices them), and the passengers with what each paid are added to it. It creates no drive, and nothing can be edited or deleted afterwards through this connection. Find the drive_ids with list_vehicle_trips, which says when a drive is already in a carpool (such a drive is refused). This writes to the owner's records: call it with dry_run true first, show the owner the stops, costs and shares, and record only once they agree. Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "drive_ids": {
+          "description": "the existing drives to group into one carpool, by the drive_id list_vehicle_trips gives; 30 at most. They become the legs of the carpool, in chronological order",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "dry_run": {
+          "description": "true to see the carpool that would be recorded, with its stops, costs and shares, without recording anything",
+          "type": "boolean"
+        },
+        "notes": {
+          "description": "a free note on the carpool",
+          "type": "string"
+        },
+        "passengers": {
+          "description": "who rode and what they paid; 7 at most",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "alights_at_stop": {
+                "description": "index of the stop where the passenger got off, the arrival of the last drive being the highest index; the end of the trip by default",
+                "type": [
+                  "null",
+                  "integer"
+                ]
+              },
+              "amount_paid": {
+                "description": "what the passenger paid, a decimal string in the vehicle's currency such as \"12.50\"; \"0\" or left out when nothing was paid yet",
+                "type": "string"
+              },
+              "boards_at_stop": {
+                "description": "index of the stop where the passenger got on, 0 being the departure of the first drive; the whole trip by default. The stops of a dry run show the indexes",
+                "type": [
+                  "null",
+                  "integer"
+                ]
+              },
+              "name": {
+                "description": "the passenger's name, as the owner calls them",
+                "type": "string"
+              },
+              "notes": {
+                "description": "a free note on the booking",
+                "type": "string"
+              },
+              "seats": {
+                "description": "seats the passenger took, 1 by default",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "title": {
+          "description": "the title of the carpool; by default the departure and the arrival of the whole trip, which needs the drives to have addresses",
+          "type": "string"
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "drive_ids"
+      ],
+      "type": "object"
+    },
+    "name": "create_carpool_from_drives",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "carpool": {
+          "additionalProperties": false,
+          "description": "the carpool, as get_carpool lists it; its id is empty on a dry run",
+          "properties": {
+            "date": {
+              "description": "RFC 3339 instant of the trip",
+              "type": "string"
+            },
+            "distance": {
+              "additionalProperties": false,
+              "description": "distance of the trip",
+              "properties": {
+                "unit": {
+                  "description": "always km",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "the distance",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
+            },
+            "driver_cost_share": {
+              "additionalProperties": false,
+              "description": "the part of the cost the driver keeps",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "energy_cost": {
+              "additionalProperties": false,
+              "description": "energy part of the cost",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "id": {
+              "description": "the id of the carpool trip; empty for a carpool that was only previewed",
+              "type": "string"
+            },
+            "net_cost": {
+              "additionalProperties": false,
+              "description": "total cost minus revenue",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "notes": {
+              "description": "free note on the trip, user text; null when none",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "passengers": {
+              "description": "who rode, named",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "alights_at": {
+                    "description": "the stop where the passenger got off; null when that stop has no label",
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "balance": {
+                    "additionalProperties": false,
+                    "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "boards_at": {
+                    "description": "the stop where the passenger got on; null when that stop has no label",
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "cost_share": {
+                    "additionalProperties": false,
+                    "description": "fair share of the costs of the legs the passenger rode",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "name": {
+                    "description": "the passenger's name as the owner typed it, user text",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "description": "free note on the booking, user text; null when none",
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "paid": {
+                    "additionalProperties": false,
+                    "description": "what the passenger paid",
+                    "properties": {
+                      "amount": {
+                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "type": "object"
+                  },
+                  "seats": {
+                    "description": "seats the passenger took",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "seats",
+                  "boards_at",
+                  "alights_at",
+                  "paid",
+                  "cost_share",
+                  "balance",
+                  "notes"
+                ],
+                "type": "object"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "revenue": {
+              "additionalProperties": false,
+              "description": "what the passengers paid",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "stops": {
+              "description": "the stops of the trip in order, from departure to arrival; a stop without a label is null",
+              "items": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "title": {
+              "description": "the trip's title, user text",
+              "type": "string"
+            },
+            "tolls_cost": {
+              "additionalProperties": false,
+              "description": "tolls part of the cost",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "total_cost": {
+              "additionalProperties": false,
+              "description": "what the trip cost to run",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "date",
+            "distance",
+            "stops",
+            "total_cost",
+            "energy_cost",
+            "tolls_cost",
+            "revenue",
+            "net_cost",
+            "driver_cost_share",
+            "passengers",
+            "notes"
+          ],
+          "type": "object"
+        },
+        "recorded": {
+          "description": "true when the carpool was recorded; false for a dry run, which records nothing",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "recorded",
+        "carpool"
+      ],
+      "type": "object"
+    },
+    "title": "Group drives into a carpool"
+  },
+  {
+    "annotations": {
       "idempotentHint": false,
       "openWorldHint": false,
       "readOnlyHint": true
@@ -423,6 +826,10 @@
                 ],
                 "type": "object"
               },
+              "id": {
+                "description": "the id of the carpool trip; empty for a carpool that was only previewed",
+                "type": "string"
+              },
               "net_cost": {
                 "additionalProperties": false,
                 "description": "total cost minus revenue",
@@ -634,6 +1041,7 @@
               }
             },
             "required": [
+              "id",
               "title",
               "date",
               "distance",
@@ -7153,6 +7561,16 @@
           "items": {
             "additionalProperties": false,
             "properties": {
+              "carpool_ids": {
+                "description": "the ids of the carpool trips this trip is a leg of, as get_carpool lists them; empty when it is in none",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
               "distance": {
                 "additionalProperties": false,
                 "description": "distance of the trip; null when it was not recorded",
@@ -7174,6 +7592,10 @@
                   "null",
                   "object"
                 ]
+              },
+              "drive_id": {
+                "description": "the id of the trip, to name it in create_carpool_from_drives",
+                "type": "string"
               },
               "driver": {
                 "description": "name of the person who drove, as the owner recorded them, user text; null when no driver is assigned",
@@ -7249,6 +7671,8 @@
               }
             },
             "required": [
+              "drive_id",
+              "carpool_ids",
               "start_time",
               "end_time",
               "from",

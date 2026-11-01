@@ -82,8 +82,15 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
 
   const { tools } = await client.listTools()
   expect(tools.length).toBeGreaterThan(0)
+  // The tools that write are named here on purpose: a new one has to be added to this list in review.
+  const writing = ['create_carpool_from_drives']
   for (const tool of tools) {
-    expect(tool.annotations?.readOnlyHint, `${tool.name} must be read-only`).toBe(true)
+    if (writing.includes(tool.name)) {
+      expect(tool.annotations?.readOnlyHint, `${tool.name} writes`).not.toBe(true)
+      expect(tool.annotations?.destructiveHint, `${tool.name} never deletes or edits`).toBe(false)
+    } else {
+      expect(tool.annotations?.readOnlyHint, `${tool.name} must be read-only`).toBe(true)
+    }
     expect(tool.outputSchema, `${tool.name} declares what it returns`).toBeDefined()
   }
 
@@ -92,7 +99,14 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   const vehicles: { id: string; currency: string }[] = listed.data.vehicles
   expect(vehicles.length).toBeGreaterThan(0)
 
-  for (const tool of tools) {
+  // A grant is read-only unless the user ticked the writing box: the writing tool refuses it
+  for (const name of writing) {
+    const refused = await call(client, name, { vehicle_id: vehicles[0].id, drive_ids: ['00000000-0000-4000-8000-000000000001'] })
+    expect(refused.isError, `${name} on a read grant`).toBe(true)
+    expect(refused.text).toContain('can only read')
+  }
+
+  for (const tool of tools.filter((tool) => !writing.includes(tool.name))) {
     const res = await call(client, tool.name, argumentsFor(tool, vehicles[0].id))
     expect(res.isError, `${tool.name}: ${res.text}`).toBe(false)
     expect(Object.keys(res.data).length, `${tool.name} answers with structured content`).toBeGreaterThan(0)

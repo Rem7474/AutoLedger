@@ -181,7 +181,7 @@ onMounted(() => {
               {{ t('account.tokens.oauthBadge') }}
             </span>
             <span class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              {{ tok.scope === 'read' ? t('account.tokens.scopeBadgeRead') : t('account.tokens.scopeBadgeIngest') }}
+              {{ t(`account.tokens.scopeBadge.${tok.scope}`) }}
             </span>
           </div>
           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mt-1">
@@ -211,7 +211,7 @@ onMounted(() => {
           <Trash2 class="h-4 w-4" />
         </button>
         </div>
-        <TokenCallLog v-if="tok.scope === 'read'" :token-id="tok.id" />
+        <TokenCallLog v-if="tok.scope !== 'ingest'" :token-id="tok.id" />
       </li>
     </ul>
 

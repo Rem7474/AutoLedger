@@ -121,6 +121,7 @@
           "amount": "string",
           "currency": "string"
         },
+        "id": "string",
         "net_cost": {
           "amount": "string",
           "currency": "string"
@@ -2714,10 +2715,12 @@
     "matching": "number",
     "trips": [
       {
+        "carpool_ids": [],
         "distance": {
           "unit": "string",
           "value": "number"
         },
+        "drive_id": "string",
         "driver": "string",
         "duration_min": "number",
         "end_time": "string",
@@ -2742,10 +2745,12 @@
     "matching": "number",
     "trips": [
       {
+        "carpool_ids": [],
         "distance": {
           "unit": "string",
           "value": "number"
         },
+        "drive_id": "string",
         "driver": "string",
         "duration_min": "number",
         "end_time": "string",

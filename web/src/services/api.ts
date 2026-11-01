@@ -548,8 +548,8 @@ export const api = {
     request<APITokenCreatedResponse>('/auth/tokens', { method: 'POST', body: JSON.stringify(data) }),
   previewOAuthAuthorization: (params: OAuthAuthorizeParams) =>
     request<OAuthAuthorizePreview>(`/oauth/authorize?${new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => typeof e[1] === 'string'))}`),
-  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny', vehicleIds: string[] | null = null) =>
-    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision, vehicle_ids: vehicleIds }) }),
+  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny', vehicleIds: string[] | null = null, allowWrite = false) =>
+    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision, vehicle_ids: vehicleIds, allow_write: allowWrite }) }),
   revokeAPIToken: (tokenId: string) =>
     request<{ success: boolean }>(`/auth/tokens/${tokenId}`, { method: 'DELETE' }),
 
@@ -665,7 +665,8 @@ export interface APITokenInfo {
   id: string
   name: string
   token_prefix: string
-  scope: APITokenScope
+  /** An assistant's grant can also be 'write'; a token created from the account page is 'ingest' or 'read'. */
+  scope: APITokenScope | 'write'
   /** True for a grant an assistant obtained by OAuth; expires_at is then when it lapses unless renewed. */
   oauth: boolean
   /** The only vehicles the token can read; null is every vehicle of the account. */
