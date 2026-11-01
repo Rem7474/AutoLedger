@@ -156,21 +156,18 @@ async function handleDriverChange(event: Event) {
               {{ selectedCostDrive.is_trip_group ? $t('drives.driveCostModal.tripTitle', { name: selectedCostDrive.trip_group_name }) : $t('drives.driveCostModal.driveTitle') }}
             </h3>
             <p class="text-xs text-slate-400">{{ formatDate(selectedCostDrive.start_time) }}</p>
+            <a
+              v-if="teslamateDriveUrl(selectedCostDrive)"
+              :href="teslamateDriveUrl(selectedCostDrive)!"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="mt-1 inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium"
+              :title="$t('drives.driveCostModal.openThisDriveInThe')"
+            >
+              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
+            </a>
           </div>
         </div>
-    </template>
-    <template #actions>
-        <a
-          v-if="teslamateDriveUrl(selectedCostDrive)"
-          :href="teslamateDriveUrl(selectedCostDrive)!"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn btn-secondary shrink-0"
-          :title="$t('drives.driveCostModal.openThisDriveInThe')"
-        >
-          <ExternalLink class="w-3.5 h-3.5 text-info-400" />
-          <span class="hidden sm:inline">TeslaMate</span>
-        </a>
     </template>
 
 
