@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"reflect"
 	"sync/atomic"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/models"
+	"github.com/teslacost/teslacost/internal/money"
 )
 
 func TestDriveDistanceIndexSumsTheDrivesOfAHalfOpenInterval(t *testing.T) {
@@ -140,5 +142,53 @@ func TestIntegrationMonthlyTimelineMatchesTheTCOAndSkipsTheRest(t *testing.T) {
 	}
 	if light >= full {
 		t.Fatalf("the drill-down must not recompute the whole TCO: %d queries against %d", light, full)
+	}
+}
+
+func TestIntegrationMonthlyCostsSubtractTheCarpoolRevenueOfTheMonth(t *testing.T) {
+	db, repo := setupIntegrationDB(t, false)
+	ctx := context.Background()
+	v := mustVehicle(t, repo, "net-monthly@example.com")
+	svc, _ := countingTCOService(t)
+
+	addCheckpoints(t, repo, v.ID, 0, 8)
+	month := time.Now().AddDate(0, -3, 0)
+	mustDrive(t, repo, v.ID, 1, month, 11000, 100)
+	for i, revenue := range []float64{30, 12.5} {
+		if _, err := db.Pool.Exec(ctx, `INSERT INTO carpool_trips (vehicle_id, title, date, total_revenue) VALUES ($1, $2, $3, $4)`,
+			v.ID, fmt.Sprintf("cp%d", i), month, revenue); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	sum, err := svc.ComputeVehicleTCO(ctx, v.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := month.In(svc.location()).Format("2006-01")
+	var found bool
+	var total money.Cents
+	for _, mc := range sum.MonthlyCosts {
+		total += mc.CarpoolRevenue
+		if mc.NetTotal != mc.Total-mc.CarpoolRevenue {
+			t.Fatalf("%s: net %d, want total %d minus revenue %d", mc.Month, mc.NetTotal, mc.Total, mc.CarpoolRevenue)
+		}
+		if mc.Month == key {
+			found = true
+			if mc.CarpoolRevenue != 4250 {
+				t.Fatalf("revenue of %s = %d, want 4250", key, mc.CarpoolRevenue)
+			}
+			if mc.CostPerKmNet == nil {
+				t.Fatalf("a month with distance and revenue needs a net cost per km")
+			}
+		} else if mc.CarpoolRevenue != 0 {
+			t.Fatalf("revenue leaked into %s", mc.Month)
+		}
+	}
+	if !found {
+		t.Fatalf("month %s missing from the timeline", key)
+	}
+	if total != sum.CarpoolRevenue {
+		t.Fatalf("the months add up to %d of revenue, the summary says %d", total, sum.CarpoolRevenue)
 	}
 }

@@ -54,6 +54,11 @@ type MonthlyCost struct {
 	// instalments dated after today. Total minus Scheduled is what was spent so far.
 	Scheduled money.Cents `json:"scheduled,omitempty"`
 	CostPerKm *float64    `json:"cost_per_km"`
+	// CarpoolRevenue is what the passengers paid for the carpools dated this month. It is not a cost: Total and
+	// the categories stay gross, NetTotal and CostPerKmNet subtract the revenue.
+	CarpoolRevenue money.Cents `json:"carpool_revenue"`
+	NetTotal       money.Cents `json:"net_total"`
+	CostPerKmNet   *float64    `json:"cost_per_km_net"`
 }
 
 // TagCostBreakdown represents costs split by tag (e.g. Pro vs Perso).
