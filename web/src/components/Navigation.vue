@@ -249,7 +249,7 @@ function handleLogout() {
       <SheetGrabber class="-mt-2 mb-2" />
       <div class="mb-2 flex items-center justify-between">
         <p class="truncate text-xs text-slate-400">{{ authStore.user?.email }}</p>
-        <button type="button" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white" :aria-label="$t('common.close')" @click="showMore = false">
+        <button type="button" class="sr-only" :aria-label="$t('common.close')" @click="showMore = false">
           <X class="h-5 w-5" aria-hidden="true" />
         </button>
       </div>

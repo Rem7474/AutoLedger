@@ -225,7 +225,7 @@ onBeforeUnmount(() => {
           <h2 id="quick-add-title" class="text-lg font-bold text-white">{{ $t('quickadd.quickAddSheet.quickAdd') }}</h2>
           <p class="truncate text-xs text-slate-400">{{ vehicle.name }}</p>
         </div>
-        <button type="button" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white" :aria-label="$t('common.close')" @click="quickAdd.close()">
+        <button type="button" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white max-md:sr-only" :aria-label="$t('common.close')" @click="quickAdd.close()">
           <X class="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
