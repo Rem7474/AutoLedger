@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import KpiCard from '@/components/KpiCard.vue'
-import { Users, TrendingUp, CreditCard, Receipt } from 'lucide-vue-next'
+import { TrendingUp, CreditCard, Receipt } from 'lucide-vue-next'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { formatPercentOrUnknown } from '@/utils/numbers'
 import { t } from '@/i18n'
-import { distanceUnit, formatDistanceValue, perDistance } from '@/units'
+import { distanceUnit, perDistance } from '@/units'
 
 // Totals of all the carpool trips of the vehicle
 const props = defineProps<{ summary: any }>()
@@ -32,28 +32,9 @@ const netCostPerDistance = computed(() =>
 </script>
 
 <template>
-  <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+  <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
     <KpiCard
-      :label="$t('carpool.carpoolSummaryGrid.carpooledTrips')"
-      :period="period"
-      :icon="Users"
-      :value="String(summary.total_trips)"
-      :unit="` ${$t('carpool.carpoolSummaryGrid.trips', {}, summary.total_trips)}`"
-    >
-      <p class="mt-1 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.kmShared', { unit: distanceUnit(), total_distance_km: formatDistanceValue(summary.total_distance_km || 0) }) }}</p>
-    </KpiCard>
-
-    <KpiCard
-      :label="$t('carpool.carpoolSummaryGrid.passengersCarried')"
-      :period="period"
-      :icon="Users"
-      :value="String(summary.total_passengers)"
-      :unit="` ${$t('carpool.carpoolSummaryGrid.people', {}, summary.total_passengers)}`"
-    >
-      <p class="mt-1 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.fairShareDue', { total_passengers_share: fmt(summary.total_passengers_share) }) }}</p>
-    </KpiCard>
-
-    <KpiCard
+      class="col-span-2 lg:col-span-1"
       :label="$t('carpool.carpoolSummaryGrid.totalReceivedFromPassengers')"
       :period="period"
       :icon="CreditCard"
@@ -78,7 +59,6 @@ const netCostPerDistance = computed(() =>
     </KpiCard>
 
     <KpiCard
-      class="col-span-2 lg:col-span-1"
       :label="$t('carpool.carpoolSummaryGrid.driverSNetCost')"
       :period="period"
       :icon="Receipt"

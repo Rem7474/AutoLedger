@@ -25,12 +25,6 @@
     "ofTheTotalActualCost": "of the total actual cost ({total_real_cost})",
     "costRecoveryRate": "Cost recovery rate",
     "totalReceivedFromPassengers": "Total received from passengers",
-    "fairShareDue": "Fair share due: {total_passengers_share}",
-    "people": "person | people",
-    "passengersCarried": "Passengers carried",
-    "kmShared": "{total_distance_km} {unit} shared",
-    "trips": "trip | trips",
-    "carpooledTrips": "Carpooled trips",
     "covered": "Passengers' shares covered",
     "below": "{amount} below their share",
     "allTrips": "All trips"
