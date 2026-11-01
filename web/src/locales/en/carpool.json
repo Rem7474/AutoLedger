@@ -17,7 +17,8 @@
     "recalcDone": "The carpool \"{title}\" has been recalculated.",
     "recalcDoneTitle": "Recalculation done",
     "recalcError": "Recalculation failed: {message}",
-    "recalcSelectedDone": "{count} carpool(s) recalculated."
+    "recalcSelectedDone": "{count} carpool(s) recalculated.",
+    "deleteManyMessage": "Delete these {count} carpools?"
   },
   "carpoolSummaryGrid": {
     "driverSFairShare": "Driver's fair share: {total_driver_share}",
@@ -52,7 +53,8 @@
     "recalculateTheActualCostsOf2": "Recalculate the actual costs of the selected carpools",
     "fullyRecovered": "Trip fully paid off!",
     "recovered": "{percent}% paid by the passengers",
-    "seats": "{count} seat | {count} seats"
+    "seats": "{count} seat | {count} seats",
+    "recalculateNone": "No carpool made from distance to recalculate"
   },
   "carpoolTripModal": {
     "notesOptional": "Notes (optional)",

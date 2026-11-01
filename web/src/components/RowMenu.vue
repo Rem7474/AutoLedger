@@ -29,7 +29,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="root" class="relative z-10 shrink-0">
+  <div ref="root" class="relative z-10 shrink-0 max-sm:hidden">
     <button type="button" class="tap row-action max-sm:!min-w-7 max-sm:!px-0.5 max-sm:-mr-1.5" :aria-label="label" :title="label" aria-haspopup="menu" :aria-expanded="open" @click="open = !open">
       <MoreHorizontal class="h-4 w-4" aria-hidden="true" />
     </button>

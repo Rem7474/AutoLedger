@@ -17,7 +17,8 @@
     "recalcDone": "Le covoiturage \"{title}\" a été recalculé avec succès.",
     "recalcDoneTitle": "Recalcul terminé",
     "recalcError": "Erreur lors du recalcul : {message}",
-    "recalcSelectedDone": "{count} covoiturage(s) recalculé(s) avec succès."
+    "recalcSelectedDone": "{count} covoiturage(s) recalculé(s) avec succès.",
+    "deleteManyMessage": "Supprimer ces {count} covoiturages ?"
   },
   "carpoolSummaryGrid": {
     "driverSFairShare": "Part équitable conducteur : {total_driver_share}",
@@ -52,7 +53,8 @@
     "recalculateTheActualCostsOf2": "Recalculer les coûts réels des covoiturages sélectionnés",
     "fullyRecovered": "Trajet 100% rentabilisé !",
     "recovered": "{percent} % payé par les passagers",
-    "seats": "{count} place | {count} places"
+    "seats": "{count} place | {count} places",
+    "recalculateNone": "Aucun covoiturage saisi par distance à recalculer"
   },
   "carpoolTripModal": {
     "notesOptional": "Notes (optionnel)",

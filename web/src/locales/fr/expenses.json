@@ -37,7 +37,8 @@
     "energyTitle": "Énergie",
     "energySubtitle": "Consommation, recharges et pleins",
     "fixedCosts": "Frais fixes",
-    "fillUps": "Pleins"
+    "fillUps": "Pleins",
+    "deleteManyMessage": "Supprimer ces {count} éléments ?"
   },
   "teslamateLinks": {
     "details": "Détails dans TeslaMate",
@@ -89,7 +90,8 @@
     "at": "à",
     "monthSummary": "{count} · {kwh} kWh · {cost}",
     "averagePrice": "{price}/kWh en moyenne",
-    "monthCount": "{count} recharge | {count} recharges"
+    "monthCount": "{count} recharge | {count} recharges",
+    "syncedCannotDelete": "Synchronisée depuis TeslaMate, suppression impossible"
   },
   "completeReminderModal": {
     "confirmTheMaintenance": "Confirmer l'entretien",

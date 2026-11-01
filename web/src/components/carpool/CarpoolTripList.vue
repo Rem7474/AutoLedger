@@ -9,6 +9,8 @@ import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock } from 'lucide-vue-next'
 import { formatDate, hasLinkedLegs } from '@/utils/carpool'
+import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
+import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 
 // The carpool trips as compact cards (the legs, passengers and costs are in the detail, opened by a click), and the
@@ -25,6 +27,7 @@ const emit = defineEmits<{
   recalculate: [trip: any]
   edit: [trip: any]
   delete: [trip: any]
+  'delete-many': [trips: any[]]
 }>()
 const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
@@ -32,6 +35,21 @@ const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 
 // A carpool made from drives follows their cost on its own: only the ones entered by distance are recalculated
 const recalculable = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id) && !hasLinkedLegs(tr)))
+const selectedTrips = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id)))
+const actions = computed<SelectionAction[]>(() => [
+  ...editDeleteActions(selectedTrips.value, { edit: (tr) => emit('edit', tr), remove: (list) => emit('delete-many', list) }),
+  {
+    key: 'recalculate',
+    label: t('carpool.carpoolTripList.recalculateActualCosts', { length: recalculable.value.length }),
+    icon: RotateCw,
+    run: () => emit('batch-recalculate'),
+    busy: props.recalculating,
+    disabled: recalculable.value.length === 0,
+    reason: t('carpool.carpoolTripList.recalculateNone'),
+    overflow: true,
+  },
+  { key: 'export', label: t('carpool.carpoolTripList.exportCsv'), icon: Download, run: () => emit('export'), overflow: true },
+])
 const { showBox, press, onPointerdown, onRowClick } = useSelectableRow<any>({
   enabled: computed(() => vehicleStore.canEdit),
   selecting: computed(() => props.selectedTripIds.length > 0),
@@ -48,30 +66,9 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
       v-if="vehicleStore.canEdit"
       :count="selectedTripIds.length"
       noun="carpool"
+      :actions="actions"
       @clear="emit('clear')"
-    >
-      <button
-        v-if="recalculable.length"
-        type="button"
-        @click="emit('batch-recalculate')"
-        :disabled="recalculating"
-        class="btn btn-primary"
-        :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf2')"
-      >
-        <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': recalculating }" />
-        <span>{{ $t('carpool.carpoolTripList.recalculateActualCosts', { length: recalculable.length }) }}</span>
-      </button>
-
-      <button
-        type="button"
-        @click="emit('export')"
-        class="btn btn-secondary"
-        :title="$t('carpool.carpoolTripList.exportTheSelectionAsCsv')"
-      >
-        <Download class="w-3.5 h-3.5 text-slate-300" />
-        <span>{{ $t('carpool.carpoolTripList.exportCsv') }}</span>
-      </button>
-    </BulkSelectionBar>
+    />
 
     <!-- Header row: Select all checkbox & Total info -->
     <div v-if="vehicleStore.canEdit" class="flex items-center justify-between text-xs text-slate-400 px-2">
