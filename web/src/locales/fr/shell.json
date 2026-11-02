@@ -112,6 +112,7 @@
     "notReady": "Erreur ({status}): La base de données ou le service n'est pas prêt",
     "requestFailed": "La requête a échoué ({status})",
     "driveNoToll": "Trajet marqué sans péage",
+    "chargeCostConfirmed": "Coût de la recharge confirmé",
     "tripSuggestionDismiss": "Voyage détecté écarté",
     "toll": "Péage / parking de {amount}",
     "tollEdit": "Modification de péage / parking",

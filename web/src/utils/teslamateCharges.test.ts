@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { teslamateChargeCostUrl, teslamateChargeUrl } from './teslamateCharges'
+import { chargeCostToReview, teslamateChargeCostUrl, teslamateChargeUrl } from './teslamateCharges'
 
 const vehicle = { teslamate_grafana_url: 'http://grafana.local', teslamate_url: 'http://tm.local', teslamate_car_id: 2 }
 const charge = {
@@ -47,12 +47,13 @@ describe('teslamateChargeCostUrl', () => {
     expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: undefined }, now)).toBe('http://tm.local/charge-cost/152')
   })
 
-  it('points to the cost page of a charge reported at 0, which TeslaMate also sends for a cost that is not set', () => {
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 0 }, now)).toBe('http://tm.local/charge-cost/152')
+  it('points to the cost page of a charge reported at 0 that nobody confirmed as free', () => {
+    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 0, cost_to_review: true }, now)).toBe('http://tm.local/charge-cost/152')
   })
 
-  it('has no link once the cost is known', () => {
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 4.2 }, now)).toBeNull()
+  it('has no link once the cost is known or confirmed as free', () => {
+    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 4.2, cost_to_review: false }, now)).toBeNull()
+    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 0, cost_to_review: false }, now)).toBeNull()
   })
 
   it('has no link for a cost typed in AutoLedger, which a synchronisation never overwrites', () => {
@@ -73,5 +74,19 @@ describe('teslamateChargeCostUrl', () => {
 
   it('defaults the reference time to now', () => {
     expect(teslamateChargeCostUrl(vehicle, { ...charge, date: new Date().toISOString() })).toBe('http://tm.local/charge-cost/152')
+  })
+})
+
+describe('chargeCostToReview', () => {
+  it('follows the server when it says so', () => {
+    expect(chargeCostToReview({ cost: 0, cost_to_review: true })).toBe(true)
+    expect(chargeCostToReview({ cost: null, cost_to_review: false })).toBe(false)
+  })
+
+  it('falls back on an unknown cost for a charge read without the flag', () => {
+    expect(chargeCostToReview({ cost: null })).toBe(true)
+    expect(chargeCostToReview({ cost: undefined })).toBe(true)
+    expect(chargeCostToReview({ cost: 0 })).toBe(false)
+    expect(chargeCostToReview(null)).toBe(false)
   })
 })

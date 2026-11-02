@@ -14,7 +14,7 @@ import { formatChargeWindow } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { formatNumber } from '@/utils/numbers'
 import { chargeDeletable, chargeOrigin, chargeOriginKey } from '@/utils/chargeProvenance'
-import { teslamateChargeCostUrl, teslamateChargeUrl } from '@/utils/teslamateCharges'
+import { chargeCostToReview, teslamateChargeCostUrl, teslamateChargeUrl } from '@/utils/teslamateCharges'
 import { distanceUnit, formatPerDistanceValue, perDistance } from '@/units'
 import { hasEnergyEstimate } from '@/utils/vehicles'
 
@@ -31,6 +31,7 @@ const emit = defineEmits<{
   'import-csv': []
   'load-more': []
   edit: [charge: any]
+  'review-cost': [charge: any, reviewed: boolean]
   delete: [charge: any]
   'view-document': [docId: string | null | undefined, filename?: string | null, download?: boolean]
 }>()
@@ -95,7 +96,7 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
           v-for="c in month.charges"
           :key="c.id"
           class="relative bg-slate-900 border hover:border-slate-700/90 p-3 rounded-2xl flex items-center gap-2 sm:gap-3 transition-colors"
-          :class="c.cost === null ? 'border-warning-500/40' : 'border-slate-800'"
+          :class="chargeCostToReview(c) ? 'border-warning-500/40' : 'border-slate-800'"
         >
           <!-- The row opens the charge; the receipt and the TeslaMate links above it keep their own click -->
           <CardOpenButton
@@ -134,16 +135,9 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
             <span v-else class="text-xs font-bold text-warning-400 flex items-center gap-1">
               <AlertTriangle class="w-3.5 h-3.5" /> {{ $t('expenses.chargesPanel.missingCost') }}
             </span>
-            <a
-              v-if="teslamateChargeCostUrl(vehicleStore.activeVehicle, c)"
-              :href="teslamateChargeCostUrl(vehicleStore.activeVehicle, c)!"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="relative z-10 mt-0.5 inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium"
-              :title="$t('expenses.teslamateLinks.setCostHint')"
-            >
-              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.setCost') }}
-            </a>
+            <span v-if="c.cost !== null && chargeCostToReview(c)" class="text-xs font-bold text-warning-400 flex items-center justify-end gap-1">
+              <AlertTriangle class="w-3.5 h-3.5" /> {{ $t('expenses.costReview.toConfirm') }}
+            </span>
           </div>
           <RowMenu
             v-if="vehicleStore.canEdit && (teslamateChargeUrl(vehicleStore.activeVehicle, c) || chargeDeletable(c))"
@@ -164,6 +158,30 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
               <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
             </button>
           </RowMenu>
+          <div
+            v-if="(c.cost !== null && chargeCostToReview(c) && vehicleStore.canEdit) || teslamateChargeCostUrl(vehicleStore.activeVehicle, c)"
+            class="basis-full flex flex-wrap items-center gap-x-4 gap-y-1 text-xs"
+          >
+            <button
+              v-if="c.cost !== null && chargeCostToReview(c) && vehicleStore.canEdit"
+              type="button"
+              class="tap-text text-info-400 hover:text-info-300 font-medium"
+              :title="$t('expenses.costReview.confirmFreeHint')"
+              @click="emit('review-cost', c, true)"
+            >
+              {{ $t('expenses.costReview.confirmFree') }}
+            </button>
+            <a
+              v-if="teslamateChargeCostUrl(vehicleStore.activeVehicle, c)"
+              :href="teslamateChargeCostUrl(vehicleStore.activeVehicle, c)!"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="tap-text inline-flex items-center gap-1 text-info-400 hover:text-info-300 font-medium"
+              :title="$t('expenses.teslamateLinks.setCostHint')"
+            >
+              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.setCost') }}
+            </a>
+          </div>
         </div>
       </section>
       <div class="flex items-center justify-between text-xs text-slate-400 px-1">

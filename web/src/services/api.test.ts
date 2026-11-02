@@ -325,6 +325,7 @@ describe('endpoint contract', () => {
     ['listImportProfiles', () => api.listImportProfiles(), 'GET', '/import-profiles'],
     ['deleteImportProfile', () => api.deleteImportProfile('p1'), 'DELETE', '/import-profiles/p1'],
     ['updateDriveTags', () => api.updateDriveTags('v1', 'd1', ['a']), 'PATCH', '/vehicles/v1/drives/d1/tags', { tags: ['a'] }],
+    ['setChargeCostReview', () => api.setChargeCostReview('v1', 'c1', true), 'PATCH', '/vehicles/v1/charges/c1/cost-review', { reviewed: true }],
     ['setDriveTollReview', () => api.setDriveTollReview('v1', 'd1', true), 'PATCH', '/vehicles/v1/drives/d1/toll-review', { reviewed: true }],
     ['getTollDetection', () => api.getTollDetection('v1', 'd1'), 'GET', '/vehicles/v1/drives/d1/toll-detection'],
     ['applyTollEstimate', () => api.applyTollEstimate('v1', 'd1'), 'POST', '/vehicles/v1/drives/d1/apply-toll-estimate'],

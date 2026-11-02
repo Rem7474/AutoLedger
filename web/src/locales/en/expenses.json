@@ -39,6 +39,13 @@
     "fixedCosts": "Fixed costs",
     "fillUps": "Fill-ups"
   },
+  "costReview": {
+    "confirmFree": "Confirm €0",
+    "confirmFreeHint": "TeslaMate reports 0 for a cost it does not know: confirm that this charge was free.",
+    "toConfirm": "Cost to confirm",
+    "free": "Free",
+    "reopen": "Reopen the cost"
+  },
   "teslamateLinks": {
     "details": "Details in TeslaMate",
     "setCost": "Set the cost in TeslaMate",

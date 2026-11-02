@@ -39,6 +39,13 @@
     "fixedCosts": "Frais fixes",
     "fillUps": "Pleins"
   },
+  "costReview": {
+    "confirmFree": "Confirmer 0 €",
+    "confirmFreeHint": "TeslaMate envoie 0 pour un coût qu'il ne connaît pas : confirme que cette recharge était gratuite.",
+    "toConfirm": "Coût à confirmer",
+    "free": "Gratuite",
+    "reopen": "Rouvrir le coût"
+  },
   "teslamateLinks": {
     "details": "Détails dans TeslaMate",
     "setCost": "Définir le coût dans TeslaMate",

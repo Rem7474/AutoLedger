@@ -254,6 +254,15 @@ async function loadMoreCharges() {
   }
 }
 
+async function reviewChargeCost(c: any, reviewed: boolean) {
+  try {
+    await api.setChargeCostReview(vehicleId.value, c.id, reviewed)
+    await loadData()
+  } catch (err: any) {
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+  }
+}
+
 function toggleMissingCostFilter() {
   missingCostOnly.value = !missingCostOnly.value
   loadData()
@@ -419,6 +428,7 @@ function openUploadDocumentModal() {
       @load-more="loadMoreCharges"
       @edit="openEditChargeModal"
       @delete="handleDeleteCharge"
+      @review-cost="reviewChargeCost"
       @view-document="viewOrDownloadDocument"
     />
 

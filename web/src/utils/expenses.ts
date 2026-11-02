@@ -279,6 +279,8 @@ interface ChargeLike {
   date: string
   kwh_added: number
   cost: number | null
+  /** A 0 nobody confirmed as free: its energy is not priced, so it stays out of the average price. */
+  cost_to_review?: boolean
   currency?: string | null
   fx_rate?: number | string | null
 }
@@ -314,7 +316,7 @@ export function groupChargesByMonth<T extends ChargeLike>(charges: T[], baseCurr
     }
     const base = !c.currency || c.currency === baseCurrency ? c.cost : c.cost * (Number(c.fx_rate) || 0)
     month.cost += base
-    if (c.kwh_added > 0) pricedKwh.set(key, (pricedKwh.get(key) ?? 0) + c.kwh_added)
+    if (c.kwh_added > 0 && !c.cost_to_review) pricedKwh.set(key, (pricedKwh.get(key) ?? 0) + c.kwh_added)
   }
   for (const month of months.values()) {
     const priced = pricedKwh.get(month.key) ?? 0
