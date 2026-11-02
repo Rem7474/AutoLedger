@@ -64,7 +64,9 @@ func NewMCPHandler(read *IntegrationReadHandler, tokens middleware.APITokenValid
 	})
 	h.handler = auth.RequireBearerToken(h.verifyToken, &auth.RequireBearerTokenOptions{
 		ResourceMetadataURL: h.issuer + "/.well-known/oauth-protected-resource/mcp",
-		Scopes:              []string{appAuth.ScopeRead},
+		// No scope is named in the challenge: a client that finds one asks for exactly that, and would never offer the
+		// owner the writing box. It falls back to the scopes of the protected resource metadata. Every grant holds
+		// read, which is all this endpoint needs; the writing tools check for write themselves.
 		// The validator already refuses an expired token and does not report the expiry.
 		AllowMissingExpiration: true,
 	})(streamable)
@@ -87,7 +89,7 @@ func (h *MCPHandler) ResourceMetadata() http.Handler {
 	return auth.ProtectedResourceMetadataHandler(&oauthex.ProtectedResourceMetadata{
 		Resource:               h.issuer + "/mcp",
 		AuthorizationServers:   []string{h.issuer},
-		ScopesSupported:        []string{appAuth.ScopeRead},
+		ScopesSupported:        []string{appAuth.ScopeRead, appAuth.ScopeWrite},
 		BearerMethodsSupported: []string{"header"},
 		ResourceName:           "AutoLedger",
 	})
@@ -100,6 +102,10 @@ func (h *MCPHandler) verifyToken(ctx context.Context, token string, _ *http.Requ
 	}
 	grant, err := middleware.ValidateTokenGrant(ctx, h.tokens, appAuth.HashAPIToken(token))
 	if err != nil {
+		return nil, auth.ErrInvalidToken
+	}
+	if !appAuth.CanRead(grant.Scope) {
+		// A token that can push events must not read, and the challenge no longer names a required scope
 		return nil, auth.ErrInvalidToken
 	}
 	info := &auth.TokenInfo{UserID: grant.UserID, Scopes: []string{grant.Scope}, Extra: map[string]any{mcpTokenIDExtra: grant.TokenID}}

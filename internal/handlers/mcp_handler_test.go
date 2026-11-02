@@ -130,6 +130,8 @@ func TestMCPEndpointOnlyOpensToAReadTokenAndSaysWhereToAuthorize(t *testing.T) {
 		}
 		if got := resp.Header.Get("WWW-Authenticate"); !strings.Contains(got, `resource_metadata="https://ledger.example/.well-known/oauth-protected-resource/mcp"`) {
 			t.Errorf("%s: a client finds the authorization server through WWW-Authenticate, got %q", name, got)
+		} else if strings.Contains(got, "scope=") {
+			t.Errorf("%s: the challenge names a scope, a client would ask for that one only and never for write: %q", name, got)
 		}
 	}
 
@@ -269,7 +271,7 @@ func TestMCPResourceMetadataNamesTheAuthorizationServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	if meta.Resource != "https://ledger.example/mcp" || len(meta.AuthorizationServers) != 1 || meta.AuthorizationServers[0] != "https://ledger.example" ||
-		len(meta.ScopesSupported) != 1 || meta.ScopesSupported[0] != "read" {
+		len(meta.ScopesSupported) != 2 || meta.ScopesSupported[0] != "read" || meta.ScopesSupported[1] != "write" {
 		t.Errorf("metadata: %s", rec.Body.String())
 	}
 }
