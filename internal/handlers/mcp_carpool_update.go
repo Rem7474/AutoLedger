@@ -13,6 +13,9 @@ import (
 	"github.com/teslacost/teslacost/internal/money"
 )
 
+// errCarpoolChanged is the answer when the carpool was saved after the assistant read it.
+var errCarpoolChanged = mcpUserError("the carpool was changed since it was read: read it again with get_carpool, show the owner what it holds now, and redo the change")
+
 type mcpPassengerChange struct {
 	Name          string  `json:"name" jsonschema:"the passenger to change, as named in the carpool"`
 	NewName       *string `json:"new_name,omitempty" jsonschema:"a new name for the passenger"`
@@ -26,6 +29,7 @@ type mcpPassengerChange struct {
 type mcpUpdateCarpoolInput struct {
 	VehicleID        string                     `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same"`
 	CarpoolID        string                     `json:"carpool_id" jsonschema:"the id of the carpool trip, as get_carpool gives it"`
+	ExpectedVersion  int64                      `json:"expected_version" jsonschema:"the version of the carpool as get_carpool gave it: the call is refused when the carpool was saved since, so that a change made meanwhile is not overwritten"`
 	Title            *string                    `json:"title,omitempty" jsonschema:"a new title for the carpool"`
 	Notes            *string                    `json:"notes,omitempty" jsonschema:"the note on the carpool; an empty string removes it"`
 	AddPassengers    []mcpCarpoolPassengerInput `json:"add_passengers,omitempty" jsonschema:"passengers to add; a name already in the carpool is refused, change that passenger with update_passengers"`
@@ -39,7 +43,7 @@ func (h *MCPHandler) addCarpoolUpdateTools() {
 		Name:  "update_carpool",
 		Title: "Change a carpool",
 		Description: "Changes a carpool the owner recorded: its title or note, and its passengers (add one, change what one paid, their seats or stops, rename one, take one out). " +
-			"The drives of the carpool and its costs are not changed here, and no carpool can be deleted; a passenger can be taken out of one. Get the carpool_id from get_carpool. " +
+			"The drives of the carpool and its costs are not changed here, and no carpool can be deleted; a passenger can be taken out of one. Get the carpool_id and its version from get_carpool, and give the version back as expected_version: the call is refused when the carpool was changed meanwhile. " +
 			"What a passenger paid replaces the amount recorded: read it first, and say the old and the new amount to the owner. " +
 			"This overwrites the owner's records: call it with dry_run true first, show the owner the carpool as it would be, and save only once they agree. " +
 			"Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
@@ -88,6 +92,10 @@ func (h *IntegrationReadHandler) UpdateCarpool(ctx context.Context, userID, vehi
 		return nil, mcpUserError("nothing to change: give a title, notes, or passengers to add, update or remove")
 	}
 
+	if in.ExpectedVersion < 1 {
+		return nil, mcpUserError("expected_version is the version of this carpool as get_carpool gives it: read the carpool first")
+	}
+
 	stored, err := h.repo.GetCarpoolTrip(ctx, carpoolID, vehicle.ID)
 	if errors.Is(err, database.ErrNotFound) {
 		return nil, mcpUserError("carpool not found on this vehicle: use the id of get_carpool for the same vehicle")
@@ -101,6 +109,10 @@ func (h *IntegrationReadHandler) UpdateCarpool(ctx context.Context, userID, vehi
 		return nil, err
 	}
 	existing := current[0]
+	// A save is guarded by the update itself; a preview writes nothing, so it is checked here
+	if in.DryRun && existing.Version != in.ExpectedVersion {
+		return nil, errCarpoolChanged
+	}
 
 	passengers, err := changedPassengers(existing.Passengers, in)
 	if err != nil {
@@ -131,12 +143,16 @@ func (h *IntegrationReadHandler) UpdateCarpool(ctx context.Context, userID, vehi
 		return nil, err
 	}
 	trip.ID, trip.Date, trip.CostsFrozenAt = existing.ID, existing.Date, existing.CostsFrozenAt
+	trip.UpdatedAt, trip.Version, trip.ExpectedVersion = existing.UpdatedAt, existing.Version, &in.ExpectedVersion
 	if trip.CostsFrozenAt == nil {
 		if err := h.carpool.ResolveLegsForSave(ctx, vehicle.ID, legs); err != nil {
 			return nil, err
 		}
 	}
 	out, err := h.saveCarpool(ctx, vehicle, trip, legs, built, in.DryRun, true)
+	if errors.Is(err, database.ErrStaleWrite) {
+		return nil, errCarpoolChanged
+	}
 	if err != nil {
 		return nil, err
 	}

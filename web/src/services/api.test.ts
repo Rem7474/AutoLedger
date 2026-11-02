@@ -5,6 +5,7 @@ vi.mock('@/stores/auth', () => ({ useAuthStore: () => ({ user: { id: 'account-A'
 vi.mock('@/stores/offline', () => ({ useOfflineStore: () => ({ queue }) }))
 
 import { api } from './api'
+import { isStaleWrite } from './apiError'
 
 function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
@@ -26,6 +27,19 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('request', () => {
+  it('tells a save refused as out of date from any other failure', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'changed', code: 'request.stale' }, 409))
+    const stale = await api.updateCarpool('v1', 'c1', { title: 'x', expected_version: 3 }).catch((err) => err)
+    expect(isStaleWrite(stale)).toBe(true)
+    expect(stale.message).toContain('modifié depuis son ouverture')
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ expected_version: 3 })
+
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'name taken', code: 'charging_place.name_taken' }, 409))
+    const other = await api.updateCarpool('v1', 'c1', { title: 'x' }).catch((err) => err)
+    expect(isStaleWrite(other)).toBe(false)
+    expect(other).toBeInstanceOf(Error)
+  })
+
   it('sends credentials and a JSON content type, and returns the parsed body', async () => {
     fetchMock.mockResolvedValue(jsonResponse([{ id: 'v1' }]))
     expect(await api.getVehicles()).toEqual([{ id: 'v1' }])

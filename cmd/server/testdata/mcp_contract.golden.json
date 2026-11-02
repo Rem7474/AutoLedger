@@ -163,7 +163,8 @@
         "total_cost": {
           "amount": "string",
           "currency": "string"
-        }
+        },
+        "version": "number"
       }
     ],
     "truncated": "boolean",
