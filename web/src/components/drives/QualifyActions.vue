@@ -3,7 +3,8 @@ import { Plus, Ban } from 'lucide-vue-next'
 
 // The two taps that qualify an item of a "to qualify" queue: accept it (enter the toll, create the trip)
 // or rule it out (no toll, not a trip).
-defineProps<{ primaryLabel: string; primaryTitle: string; secondaryLabel: string; secondaryTitle: string; busy?: boolean }>()
+// The second tap is optional: a charge with no cost at all cannot be ruled out, only completed.
+defineProps<{ primaryLabel: string; primaryTitle: string; secondaryLabel?: string; secondaryTitle?: string; busy?: boolean }>()
 const emit = defineEmits<{ primary: []; secondary: [] }>()
 </script>
 
@@ -19,6 +20,7 @@ const emit = defineEmits<{ primary: []; secondary: [] }>()
       <Plus class="w-3.5 h-3.5" /> {{ primaryLabel }}
     </button>
     <button
+      v-if="secondaryLabel"
       type="button"
       :disabled="busy"
       @click="emit('secondary')"
