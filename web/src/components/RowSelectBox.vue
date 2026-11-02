@@ -6,7 +6,7 @@ const emit = defineEmits<{ toggle: [] }>()
 </script>
 
 <template>
-  <label :for="`select-${id}`" class="relative z-10 tap -ml-1 p-1 shrink-0 flex items-center cursor-pointer" :title="label">
+  <label :for="`select-${id}`" class="row-check relative z-10 tap -ml-1 p-1 shrink-0 flex items-center cursor-pointer" :title="label">
     <span class="sr-only">{{ label }}</span>
     <input :id="`select-${id}`" type="checkbox" :checked="checked" class="select-box" @change="emit('toggle')" />
   </label>

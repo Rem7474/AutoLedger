@@ -16,10 +16,12 @@ export interface SelectionAction {
   disabled?: boolean
   reason?: string
   busy?: boolean
+  // Phone only: the list shows its own control on a desktop (select all of a page)
+  phoneOnly?: boolean
 }
 
 // What the bar shows directly: on a phone the first few as icons, on a desktop all of them as buttons
-export const barActions = (actions: SelectionAction[]) => actions.filter((a) => !a.overflow)
+export const barActions = (actions: SelectionAction[]) => actions.filter((a) => !a.overflow && !a.phoneOnly)
 export const phoneShortcuts = (actions: SelectionAction[], max = 3) => barActions(actions).slice(0, max)
 
 // Edit (one row at a time) and delete (several at once; blocked when a row cannot be deleted, e.g. synced from

@@ -6,12 +6,12 @@ import type { VehiclePerson } from '@/services/api'
 import { defaultDriver } from '@/utils/vehicles'
 import { usePreferencesStore } from '@/stores/preferences'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
-import { Receipt, Layers, Users, Plus, Download, Pencil, Trash2, Tag, ExternalLink } from 'lucide-vue-next'
+import { Receipt, Layers, Users, Plus, Download, Pencil, Trash2, ExternalLink, ListChecks, Briefcase, User } from 'lucide-vue-next'
 import type { SelectionAction } from '@/utils/selectionActions'
 import { teslamateDriveUrl } from '@/utils/drives'
 
 // Actions on the drives selected in the list; the page runs them.
-const props = defineProps<{ selectedDriveIds: string[]; selectedDrives: any[]; selectedOffPage: number; selectedSummaryMetrics: string; bulkApplyingToll: boolean; people: VehiclePerson[]; tollDetectionActive: boolean }>()
+const props = defineProps<{ selectedDriveIds: string[]; selectedDrives: any[]; selectedOffPage: number; allPageSelected: boolean; selectedSummaryMetrics: string; bulkApplyingToll: boolean; people: VehiclePerson[]; tollDetectionActive: boolean }>()
 const emit = defineEmits<{
   clear: []
   carpool: []
@@ -21,6 +21,7 @@ const emit = defineEmits<{
   driver: [driverId: string | null]
   export: []
   'add-to-trip': []
+  'select-page': []
   edit: [drive: any]
   delete: [drives: any[]]
 }>()
@@ -47,7 +48,16 @@ const actions = computed<SelectionAction[]>(() => {
   const n = props.selectedDriveIds.length
   const manual = drives.length > 0 && drives.every((d) => d.is_manual)
   const one = n === 1
-  const list: SelectionAction[] = []
+  // On a phone the page has no select-all row (it would push the list down when the selection starts)
+  const list: SelectionAction[] = [
+    {
+      key: 'select-page',
+      label: props.allPageSelected ? t('drives.drivesView.deselectPage') : t('drives.drivesView.selectPage'),
+      icon: ListChecks,
+      run: () => emit('select-page'),
+      phoneOnly: true,
+    },
+  ]
   list.push({
     key: 'edit',
     label: t('common.edit'),
@@ -84,8 +94,8 @@ const actions = computed<SelectionAction[]>(() => {
   list.push({ key: 'group', label: t('drives.driveBulkActions.mergeToll'), icon: Layers, run: () => emit('group'), overflow: true })
   list.push({ key: 'trip', label: t('drives.driveBulkActions.addToTrip'), icon: Plus, run: () => emit('add-to-trip'), overflow: true })
   if (prefs.proPersoEnabled) {
-    list.push({ key: 'work', label: t('drives.driveBulkActions.work'), icon: Tag, run: () => emit('tag', 'Pro'), overflow: true })
-    list.push({ key: 'personal', label: t('drives.driveBulkActions.personal'), icon: Tag, run: () => emit('tag', 'Perso'), overflow: true })
+    list.push({ key: 'work', label: t('drives.driveBulkActions.work'), icon: Briefcase, run: () => emit('tag', 'Pro'), overflow: true })
+    list.push({ key: 'personal', label: t('drives.driveBulkActions.personal'), icon: User, run: () => emit('tag', 'Perso'), overflow: true })
   }
   const tmUrl = props.selectedDrives.length === 1 ? teslamateDriveUrl(vehicleStore.activeVehicle, props.selectedDrives[0]) : null
   if (tmUrl) {

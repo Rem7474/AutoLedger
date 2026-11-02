@@ -72,7 +72,7 @@ function openCarpool() {
     <label
       v-if="showBox"
       :for="'drive-select-' + d.id"
-      class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
+      class="row-check relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
       :title="$t('drives.driveCard.selectThisDrive')"
     >
       <span class="sr-only">{{ $t('drives.driveCard.selectThisDrive') }}</span>

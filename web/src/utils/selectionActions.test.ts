@@ -12,6 +12,12 @@ describe('selection actions', () => {
     expect(barActions(all).map((a) => a.key)).toEqual(['a', 'c'])
   })
 
+  it('keeps the phone-only actions out of the bar and its shortcuts', () => {
+    const all = [{ ...action('select'), phoneOnly: true }, action('a'), action('b')]
+    expect(barActions(all).map((x) => x.key)).toEqual(['a', 'b'])
+    expect(phoneShortcuts(all).map((x) => x.key)).toEqual(['a', 'b'])
+  })
+
   it('shows at most three shortcuts on a phone', () => {
     const all = ['a', 'b', 'c', 'd'].map((k) => action(k))
     expect(phoneShortcuts(all).map((a) => a.key)).toEqual(['a', 'b', 'c'])

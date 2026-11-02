@@ -515,11 +515,13 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       :selected-drive-ids="selectedDriveIds"
       :selected-drives="selectedList"
       :selected-off-page="selectedOffPage"
+      :all-page-selected="allPageSelected"
       :selected-summary-metrics="selectedSummaryMetrics"
       :bulk-applying-toll="bulkApplyingToll"
       :toll-detection-active="vehicleStore.tollDetectionActive"
       :people="vehiclePeople"
       @clear="clearSelection"
+      @select-page="selectAll"
       @carpool="handleCarpoolSelectedDrives"
       @group="showGroupModal = true"
       @bulk-toll="handleBulkApplyToll"
@@ -554,10 +556,9 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
     <!-- REAL DRIVES LIST -->
     <div v-else class="space-y-3">
       <!-- Select all toggle & Total info -->
-      <div class="flex items-center justify-between text-xs text-slate-400 px-2">
+      <div class="flex items-center justify-between text-xs text-slate-400 px-2 max-sm:hidden">
         <SelectAllToggle
           v-if="vehicleStore.canEdit"
-          :class="{ 'max-sm:hidden': !selectedDriveIds.length }"
           :checked="allPageSelected"
           :indeterminate="somePageSelected"
           :label="allPageSelected ? $t('drives.drivesView.deselectPage') : $t('drives.drivesView.selectPage')"

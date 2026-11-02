@@ -158,7 +158,7 @@ onUnmounted(() => {
             @change="moreOpen = false"
           >
             <button
-              v-for="a in actions.filter((x) => x.overflow)"
+              v-for="a in actions.filter((x) => x.overflow && !x.phoneOnly)"
               :key="a.key"
               type="button"
               role="menuitem"

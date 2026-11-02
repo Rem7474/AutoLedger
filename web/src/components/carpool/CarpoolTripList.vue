@@ -7,7 +7,7 @@ import { formatDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
-import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock } from 'lucide-vue-next'
+import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock, ListChecks } from 'lucide-vue-next'
 import { formatDate, hasLinkedLegs, splitByFreeze } from '@/utils/carpool'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import { t } from '@/i18n'
@@ -41,6 +41,14 @@ const selectedTrips = computed(() => props.trips.filter((tr) => props.selectedTr
 // The carpools made from drives either follow their cost or hold the amounts as entered (frozen)
 const freezeSplit = computed(() => splitByFreeze(selectedTrips.value))
 const actions = computed<SelectionAction[]>(() => [
+  // On a phone the list has no select-all row (it would push the cards down when the selection starts)
+  {
+    key: 'select-all',
+    label: isAllSelected.value ? t('common.deselectAll') : t('common.selectAll'),
+    icon: ListChecks,
+    run: () => emit('toggle-all'),
+    phoneOnly: true,
+  },
   ...editDeleteActions(selectedTrips.value, { edit: (tr) => emit('edit', tr), remove: (list) => emit('delete-many', list) }),
   {
     key: 'freeze',
@@ -95,7 +103,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
     />
 
     <!-- Header row: Select all checkbox & Total info -->
-    <div v-if="vehicleStore.canEdit" class="flex items-center justify-between text-xs text-slate-400 px-2">
+    <div v-if="vehicleStore.canEdit" class="flex items-center justify-between text-xs text-slate-400 px-2 max-sm:hidden">
       <SelectAllToggle
         :checked="isAllSelected"
         :indeterminate="selectedTripIds.length > 0 && !isAllSelected"
@@ -124,7 +132,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
       <label
         v-if="showBox"
         :for="'carpool-select-' + trip.id"
-        class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
+        class="row-check relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
         :title="$t('carpool.carpoolTripList.selectThisCarpool')"
       >
         <span class="sr-only">{{ $t('carpool.carpoolTripList.selectThisCarpool') }}</span>
