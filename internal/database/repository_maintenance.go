@@ -123,7 +123,7 @@ func (r *Repository) UpdateMaintenanceExpense(ctx context.Context, m *models.Mai
 	// Reminders that follow from this record keep its date, and its odometer when it has one.
 	if _, err := r.pool.Exec(ctx, `
 		UPDATE maintenance_reminders
-		SET last_service_date = $1, last_service_odometer = COALESCE($2, last_service_odometer), updated_at = NOW()
+		SET last_service_date = $1, last_service_odometer = COALESCE($2, last_service_odometer), version = version + 1, updated_at = NOW()
 		WHERE maintenance_id::text = $3;`, m.Date, m.Odometer, m.ID); err != nil {
 		return err
 	}

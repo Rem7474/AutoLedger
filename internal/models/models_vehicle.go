@@ -228,8 +228,10 @@ type VehicleOwnership struct {
 	EndDate   *time.Time   `json:"end_date,omitempty"`
 	SalePrice *money.Cents `json:"sale_price,omitempty"`
 
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	Version         int64     `json:"version"`
+	ExpectedVersion *int64    `json:"-"`
 }
 
 // IsLease reports whether the vehicle is under a LOA or LLD contract.
