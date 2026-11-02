@@ -331,7 +331,8 @@ async function handleSave() {
       })),
     }
     if (editingTripId.value) {
-      await api.updateCarpool(props.vehicleId, editingTripId.value, payload)
+      // The update is refused when the carpool was saved since it was loaded, instead of overwriting that change
+      await api.updateCarpool(props.vehicleId, editingTripId.value, { ...payload, expected_updated_at: props.editing?.updated_at })
     } else {
       await api.createCarpool(props.vehicleId, payload)
     }

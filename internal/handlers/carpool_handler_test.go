@@ -194,3 +194,33 @@ func TestCarpoolEstimateAndRecalculate(t *testing.T) {
 	}
 	a.expect(http.StatusBadRequest, "POST", "/carpools/recalculate", `{`)
 }
+
+func TestCarpoolUpdateRefusesAnOutOfDateEditor(t *testing.T) {
+	a := newCarpoolAPI(t, "stale")
+	created := a.expect(http.StatusCreated, "POST", "/carpools", `{"title":"Solo","distance_km":50,"electricity_cost":5,"passengers":[]}`)
+	id, loaded := created["id"].(string), created["updated_at"].(string)
+
+	first := a.expect(http.StatusOK, "PUT", "/carpools/"+id,
+		`{"title":"First editor","distance_km":50,"passengers":[],"expected_updated_at":"`+loaded+`"}`)
+	if first["updated_at"] == loaded {
+		t.Fatalf("a save must move updated_at: %v", first)
+	}
+
+	// The second editor opened the carpool before the first one saved it
+	refused := a.expect(http.StatusConflict, "PUT", "/carpools/"+id,
+		`{"title":"Second editor","distance_km":50,"passengers":[],"expected_updated_at":"`+loaded+`"}`)
+	if refused["code"] != "carpool.changed" {
+		t.Fatalf("a stale save answers carpool.changed: %v", refused)
+	}
+	if got := a.expect(http.StatusOK, "GET", "/carpools/"+id, ""); got["title"] != "First editor" {
+		t.Fatalf("the first editor's change was overwritten: %v", got)
+	}
+
+	// The current stamp is accepted, and so is an editor that sends none
+	a.expect(http.StatusOK, "PUT", "/carpools/"+id,
+		`{"title":"Second editor","distance_km":50,"passengers":[],"expected_updated_at":"`+first["updated_at"].(string)+`"}`)
+	a.expect(http.StatusOK, "PUT", "/carpools/"+id, `{"title":"No stamp","distance_km":50,"passengers":[]}`)
+	// A stamp for a carpool that does not exist is a 404, not a conflict
+	a.expect(http.StatusNotFound, "PUT", "/carpools/00000000-0000-0000-0000-000000000000",
+		`{"title":"Ghost","distance_km":1,"expected_updated_at":"`+loaded+`"}`)
+}

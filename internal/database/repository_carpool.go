@@ -86,15 +86,21 @@ func (r *Repository) saveCarpoolTrip(ctx context.Context, trip *models.CarpoolTr
 			    insurance_cost = $10, other_cost = $11, total_cost = $12, total_revenue = $13,
 			    net_cost = $14, notes = $15, updated_at = NOW(),
 			    costs_frozen_at = CASE WHEN $18::timestamptz IS NULL THEN NULL ELSE COALESCE(costs_frozen_at, $18::timestamptz) END
-			WHERE id::text = $16 AND vehicle_id = $17
+			WHERE id::text = $16 AND vehicle_id = $17 AND ($19::timestamptz IS NULL OR updated_at = $19::timestamptz)
 			RETURNING created_at, updated_at, costs_frozen_at;
 		`,
 			trip.DriveID, trip.TripGroupID, trip.Title, trip.Date, trip.DistanceKm,
 			trip.ElectricityCost, trip.TollsCost, trip.TiresCost, trip.MaintenanceCost,
 			trip.InsuranceCost, trip.OtherCost, trip.TotalCost, trip.TotalRevenue,
-			trip.NetCost, trip.Notes, trip.ID, trip.VehicleID, trip.CostsFrozenAt,
+			trip.NetCost, trip.Notes, trip.ID, trip.VehicleID, trip.CostsFrozenAt, trip.ExpectedUpdatedAt,
 		).Scan(&trip.CreatedAt, &trip.UpdatedAt, &trip.CostsFrozenAt)
 		if errors.Is(err, pgx.ErrNoRows) {
+			if trip.ExpectedUpdatedAt != nil {
+				var exists bool
+				if qerr := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM carpool_trips WHERE id::text = $1 AND vehicle_id = $2);`, trip.ID, trip.VehicleID).Scan(&exists); qerr == nil && exists {
+					return ErrStaleWrite
+				}
+			}
 			return ErrNotFound
 		}
 	}

@@ -234,7 +234,8 @@
     "invalid_override": "Catégorie de coût inconnue : {p0}",
     "needs_leg": "Un covoiturage doit comporter au moins une étape",
     "invalid_stops": "Arrêts de montée et de descente invalides pour {p0}",
-    "title_required": "Le titre du covoiturage est requis"
+    "title_required": "Le titre du covoiturage est requis",
+    "changed": "Le covoiturage a été modifié depuis son ouverture : rechargez-le et refaites vos modifications"
   },
   "expense": {
     "type_invalid": "Type de dépense invalide",

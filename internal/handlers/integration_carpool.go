@@ -68,6 +68,7 @@ type IntegrationCarpoolTrip struct {
 	DriverCost IntegrationAmount             `json:"driver_cost_share" jsonschema:"the part of the cost the driver keeps"`
 	Passengers []IntegrationCarpoolPassenger `json:"passengers" jsonschema:"who rode, named"`
 	Notes      *string                       `json:"notes" jsonschema:"free note on the trip, user text; null when none"`
+	UpdatedAt  string                        `json:"updated_at" jsonschema:"RFC 3339 instant of the last save of the carpool: give it back as expected_updated_at to update_carpool; empty for a carpool that was only previewed"`
 }
 
 // IntegrationCarpool lists the carpool trips of a vehicle, the most recent first.
@@ -116,7 +117,7 @@ func integrationCarpoolTrip(t models.CarpoolTripWithPassengers, currency string)
 		ID: t.ID, Title: t.Title, Date: t.Date.UTC().Format(time.RFC3339), Distance: kilometres(t.DistanceKm), Stops: stops,
 		TotalCost: amountOf(t.TotalCost, currency), Energy: amountOf(t.ElectricityCost, currency), Tolls: amountOf(t.TollsCost, currency),
 		Revenue: amountOf(t.TotalRevenue, currency), NetCost: amountOf(t.NetCost, currency), DriverCost: amountOf(t.DriverCostShare, currency),
-		Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes),
+		Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes), UpdatedAt: carpoolStamp(t.UpdatedAt),
 	}
 	for _, p := range t.Passengers {
 		item.Passengers = append(item.Passengers, IntegrationCarpoolPassenger{
@@ -200,4 +201,13 @@ func (h *IntegrationReadHandler) GetCarpool(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// carpoolStamp writes the instant a carpool was last saved at the precision the database keeps, so that a client can give
+// it back to update_carpool unchanged.
+func carpoolStamp(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.UTC().Format(time.RFC3339Nano)
 }

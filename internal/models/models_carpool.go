@@ -30,6 +30,9 @@ type CarpoolTrip struct {
 	CostsFrozenAt *time.Time `json:"costs_frozen_at,omitempty"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
+	// ExpectedUpdatedAt, when set on an update, is the UpdatedAt the caller read: the update is refused when the
+	// trip was saved since. It is not stored.
+	ExpectedUpdatedAt *time.Time `json:"-"`
 }
 
 // CarpoolPassenger represents a booking / passenger contribution for a full trip or sub-leg ("bout de trajet").
