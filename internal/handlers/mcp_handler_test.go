@@ -137,8 +137,8 @@ func TestMCPEndpointOnlyOpensToAReadTokenAndSaysWhereToAuthorize(t *testing.T) {
 
 	resp := f.post(ingest)
 	_ = resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden {
-		t.Errorf("a token that can push events must not read through MCP: status %d, want 403", resp.StatusCode)
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("a token that can push events must not read through MCP: status %d, want 401", resp.StatusCode)
 	}
 
 	resp = f.post(f.readTok)

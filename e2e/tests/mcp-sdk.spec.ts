@@ -137,7 +137,8 @@ test('a grant limited to one vehicle sees only that vehicle', async ({ page, bas
   let chosen = ''
   const client = await connect(page, baseURL!, 'Limited assistant', async (consent) => {
     await consent.getByLabel('Only the vehicles I choose').check()
-    const boxes = consent.locator('input[type=checkbox]')
+    // The writing box is a checkbox too: the vehicles are the others
+    const boxes = consent.locator('label:not(:has-text("Also let it")) input[type=checkbox]')
     expect(await boxes.count(), 'the demo account has several vehicles to choose from').toBeGreaterThan(1)
     chosen = (await boxes.first().locator('xpath=ancestor::label').innerText()).trim()
     await boxes.first().check()
