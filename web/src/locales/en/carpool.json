@@ -165,7 +165,12 @@
     },
     "someAdjusted": "Some legs differ from what their drives cost.",
     "restoreAll": "Restore the drives' amounts",
-    "restoreAllTitle": "Restore the drives' amounts?"
+    "restoreAllTitle": "Restore the drives' amounts?",
+    "freezeMany": "Freeze amounts ({count})",
+    "freezeNone": "No carpool linked to drives to freeze",
+    "resyncMany": "Resync ({count})",
+    "resyncNone": "No frozen carpool to resync",
+    "resyncManyTitle": "Follow the drives again for {count} carpools?"
   },
   "editor": {
     "recap": "Recap",

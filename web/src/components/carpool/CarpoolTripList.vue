@@ -8,19 +8,21 @@ import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock } from 'lucide-vue-next'
-import { formatDate, hasLinkedLegs } from '@/utils/carpool'
+import { formatDate, hasLinkedLegs, splitByFreeze } from '@/utils/carpool'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 
 // The carpool trips as compact cards (the legs, passengers and costs are in the detail, opened by a click), and the
-// selection actions (recalculate, export). On a phone the checkboxes are hidden at rest: a long press selects a carpool and
+// selection actions (edit, delete, freeze or resync the amounts of the carpools made from drives, recalculate, export). On a phone the checkboxes are hidden at rest: a long press selects a carpool and
 // starts the selection, where the boxes show and a tap toggles the row instead of opening it.
 const props = defineProps<{ trips: any[]; selectedTripIds: string[]; recalculating: boolean }>()
 const emit = defineEmits<{
   clear: []
   open: [trip: any]
   'batch-recalculate': []
+  'batch-freeze': [trips: any[]]
+  'batch-resync': [trips: any[]]
   export: []
   'toggle-all': []
   toggle: [tripId: string]
@@ -36,8 +38,30 @@ const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 // A carpool made from drives follows their cost on its own: only the ones entered by distance are recalculated
 const recalculable = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id) && !hasLinkedLegs(tr)))
 const selectedTrips = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id)))
+// The carpools made from drives either follow their cost or hold the amounts as entered (frozen)
+const freezeSplit = computed(() => splitByFreeze(selectedTrips.value))
 const actions = computed<SelectionAction[]>(() => [
   ...editDeleteActions(selectedTrips.value, { edit: (tr) => emit('edit', tr), remove: (list) => emit('delete-many', list) }),
+  {
+    key: 'freeze',
+    label: t('carpool.linked.freezeMany', { count: freezeSplit.value.freezable.length }),
+    icon: Lock,
+    run: () => emit('batch-freeze', freezeSplit.value.freezable),
+    busy: props.recalculating,
+    disabled: freezeSplit.value.freezable.length === 0,
+    reason: t('carpool.linked.freezeNone'),
+    overflow: true,
+  },
+  {
+    key: 'resync',
+    label: t('carpool.linked.resyncMany', { count: freezeSplit.value.resyncable.length }),
+    icon: Link2,
+    run: () => emit('batch-resync', freezeSplit.value.resyncable),
+    busy: props.recalculating,
+    disabled: freezeSplit.value.resyncable.length === 0,
+    reason: t('carpool.linked.resyncNone'),
+    overflow: true,
+  },
   {
     key: 'recalculate',
     label: t('carpool.carpoolTripList.recalculateActualCosts', { length: recalculable.value.length }),

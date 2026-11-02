@@ -165,7 +165,12 @@
     },
     "someAdjusted": "Certaines étapes diffèrent du coût de leurs trajets.",
     "restoreAll": "Rétablir les montants des trajets",
-    "restoreAllTitle": "Rétablir les montants des trajets ?"
+    "restoreAllTitle": "Rétablir les montants des trajets ?",
+    "freezeMany": "Figer les montants ({count})",
+    "freezeNone": "Aucun covoiturage lié aux trajets à figer",
+    "resyncMany": "Resynchroniser ({count})",
+    "resyncNone": "Aucun covoiturage figé à resynchroniser",
+    "resyncManyTitle": "Suivre à nouveau les trajets pour {count} covoiturages ?"
   },
   "editor": {
     "recap": "Récapitulatif",
