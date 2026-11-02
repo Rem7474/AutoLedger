@@ -379,6 +379,9 @@ func TestMCPEndpointAnswersABrowserClientsProbe(t *testing.T) {
 // updateRoutesPending (to do) or in updateRoutesExempt (with its reason), so that the question is asked for each one.
 var updateRoutesVersioned = []string{
 	"PUT /api/vehicles/{vehicleId}/carpools/{id}",
+	"PUT /api/vehicles/{id}",
+	"PUT /api/vehicles/{vehicleId}/charges/{chargeId}",
+	"PUT /api/vehicles/{vehicleId}/drives/{driveId}",
 	"PUT /api/vehicles/{vehicleId}/expenses/{expenseId}",
 	"PUT /api/vehicles/{vehicleId}/fuel-logs/{fuelLogId}",
 	"PUT /api/vehicles/{vehicleId}/maintenance/{maintenanceId}",
@@ -389,23 +392,15 @@ var updateRoutesVersioned = []string{
 // updateRoutesPending are the routes whose item still gets overwritten by the last save. The list shrinks as the items
 // are versioned; it must not grow.
 var updateRoutesPending = []string{
-	"PATCH /api/vehicles/{vehicleId}/drives/{driveId}/tags",
-	"PATCH /api/vehicles/{vehicleId}/drives/{driveId}/toll-review",
 	"PATCH /api/vehicles/{vehicleId}/tires/batch",
 	"PUT /api/comparison-scenarios/{scenarioId}",
 	"PUT /api/tariffs/plans/{id}",
-	"PUT /api/vehicles/{id}",
-	"PUT /api/vehicles/{id}/estimated-energy",
 	"PUT /api/vehicles/{id}/members/{memberId}",
 	"PUT /api/vehicles/{id}/ownership",
 	"PUT /api/vehicles/{id}/people/{personId}",
 	"PUT /api/vehicles/{id}/people/{personId}/default",
 	"PUT /api/vehicles/{id}/people/{personId}/link",
-	"PUT /api/vehicles/{vehicleId}/charges/{chargeId}",
 	"PUT /api/vehicles/{vehicleId}/charging-places/{placeId}",
-	"PUT /api/vehicles/{vehicleId}/drives/driver",
-	"PUT /api/vehicles/{vehicleId}/drives/{driveId}",
-	"PUT /api/vehicles/{vehicleId}/drives/{driveId}/driver",
 	"PUT /api/vehicles/{vehicleId}/reminders/{reminderId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}/logs/{logId}",
@@ -414,12 +409,17 @@ var updateRoutesPending = []string{
 
 // updateRoutesExempt are the routes that need no version, and why.
 var updateRoutesExempt = map[string]string{
-	"PUT /api/auth/distance-unit":                           "personal setting, a single editor",
-	"PUT /api/auth/language":                                "personal setting, a single editor",
-	"PUT /api/auth/volume-unit":                             "personal setting, a single editor",
-	"PUT /api/fleet/budget":                                 "personal setting, a single editor",
-	"PUT /api/vehicles/{vehicleId}/charging-places/aliases": "replaces a whole mapping, not an item",
-	"PUT /api/vehicles/{vehicleId}/webhook":                 "single setting per vehicle, not an item",
+	"PATCH /api/vehicles/{vehicleId}/drives/{driveId}/tags":        "replaces one field of a drive; advances its version so an open editor is refused",
+	"PATCH /api/vehicles/{vehicleId}/drives/{driveId}/toll-review": "flags one field of a drive; advances its version so an open editor is refused",
+	"PUT /api/vehicles/{id}/estimated-energy":                      "sets two fields of a vehicle; advances its version so an open editor is refused",
+	"PUT /api/vehicles/{vehicleId}/drives/driver":                  "sets one field on several drives; advances their version",
+	"PUT /api/vehicles/{vehicleId}/drives/{driveId}/driver":        "sets one field of a drive; advances its version",
+	"PUT /api/auth/distance-unit":                                  "personal setting, a single editor",
+	"PUT /api/auth/language":                                       "personal setting, a single editor",
+	"PUT /api/auth/volume-unit":                                    "personal setting, a single editor",
+	"PUT /api/fleet/budget":                                        "personal setting, a single editor",
+	"PUT /api/vehicles/{vehicleId}/charging-places/aliases":        "replaces a whole mapping, not an item",
+	"PUT /api/vehicles/{vehicleId}/webhook":                        "single setting per vehicle, not an item",
 }
 
 func TestEveryUpdateRouteIsVersionedOrListed(t *testing.T) {

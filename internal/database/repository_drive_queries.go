@@ -20,7 +20,7 @@ func (r *Repository) GetDriveByID(ctx context.Context, driveID, vehicleID string
 		SELECT id, vehicle_id, teslamate_drive_id, start_time, end_time,
 		       start_odometer, end_odometer, distance_km, duration_min,
 		       speed_avg, speed_max, power_max, power_min, start_address, end_address, energy_consumed_kwh,
-		       consumption_kwh_100km, tags, is_manual, energy_estimated, toll_reviewed_at, created_at, updated_at
+		       consumption_kwh_100km, tags, is_manual, energy_estimated, toll_reviewed_at, created_at, updated_at, version
 		FROM drives
 		WHERE id::text = $1 AND vehicle_id = $2 AND deleted_upstream_at IS NULL;
 	`
@@ -30,7 +30,7 @@ func (r *Repository) GetDriveByID(ctx context.Context, driveID, vehicleID string
 		&d.StartOdometer, &d.EndOdometer, &d.DistanceKm, &d.DurationMin,
 		&d.SpeedAvg, &d.SpeedMax, &d.PowerMax, &d.PowerMin,
 		&d.StartAddress, &d.EndAddress, &d.EnergyConsumedKwh,
-		&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt,
+		&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt, &d.Version,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
