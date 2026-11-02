@@ -60,39 +60,38 @@ const summaryChips = computed(() =>
 
 <template>
   <div class="space-y-3">
-    <!-- Phone: the period and the filters are in a sheet -->
-    <div v-if="isMobile" class="space-y-2 rounded-2xl border border-slate-800 bg-slate-900 p-3">
-      <div class="flex items-center gap-2">
-        <button type="button" class="btn btn-secondary min-w-0 flex-1 justify-start" @click="sheetOpen = true">
-          <Calendar class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-          <span class="truncate">{{ periodSummary }}</span>
-        </button>
-        <button type="button" class="btn btn-secondary shrink-0" @click="sheetOpen = true">
-          <SlidersHorizontal class="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{{ $t('drives.drivesView.filters') }}</span>
-          <span v-if="activeCount > 0" class="rounded-full bg-rose-600 px-1.5 text-xs font-bold text-white">{{ activeCount }}</span>
-        </button>
-      </div>
-      <div class="relative">
+    <!-- Phone: one line, the search field, the period and the filters button; the period and the quick filters are in a sheet -->
+    <div v-if="isMobile" class="flex items-center gap-2">
+      <div class="relative min-w-0 flex-1">
         <label for="drives-search-input-phone" class="sr-only">{{ $t('drives.drivesToolbar.searchForACityOr') }}</label>
-        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <input
           id="drives-search-input-phone"
-          type="text"
+          type="search"
+          enterkeyhint="search"
           v-model="searchQuery"
           @input="onSearchInput"
-          :placeholder="$t('drives.drivesToolbar.searchForACityAddress')"
-          class="w-full rounded-xl border border-slate-800 bg-slate-950 py-1.5 pl-9 pr-8 text-xs text-white placeholder-slate-500 transition-colors focus:border-rose-500 focus:outline-none"
+          :placeholder="$t('drives.drivesToolbar.searchShort')"
+          class="w-full rounded-full border border-slate-800 bg-slate-900 pl-10 pr-10 text-white placeholder-slate-500 transition-colors focus:border-rose-500 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         <button
           v-if="searchQuery"
+          type="button"
           @click="clearSearch"
-          class="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white"
+          class="tap absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-slate-400"
           :title="$t('drives.drivesToolbar.clearTheSearch')" :aria-label="$t('drives.drivesToolbar.clearTheSearch')"
         >
-          <X class="h-3.5 w-3.5" />
+          <X class="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
+      <button type="button" class="btn btn-secondary max-w-[40%] shrink-0 rounded-full" @click="sheetOpen = true">
+        <Calendar class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+        <span class="truncate">{{ periodSummary }}</span>
+      </button>
+      <button type="button" class="tap btn btn-secondary relative shrink-0 rounded-full !px-0 w-11" :aria-label="$t('drives.drivesView.filters')" @click="sheetOpen = true">
+        <SlidersHorizontal class="h-4 w-4" aria-hidden="true" />
+        <span v-if="activeCount > 0" class="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-rose-600 px-1 text-center text-xs font-bold leading-5 text-white">{{ activeCount }}</span>
+      </button>
     </div>
 
     <ModalShell v-if="isMobile" v-model:open="sheetOpen" :title="$t('drives.drivesView.filters')" :icon="SlidersHorizontal" icon-class="text-slate-300" size="sm">
