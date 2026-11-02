@@ -22,6 +22,7 @@ import {
 import ModalShell from '@/components/ModalShell.vue'
 import { distanceUnit, formatDistance, formatDistanceValue, formatPerDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 
 // The acquisition contract of a vehicle (purchase, loan, LOA, LLD) in three steps. \`ownership\` is the saved
 // contract (null when there is none); saving reports the stored contract, deleting reports deleted.
@@ -30,6 +31,7 @@ const emit = defineEmits<{ saved: [ownership: any]; deleted: [] }>()
 const currency = computed(() => props.vehicle?.currency ?? '')
 const open = defineModel<boolean>('open', { required: true })
 const { showConfirm, showAlert } = useConfirm()
+const { explainStaleWrite } = useStaleWrite()
 
 const ownershipVehicle = computed(() => props.vehicle)
 const currentOwnershipStep = ref(1)
@@ -74,10 +76,16 @@ async function saveOwnershipAction() {
   if (!props.vehicle) return
   if (!validateOwnershipStep(1) || !validateOwnershipStep(2)) return
   try {
-    const saved = await api.saveOwnership(props.vehicle.id, ownershipPayload(ownershipForm.value))
+    const saved = await api.saveOwnership(props.vehicle.id, { ...ownershipPayload(ownershipForm.value), expected_version: props.ownership?.version })
     open.value = false
     emit('saved', saved)
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      // Show the contract as it is now rather than the one the editor opened.
+      open.value = false
+      emit('saved', await api.getOwnership(props.vehicle.id))
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

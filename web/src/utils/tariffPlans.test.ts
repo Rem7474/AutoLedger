@@ -4,6 +4,7 @@ import { emptyPlanForm, formToPayload, groupVersions, nextVersionForm, planProbl
 
 const plan = (over: Partial<TariffPlan> = {}): TariffPlan => ({
   id: 'p1',
+  version: 1,
   user_id: 'u',
   name: 'Heures creuses',
   plan_type: 'BANDS',

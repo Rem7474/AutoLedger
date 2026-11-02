@@ -117,6 +117,8 @@ type MaintenanceReminder struct {
 	LastNotifiedOdometer *float64   `json:"last_notified_odometer,omitempty"`
 	CreatedAt            time.Time  `json:"created_at"`
 	UpdatedAt            time.Time  `json:"updated_at"`
+	Version              int64      `json:"version"`
+	ExpectedVersion      *int64     `json:"-"`
 
 	// Summary of the linked maintenance record, filled when listing.
 	Maintenance *LinkedMaintenance `json:"maintenance,omitempty"`
