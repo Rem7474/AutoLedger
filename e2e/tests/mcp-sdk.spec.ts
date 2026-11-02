@@ -107,7 +107,7 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   // A grant is read-only unless the user ticked the writing box: the writing tool refuses it
   for (const name of writing) {
     const refused = await call(client, name, name === 'update_carpool'
-      ? { vehicle_id: vehicles[0].id, carpool_id: '00000000-0000-4000-8000-000000000001', title: 'x' }
+      ? { vehicle_id: vehicles[0].id, carpool_id: '00000000-0000-4000-8000-000000000001', expected_updated_at: '2026-01-01T00:00:00Z', title: 'x' }
       : { vehicle_id: vehicles[0].id, drive_ids: ['00000000-0000-4000-8000-000000000001'] })
     expect(refused.isError, `${name} on a read grant`).toBe(true)
     expect(refused.text).toContain('can only read')
