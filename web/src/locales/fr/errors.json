@@ -24,6 +24,7 @@
     "invalid_status": "Le statut doit être overdue, due_soon ou ok",
     "invalid_date": "Date invalide",
     "not_found": "Élément introuvable",
+    "stale": "L'élément a été modifié depuis son ouverture : rechargez-le et refaites vos modifications",
     "invalid_reference": "Référence invalide : trajet, groupe ou pneu inexistant pour ce véhicule",
     "invalid_date_value": "Date invalide : {p0}",
     "invalid_value": "Valeur invalide",
@@ -234,8 +235,7 @@
     "invalid_override": "Catégorie de coût inconnue : {p0}",
     "needs_leg": "Un covoiturage doit comporter au moins une étape",
     "invalid_stops": "Arrêts de montée et de descente invalides pour {p0}",
-    "title_required": "Le titre du covoiturage est requis",
-    "changed": "Le covoiturage a été modifié depuis son ouverture : rechargez-le et refaites vos modifications"
+    "title_required": "Le titre du covoiturage est requis"
   },
   "expense": {
     "type_invalid": "Type de dépense invalide",

@@ -70,6 +70,10 @@
     "vehicles": "Vehicles",
     "account": "Account"
   },
+  "stale": {
+    "title": "Changed elsewhere",
+    "message": "This item was changed since you opened it, by someone else or in another window. Nothing was saved: the latest version is loaded again, make your changes on it."
+  },
   "confirm": {
     "title": "Confirmation",
     "deleteTitle": "Deletion",

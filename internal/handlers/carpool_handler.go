@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -73,9 +72,9 @@ type UpsertCarpoolRequest struct {
 	InsuranceCost   money.Cents `json:"insurance_cost"`
 	OtherCost       money.Cents `json:"other_cost"`
 	Notes           *string     `json:"notes"`
-	// ExpectedUpdatedAt is the updated_at of the trip as the editor loaded it: an update is refused with 409 when the
-	// trip was saved since. Left out, the update replaces whatever is stored.
-	ExpectedUpdatedAt *time.Time `json:"expected_updated_at"`
+	// ExpectedVersion is the version of the trip as the editor loaded it: an update is refused with 409 when the trip
+	// was saved since. Left out, the update replaces whatever is stored.
+	ExpectedVersion *int64 `json:"expected_version"`
 	// CostsFrozen keeps the amounts of the legs as sent instead of following their drives
 	CostsFrozen bool               `json:"costs_frozen"`
 	Legs        []LegPayload       `json:"legs"`
@@ -325,13 +324,9 @@ func (h *CarpoolHandler) save(w http.ResponseWriter, r *http.Request, tripID str
 	if tripID == "" {
 		err = h.repo.CreateCarpoolTrip(r.Context(), trip, legs, passengers)
 	} else {
-		trip.ID, trip.ExpectedUpdatedAt = tripID, req.ExpectedUpdatedAt
+		trip.ID, trip.ExpectedVersion = tripID, req.ExpectedVersion
 		status = http.StatusOK
 		err = h.repo.UpdateCarpoolTrip(r.Context(), trip, legs, passengers)
-	}
-	if errors.Is(err, database.ErrStaleWrite) {
-		writeAPIError(w, http.StatusConflict, apierror.New("carpool.changed", "The carpool was changed since you opened it: reload it and make your changes again"))
-		return
 	}
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to save carpool trip")

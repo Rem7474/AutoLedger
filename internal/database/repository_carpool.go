@@ -72,36 +72,30 @@ func (r *Repository) saveCarpoolTrip(ctx context.Context, trip *models.CarpoolTr
 				electricity_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost,
 				total_cost, total_revenue, net_cost, notes, costs_frozen_at
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-			RETURNING id, created_at, updated_at;
+			RETURNING id, created_at, updated_at, version;
 		`,
 			trip.VehicleID, trip.DriveID, trip.TripGroupID, trip.Title, trip.Date, trip.DistanceKm,
 			trip.ElectricityCost, trip.TollsCost, trip.TiresCost, trip.MaintenanceCost, trip.InsuranceCost, trip.OtherCost,
 			trip.TotalCost, trip.TotalRevenue, trip.NetCost, trip.Notes, trip.CostsFrozenAt,
-		).Scan(&trip.ID, &trip.CreatedAt, &trip.UpdatedAt)
+		).Scan(&trip.ID, &trip.CreatedAt, &trip.UpdatedAt, &trip.Version)
 	} else {
 		err = tx.QueryRow(ctx, `
 			UPDATE carpool_trips
 			SET drive_id = $1, trip_group_id = $2, title = $3, date = $4, distance_km = $5,
 			    electricity_cost = $6, tolls_cost = $7, tires_cost = $8, maintenance_cost = $9,
 			    insurance_cost = $10, other_cost = $11, total_cost = $12, total_revenue = $13,
-			    net_cost = $14, notes = $15, updated_at = NOW(),
+			    net_cost = $14, notes = $15, updated_at = NOW(), version = version + 1,
 			    costs_frozen_at = CASE WHEN $18::timestamptz IS NULL THEN NULL ELSE COALESCE(costs_frozen_at, $18::timestamptz) END
-			WHERE id::text = $16 AND vehicle_id = $17 AND ($19::timestamptz IS NULL OR updated_at = $19::timestamptz)
-			RETURNING created_at, updated_at, costs_frozen_at;
+			WHERE id::text = $16 AND vehicle_id = $17 AND ($19::bigint IS NULL OR version = $19::bigint)
+			RETURNING created_at, updated_at, costs_frozen_at, version;
 		`,
 			trip.DriveID, trip.TripGroupID, trip.Title, trip.Date, trip.DistanceKm,
 			trip.ElectricityCost, trip.TollsCost, trip.TiresCost, trip.MaintenanceCost,
 			trip.InsuranceCost, trip.OtherCost, trip.TotalCost, trip.TotalRevenue,
-			trip.NetCost, trip.Notes, trip.ID, trip.VehicleID, trip.CostsFrozenAt, trip.ExpectedUpdatedAt,
-		).Scan(&trip.CreatedAt, &trip.UpdatedAt, &trip.CostsFrozenAt)
+			trip.NetCost, trip.Notes, trip.ID, trip.VehicleID, trip.CostsFrozenAt, trip.ExpectedVersion,
+		).Scan(&trip.CreatedAt, &trip.UpdatedAt, &trip.CostsFrozenAt, &trip.Version)
 		if errors.Is(err, pgx.ErrNoRows) {
-			if trip.ExpectedUpdatedAt != nil {
-				var exists bool
-				if qerr := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM carpool_trips WHERE id::text = $1 AND vehicle_id = $2);`, trip.ID, trip.VehicleID).Scan(&exists); qerr == nil && exists {
-					return ErrStaleWrite
-				}
-			}
-			return ErrNotFound
+			return staleOrNotFound(ctx, tx, "carpool_trips", trip.ID, trip.VehicleID, trip.ExpectedVersion)
 		}
 	}
 	if err != nil {
@@ -206,7 +200,8 @@ func (r *Repository) UpdateCarpoolLegCosts(ctx context.Context, trip *models.Car
 func (r *Repository) SetCarpoolCostsFrozen(ctx context.Context, id, vehicleID string, frozen bool) error {
 	cmd, err := r.pool.Exec(ctx, `
 		UPDATE carpool_trips
-		SET costs_frozen_at = CASE WHEN $3 THEN COALESCE(costs_frozen_at, NOW()) ELSE NULL END
+		SET costs_frozen_at = CASE WHEN $3 THEN COALESCE(costs_frozen_at, NOW()) ELSE NULL END,
+		    version = version + 1
 		WHERE id::text = $1 AND vehicle_id = $2;
 	`, id, vehicleID, frozen)
 	if err != nil {
@@ -241,14 +236,14 @@ func ensureCarpoolLinksOwned(ctx context.Context, tx pgx.Tx, trip *models.Carpoo
 const carpoolTripColumns = `
 	id, vehicle_id, drive_id, trip_group_id, title, date, distance_km,
 	electricity_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost,
-	total_cost, total_revenue, net_cost, notes, costs_frozen_at, created_at, updated_at
+	total_cost, total_revenue, net_cost, notes, costs_frozen_at, created_at, updated_at, version
 `
 
 func scanCarpoolTrip(row pgx.Row, t *models.CarpoolTripWithPassengers) error {
 	return row.Scan(
 		&t.ID, &t.VehicleID, &t.DriveID, &t.TripGroupID, &t.Title, &t.Date, &t.DistanceKm,
 		&t.ElectricityCost, &t.TollsCost, &t.TiresCost, &t.MaintenanceCost, &t.InsuranceCost, &t.OtherCost,
-		&t.TotalCost, &t.TotalRevenue, &t.NetCost, &t.Notes, &t.CostsFrozenAt, &t.CreatedAt, &t.UpdatedAt,
+		&t.TotalCost, &t.TotalRevenue, &t.NetCost, &t.Notes, &t.CostsFrozenAt, &t.CreatedAt, &t.UpdatedAt, &t.Version,
 	)
 }
 

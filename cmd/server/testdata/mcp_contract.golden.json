@@ -164,7 +164,7 @@
           "amount": "string",
           "currency": "string"
         },
-        "updated_at": "string"
+        "version": "number"
       }
     ],
     "truncated": "boolean",

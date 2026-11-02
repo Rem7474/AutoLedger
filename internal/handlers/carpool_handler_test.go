@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -198,19 +199,19 @@ func TestCarpoolEstimateAndRecalculate(t *testing.T) {
 func TestCarpoolUpdateRefusesAnOutOfDateEditor(t *testing.T) {
 	a := newCarpoolAPI(t, "stale")
 	created := a.expect(http.StatusCreated, "POST", "/carpools", `{"title":"Solo","distance_km":50,"electricity_cost":5,"passengers":[]}`)
-	id, loaded := created["id"].(string), created["updated_at"].(string)
+	id, loaded := created["id"].(string), created["version"].(float64)
 
 	first := a.expect(http.StatusOK, "PUT", "/carpools/"+id,
-		`{"title":"First editor","distance_km":50,"passengers":[],"expected_updated_at":"`+loaded+`"}`)
-	if first["updated_at"] == loaded {
-		t.Fatalf("a save must move updated_at: %v", first)
+		`{"title":"First editor","distance_km":50,"passengers":[],"expected_version":`+strconv.Itoa(int(loaded))+`}`)
+	if first["version"].(float64) != loaded+1 {
+		t.Fatalf("a save advances the version by one: %v", first)
 	}
 
 	// The second editor opened the carpool before the first one saved it
 	refused := a.expect(http.StatusConflict, "PUT", "/carpools/"+id,
-		`{"title":"Second editor","distance_km":50,"passengers":[],"expected_updated_at":"`+loaded+`"}`)
-	if refused["code"] != "carpool.changed" {
-		t.Fatalf("a stale save answers carpool.changed: %v", refused)
+		`{"title":"Second editor","distance_km":50,"passengers":[],"expected_version":`+strconv.Itoa(int(loaded))+`}`)
+	if refused["code"] != "request.stale" {
+		t.Fatalf("a stale save answers request.stale: %v", refused)
 	}
 	if got := a.expect(http.StatusOK, "GET", "/carpools/"+id, ""); got["title"] != "First editor" {
 		t.Fatalf("the first editor's change was overwritten: %v", got)
@@ -218,9 +219,27 @@ func TestCarpoolUpdateRefusesAnOutOfDateEditor(t *testing.T) {
 
 	// The current stamp is accepted, and so is an editor that sends none
 	a.expect(http.StatusOK, "PUT", "/carpools/"+id,
-		`{"title":"Second editor","distance_km":50,"passengers":[],"expected_updated_at":"`+first["updated_at"].(string)+`"}`)
+		`{"title":"Second editor","distance_km":50,"passengers":[],"expected_version":`+strconv.Itoa(int(first["version"].(float64)))+`}`)
 	a.expect(http.StatusOK, "PUT", "/carpools/"+id, `{"title":"No stamp","distance_km":50,"passengers":[]}`)
 	// A stamp for a carpool that does not exist is a 404, not a conflict
 	a.expect(http.StatusNotFound, "PUT", "/carpools/00000000-0000-0000-0000-000000000000",
-		`{"title":"Ghost","distance_km":1,"expected_updated_at":"`+loaded+`"}`)
+		`{"title":"Ghost","distance_km":1,"expected_version":`+strconv.Itoa(int(loaded))+`}`)
+}
+
+func TestCarpoolFreezeAdvancesTheVersionAndReadingDoesNot(t *testing.T) {
+	a := newCarpoolAPI(t, "staleFreeze")
+	created := a.expect(http.StatusCreated, "POST", "/carpools", `{"title":"Solo","distance_km":50,"electricity_cost":5,"passengers":[]}`)
+	id, loaded := created["id"].(string), int(created["version"].(float64))
+
+	// Listing and reading refresh the amounts that follow their drives without counting as a save
+	a.expect(http.StatusOK, "GET", "/carpools/"+id, "")
+	a.expect(http.StatusOK, "GET", "/carpools", "")
+	if got := a.expect(http.StatusOK, "GET", "/carpools/"+id, ""); int(got["version"].(float64)) != loaded {
+		t.Fatalf("reading must not advance the version: %v", got)
+	}
+
+	// Freezing is a change the owner makes: an editor opened before it must not overwrite it
+	a.expect(http.StatusOK, "POST", "/carpools/"+id+"/freeze", "")
+	a.expect(http.StatusConflict, "PUT", "/carpools/"+id,
+		`{"title":"Late editor","distance_km":50,"passengers":[],"expected_version":`+strconv.Itoa(loaded)+`}`)
 }

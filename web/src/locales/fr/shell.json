@@ -70,6 +70,10 @@
     "vehicles": "Véhicules",
     "account": "Compte"
   },
+  "stale": {
+    "title": "Modifié ailleurs",
+    "message": "Cet élément a été modifié depuis son ouverture, par quelqu'un d'autre ou dans une autre fenêtre. Rien n'a été enregistré : la dernière version est rechargée, refaites vos modifications dessus."
+  },
   "confirm": {
     "title": "Confirmation",
     "deleteTitle": "Suppression",

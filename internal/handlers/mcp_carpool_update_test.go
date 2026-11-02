@@ -40,7 +40,7 @@ func TestUpdateCarpoolChangesPassengersAndKeepsTheRest(t *testing.T) {
 
 	// A dry run shows the result and stores nothing
 	preview, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{
-		CarpoolID: before.ID, ExpectedUpdatedAt: before.UpdatedAt, DryRun: true, UpdatePassengers: []mcpPassengerChange{{Name: "bob", AmountPaid: ptr("8")}},
+		CarpoolID: before.ID, ExpectedVersion: before.Version, DryRun: true, UpdatePassengers: []mcpPassengerChange{{Name: "bob", AmountPaid: ptr("8")}},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -53,7 +53,7 @@ func TestUpdateCarpoolChangesPassengersAndKeepsTheRest(t *testing.T) {
 	}
 
 	out, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{
-		CarpoolID: before.ID, ExpectedUpdatedAt: before.UpdatedAt, Title: ptr("  Week-end Nice "), Notes: ptr(""),
+		CarpoolID: before.ID, ExpectedVersion: before.Version, Title: ptr("  Week-end Nice "), Notes: ptr(""),
 		UpdatePassengers: []mcpPassengerChange{
 			{Name: " BOB ", AmountPaid: ptr("8"), NewName: ptr("Robert"), Seats: ptr(2), Notes: ptr("front seat")},
 			{Name: "Alice", AlightsAtStop: ptr(1)},
@@ -93,7 +93,7 @@ func TestUpdateCarpoolChangesPassengersAndKeepsTheRest(t *testing.T) {
 	}
 
 	// Taking a passenger out takes what they paid out of the revenue
-	removed, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: before.ID, ExpectedUpdatedAt: out.Carpool.UpdatedAt, RemovePassengers: []string{"alice"}})
+	removed, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: before.ID, ExpectedVersion: out.Carpool.Version, RemovePassengers: []string{"alice"}})
 	if err != nil || len(removed.Carpool.Passengers) != 2 || removed.Carpool.Revenue.Amount != "13.00" {
 		t.Fatalf("removal: %+v %v", removed, err)
 	}
@@ -121,7 +121,7 @@ func TestUpdateCarpoolKeepsAFrozenCarpoolsAmounts(t *testing.T) {
 		t.Fatalf("setup: %+v %v", frozen, err)
 	}
 
-	if _, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: before.ID, ExpectedUpdatedAt: carpoolStamp(frozen.UpdatedAt), Title: ptr("Renamed")}); err != nil {
+	if _, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: before.ID, ExpectedVersion: frozen.Version, Title: ptr("Renamed")}); err != nil {
 		t.Fatal(err)
 	}
 	after, err := a.repo.GetCarpoolTrip(ctx, before.ID, a.vid)
@@ -144,15 +144,15 @@ func TestUpdateCarpoolRefusesWhatItCannotChange(t *testing.T) {
 	}{
 		"nothing to change":     {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID}, "nothing to change"},
 		"not an id":             {a.userID, mcpUpdateCarpoolInput{CarpoolID: "Lyon", Title: ptr("x")}, "not a carpool id"},
-		"unknown carpool":       {a.userID, mcpUpdateCarpoolInput{CarpoolID: other, ExpectedUpdatedAt: c.UpdatedAt, Title: ptr("x")}, "carpool not found"},
-		"unknown passenger":     {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, UpdatePassengers: []mcpPassengerChange{{Name: "Zoe", Seats: ptr(2)}}}, `no passenger is called "Zoe": the carpool has "Alice", "Bob"`},
-		"remove unknown":        {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, RemovePassengers: []string{"Zoe"}}, "no passenger is called"},
-		"add a name twice":      {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, AddPassengers: []mcpCarpoolPassengerInput{{Name: "alice"}}}, "already in the carpool"},
-		"negative amount":       {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", AmountPaid: ptr("-1")}}}, "amount_paid of Bob"},
-		"not an amount":         {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", AmountPaid: ptr("ten")}}}, "amount_paid of Bob"},
-		"empty new name":        {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", NewName: ptr(" ")}}}, "new_name cannot be empty"},
-		"stops out of the trip": {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", AlightsAtStop: ptr(5)}}}, "drop-off stop"},
-		"read-only member":      {a.viewerID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedUpdatedAt: c.UpdatedAt, Title: ptr("x")}, "read-only"},
+		"unknown carpool":       {a.userID, mcpUpdateCarpoolInput{CarpoolID: other, ExpectedVersion: c.Version, Title: ptr("x")}, "carpool not found"},
+		"unknown passenger":     {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, UpdatePassengers: []mcpPassengerChange{{Name: "Zoe", Seats: ptr(2)}}}, `no passenger is called "Zoe": the carpool has "Alice", "Bob"`},
+		"remove unknown":        {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, RemovePassengers: []string{"Zoe"}}, "no passenger is called"},
+		"add a name twice":      {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, AddPassengers: []mcpCarpoolPassengerInput{{Name: "alice"}}}, "already in the carpool"},
+		"negative amount":       {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", AmountPaid: ptr("-1")}}}, "amount_paid of Bob"},
+		"not an amount":         {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", AmountPaid: ptr("ten")}}}, "amount_paid of Bob"},
+		"empty new name":        {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", NewName: ptr(" ")}}}, "new_name cannot be empty"},
+		"stops out of the trip": {a.userID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, UpdatePassengers: []mcpPassengerChange{{Name: "Bob", AlightsAtStop: ptr(5)}}}, "drop-off stop"},
+		"read-only member":      {a.viewerID, mcpUpdateCarpoolInput{CarpoolID: c.ID, ExpectedVersion: c.Version, Title: ptr("x")}, "read-only"},
 	}
 	for name, tc := range cases {
 		if _, err := h.UpdateCarpool(ctx, tc.user, a.vid, tc.in); err == nil || !strings.Contains(err.Error(), tc.want) {
@@ -183,7 +183,7 @@ func TestUpdateCarpoolDoesNotOverwriteAChangeMadeMeanwhile(t *testing.T) {
 	}
 
 	for name, dry := range map[string]bool{"saving": false, "previewing": true} {
-		_, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: read.ID, ExpectedUpdatedAt: read.UpdatedAt, DryRun: dry, Title: ptr("Assistant title")})
+		_, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: read.ID, ExpectedVersion: read.Version, DryRun: dry, Title: ptr("Assistant title")})
 		if err == nil || !strings.Contains(err.Error(), "changed since it was read") {
 			t.Fatalf("%s from an out-of-date read: %v", name, err)
 		}
@@ -193,11 +193,11 @@ func TestUpdateCarpoolDoesNotOverwriteAChangeMadeMeanwhile(t *testing.T) {
 	}
 
 	// Reading again gives a stamp that is accepted
-	again := carpoolStamp(stored.UpdatedAt)
-	if out, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: read.ID, ExpectedUpdatedAt: again, Title: ptr("Assistant title")}); err != nil || !out.Saved {
+	again := stored.Version
+	if out, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: read.ID, ExpectedVersion: again, Title: ptr("Assistant title")}); err != nil || !out.Saved {
 		t.Fatalf("an up-to-date read is accepted: %+v %v", out, err)
 	}
-	if _, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: read.ID, Title: ptr("x")}); err == nil || !strings.Contains(err.Error(), "expected_updated_at") {
+	if _, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: read.ID, Title: ptr("x")}); err == nil || !strings.Contains(err.Error(), "expected_version") {
 		t.Fatalf("a call without the stamp is refused: %v", err)
 	}
 }
@@ -213,7 +213,7 @@ func TestUpdateCarpoolTellsHomonymsApart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: out.Carpool.ID, ExpectedUpdatedAt: out.Carpool.UpdatedAt, UpdatePassengers: []mcpPassengerChange{{Name: "Sam", AmountPaid: ptr("9")}}})
+	_, err = h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{CarpoolID: out.Carpool.ID, ExpectedVersion: out.Carpool.Version, UpdatePassengers: []mcpPassengerChange{{Name: "Sam", AmountPaid: ptr("9")}}})
 	if err == nil || !strings.Contains(err.Error(), "cannot be told apart") {
 		t.Fatalf("a name shared by two passengers is never guessed: %v", err)
 	}
@@ -244,7 +244,7 @@ func TestMCPUpdateCarpoolNeedsAConnectionAllowedToWrite(t *testing.T) {
 	if err := json.Unmarshal(raw, &made); err != nil || made.Carpool.ID == "" {
 		t.Fatalf("setup: %s %v", raw, err)
 	}
-	args := map[string]any{"vehicle_id": f.mine.ID, "carpool_id": made.Carpool.ID, "expected_updated_at": made.Carpool.UpdatedAt, "update_passengers": []map[string]any{{"name": "Alice", "amount_paid": "11"}}}
+	args := map[string]any{"vehicle_id": f.mine.ID, "carpool_id": made.Carpool.ID, "expected_version": made.Carpool.Version, "update_passengers": []map[string]any{{"name": "Alice", "amount_paid": "11"}}}
 
 	if res := call(f.readTok, "update_carpool", args); !res.IsError || !strings.Contains(res.Content[0].(*mcp.TextContent).Text, "can only read") {
 		t.Fatalf("a read connection must not change a carpool: %+v", res)

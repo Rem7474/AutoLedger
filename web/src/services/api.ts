@@ -2,7 +2,7 @@ import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 // AutoLedger API Service
 import { newIdempotencyKey } from '@/services/offlineQueue'
-import { apiErrorMessage } from '@/services/apiError'
+import { apiErrorMessage, StaleWriteError } from '@/services/apiError'
 import { csvImportForm, type CSVExecuteResult, type CSVImportBatch, type CSVImportOptions, type CSVImportProfile, type CSVPreviewResult } from '@/services/csvImport'
 import { fetchWithSessionRefresh, isPublicAuthRequest } from '@/services/sessionFetch'
 
@@ -107,7 +107,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}, offlineLa
   }
 
   if (!res.ok) {
-    throw new Error(apiErrorMessage(data, t('shell.api.requestFailed', { status: res.status })))
+    const message = apiErrorMessage(data, t('shell.api.requestFailed', { status: res.status }))
+    if (res.status === 409 && data?.code === 'request.stale') throw new StaleWriteError(message)
+    throw new Error(message)
   }
 
   return data as T
