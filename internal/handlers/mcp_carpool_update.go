@@ -39,7 +39,7 @@ func (h *MCPHandler) addCarpoolUpdateTools() {
 		Name:  "update_carpool",
 		Title: "Change a carpool",
 		Description: "Changes a carpool the owner recorded: its title or note, and its passengers (add one, change what one paid, their seats or stops, rename one, take one out). " +
-			"The drives of the carpool and its costs are not changed here, and nothing can delete a carpool. Get the carpool_id from get_carpool. " +
+			"The drives of the carpool and its costs are not changed here, and no carpool can be deleted; a passenger can be taken out of one. Get the carpool_id from get_carpool. " +
 			"What a passenger paid replaces the amount recorded: read it first, and say the old and the new amount to the owner. " +
 			"This overwrites the owner's records: call it with dry_run true first, show the owner the carpool as it would be, and save only once they agree. " +
 			"Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
