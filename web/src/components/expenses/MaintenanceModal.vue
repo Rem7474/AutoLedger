@@ -5,6 +5,7 @@ import { t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDocumentAttach } from '@/composables/useDocumentAttach'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -39,6 +40,7 @@ const { isUploadingDocument, onSelectExistingDoc, onDropzoneDirectUpload } = use
   (doc) => emit('document-added', doc)
 )
 
+const { explainStaleWrite } = useStaleWrite()
 const editingMaintId = computed(() => props.editing?.id ?? null)
 const vehicleStore = useVehicleStore()
 const baseCurrency = computed(() => vehicleStore.currency)
@@ -214,13 +216,18 @@ async function handleCreateMaintAction() {
       document_id: maintForm.value.document_id || null,
     }
     if (editingMaintId.value) {
-      await api.updateMaintenance(props.vehicleId, editingMaintId.value, payload)
+      await api.updateMaintenance(props.vehicleId, editingMaintId.value, { ...payload, expected_version: props.editing?.version })
     } else {
       await api.createMaintenance(props.vehicleId, payload)
     }
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

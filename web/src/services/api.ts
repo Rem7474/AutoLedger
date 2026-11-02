@@ -304,7 +304,7 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ drive_ids: driveIds }) },
       t('shell.api.tripSuggestionDismiss')
     ),
-  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[] }) =>
+  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[]; expected_version?: number }) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteTripGroup: (vehicleId: string, groupId: string, deleteExpenses = false) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}?delete_expenses=${deleteExpenses}`, { method: 'DELETE' }),

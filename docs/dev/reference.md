@@ -52,6 +52,7 @@ Text with no HTTP request to translate through (reminder and sync-failure webhoo
 
 An item that several people or tools can edit carries a `version` column (`BIGINT NOT NULL DEFAULT 1`). Every write made by a user (REST `PUT`, MCP tool, freeze or unfreeze) runs `version = version + 1`; background jobs (sync, geocoding, linked-cost refresh) never advance it, so they cannot raise a conflict.
 
+- Versioned items: carpools, fill-ups, maintenance expenses, drive expenses, odometer readings and trip groups. The route-table test lists the others.
 - Responses expose `version`. A `PUT` accepts `expected_version` in the body (the offline queue replays the body, not headers). Absent: the write goes through. Present and different from the stored version: `409` with the code `request.stale`; present for an item that does not exist: `404`.
 - The check sits in the `UPDATE ... WHERE (expected IS NULL OR version = expected)` itself, so no write can slip between the test and the write. On zero rows, `staleOrNotFound` (`internal/database/versioning.go`) tells a missing item (`ErrNotFound`) from a changed one (`ErrStaleWrite`); the table must be in `versionedTables`. `writeRepoError` maps `ErrStaleWrite` to `request.stale`.
 - An MCP tool that changes an item requires `expected_version`, read from the matching `get_*` tool; a preview (`dry_run`) compares in memory, a real save is guarded by the SQL.

@@ -8,7 +8,14 @@ import (
 // versionedTables are the tables whose rows carry a version column that the writes made by a user advance. A save that
 // names the version it read is refused when the row has moved on (see ErrStaleWrite). Jobs (sync, geocoding, cost
 // refresh) do not advance it: they must not make an open editor fail.
-var versionedTables = map[string]bool{"carpool_trips": true}
+var versionedTables = map[string]bool{
+	"carpool_trips":        true,
+	"fuel_logs":            true,
+	"maintenance_expenses": true,
+	"odometer_checkpoints": true,
+	"trip_groups":          true,
+	"drive_expenses":       true,
+}
 
 // staleOrNotFound tells why an UPDATE guarded by a version touched no row: the row is gone (ErrNotFound) or it was saved
 // since the caller read it (ErrStaleWrite). Without an expected version the row can only be missing.

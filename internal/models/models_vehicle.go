@@ -160,11 +160,14 @@ type UpdateVehicleMemberRoleRequest struct {
 
 // OdometerCheckpoint represents a manual odometer milestone at a specific date.
 type OdometerCheckpoint struct {
-	ID        string    `json:"id"`
-	VehicleID string    `json:"vehicle_id"`
-	Date      time.Time `json:"date"`
-	Odometer  float64   `json:"odometer"`
-	Notes     *string   `json:"notes,omitempty"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version         int64     `json:"version"`
+	ExpectedVersion *int64    `json:"-"`
+	VehicleID       string    `json:"vehicle_id"`
+	Date            time.Time `json:"date"`
+	Odometer        float64   `json:"odometer"`
+	Notes           *string   `json:"notes,omitempty"`
 	// Source is "MANUAL" (entered by a user) or "HA" (reported by the Home Assistant integration).
 	Source        string    `json:"source"`
 	SourceBatchID *string   `json:"-"`
