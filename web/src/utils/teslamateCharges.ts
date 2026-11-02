@@ -27,10 +27,11 @@ export function teslamateChargeUrl(vehicle: any, c: any): string | null {
 }
 
 /** Link to the page of TeslaMate where the cost of a charge is set. Only for a charge whose cost is unknown and
- * that the next synchronisation will read again: the cost typed there comes back on its own. */
+ * that the next synchronisation will read again: the cost typed there comes back on its own.
+ * TeslaMate reports a cost that is not set as 0, like a charge that really was free: both are offered the link. */
 export function teslamateChargeCostUrl(vehicle: any, c: any, now: number = Date.now()): string | null {
   if (!vehicle?.teslamate_url || !isTeslaMateCharge(c)) return null
-  if (c.cost !== null && c.cost !== undefined) return null
+  if (c.cost !== null && c.cost !== undefined && Number(c.cost) !== 0) return null
   if (c.cost_source === 'MANUAL') return null
   if (now - new Date(c.date).getTime() > RESYNC_WINDOW_MS) return null
   return `${vehicle.teslamate_url}/charge-cost/${c.teslamate_charge_id}`

@@ -47,8 +47,11 @@ describe('teslamateChargeCostUrl', () => {
     expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: undefined }, now)).toBe('http://tm.local/charge-cost/152')
   })
 
-  it('has no link once the cost is known, even a free one', () => {
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 0 }, now)).toBeNull()
+  it('points to the cost page of a charge reported at 0, which TeslaMate also sends for a cost that is not set', () => {
+    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 0 }, now)).toBe('http://tm.local/charge-cost/152')
+  })
+
+  it('has no link once the cost is known', () => {
     expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 4.2 }, now)).toBeNull()
   })
 
