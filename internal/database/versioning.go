@@ -15,6 +15,9 @@ var versionedTables = map[string]bool{
 	"odometer_checkpoints": true,
 	"trip_groups":          true,
 	"drive_expenses":       true,
+	"vehicles":             true,
+	"drives":               true,
+	"charge_logs":          true,
 }
 
 // staleOrNotFound tells why an UPDATE guarded by a version touched no row: the row is gone (ErrNotFound) or it was saved
@@ -27,7 +30,12 @@ func staleOrNotFound(ctx context.Context, q rowQuerier, table, id, vehicleID str
 		return fmt.Errorf("table %s has no version", table)
 	}
 	var exists bool
-	query := fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE id::text = $1 AND vehicle_id = $2);`, table)
+	// A vehicle is identified by its own id; every other versioned row belongs to a vehicle.
+	owner := "vehicle_id::text"
+	if table == "vehicles" {
+		owner = "id::text"
+	}
+	query := fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE id::text = $1 AND %s = $2);`, table, owner)
 	if err := q.QueryRow(ctx, query, id, vehicleID).Scan(&exists); err != nil {
 		return fmt.Errorf("failed to check %s: %w", table, err)
 	}

@@ -26,7 +26,10 @@ func (r VehicleRole) CanEdit() bool {
 
 // Vehicle represents an automobile owned by a user.
 type Vehicle struct {
-	ID                       string      `json:"id"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version                  int64       `json:"version"`
+	ExpectedVersion          *int64      `json:"-"`
 	UserID                   string      `json:"user_id"`
 	Role                     VehicleRole `json:"role,omitempty"`
 	Name                     string      `json:"name"`

@@ -35,7 +35,10 @@ type MaintenanceExpense struct {
 
 // ChargeLog records an EV charging event with costs and kWh.
 type ChargeLog struct {
-	ID                string     `json:"id"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version           int64      `json:"version"`
+	ExpectedVersion   *int64     `json:"-"`
 	VehicleID         string     `json:"vehicle_id"`
 	TeslaMateChargeID *int       `json:"teslamate_charge_id,omitempty"`
 	Date              time.Time  `json:"date"`
