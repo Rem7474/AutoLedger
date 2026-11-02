@@ -65,7 +65,7 @@ func (s *SyncService) syncCharges(ctx context.Context, client *teslamate.Client,
 	return st
 }
 
-// costCents converts a TeslaMate cost; nil (no tariff configured) stays nil.
+// costCents converts a TeslaMate cost; an absent cost stays nil.
 func costCents(cost *float64) *money.Cents {
 	if cost == nil {
 		return nil
