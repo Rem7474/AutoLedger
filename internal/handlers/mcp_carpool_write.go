@@ -57,7 +57,7 @@ func (h *MCPHandler) addCarpoolWriteTools() {
 		Name:  "create_carpool_from_drives",
 		Title: "Group drives into a carpool",
 		Description: "Records a carpool made of drives the owner already has: the drives become its legs (priced as the app prices them), and the passengers with what each paid are added to it. " +
-			"It creates no drive, and nothing can be edited or deleted afterwards through this connection. Find the drive_ids with list_vehicle_trips, which says when a drive is already in a carpool (such a drive is refused). " +
+			"It creates no drive and deletes nothing; a carpool is changed afterwards with update_carpool. Find the drive_ids with list_vehicle_trips, which says when a drive is already in a carpool (such a drive is refused). " +
 			"This writes to the owner's records: call it with dry_run true first, show the owner the stops, costs and shares, and record only once they agree. " +
 			"Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(false), OpenWorldHint: ptr(false)},
@@ -146,9 +146,29 @@ func (h *IntegrationReadHandler) CreateCarpoolFromDrives(ctx context.Context, us
 		return nil, err
 	}
 
+	trip.ID = ""
+	return h.saveCarpool(ctx, vehicle, trip, legs, passengers, in.DryRun, false)
+}
+
+// saveCarpool stores a carpool built by buildCarpool (or previews it with dryRun) and returns it as get_carpool lists
+// it, its shares computed. update says the trip already exists.
+func (h *IntegrationReadHandler) saveCarpool(ctx context.Context, vehicle *models.Vehicle, trip *models.CarpoolTrip, legs []models.CarpoolLeg, passengers []models.CarpoolPassenger, dryRun, update bool) (*IntegrationCarpoolCreated, error) {
 	saved := models.CarpoolTripWithPassengers{CarpoolTrip: *trip, Legs: legs, Passengers: passengers}
-	if !in.DryRun {
-		if err := h.repo.CreateCarpoolTrip(ctx, trip, legs, passengers); err != nil {
+	switch {
+	case dryRun:
+		saved.TotalRevenue = 0
+		for _, p := range passengers {
+			saved.TotalRevenue += p.AmountPaid
+		}
+		saved.SumLegs(legs)
+	default:
+		var err error
+		if update {
+			err = h.repo.UpdateCarpoolTrip(ctx, trip, legs, passengers)
+		} else {
+			err = h.repo.CreateCarpoolTrip(ctx, trip, legs, passengers)
+		}
+		if err != nil {
 			return nil, err
 		}
 		stored, err := h.repo.GetCarpoolTrip(ctx, trip.ID, vehicle.ID)
@@ -156,21 +176,15 @@ func (h *IntegrationReadHandler) CreateCarpoolFromDrives(ctx context.Context, us
 			return nil, err
 		}
 		saved = *stored
-	} else {
-		saved.TotalRevenue = 0
-		for _, p := range passengers {
-			saved.TotalRevenue += p.AmountPaid
-		}
-		saved.SumLegs(legs)
 	}
 	trips := []models.CarpoolTripWithPassengers{saved}
-	if !in.DryRun {
+	if !dryRun {
 		if err := h.carpool.RefreshLinkedCosts(ctx, vehicle.ID, trips); err != nil {
 			return nil, err
 		}
 	}
 	trips[0].DriverCostShare, trips[0].PassengersCostShare = services.AllocateCarpoolCosts(trips[0].Legs, trips[0].Passengers)
-	return &IntegrationCarpoolCreated{Recorded: !in.DryRun, Carpool: integrationCarpoolTrip(trips[0], vehicle.Currency)}, nil
+	return &IntegrationCarpoolCreated{Recorded: !dryRun, Carpool: integrationCarpoolTrip(trips[0], vehicle.Currency)}, nil
 }
 
 // carpoolDriveIDs checks the drives of a call: at least one, a bounded number, and none twice.
