@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -31,9 +32,9 @@ func insertTripGroup(ctx context.Context, tx pgx.Tx, tg *models.TripGroup, drive
 	query := `
 		INSERT INTO trip_groups (vehicle_id, name, notes)
 		VALUES ($1, $2, $3)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`
-	if err := tx.QueryRow(ctx, query, tg.VehicleID, tg.Name, tg.Notes).Scan(&tg.ID, &tg.CreatedAt, &tg.UpdatedAt); err != nil {
+	if err := tx.QueryRow(ctx, query, tg.VehicleID, tg.Name, tg.Notes).Scan(&tg.ID, &tg.CreatedAt, &tg.UpdatedAt, &tg.Version); err != nil {
 		return err
 	}
 	return linkTripGroupDrives(ctx, tx, tg.ID, driveIDs)
@@ -55,7 +56,7 @@ func linkTripGroupDrives(ctx context.Context, tx pgx.Tx, tripGroupID string, dri
 
 func (r *Repository) ListTripGroups(ctx context.Context, vehicleID string) ([]models.TripGroup, error) {
 	rows, err := r.pool.Query(ctx, DriveTollAllocationCTE+`
-		SELECT tg.id, tg.vehicle_id, tg.name, tg.notes, tg.created_at, tg.updated_at,
+		SELECT tg.id, tg.vehicle_id, tg.name, tg.notes, tg.created_at, tg.updated_at, tg.version,
 		       ARRAY(SELECT tgd.drive_id::text FROM trip_group_drives tgd
 		             JOIN drives d ON d.id = tgd.drive_id AND d.deleted_upstream_at IS NULL
 		             WHERE tgd.trip_group_id = tg.id ORDER BY d.start_time),
@@ -83,7 +84,7 @@ func (r *Repository) ListTripGroups(ctx context.Context, vehicleID string) ([]mo
 	var list []models.TripGroup
 	for rows.Next() {
 		var tg models.TripGroup
-		if err := rows.Scan(&tg.ID, &tg.VehicleID, &tg.Name, &tg.Notes, &tg.CreatedAt, &tg.UpdatedAt,
+		if err := rows.Scan(&tg.ID, &tg.VehicleID, &tg.Name, &tg.Notes, &tg.CreatedAt, &tg.UpdatedAt, &tg.Version,
 			&tg.DriveIDs, &tg.DistanceKm, &tg.StartTime, &tg.EndTime, &tg.ExpensesTotal, &tg.ExpenseCount, &tg.CarpoolCount, &tg.TollsTotal); err != nil {
 			return nil, err
 		}
@@ -100,15 +101,16 @@ func (r *Repository) UpdateTripGroup(ctx context.Context, tg *models.TripGroup, 
 	}
 	defer tx.Rollback(ctx)
 
-	tag, err := tx.Exec(ctx, `
-		UPDATE trip_groups SET name = $1, notes = $2, updated_at = NOW()
-		WHERE id::text = $3 AND vehicle_id = $4;
-	`, tg.Name, tg.Notes, tg.ID, tg.VehicleID)
+	err = tx.QueryRow(ctx, `
+		UPDATE trip_groups SET name = $1, notes = $2, updated_at = NOW(), version = version + 1
+		WHERE id::text = $3 AND vehicle_id = $4 AND ($5::bigint IS NULL OR version = $5::bigint)
+		RETURNING version;
+	`, tg.Name, tg.Notes, tg.ID, tg.VehicleID, tg.ExpectedVersion).Scan(&tg.Version)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, tx, "trip_groups", tg.ID, tg.VehicleID, tg.ExpectedVersion)
+	}
 	if err != nil {
 		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
 	}
 	if driveIDs != nil {
 		if len(uniqueStrings(driveIDs)) == 0 {

@@ -4,6 +4,7 @@ import NumberInput from '@/components/NumberInput.vue'
 import { Receipt, Radar, Plus, Pencil, Trash2, Save, X, ChevronDown } from 'lucide-vue-next'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { mergeExpensesByDrive, tollApplyStatusLabel } from '@/utils/drives'
@@ -179,6 +180,8 @@ function startEditExpense(exp: any) {
   expenseEditForm.value = { type: exp.type, amount: exp.amount, notes: exp.notes || '' }
 }
 
+const { explainStaleWrite } = useStaleWrite()
+
 async function handleSaveExpenseEdit(exp: any) {
   if (!props.vehicleId) return
   const amount = Number(expenseEditForm.value.amount)
@@ -197,10 +200,16 @@ async function handleSaveExpenseEdit(exp: any) {
       // Keep the current link: single drive or trip group
       drive_id: exp.drive_id ?? null,
       trip_group_id: exp.trip_group_id ?? null,
+      expected_version: exp.version,
     })
     editingExpenseId.value = null
     await refreshCostModal()
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      editingExpenseId.value = null
+      await refreshCostModal()
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

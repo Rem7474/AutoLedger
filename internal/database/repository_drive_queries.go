@@ -196,7 +196,7 @@ func (r *Repository) GetDriveExpensesByDriveID(ctx context.Context, vehicleID, d
 			END,
 			e.type, e.amount, e.currency, e.fx_rate, e.date, e.notes,
 			e.document_id, doc.filename,
-			e.source, e.created_at,
+			e.source, e.created_at, e.version,
 			a.allocated
 		FROM allocations a
 		JOIN drive_expenses e ON e.id = a.expense_id
@@ -219,7 +219,7 @@ func (r *Repository) GetDriveExpensesByDriveID(ctx context.Context, vehicleID, d
 			&de.DriveID, &de.DriveTitle, &de.Type,
 			&de.Amount, &de.Currency, &de.FxRate, &de.Date, &de.Notes,
 			&de.DocumentID, &de.DocumentFilename,
-			&de.Source, &de.CreatedAt,
+			&de.Source, &de.CreatedAt, &de.Version,
 			&de.AllocatedAmount,
 		); err != nil {
 			return nil, err

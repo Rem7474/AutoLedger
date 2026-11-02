@@ -8,7 +8,10 @@ import (
 
 // MaintenanceExpense represents vehicle maintenance, insurance, subscriptions, etc.
 type MaintenanceExpense struct {
-	ID                       string      `json:"id"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version                  int64       `json:"version"`
+	ExpectedVersion          *int64      `json:"-"`
 	VehicleID                string      `json:"vehicle_id"`
 	Category                 string      `json:"category"`
 	Amount                   money.Cents `json:"amount"`

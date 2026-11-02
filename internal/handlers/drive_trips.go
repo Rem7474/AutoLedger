@@ -135,9 +135,10 @@ func (h *DriveHandler) DismissTripSuggestion(w http.ResponseWriter, r *http.Requ
 }
 
 type UpdateTripGroupRequest struct {
-	Name     string   `json:"name"`
-	Notes    *string  `json:"notes"`
-	DriveIDs []string `json:"drive_ids"` // Omitted: drives unchanged
+	ExpectedVersion *int64   `json:"expected_version"` // The version the client read; absent: not checked
+	Name            string   `json:"name"`
+	Notes           *string  `json:"notes"`
+	DriveIDs        []string `json:"drive_ids"` // Omitted: drives unchanged
 }
 
 // UpdateTripGroup renames a trip group and optionally replaces its drives.
@@ -155,7 +156,7 @@ func (h *DriveHandler) UpdateTripGroup(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusBadRequest, apierror.New("trip.name_required", "The trip name is required"))
 		return
 	}
-	tg := &models.TripGroup{ID: chi.URLParam(r, "groupId"), VehicleID: vehicleID, Name: req.Name, Notes: req.Notes}
+	tg := &models.TripGroup{ID: chi.URLParam(r, "groupId"), VehicleID: vehicleID, Name: req.Name, Notes: req.Notes, ExpectedVersion: req.ExpectedVersion}
 	if err := h.repo.UpdateTripGroup(r.Context(), tg, req.DriveIDs); err != nil {
 		writeRepoError(w, r, err, "Failed to update trip group")
 		return

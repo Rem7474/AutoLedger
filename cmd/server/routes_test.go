@@ -379,6 +379,11 @@ func TestMCPEndpointAnswersABrowserClientsProbe(t *testing.T) {
 // updateRoutesPending (to do) or in updateRoutesExempt (with its reason), so that the question is asked for each one.
 var updateRoutesVersioned = []string{
 	"PUT /api/vehicles/{vehicleId}/carpools/{id}",
+	"PUT /api/vehicles/{vehicleId}/expenses/{expenseId}",
+	"PUT /api/vehicles/{vehicleId}/fuel-logs/{fuelLogId}",
+	"PUT /api/vehicles/{vehicleId}/maintenance/{maintenanceId}",
+	"PUT /api/vehicles/{vehicleId}/odometer-checkpoints/{checkpointId}",
+	"PUT /api/vehicles/{vehicleId}/trip-groups/{groupId}",
 }
 
 // updateRoutesPending are the routes whose item still gets overwritten by the last save. The list shrinks as the items
@@ -401,15 +406,10 @@ var updateRoutesPending = []string{
 	"PUT /api/vehicles/{vehicleId}/drives/driver",
 	"PUT /api/vehicles/{vehicleId}/drives/{driveId}",
 	"PUT /api/vehicles/{vehicleId}/drives/{driveId}/driver",
-	"PUT /api/vehicles/{vehicleId}/expenses/{expenseId}",
-	"PUT /api/vehicles/{vehicleId}/fuel-logs/{fuelLogId}",
-	"PUT /api/vehicles/{vehicleId}/maintenance/{maintenanceId}",
-	"PUT /api/vehicles/{vehicleId}/odometer-checkpoints/{checkpointId}",
 	"PUT /api/vehicles/{vehicleId}/reminders/{reminderId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}/logs/{logId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}/sessions/{sessionId}",
-	"PUT /api/vehicles/{vehicleId}/trip-groups/{groupId}",
 }
 
 // updateRoutesExempt are the routes that need no version, and why.
