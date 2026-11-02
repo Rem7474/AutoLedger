@@ -7,6 +7,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
@@ -278,7 +279,8 @@ func (s *EnergyStatsService) PlaceStats(ctx context.Context, vehicleID, ownerID 
 		), resolved AS (
 			SELECT c.id, c.date, c.kwh_added, p.name AS place_name, p.category AS place_category,
 			       COALESCE(c.place_id, a.place_id)::text AS place_id,
-			       (COALESCE(c.place_id, a.place_id) IS NULL AND btrim(COALESCE(c.address, '')) <> '' AND h.yes) AS outside
+			       (COALESCE(c.place_id, a.place_id) IS NULL AND btrim(COALESCE(c.address, '')) <> '' AND h.yes) AS outside,
+			       `+database.ChargeUnconfirmedZeroSQL("c")+` AS unconfirmed_zero
 			FROM charge_logs c
 			CROSS JOIN has_home h
 			LEFT JOIN charging_place_aliases a
@@ -295,10 +297,10 @@ func (s *EnergyStatsService) PlaceStats(ctx context.Context, vehicleID, ownerID 
 		       COUNT(*) FILTER (WHERE r.kwh_added > 0),
 		       COALESCE(SUM(r.kwh_added) FILTER (WHERE r.kwh_added > 0), 0)::float8,
 		       COALESCE(SUM(l.amount_eur) FILTER (WHERE r.kwh_added > 0), 0),
-		       COALESCE(SUM(r.kwh_added) FILTER (WHERE r.kwh_added > 0 AND l.source_id IS NOT NULL), 0)::float8,
-		       COUNT(*) FILTER (WHERE r.kwh_added > 0 AND l.source_id IS NOT NULL AND l.amount_eur = 0),
-		       COUNT(*) FILTER (WHERE r.kwh_added > 0 AND l.source_id IS NULL),
-		       COALESCE(SUM(r.kwh_added) FILTER (WHERE r.kwh_added > 0 AND l.source_id IS NULL), 0)::float8,
+		       COALESCE(SUM(r.kwh_added) FILTER (WHERE r.kwh_added > 0 AND l.source_id IS NOT NULL AND NOT r.unconfirmed_zero), 0)::float8,
+		       COUNT(*) FILTER (WHERE r.kwh_added > 0 AND l.source_id IS NOT NULL AND l.amount_eur = 0 AND NOT r.unconfirmed_zero),
+		       COUNT(*) FILTER (WHERE r.kwh_added > 0 AND (l.source_id IS NULL OR r.unconfirmed_zero)),
+		       COALESCE(SUM(r.kwh_added) FILTER (WHERE r.kwh_added > 0 AND (l.source_id IS NULL OR r.unconfirmed_zero)), 0)::float8,
 		       COUNT(*) FILTER (WHERE r.kwh_added <= 0)
 		FROM resolved r
 		LEFT JOIN cost_ledger l ON l.source_table = 'charge_logs' AND l.source_id = r.id

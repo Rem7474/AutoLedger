@@ -62,10 +62,11 @@ func (r *Repository) GetLatestTeslaMateChargeDate(ctx context.Context, vehicleID
 	return &t, nil
 }
 
-const chargeSelectColumns = `
+var chargeSelectColumns = `
 	c.id, c.vehicle_id, c.teslamate_charge_id, c.date, c.end_date,
 	c.address, c.kwh_added, c.kwh_used, c.cost, c.cost_source, c.currency, c.fx_rate, c.odometer, c.is_manual, c.notes,
-	c.document_id, doc.filename, c.created_at, c.origin, c.place_id::text
+	c.document_id, doc.filename, c.created_at, c.origin, c.place_id::text,
+	(` + ChargeCostToReviewSQL("c") + `) AS cost_to_review, c.cost_reviewed_at
 `
 
 func scanCharge(row pgx.Row, c *models.ChargeLog) error {
@@ -74,19 +75,55 @@ func scanCharge(row pgx.Row, c *models.ChargeLog) error {
 		&c.Address, &c.KwhAdded, &c.KwhUsed, &c.Cost, &c.CostSource, &c.Currency, &c.FxRate, &c.Odometer,
 		&c.IsManual, &c.Notes,
 		&c.DocumentID, &c.DocumentFilename,
-		&c.CreatedAt, &c.Origin, &c.PlaceID,
+		&c.CreatedAt, &c.Origin, &c.PlaceID, &c.CostToReview, &c.CostReviewedAt,
 	)
+}
+
+// ChargeUnconfirmedZeroSQL is true for a synchronised charge priced 0 that the owner did not confirm as free.
+// TeslaMate reports a cost it does not know as 0, like a charge that really was free; a 0 typed in AutoLedger,
+// imported or sent by a webhook is deliberate. The alias is the one of charge_logs in the query, empty for none.
+func ChargeUnconfirmedZeroSQL(alias string) string {
+	p := alias
+	if p != "" {
+		p += "."
+	}
+	return "(" + p + "origin = 'TESLAMATE' AND " + p + "cost_source = 'TESLAMATE' AND " + p + "cost = 0 AND " + p + "cost_reviewed_at IS NULL)"
+}
+
+// ChargeCostToReviewSQL is true for a charge whose cost is still to be completed: unknown, or a 0 nobody confirmed.
+func ChargeCostToReviewSQL(alias string) string {
+	p := alias
+	if p != "" {
+		p += "."
+	}
+	return "(" + p + "cost IS NULL OR " + ChargeUnconfirmedZeroSQL(alias) + ")"
+}
+
+// SetChargeCostReviewed confirms (or reopens) a 0 cost as the right one.
+func (r *Repository) SetChargeCostReviewed(ctx context.Context, chargeID, vehicleID string, reviewed bool) error {
+	tag, err := r.pool.Exec(ctx, `
+		UPDATE charge_logs
+		SET cost_reviewed_at = CASE WHEN $1 THEN NOW() ELSE NULL END
+		WHERE id::text = $2 AND vehicle_id = $3 AND deleted_upstream_at IS NULL;
+	`, reviewed, chargeID, vehicleID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // ListCharges lists charges; missingCostOnly restricts to charges whose cost is still unknown.
 func (r *Repository) ListCharges(ctx context.Context, vehicleID string, missingCostOnly bool, limit, offset int) ([]models.ChargeLog, int, error) {
-	whereCount := `vehicle_id = $1 AND deleted_upstream_at IS NULL AND (NOT $2 OR cost IS NULL)`
+	whereCount := `vehicle_id = $1 AND deleted_upstream_at IS NULL AND (NOT $2 OR ` + ChargeCostToReviewSQL("") + `)`
 	var total int
 	if err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM charge_logs WHERE `+whereCount, vehicleID, missingCostOnly).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
-	whereSelect := `c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL AND (NOT $2 OR c.cost IS NULL)`
+	whereSelect := `c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL AND (NOT $2 OR ` + ChargeCostToReviewSQL("c") + `)`
 	rows, err := r.pool.Query(ctx, `
 		SELECT `+chargeSelectColumns+`
 		FROM charge_logs c
@@ -111,10 +148,10 @@ func (r *Repository) ListCharges(ctx context.Context, vehicleID string, missingC
 	return list, total, rows.Err()
 }
 
-// CountChargesWithoutCost counts charges with an unknown cost.
+// CountChargesWithoutCost counts the charges whose cost is still to be completed (see ChargeCostToReviewSQL).
 func (r *Repository) CountChargesWithoutCost(ctx context.Context, vehicleID string) (int, error) {
 	var count int
-	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM charge_logs WHERE vehicle_id = $1 AND cost IS NULL AND deleted_upstream_at IS NULL;`, vehicleID).Scan(&count)
+	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM charge_logs WHERE vehicle_id = $1 AND `+ChargeCostToReviewSQL("")+` AND deleted_upstream_at IS NULL;`, vehicleID).Scan(&count)
 	return count, err
 }
 

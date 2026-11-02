@@ -44,9 +44,14 @@ type ChargeLog struct {
 	KwhUsed    *float64     `json:"kwh_used,omitempty"`
 	Cost       *money.Cents `json:"cost"`        // nil = unknown cost (to be completed)
 	CostSource string       `json:"cost_source"` // TESLAMATE | MANUAL
-	Currency   string       `json:"currency"`
-	FxRate     *float64     `json:"fx_rate,omitempty"`
-	Odometer   *float64     `json:"odometer,omitempty"`
+	// CostToReview is true while the cost is unknown (nil) or is a 0 of a synchronised charge that nobody confirmed as
+	// free: TeslaMate reports a cost it does not know as 0.
+	CostToReview bool `json:"cost_to_review"`
+	// CostReviewedAt is when the owner confirmed that a 0 cost is right.
+	CostReviewedAt *time.Time `json:"cost_reviewed_at,omitempty"`
+	Currency       string     `json:"currency"`
+	FxRate         *float64   `json:"fx_rate,omitempty"`
+	Odometer       *float64   `json:"odometer,omitempty"`
 	// Stored by the synchronization and read by the energy statistics, not exposed with the charge.
 	StartBatteryLevel *int     `json:"-"`
 	EndBatteryLevel   *int     `json:"-"`
