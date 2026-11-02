@@ -44,7 +44,10 @@ async function connect(page: Page, baseURL: string, name: string, choose?: (page
   expect(provider.info?.client_id, 'the client registered itself').toBeTruthy()
 
   await page.goto(provider.authorizationUrl!.toString())
-  await expect(page.getByText(`${name} asks to read your AutoLedger data.`)).toBeVisible()
+  // The client asks for what the endpoint announces (read and write), so the consent page offers the writing box,
+  // which stays unticked here: these tests connect with a read grant.
+  await expect(page.getByText(`${name} asks to read your AutoLedger data`)).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: /Also let it/ })).toBeVisible()
   await choose?.(page)
   await page.getByRole('button', { name: 'Approve' }).click()
   await expect.poll(() => { try { return callback().searchParams.get('code') } catch { return null } }).not.toBeNull()
@@ -134,7 +137,8 @@ test('a grant limited to one vehicle sees only that vehicle', async ({ page, bas
   let chosen = ''
   const client = await connect(page, baseURL!, 'Limited assistant', async (consent) => {
     await consent.getByLabel('Only the vehicles I choose').check()
-    const boxes = consent.locator('input[type=checkbox]')
+    // The writing box is a checkbox too: the vehicles are the others
+    const boxes = consent.locator('label:not(:has-text("Also let it")) input[type=checkbox]')
     expect(await boxes.count(), 'the demo account has several vehicles to choose from').toBeGreaterThan(1)
     chosen = (await boxes.first().locator('xpath=ancestor::label').innerText()).trim()
     await boxes.first().check()
