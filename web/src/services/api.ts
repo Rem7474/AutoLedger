@@ -7,6 +7,7 @@ import { csvImportForm, type CSVExecuteResult, type CSVImportBatch, type CSVImpo
 import { fetchWithSessionRefresh, isPublicAuthRequest } from '@/services/sessionFetch'
 
 const BASE_URL = '/api'
+const SESSION_CHECK = '/auth/me'
 
 // The access and refresh tokens live exclusively in HttpOnly cookies set by the API
 // (see internal/handlers/auth_handler.go) — JS never reads or stores them, which removes
@@ -87,8 +88,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}, offlineLa
     throw err
   }
 
-  // A failed refresh keeps the existing redirect for ordinary API requests.
-  if (res.status === 401 && !isPublicAuthRequest(`${BASE_URL}${endpoint}`)) {
+  // A failed refresh keeps the existing redirect for ordinary API requests. The session check is only a question
+  // ("signed in?"): its caller routes the visitor, and a full-page redirect would discard the page that is
+  // waiting for the sign-in before the router can remember it.
+  if (res.status === 401 && endpoint !== SESSION_CHECK && !isPublicAuthRequest(`${BASE_URL}${endpoint}`)) {
     if (!['/login', '/register', '/onboarding'].includes(window.location.pathname)) {
       window.location.href = '/login'
     }
@@ -138,7 +141,7 @@ export const api = {
   register: (payload: any) => request<any>('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
   refresh: () => request<any>('/auth/refresh', { method: 'POST' }),
   logout: () => request<any>('/auth/logout', { method: 'POST' }),
-  getMe: () => request<any>('/auth/me'),
+  getMe: () => request<any>(SESSION_CHECK),
   getSessions: () => request<any[]>('/auth/sessions'),
   revokeSession: (id: string) => request<any>(`/auth/sessions/${id}`, { method: 'DELETE' }),
   logoutAll: () => request<any>('/auth/logout-all', { method: 'POST' }),

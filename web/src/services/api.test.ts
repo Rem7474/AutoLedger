@@ -119,6 +119,16 @@ describe('request', () => {
     expect(location.href).toBe(from === '/login' ? '' : expected)
   })
 
+  it('leaves the page where it is when the session check is refused, so the router can remember it', async () => {
+    location.pathname = '/oauth/authorize'
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ error: 'unauthorized' }, 401))
+      .mockResolvedValueOnce(jsonResponse({}, 401)) // refresh refused
+      .mockResolvedValueOnce(jsonResponse({ error: 'unauthorized' }, 401))
+    await expect(api.getMe()).rejects.toThrow()
+    expect(location.href).toBe('')
+  })
+
   it('treats a network error during the refresh as a failed refresh', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'expired' }, 401))
