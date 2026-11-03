@@ -150,7 +150,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
       <div class="min-w-0 flex-1">
         <!-- What matters: which carpool, and what is left to the driver -->
         <div class="flex items-start justify-between gap-3">
-          <h3 class="text-sm font-semibold text-white truncate min-w-0" :title="trip.title">{{ trip.title }}</h3>
+          <h3 class="text-sm font-semibold text-white max-sm:line-clamp-2 sm:truncate min-w-0" :title="trip.title">{{ trip.title }}</h3>
           <div class="shrink-0 text-right">
             <div v-if="trip.net_cost > 0" class="text-sm font-extrabold text-white">{{ fmt(trip.net_cost) }}</div>
             <div v-else class="text-sm font-extrabold text-success-400">+{{ fmt(Math.abs(trip.net_cost)) }}</div>
