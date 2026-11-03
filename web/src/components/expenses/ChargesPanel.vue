@@ -10,6 +10,7 @@ import { Zap, ExternalLink } from 'lucide-vue-next'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectionHint from '@/components/SelectionHint.vue'
 import ChargeCard from '@/components/expenses/ChargeCard.vue'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import ToQualifyFilter from '@/components/drives/ToQualifyFilter.vue'
 import { useRowSelection } from '@/composables/useRowSelection'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
@@ -116,9 +117,8 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
             <template v-if="month.pricePerKwh !== null"> · {{ $t('expenses.chargesPanel.averagePrice', { price: formatAmount(month.pricePerKwh, vehicleStore.currency, 3) }) }}</template>
           </p>
         </header>
+        <SwipeToDelete v-for="c in month.charges" :key="c.id" :disabled="!vehicleStore.canEdit || selecting || !chargeDeletable(c)" @delete="emit('delete', c)">
         <ChargeCard
-          v-for="c in month.charges"
-          :key="c.id"
           :c="c"
           :selected="isSelected(c)"
           :selecting="selecting"
@@ -128,6 +128,7 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
           @review-cost="(charge, reviewed) => emit('review-cost', charge, reviewed)"
           @view-document="(id, name, download) => emit('view-document', id, name, download)"
         />
+        </SwipeToDelete>
       </section>
       <div class="flex items-center justify-between text-xs text-slate-400 px-1">
         <span>{{ $t('expenses.chargesPanel.chargeSShownOutOf', { length: charges.length, chargesTotal }) }}</span>
