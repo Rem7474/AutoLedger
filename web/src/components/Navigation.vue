@@ -64,7 +64,7 @@ const currentRouteName = computed(() => route.name)
 const navSections = computed(() => groupNavItems(navItems.value))
 
 // Phone bar: the everyday pages, the quick entry button in the middle, everything else behind "Plus".
-const primaryNames = computed(() => (vehicleStore.canCharge ? ['dashboard', 'drives', 'expenses'] : ['dashboard', 'energy', 'odometer']))
+const primaryNames = computed(() => (vehicleStore.canCharge ? ['dashboard', 'drives', 'energy'] : ['dashboard', 'energy', 'odometer']))
 const primaryItems = computed(() =>
   primaryNames.value.map((name) => navItems.value.find((item) => item.name === name)).filter((item) => !!item),
 )

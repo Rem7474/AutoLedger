@@ -142,7 +142,9 @@ test.beforeAll(async ({ request }) => {
   expect(ev && ice).toBeTruthy()
 })
 
-const toast = (page: import('@playwright/test').Page) => page.getByRole('status').filter({ hasText: /\S/ })
+// A loading skeleton is also a status region: only the live announcement is a toast
+const toast = (page: import('@playwright/test').Page) =>
+  page.locator('[role="status"]:not([aria-busy="true"])').filter({ hasText: /\S/ })
 
 test('quick-add records a charge typed with its cost', async ({ page }) => {
   await useVehicle(page, ev.id, '/energy')

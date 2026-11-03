@@ -25,10 +25,11 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
   const isMaintenanceSection = computed(() => route.meta.section === 'maintenance')
   const isEnergySection = computed(() => route.meta.section === 'energy')
 
-  // Electric: efficiency, charges, estimate. Combustion: fill-ups. Hybrid: efficiency, charges and fill-ups.
+  // Electric: charges, efficiency, estimate. Combustion: fill-ups. Hybrid: charges, efficiency and fill-ups.
+  // Charges come first, so they are what the page opens on: it is the entry people come back to.
   function energyTabs(): ExpensesTab[] {
     if (!vehicleStore.canCharge) return ['FUEL']
-    return vehicleStore.canRefuel ? ['EFFICIENCY', 'CHARGES', 'FUEL'] : ['EFFICIENCY', 'CHARGES', 'ESTIMATE']
+    return vehicleStore.canRefuel ? ['CHARGES', 'EFFICIENCY', 'FUEL'] : ['CHARGES', 'EFFICIENCY', 'ESTIMATE']
   }
   const sectionTabs = computed<ExpensesTab[]>(() => {
     if (isMaintenanceSection.value) return ['MAINTENANCE', 'REMINDERS']
@@ -75,7 +76,6 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
     }
     if (isEnergySection.value) {
       const list: TabItem[] = [
-        { key: 'EFFICIENCY', label: t('expenses.expensesView.efficiency'), icon: Gauge },
         {
           key: 'CHARGES',
           label: t('expenses.expensesView.charges'),
@@ -83,6 +83,7 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
           badge: b.chargesWithoutCost > 0 ? b.chargesWithoutCost : undefined,
           badgeTone: 'warning',
         },
+        { key: 'EFFICIENCY', label: t('expenses.expensesView.efficiency'), icon: Gauge },
       ]
       if (!vehicleStore.canRefuel) list.push({ key: 'ESTIMATE', label: t('expenses.expensesView.estimate'), icon: Calculator })
       const fuel: TabItem = { key: 'FUEL', label: t('expenses.expensesView.fillUps'), icon: Fuel }

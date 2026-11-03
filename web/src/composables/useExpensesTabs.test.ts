@@ -26,11 +26,23 @@ describe('useExpensesTabs', () => {
     route.meta = { section: 'maintenance' }
     expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['MAINTENANCE', 'REMINDERS'])
     route.meta = { section: 'energy' }
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['EFFICIENCY', 'CHARGES', 'ESTIMATE'])
+    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['CHARGES', 'EFFICIENCY', 'ESTIMATE'])
     store.canRefuel = true
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['EFFICIENCY', 'CHARGES', 'FUEL'])
+    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['CHARGES', 'EFFICIENCY', 'FUEL'])
     store.canCharge = false
     expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['FUEL'])
+  })
+
+  it('opens the energy page on the charges of an electric or hybrid vehicle, and on the fill-ups of a combustion one', () => {
+    route.meta = { section: 'energy' }
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('CHARGES')
+    route.query = { tab: 'efficiency' }
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('EFFICIENCY')
+    route.query = {}
+    store.canRefuel = true
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('CHARGES')
+    store.canCharge = false
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('FUEL')
   })
 
   it('opens the tab of the query, falling back to the first tab of the section', () => {
