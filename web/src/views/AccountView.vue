@@ -16,6 +16,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useConfirm } from '@/composables/useConfirm'
 import { describeRelativeTime, describeUserAgent } from '@/utils/userAgent'
 import { ssoLinkNotice } from '@/utils/sso'
+import { COLLAPSED_SESSIONS, visibleSessions } from '@/utils/sessionList'
 
 interface Session {
   id: string
@@ -33,6 +34,8 @@ const prefs = usePreferencesStore()
 const { showConfirm } = useConfirm()
 
 const sessions = ref<Session[]>([])
+const showAllSessions = ref(false)
+const listedSessions = computed(() => visibleSessions(sessions.value, showAllSessions.value))
 const loading = ref(true)
 const loadError = ref('')
 const busyId = ref<string | null>(null)
@@ -295,7 +298,7 @@ onMounted(() => {
       <p v-else-if="loadError" role="alert" class="text-sm text-danger-300">{{ loadError }}</p>
       <ul v-else class="space-y-2">
         <li
-          v-for="s in sessions"
+          v-for="s in listedSessions"
           :key="s.id"
           class="flex items-center justify-between gap-3 rounded-xl border bg-slate-950/60 p-3"
           :class="s.current ? 'border-success-500/30' : 'border-slate-800'"
@@ -326,6 +329,15 @@ onMounted(() => {
         </li>
         <li v-if="sessions.length === 0" class="text-sm text-slate-400">{{ $t('account.accountView.noActiveSession') }}</li>
       </ul>
+      <button
+        v-if="!loading && !loadError && sessions.length > COLLAPSED_SESSIONS"
+        type="button"
+        class="btn btn-secondary mt-3 w-full justify-center"
+        :aria-expanded="showAllSessions"
+        @click="showAllSessions = !showAllSessions"
+      >
+        {{ showAllSessions ? $t('account.accountView.showFewerDevices') : $t('account.accountView.showAllDevices', { count: sessions.length }) }}
+      </button>
       <p v-if="sessionError" role="alert" class="mt-3 text-xs text-danger-300">{{ sessionError }}</p>
       <p class="mt-3 text-xs text-slate-400">{{ $t('account.accountView.aSignedOutDeviceKeeps') }}</p>
     </section>

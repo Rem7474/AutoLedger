@@ -7,6 +7,8 @@
     "thisDevice": "This device",
     "loading": "Loading…",
     "signOutEverywhere": "Sign out everywhere",
+    "showAllDevices": "Show all {count} devices",
+    "showFewerDevices": "Show fewer devices",
     "connectedDevices": "Connected devices",
     "otherDevicesAreSignedOut": "Other devices are signed out after a password change.",
     "confirmTheNewPassword": "Confirm the new password",
