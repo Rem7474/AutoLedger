@@ -366,3 +366,36 @@ test('a cost dragged to the left is deleted with an Undo, and a short drag leave
     for (const m of left.filter((x) => x.description === description)) await request.delete(`/api/vehicles/${ev.id}/maintenance/${m.id}`, { headers })
   }
 })
+
+test('an odometer reading dragged to the left is deleted with an Undo', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const notes = `Swipe reading ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/odometer-checkpoints`, {
+    headers,
+    data: { date: new Date().toISOString().slice(0, 10), odometer: 987654, notes },
+  })
+  expect(created.ok()).toBeTruthy()
+  const count = async () => ((await (await request.get(`/api/vehicles/${ev.id}/odometer-checkpoints`, { headers })).json()) as { notes?: string }[]).filter((c) => c.notes === notes).length
+
+  try {
+    await useVehicle(page, ev.id, '/odometer')
+    const rowOf = () => page.locator('div.rounded-xl', { hasText: notes }).last()
+    await rowOf().scrollIntoViewIfNeeded()
+    const box = (await rowOf().boundingBox())!
+    const y = box.y + box.height / 2
+
+    await drag(page, 340, y, -200, 4)
+    await expect(page.getByText(notes)).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(await count()).toBe(1)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(page.getByText(notes)).toBeVisible()
+    expect(await count()).toBe(1)
+
+    await drag(page, 340, (await rowOf().boundingBox())!.y + box.height / 2, -200, 4)
+    await expect.poll(count, { timeout: 12_000 }).toBe(0)
+  } finally {
+    const left = (await (await request.get(`/api/vehicles/${ev.id}/odometer-checkpoints`, { headers })).json()) as { id: string; notes?: string }[]
+    for (const c of left.filter((x) => x.notes === notes)) await request.delete(`/api/vehicles/${ev.id}/odometer-checkpoints/${c.id}`, { headers })
+  }
+})
