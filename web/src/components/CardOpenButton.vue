@@ -5,5 +5,5 @@ defineProps<{ label: string }>()
 </script>
 
 <template>
-  <button type="button" class="absolute inset-0 rounded-[inherit] cursor-pointer" :aria-label="label" />
+  <button type="button" class="card-open absolute inset-0 rounded-[inherit] cursor-pointer" :aria-label="label" />
 </template>
