@@ -47,6 +47,7 @@
     "reopen": "Rouvrir le coût",
     "enterCost": "Coût",
     "enterCostLong": "Saisir le coût",
+    "setInTeslaMate": "Saisir dans TeslaMate",
     "enterCostHint": "Saisir le coût de cette recharge",
     "freeHint": "Confirmer que cette recharge était gratuite",
     "toComplete": "À compléter ({count})",
@@ -79,7 +80,9 @@
     "editCharge": "Modifier la recharge",
     "start": "Début de la charge",
     "endOptional": "Fin de la charge (optionnel)",
-    "sourceLocked": "Données remontées par TeslaMate, en lecture seule ; le coût et les notes sont à vous et survivent aux synchronisations."
+    "sourceLocked": "Données remontées par TeslaMate, en lecture seule ; le coût et les notes sont à vous et survivent aux synchronisations.",
+    "sourceLockedCostInTeslaMate": "Données remontées par TeslaMate, en lecture seule. Le coût se saisit dans TeslaMate et est relu à la prochaine synchronisation ; les notes sont à vous.",
+    "costInTeslaMate": "À saisir dans TeslaMate"
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} recharge(s) affichée(s) sur {chargesTotal}",

@@ -9,7 +9,7 @@ import { formatChargeWindow } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { formatNumber } from '@/utils/numbers'
 import { chargeDeletable, chargeOrigin, chargeOriginKey } from '@/utils/chargeProvenance'
-import { chargeCostToReview, teslamateChargeCostUrl, teslamateChargeUrl } from '@/utils/teslamateCharges'
+import { chargeCostToReview, teslamateChargeCostUrl, teslamateChargeUrl, teslamateCostEditUrl } from '@/utils/teslamateCharges'
 
 // One charge of the list, laid out like a drive (DriveCard): a click opens it, the cost to complete is a two tap
 // queue (enter it, or confirm a 0 as free), the TeslaMate cost link stays at hand, and the rest sits in the "..." menu.
@@ -30,6 +30,9 @@ const toComplete = computed(() => vehicleStore.canEdit && review.value)
 const reviewLabel = computed(() => (props.c.cost === null || props.c.cost === undefined ? 'expenses.chargesPanel.missingCost' : 'expenses.costReview.toConfirm'))
 const detailsUrl = computed(() => teslamateChargeUrl(vehicleStore.activeVehicle, props.c))
 const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehicle, props.c))
+// A synchronised charge whose cost TeslaMate still reads again: the cost is set there, so the first tap is a link to it
+// (the form of the charge keeps its cost read-only). Without such a link the cost is entered in AutoLedger.
+const costInTeslaMate = computed(() => (toComplete.value ? teslamateCostEditUrl(vehicleStore.activeVehicle, props.c) : null))
 </script>
 
 <template>
@@ -80,8 +83,8 @@ const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehi
           </button>
         </div>
       </div>
-      <RowMenu v-if="vehicleStore.canEdit && (detailsUrl || setCostUrl || chargeDeletable(c))" :label="$t('common.moreActions')" :heading="formatChargeWindow(c.date, c.end_date)">
-        <a v-if="setCostUrl" :href="setCostUrl" target="_blank" rel="noopener noreferrer" role="menuitem" class="menu-item">
+      <RowMenu v-if="vehicleStore.canEdit && (detailsUrl || (setCostUrl && !costInTeslaMate) || chargeDeletable(c))" :label="$t('common.moreActions')" :heading="formatChargeWindow(c.date, c.end_date)">
+        <a v-if="setCostUrl && !costInTeslaMate" :href="setCostUrl" target="_blank" rel="noopener noreferrer" role="menuitem" class="menu-item">
           <ExternalLink class="w-3.5 h-3.5 text-slate-400" />{{ $t('expenses.teslamateLinks.setCost') }}
         </a>
         <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" role="menuitem" class="menu-item">
@@ -99,8 +102,9 @@ const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehi
       class="relative z-10 sm:hidden"
       stretch
       :secondary-icon="Check"
-      :primary-label="$t('expenses.costReview.enterCostLong')"
-      :primary-title="$t('expenses.costReview.enterCostHint')"
+      :primary-label="costInTeslaMate ? $t('expenses.costReview.setInTeslaMate') : $t('expenses.costReview.enterCostLong')"
+      :primary-title="costInTeslaMate ? $t('expenses.teslamateLinks.setCostHint') : $t('expenses.costReview.enterCostHint')"
+      :primary-href="costInTeslaMate ?? undefined"
       :secondary-label="c.cost !== null ? $t('expenses.costReview.free') : undefined"
       :secondary-title="$t('expenses.costReview.freeHint')"
       @primary="emit('open', c)"
@@ -136,8 +140,9 @@ const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehi
     <div class="relative z-10 flex items-center gap-1 sm:gap-2.5 flex-wrap lg:justify-end shrink-0 max-sm:hidden">
       <QualifyActions
         v-if="toComplete"
-        :primary-label="$t('expenses.costReview.enterCost')"
-        :primary-title="$t('expenses.costReview.enterCostHint')"
+        :primary-label="costInTeslaMate ? $t('expenses.costReview.setInTeslaMate') : $t('expenses.costReview.enterCost')"
+        :primary-title="costInTeslaMate ? $t('expenses.teslamateLinks.setCostHint') : $t('expenses.costReview.enterCostHint')"
+        :primary-href="costInTeslaMate ?? undefined"
         :secondary-label="c.cost !== null ? $t('expenses.costReview.free') : undefined"
         :secondary-title="$t('expenses.costReview.freeHint')"
         :secondary-icon="Check"
@@ -165,7 +170,7 @@ const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehi
       </div>
 
       <a
-        v-if="setCostUrl"
+        v-if="setCostUrl && !costInTeslaMate"
         :href="setCostUrl"
         target="_blank"
         rel="noopener noreferrer"

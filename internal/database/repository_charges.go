@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/teslacost/teslacost/internal/models"
+	"github.com/teslacost/teslacost/internal/money"
 )
 
 // Charging session ingestion and manual charge entries.
@@ -202,16 +203,19 @@ func (r *Repository) UpdateCharge(ctx context.Context, c *models.ChargeLog) erro
 		c.KwhAdded, c.Odometer = existing.KwhAdded, existing.Odometer
 	}
 
+	// The cost of a synchronised charge belongs to TeslaMate until it is changed here: saving the notes, the place or
+	// the receipt leaves it to the synchronisation, which keeps reading what is typed in TeslaMate.
+	keepsSyncedCost := existing.Origin == "TESLAMATE" && existing.CostSource == "TESLAMATE" && sameCost(existing.Cost, c.Cost) && existing.Currency == c.Currency
 	cmdTag, err := r.pool.Exec(ctx, `
 		UPDATE charge_logs
 		SET date = $1, end_date = $2, address = $3, kwh_added = $4, odometer = $5,
-		    cost = $6, cost_source = 'MANUAL', currency = $7, fx_rate = $8, notes = $9,
+		    cost = $6, cost_source = CASE WHEN $14 THEN cost_source ELSE 'MANUAL' END, currency = $7, fx_rate = $8, notes = $9,
 		    document_id = $10, place_id = $11::uuid
 		WHERE id::text = $12 AND vehicle_id = $13;
 	`,
 		c.Date, c.EndDate, c.Address, c.KwhAdded, c.Odometer,
 		c.Cost, c.Currency, c.FxRate, c.Notes, c.DocumentID, c.PlaceID,
-		c.ID, c.VehicleID,
+		c.ID, c.VehicleID, keepsSyncedCost,
 	)
 	if err != nil {
 		return err
@@ -226,6 +230,13 @@ func (r *Repository) UpdateCharge(ctx context.Context, c *models.ChargeLog) erro
 		LEFT JOIN expense_documents doc ON c.document_id = doc.id
 		WHERE c.id::text = $1 AND c.vehicle_id = $2;
 	`, c.ID, c.VehicleID), c)
+}
+
+func sameCost(a, b *money.Cents) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	return *a == *b
 }
 
 // DeleteManualCharge deletes a manually entered charge (TeslaMate charges would come back on next sync).

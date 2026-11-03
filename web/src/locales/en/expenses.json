@@ -47,6 +47,7 @@
     "reopen": "Reopen the cost",
     "enterCost": "Cost",
     "enterCostLong": "Enter the cost",
+    "setInTeslaMate": "Set in TeslaMate",
     "enterCostHint": "Enter the cost of this charge",
     "freeHint": "Confirm that this charge was free",
     "toComplete": "To complete ({count})",
@@ -79,7 +80,9 @@
     "editCharge": "Edit the charge",
     "start": "Charge start",
     "endOptional": "Charge end (optional)",
-    "sourceLocked": "Reported by TeslaMate and read-only; the cost and the notes are yours and survive synchronisations."
+    "sourceLocked": "Reported by TeslaMate and read-only; the cost and the notes are yours and survive synchronisations.",
+    "sourceLockedCostInTeslaMate": "Reported by TeslaMate and read-only. The cost is set in TeslaMate and read again by the next synchronisation; the notes are yours.",
+    "costInTeslaMate": "Set in TeslaMate"
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} charge(s) shown out of {chargesTotal}",

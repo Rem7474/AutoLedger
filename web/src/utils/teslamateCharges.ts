@@ -35,12 +35,18 @@ export function teslamateChargeUrl(vehicle: any, c: any): string | null {
   return `${vehicle.teslamate_grafana_url}/d/BHhxFeZRz/charge-details?${params.toString()}`
 }
 
-/** Link to the page of TeslaMate where the cost of a charge is set. Only for a charge whose cost is still to be
- * completed and that the next synchronisation will read again: the cost typed there comes back on its own. */
-export function teslamateChargeCostUrl(vehicle: any, c: any, now: number = Date.now()): string | null {
+/** Link to the page of TeslaMate where the cost of a synchronised charge is set, or null when the cost can only be
+ * handled in AutoLedger: no TeslaMate URL on the vehicle, a charge older than the synchronisation window (it is not read
+ * again), or a cost already corrected here. Otherwise the cost belongs to TeslaMate: the next synchronisation reads
+ * what is typed there, so it is not edited in AutoLedger. */
+export function teslamateCostEditUrl(vehicle: any, c: any, now: number = Date.now()): string | null {
   if (!vehicle?.teslamate_url || !isTeslaMateCharge(c)) return null
-  if (!chargeCostToReview(c)) return null
   if (c.cost_source === 'MANUAL') return null
   if (now - new Date(c.date).getTime() > RESYNC_WINDOW_MS) return null
   return `${vehicle.teslamate_url}/charge-cost/${c.teslamate_charge_id}`
+}
+
+/** The same link, offered as a shortcut for a charge whose cost is still to be completed. */
+export function teslamateChargeCostUrl(vehicle: any, c: any, now: number = Date.now()): string | null {
+  return chargeCostToReview(c) ? teslamateCostEditUrl(vehicle, c, now) : null
 }

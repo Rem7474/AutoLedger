@@ -13,11 +13,11 @@ const charge = {
   address: 'Valence', kwh_added: 8.9, currency: 'EUR', cost: 0, cost_to_review: true,
 }
 
-async function render(c: Record<string, unknown>, role = 'OWNER') {
+async function render(c: Record<string, unknown>, role = 'OWNER', teslamateUrl: string | null = vehicle.teslamate_url) {
   const pinia = createPinia()
   setActivePinia(pinia)
   const store = useVehicleStore()
-  store.vehicles = [{ ...vehicle, role }]
+  store.vehicles = [{ ...vehicle, role, teslamate_url: teslamateUrl ?? undefined }]
   const app = createSSRApp({ render: () => h(ChargeCard, { c }) })
   app.use(pinia).use(i18n)
   return renderToString(app)
@@ -28,13 +28,22 @@ describe('ChargeCard', () => {
     vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {}, removeItem: () => {} })
   })
 
-  it('offers to enter the cost or to confirm a 0 as free, and the TeslaMate cost link, for a 0 still to confirm', async () => {
+  it('sends a 0 still to confirm to TeslaMate to set the cost, or lets the owner confirm it as free', async () => {
     const html = await render(charge)
     expect(html).toContain('border-warning-500/40')
-    expect(html).toContain('Coût')
+    expect(html).toContain('Saisir dans TeslaMate')
+    expect(html).toContain('href="http://tm.local/charge-cost/158"')
     expect(html).toContain('Gratuite')
-    expect(html).toContain('http://tm.local/charge-cost/158')
+    expect(html).not.toContain('Saisir le coût')
     expect(html).toContain('aria-haspopup="menu"')
+  })
+
+  it('keeps entering the cost in AutoLedger when TeslaMate cannot give it back', async () => {
+    const html = await render(charge, 'OWNER', null) // no TeslaMate URL on the vehicle
+    expect(html).toContain('Saisir le coût')
+    expect(html).not.toContain('Saisir dans TeslaMate')
+    expect(html).not.toContain('charge-cost')
+    expect(await render({ ...charge, date: new Date(Date.now() - 40 * 86400e3).toISOString() })).toContain('Saisir le coût')
   })
 
   it('offers only to enter the cost when there is none at all, and says it is missing', async () => {

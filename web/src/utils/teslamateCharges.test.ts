@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chargeCostToReview, teslamateChargeCostUrl, teslamateChargeUrl } from './teslamateCharges'
+import { chargeCostToReview, teslamateChargeCostUrl, teslamateChargeUrl, teslamateCostEditUrl } from './teslamateCharges'
 
 const vehicle = { teslamate_grafana_url: 'http://grafana.local', teslamate_url: 'http://tm.local', teslamate_car_id: 2 }
 const charge = {
@@ -88,5 +88,26 @@ describe('chargeCostToReview', () => {
     expect(chargeCostToReview({ cost: undefined })).toBe(true)
     expect(chargeCostToReview({ cost: 0 })).toBe(false)
     expect(chargeCostToReview(null)).toBe(false)
+  })
+})
+
+describe('teslamateCostEditUrl', () => {
+  const priced = { ...charge, cost: 9.44, cost_to_review: false }
+
+  it('sends the cost of a synchronised charge to TeslaMate while it reads it again, priced or not', () => {
+    expect(teslamateCostEditUrl(vehicle, priced, now)).toBe('http://tm.local/charge-cost/152')
+    expect(teslamateCostEditUrl(vehicle, { ...charge, cost: 0 }, now)).toBe('http://tm.local/charge-cost/152')
+  })
+
+  it('leaves the cost to AutoLedger when TeslaMate cannot give it back', () => {
+    expect(teslamateCostEditUrl({ teslamate_grafana_url: 'x' }, priced, now)).toBeNull() // no TeslaMate URL
+    expect(teslamateCostEditUrl(vehicle, priced, new Date('2026-12-30T00:00:00Z').getTime())).toBeNull() // out of the window
+    expect(teslamateCostEditUrl(vehicle, { ...priced, cost_source: 'MANUAL' }, now)).toBeNull() // already corrected here
+    expect(teslamateCostEditUrl(vehicle, { ...priced, origin: 'WEBHOOK' }, now)).toBeNull() // not synchronised from TeslaMate
+  })
+
+  it('stays a shortcut only for a cost still to complete', () => {
+    expect(teslamateChargeCostUrl(vehicle, priced, now)).toBeNull()
+    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 0, cost_to_review: true }, now)).toBe('http://tm.local/charge-cost/152')
   })
 })

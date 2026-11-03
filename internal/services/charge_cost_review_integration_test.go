@@ -103,6 +103,56 @@ func TestIntegrationChargeCostReview(t *testing.T) {
 	}
 }
 
+// The cost of a synchronised charge is set in TeslaMate: saving the notes of the charge does not freeze it against the
+// synchronisation, only changing the cost here does.
+func TestIntegrationSavingNotesKeepsTheSynchronisedCost(t *testing.T) {
+	_, repo := setupIntegrationDB(t, false)
+	ctx := context.Background()
+	v := mustVehicle(t, repo, "cost-notes@example.com")
+	zero, paid := money.Cents(0), money.Cents(700)
+	id := 11
+	c := &models.ChargeLog{VehicleID: v.ID, TeslaMateChargeID: &id, Date: time.Now().AddDate(0, 0, -1), KwhAdded: 10, Cost: &zero, Currency: "EUR"}
+	if _, err := repo.UpsertTeslaMateCharge(ctx, c); err != nil {
+		t.Fatal(err)
+	}
+	list, _, err := repo.ListCharges(ctx, v.ID, false, 10, 0)
+	if err != nil || len(list) != 1 {
+		t.Fatalf("%v %d", err, len(list))
+	}
+	edit := list[0]
+	note := "plugged at the office"
+	edit.Notes = &note
+	if err := repo.UpdateCharge(ctx, &edit); err != nil {
+		t.Fatal(err)
+	}
+	// TeslaMate now reports the cost typed there
+	if _, err := repo.UpsertTeslaMateCharge(ctx, &models.ChargeLog{VehicleID: v.ID, TeslaMateChargeID: &id, Date: c.Date, KwhAdded: 10, Cost: &paid, Currency: "EUR"}); err != nil {
+		t.Fatal(err)
+	}
+	list, _, _ = repo.ListCharges(ctx, v.ID, false, 10, 0)
+	if list[0].CostSource != "TESLAMATE" || list[0].Cost == nil || *list[0].Cost != paid {
+		t.Fatalf("the cost typed in TeslaMate is read again after the notes were saved: %+v", list[0])
+	}
+	if list[0].Notes == nil || *list[0].Notes != note {
+		t.Fatalf("the notes are kept: %+v", list[0].Notes)
+	}
+
+	// Changing the cost here is still a correction the synchronisation respects
+	fix := list[0]
+	own := money.Cents(900)
+	fix.Cost = &own
+	if err := repo.UpdateCharge(ctx, &fix); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.UpsertTeslaMateCharge(ctx, &models.ChargeLog{VehicleID: v.ID, TeslaMateChargeID: &id, Date: c.Date, KwhAdded: 10, Cost: &zero, Currency: "EUR"}); err != nil {
+		t.Fatal(err)
+	}
+	list, _, _ = repo.ListCharges(ctx, v.ID, false, 10, 0)
+	if list[0].CostSource != "MANUAL" || list[0].Cost == nil || *list[0].Cost != own {
+		t.Fatalf("a cost changed here survives the synchronisation: %+v", list[0])
+	}
+}
+
 func TestIntegrationPlaceStatsSeparateConfirmedFreeFromUnknown(t *testing.T) {
 	db, repo := setupIntegrationDB(t, false)
 	ctx := context.Background()
