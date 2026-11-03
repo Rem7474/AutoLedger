@@ -182,7 +182,7 @@ async function loadData() {
   }
 }
 
-const { handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, loadData)
+const { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, loadData)
 
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value, vehicleStore.lastSyncTimestamp],
@@ -251,6 +251,15 @@ async function loadMoreCharges() {
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     loadingMoreCharges.value = false
+  }
+}
+
+async function reviewChargeCost(c: any, reviewed: boolean) {
+  try {
+    await api.setChargeCostReview(vehicleId.value, c.id, reviewed)
+    await loadData()
+  } catch (err: any) {
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 
@@ -325,6 +334,7 @@ function openUploadDocumentModal() {
       @add="openAddTollModal"
       @edit="openEditTollModal"
       @delete="handleDeleteToll"
+      @delete-many="handleDeleteTolls"
       @view-document="viewOrDownloadDocument"
     />
 
@@ -337,6 +347,7 @@ function openUploadDocumentModal() {
       @add="openAddMaintModal"
       @edit="openEditMaintModal"
       @delete="handleDeleteMaint"
+      @delete-many="handleDeleteMaints"
       @view-document="viewOrDownloadDocument"
     />
 
@@ -419,6 +430,8 @@ function openUploadDocumentModal() {
       @load-more="loadMoreCharges"
       @edit="openEditChargeModal"
       @delete="handleDeleteCharge"
+      @delete-many="handleDeleteCharges"
+      @review-cost="reviewChargeCost"
       @view-document="viewOrDownloadDocument"
     />
 

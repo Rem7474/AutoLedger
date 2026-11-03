@@ -12,7 +12,7 @@ import (
 
 const comparisonColumns = `id, user_id, vehicle_id, name, mode, annual_km, years,
 	ice_fuel_type, ice_l_100km, ice_fuel_price, ice_purchase_price, ice_resale_value,
-	ice_maintenance_yearly, ice_insurance_yearly, ice_tax_yearly, tracked_inputs, options, created_at, updated_at, currency`
+	ice_maintenance_yearly, ice_insurance_yearly, ice_tax_yearly, tracked_inputs, options, created_at, updated_at, currency, version`
 
 func scanComparison(row pgx.Row) (*models.ComparisonScenario, error) {
 	var s models.ComparisonScenario
@@ -20,7 +20,7 @@ func scanComparison(row pgx.Row) (*models.ComparisonScenario, error) {
 	if err := row.Scan(&s.ID, &s.UserID, &s.VehicleID, &s.Name, &s.Mode, &s.AnnualKm, &s.Years,
 		&s.ICE.FuelType, &s.ICE.LPer100Km, &s.ICE.FuelPrice, &s.ICE.PurchasePrice, &s.ICE.ResaleValue,
 		&s.ICE.MaintenanceYearly, &s.ICE.InsuranceYearly, &s.ICE.TaxYearly, &evJSON, &optJSON,
-		&s.CreatedAt, &s.UpdatedAt, &s.Currency); err != nil {
+		&s.CreatedAt, &s.UpdatedAt, &s.Currency, &s.Version); err != nil {
 		return nil, err
 	}
 	if len(evJSON) > 0 {
@@ -87,11 +87,11 @@ func (r *Repository) CreateComparisonScenario(ctx context.Context, s *models.Com
 			ice_fuel_type, ice_l_100km, ice_fuel_price, ice_purchase_price, ice_resale_value,
 			ice_maintenance_yearly, ice_insurance_yearly, ice_tax_yearly, tracked_inputs, options, currency)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`, s.UserID, s.VehicleID, s.Name, s.Mode, s.AnnualKm, s.Years,
 		s.ICE.FuelType, s.ICE.LPer100Km, s.ICE.FuelPrice, s.ICE.PurchasePrice, s.ICE.ResaleValue,
 		s.ICE.MaintenanceYearly, s.ICE.InsuranceYearly, s.ICE.TaxYearly, ev, opts, s.Currency,
-	).Scan(&s.ID, &s.CreatedAt, &s.UpdatedAt)
+	).Scan(&s.ID, &s.CreatedAt, &s.UpdatedAt, &s.Version)
 }
 
 // UpdateComparisonScenario replaces the editable fields of a scenario owned by the user.
@@ -105,15 +105,16 @@ func (r *Repository) UpdateComparisonScenario(ctx context.Context, s *models.Com
 		SET vehicle_id = $3, name = $4, mode = $5, annual_km = $6, years = $7,
 			ice_fuel_type = $8, ice_l_100km = $9, ice_fuel_price = $10, ice_purchase_price = $11, ice_resale_value = $12,
 			ice_maintenance_yearly = $13, ice_insurance_yearly = $14, ice_tax_yearly = $15,
-			tracked_inputs = $16, options = $17, currency = $18, updated_at = NOW()
-		WHERE id = $1 AND user_id = $2
-		RETURNING user_id, created_at, updated_at;
+			tracked_inputs = $16, options = $17, currency = $18,
+			version = version + 1, updated_at = NOW()
+		WHERE id = $1 AND user_id = $2 AND ($19::bigint IS NULL OR version = $19::bigint)
+		RETURNING user_id, created_at, updated_at, version;
 	`, s.ID, s.UserID, s.VehicleID, s.Name, s.Mode, s.AnnualKm, s.Years,
 		s.ICE.FuelType, s.ICE.LPer100Km, s.ICE.FuelPrice, s.ICE.PurchasePrice, s.ICE.ResaleValue,
-		s.ICE.MaintenanceYearly, s.ICE.InsuranceYearly, s.ICE.TaxYearly, ev, opts, s.Currency,
-	).Scan(&s.UserID, &s.CreatedAt, &s.UpdatedAt)
+		s.ICE.MaintenanceYearly, s.ICE.InsuranceYearly, s.ICE.TaxYearly, ev, opts, s.Currency, s.ExpectedVersion,
+	).Scan(&s.UserID, &s.CreatedAt, &s.UpdatedAt, &s.Version)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrNotFound
+		return staleOrNotFound(ctx, r.pool, "comparison_scenarios", s.ID, s.UserID, s.ExpectedVersion)
 	}
 	return err
 }

@@ -123,8 +123,8 @@ func (s *CarpoolService) GetVehicleUnitRatesAtMany(ctx context.Context, vehicleI
 		in[i].totalDistance = coveredDistanceKm(odometer.between(nil, ref), anchorsAt(i), time.Time{}, ref)
 	}
 
-	// 1. Electricity rate (vehicle currency/kWh): try the last 2 priced charges prior to or at ref. A free charge is a
-	// known price of zero, so only a missing cost is skipped.
+	// 1. Electricity rate (vehicle currency/kWh): try the last 2 priced charges prior to or at ref. A confirmed free charge is a
+	// known price of zero, so only a cost still to be completed is skipped.
 	if err := s.eachRow(ctx, `
 		SELECT r.i, c.date, c.kwh_added, c.cost
 		FROM unnest($2::timestamptz[]) WITH ORDINALITY AS r(ref, i)
@@ -134,7 +134,7 @@ func (s *CarpoolService) GetVehicleUnitRatesAtMany(ctx context.Context, vehicleI
 			FROM charge_logs
 			WHERE vehicle_id = $1
 			  AND deleted_upstream_at IS NULL
-			  AND cost IS NOT NULL
+			  AND NOT `+database.ChargeCostToReviewSQL("")+`
 			  AND (currency = (SELECT currency FROM vehicles WHERE id = $1) OR fx_rate IS NOT NULL)
 			  AND date <= r.ref
 			ORDER BY date DESC
@@ -160,7 +160,7 @@ func (s *CarpoolService) GetVehicleUnitRatesAtMany(ctx context.Context, vehicleI
 		       COALESCE(SUM(CASE WHEN c.currency = (SELECT currency FROM vehicles WHERE id = $1) THEN c.cost ELSE c.cost * c.fx_rate END), 0),
 		       COALESCE(SUM(c.kwh_added), 0)
 		FROM unnest($2::timestamptz[]) WITH ORDINALITY AS r(ref, i)
-		LEFT JOIN charge_logs c ON c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL AND c.cost IS NOT NULL
+		LEFT JOIN charge_logs c ON c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL AND NOT `+database.ChargeCostToReviewSQL("c")+`
 		  AND c.date <= r.ref AND (c.currency = (SELECT currency FROM vehicles WHERE id = $1) OR c.fx_rate IS NOT NULL)
 		GROUP BY r.i`, []any{vehicleID, refs}, func(rows pgx.Rows) error {
 		var idx int64

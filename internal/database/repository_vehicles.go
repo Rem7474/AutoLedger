@@ -58,14 +58,14 @@ func (r *Repository) CreateVehicle(ctx context.Context, v *models.Vehicle) error
 			telemetry_mode, make, model,
 			default_driver_id, tariff_plan_id, is_home_charger_default, toll_detection
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`
 	err = tx.QueryRow(ctx, query,
 		v.UserID, v.Name, v.Vin, v.CurrentOdometer,
 		v.EstimatedKwh100km, v.EstimatedPricePerKwh, v.Currency, v.Powertrain,
 		v.TelemetryMode, v.Make, v.Model,
 		v.DefaultDriverID, v.TariffPlanID, v.IsHomeChargerDefault, v.TollDetection,
-	).Scan(&v.ID, &v.CreatedAt, &v.UpdatedAt)
+	).Scan(&v.ID, &v.CreatedAt, &v.UpdatedAt, &v.Version)
 	if err != nil {
 		return fmt.Errorf("failed to create vehicle: %w", err)
 	}
@@ -135,7 +135,7 @@ func (r *Repository) ListVehiclesByUserID(ctx context.Context, userID string) ([
 		       v.estimated_kwh_100km, v.estimated_price_per_kwh, v.currency, v.powertrain,
 		       v.telemetry_mode, v.make, v.model,
 		       v.default_driver_id, v.tariff_plan_id, v.is_home_charger_default, v.toll_detection,
-		       v.created_at, v.updated_at,
+		       v.created_at, v.updated_at, v.version,
 		       vm.role
 		FROM vehicles v
 		JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $1
@@ -157,7 +157,7 @@ func (r *Repository) ListVehiclesByUserID(ctx context.Context, userID string) ([
 			&v.EstimatedKwh100km, &v.EstimatedPricePerKwh, &v.Currency, &v.Powertrain,
 			&v.TelemetryMode, &v.Make, &v.Model,
 			&v.DefaultDriverID, &v.TariffPlanID, &v.IsHomeChargerDefault, &v.TollDetection,
-			&v.CreatedAt, &v.UpdatedAt, &role,
+			&v.CreatedAt, &v.UpdatedAt, &v.Version, &role,
 		); err != nil {
 			return nil, err
 		}
@@ -193,7 +193,7 @@ func (r *Repository) GetVehicleByID(ctx context.Context, id, userID string) (*mo
 		       v.estimated_kwh_100km, v.estimated_price_per_kwh, v.currency, v.powertrain,
 		       v.telemetry_mode, v.make, v.model,
 		       v.default_driver_id, v.tariff_plan_id, v.is_home_charger_default, v.toll_detection,
-		       v.created_at, v.updated_at,
+		       v.created_at, v.updated_at, v.version,
 		       vm.role
 		FROM vehicles v
 		JOIN vehicle_members vm ON v.id = vm.vehicle_id AND vm.user_id::text = $2
@@ -205,7 +205,7 @@ func (r *Repository) GetVehicleByID(ctx context.Context, id, userID string) (*mo
 		&v.EstimatedKwh100km, &v.EstimatedPricePerKwh, &v.Currency, &v.Powertrain,
 		&v.TelemetryMode, &v.Make, &v.Model,
 		&v.DefaultDriverID, &v.TariffPlanID, &v.IsHomeChargerDefault, &v.TollDetection,
-		&v.CreatedAt, &v.UpdatedAt, &role,
+		&v.CreatedAt, &v.UpdatedAt, &v.Version, &role,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -249,8 +249,9 @@ func (r *Repository) UpdateVehicle(ctx context.Context, v *models.Vehicle) error
 		    powertrain = $6, telemetry_mode = $7, make = $8, model = $9,
 		    default_driver_id = $10, tariff_plan_id = $11,
 		    is_home_charger_default = $12, toll_detection = $13,
-		    updated_at = NOW()
-		WHERE id = $14;
+		    updated_at = NOW(), version = version + 1
+		WHERE id = $14 AND ($15::bigint IS NULL OR version = $15::bigint)
+		RETURNING version;
 	`
 	v.TelemetryMode = v.DerivedTelemetryMode()
 	if v.TollDetection == "" {
@@ -261,18 +262,18 @@ func (r *Repository) UpdateVehicle(ctx context.Context, v *models.Vehicle) error
 		return fmt.Errorf("failed to start transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
-	tag, err := tx.Exec(ctx, query,
+	err = tx.QueryRow(ctx, query,
 		v.Name, v.Vin, v.CurrentOdometer,
 		v.EstimatedKwh100km, v.EstimatedPricePerKwh, v.Powertrain,
 		v.TelemetryMode, v.Make, v.Model,
 		v.DefaultDriverID, v.TariffPlanID, v.IsHomeChargerDefault, v.TollDetection,
-		v.ID,
-	)
+		v.ID, v.ExpectedVersion,
+	).Scan(&v.Version)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, tx, "vehicles", v.ID, v.ID, v.ExpectedVersion)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to update vehicle: %w", err)
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
 	}
 	if err := saveTeslaMateSource(ctx, tx, v); err != nil {
 		return err
@@ -286,7 +287,7 @@ func (r *Repository) UpdateVehicle(ctx context.Context, v *models.Vehicle) error
 func (r *Repository) UpdateVehicleEstimatedEnergy(ctx context.Context, vehicleID, userID string, kwh100km, eurPerKwh *float64) error {
 	query := `
 		UPDATE vehicles
-		SET estimated_kwh_100km = $1, estimated_price_per_kwh = $2, updated_at = NOW()
+		SET estimated_kwh_100km = $1, estimated_price_per_kwh = $2, updated_at = NOW(), version = version + 1
 		WHERE id::text = $3 AND EXISTS (
 			SELECT 1 FROM vehicle_members vm WHERE vm.vehicle_id = vehicles.id AND vm.user_id::text = $4 AND vm.role IN ('OWNER', 'EDITOR')
 		);

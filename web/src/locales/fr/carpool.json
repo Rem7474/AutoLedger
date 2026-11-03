@@ -17,7 +17,8 @@
     "recalcDone": "Le covoiturage \"{title}\" a été recalculé avec succès.",
     "recalcDoneTitle": "Recalcul terminé",
     "recalcError": "Erreur lors du recalcul : {message}",
-    "recalcSelectedDone": "{count} covoiturage(s) recalculé(s) avec succès."
+    "recalcSelectedDone": "{count} covoiturage(s) recalculé(s) avec succès.",
+    "deleteManyMessage": "Supprimer ces {count} covoiturages ?"
   },
   "carpoolSummaryGrid": {
     "driverSFairShare": "Part équitable conducteur : {total_driver_share}",
@@ -52,7 +53,8 @@
     "recalculateTheActualCostsOf2": "Recalculer les coûts réels des covoiturages sélectionnés",
     "fullyRecovered": "Trajet 100% rentabilisé !",
     "recovered": "{percent} % payé par les passagers",
-    "seats": "{count} place | {count} places"
+    "seats": "{count} place | {count} places",
+    "recalculateNone": "Aucun covoiturage saisi par distance à recalculer"
   },
   "carpoolTripModal": {
     "notesOptional": "Notes (optionnel)",
@@ -163,7 +165,12 @@
     },
     "someAdjusted": "Certaines étapes diffèrent du coût de leurs trajets.",
     "restoreAll": "Rétablir les montants des trajets",
-    "restoreAllTitle": "Rétablir les montants des trajets ?"
+    "restoreAllTitle": "Rétablir les montants des trajets ?",
+    "freezeMany": "Figer les montants ({count})",
+    "freezeNone": "Aucun covoiturage lié aux trajets à figer",
+    "resyncMany": "Resynchroniser ({count})",
+    "resyncNone": "Aucun covoiturage figé à resynchroniser",
+    "resyncManyTitle": "Suivre à nouveau les trajets pour {count} covoiturages ?"
   },
   "editor": {
     "recap": "Récapitulatif",

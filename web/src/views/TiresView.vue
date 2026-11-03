@@ -7,6 +7,7 @@ import { useTireSelection } from '@/composables/useTireSelection'
 import LoadError from '@/components/LoadError.vue'
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import { Disc as PageIcon } from 'lucide-vue-next'
+import type { SelectionAction } from '@/utils/selectionActions'
 import { t } from '@/i18n'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -101,10 +102,12 @@ const {
   tireSessions,
   tireLogs,
   editingSessionId,
+  editingSessionVersion,
   sessionInitialForm,
   copiedSession,
   sessionToDuplicate,
   editingLogId,
+  editingLogVersion,
   logInitialForm,
   openHistoryModal,
   openTimelineTire,
@@ -177,6 +180,18 @@ function openAddModal() {
 }
 
 // Edit one or several tires
+const selectionActions = computed<SelectionAction[]>(() => [
+  { key: 'edit', label: t('tires.tiresView.editInBulk'), icon: Pencil, run: () => openTireEdit(selectedTireIds.value) },
+  {
+    key: 'scrap',
+    label: t('tires.tiresView.scrap'),
+    icon: Archive,
+    run: () => openBatchDisposeModal(),
+    disabled: !canBatchDispose.value,
+    reason: t('tires.tiresView.scrapNone'),
+  },
+])
+
 function openTireEdit(ids: string[]) {
   tireEditIds.value = [...ids]
   showTireEditModal.value = true
@@ -274,28 +289,9 @@ async function onLogSaved() {
       v-if="vehicleStore.canEdit"
       :count="selectedTireIds.length"
       noun="tire"
+      :actions="selectionActions"
       @clear="selectedTireIds = []"
-    >
-      <button
-        type="button"
-        @click="openTireEdit(selectedTireIds)"
-        class="btn btn-primary"
-      >
-        <Pencil class="w-3.5 h-3.5" />
-        <span>{{ $t('tires.tiresView.editInBulk') }}</span>
-      </button>
-
-      <button
-        v-if="canBatchDispose"
-        type="button"
-        @click="openBatchDisposeModal()"
-        class="btn btn-warning"
-        :title="$t('tires.tiresView.scrapTheSelectedTires')"
-      >
-        <Archive class="w-3.5 h-3.5" />
-        <span>{{ $t('tires.tiresView.scrap') }}</span>
-      </button>
-    </BulkSelectionBar>
+    />
 
     <!-- Header row: Select all toggle & Total info -->
     <div v-if="vehicleStore.canEdit && activeTab === 'disposed' && currentTabTireIds.length > 0" class="flex items-center justify-between text-xs text-slate-400 px-2">
@@ -472,6 +468,7 @@ async function onLogSaved() {
       :selected-tire="selectedTire"
       :copied-session="copiedSession"
       :editing-session-id="editingSessionId"
+      :editing-session-version="editingSessionVersion"
       :initial-form="sessionInitialForm"
       @saved="onSessionSaved"
     />
@@ -481,6 +478,7 @@ async function onLogSaved() {
       :vehicle-id="vehicleId"
       :selected-tire="selectedTire"
       :editing-log-id="editingLogId"
+      :editing-log-version="editingLogVersion"
       :initial-form="logInitialForm"
       @saved="onLogSaved"
     />

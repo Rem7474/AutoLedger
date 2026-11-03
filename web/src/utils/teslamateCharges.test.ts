@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { teslamateChargeCostUrl, teslamateChargeUrl } from './teslamateCharges'
+import { chargeCostToReview, teslamateChargeUrl, teslamateCostEditUrl } from './teslamateCharges'
 
 const vehicle = { teslamate_grafana_url: 'http://grafana.local', teslamate_url: 'http://tm.local', teslamate_car_id: 2 }
 const charge = {
@@ -41,34 +41,37 @@ describe('teslamateChargeUrl', () => {
   })
 })
 
-describe('teslamateChargeCostUrl', () => {
-  it('points to the cost page of a recent charge whose cost is unknown', () => {
-    expect(teslamateChargeCostUrl(vehicle, charge, now)).toBe('http://tm.local/charge-cost/152')
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: undefined }, now)).toBe('http://tm.local/charge-cost/152')
+describe('chargeCostToReview', () => {
+  it('follows the server when it says so', () => {
+    expect(chargeCostToReview({ cost: 0, cost_to_review: true })).toBe(true)
+    expect(chargeCostToReview({ cost: null, cost_to_review: false })).toBe(false)
   })
 
-  it('has no link once the cost is known, even a free one', () => {
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 0 }, now)).toBeNull()
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost: 4.2 }, now)).toBeNull()
+  it('falls back on an unknown cost for a charge read without the flag', () => {
+    expect(chargeCostToReview({ cost: null })).toBe(true)
+    expect(chargeCostToReview({ cost: undefined })).toBe(true)
+    expect(chargeCostToReview({ cost: 0 })).toBe(false)
+    expect(chargeCostToReview(null)).toBe(false)
+  })
+})
+
+describe('teslamateCostEditUrl', () => {
+  const priced = { ...charge, cost: 9.44, cost_to_review: false }
+
+  it('sends the cost of a synchronised charge to TeslaMate while it reads it again, priced or not', () => {
+    expect(teslamateCostEditUrl(vehicle, priced, now)).toBe('http://tm.local/charge-cost/152')
+    expect(teslamateCostEditUrl(vehicle, { ...charge, cost: 0 }, now)).toBe('http://tm.local/charge-cost/152')
   })
 
-  it('has no link for a cost typed in AutoLedger, which a synchronisation never overwrites', () => {
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, cost_source: 'MANUAL' }, now)).toBeNull()
+  it('leaves the cost to AutoLedger when TeslaMate cannot give it back', () => {
+    expect(teslamateCostEditUrl({ teslamate_grafana_url: 'x' }, priced, now)).toBeNull() // no TeslaMate URL
+    expect(teslamateCostEditUrl(vehicle, priced, new Date('2026-12-30T00:00:00Z').getTime())).toBeNull() // out of the window
+    expect(teslamateCostEditUrl(vehicle, { ...priced, cost_source: 'MANUAL' }, now)).toBeNull() // already corrected here
+    expect(teslamateCostEditUrl(vehicle, { ...priced, origin: 'WEBHOOK' }, now)).toBeNull() // not synchronised from TeslaMate
   })
 
-  it('has no link when the next synchronisation would not read the charge again', () => {
-    const old = { ...charge, date: '2026-09-01T10:00:00Z', end_date: '2026-09-01T11:00:00Z' }
-    expect(teslamateChargeCostUrl(vehicle, old, now)).toBeNull()
-  })
-
-  it('has no link without a TeslaMate URL, without a TeslaMate charge, or for another origin', () => {
-    expect(teslamateChargeCostUrl({ teslamate_grafana_url: 'http://g' }, charge, now)).toBeNull()
-    expect(teslamateChargeCostUrl(null, charge, now)).toBeNull()
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, teslamate_charge_id: undefined }, now)).toBeNull()
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, origin: 'CSV' }, now)).toBeNull()
-  })
-
-  it('defaults the reference time to now', () => {
-    expect(teslamateChargeCostUrl(vehicle, { ...charge, date: new Date().toISOString() })).toBe('http://tm.local/charge-cost/152')
+  it('has no link without a TeslaMate charge id, and reads the reference time from the clock by default', () => {
+    expect(teslamateCostEditUrl(vehicle, { ...priced, teslamate_charge_id: undefined }, now)).toBeNull()
+    expect(teslamateCostEditUrl(vehicle, { ...priced, date: new Date().toISOString() })).toBe('http://tm.local/charge-cost/152')
   })
 })

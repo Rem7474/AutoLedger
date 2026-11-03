@@ -13,6 +13,7 @@ import (
 )
 
 type SaveManualDriveRequest struct {
+	ExpectedVersion   *int64     `json:"expected_version"` // The version the client read; absent: not checked
 	StartTime         time.Time  `json:"start_time"`
 	EndTime           *time.Time `json:"end_time"`
 	DistanceKm        float64    `json:"distance_km"`
@@ -179,6 +180,7 @@ func (h *DriveHandler) Update(w http.ResponseWriter, r *http.Request) {
 		existing.Tags = req.Tags
 	}
 	existing.DriverID = req.DriverID
+	existing.ExpectedVersion = req.ExpectedVersion
 
 	if err := h.repo.UpdateManualDrive(r.Context(), existing); err != nil {
 		writeRepoError(w, r, err, "Failed to update manual drive")

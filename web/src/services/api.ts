@@ -2,7 +2,7 @@ import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 // AutoLedger API Service
 import { newIdempotencyKey } from '@/services/offlineQueue'
-import { apiErrorMessage } from '@/services/apiError'
+import { apiErrorMessage, StaleWriteError } from '@/services/apiError'
 import { csvImportForm, type CSVExecuteResult, type CSVImportBatch, type CSVImportOptions, type CSVImportProfile, type CSVPreviewResult } from '@/services/csvImport'
 import { fetchWithSessionRefresh, isPublicAuthRequest } from '@/services/sessionFetch'
 
@@ -107,7 +107,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}, offlineLa
   }
 
   if (!res.ok) {
-    throw new Error(apiErrorMessage(data, t('shell.api.requestFailed', { status: res.status })))
+    const message = apiErrorMessage(data, t('shell.api.requestFailed', { status: res.status }))
+    if (res.status === 409 && data?.code === 'request.stale') throw new StaleWriteError(message)
+    throw new Error(message)
   }
 
   return data as T
@@ -278,6 +280,12 @@ export const api = {
   deleteImportProfile: (id: string) => request<void>(`/import-profiles/${id}`, { method: 'DELETE' }),
   updateDriveTags: (vehicleId: string, driveId: string, tags: string[]) =>
     request<any>(`/vehicles/${vehicleId}/drives/${driveId}/tags`, { method: 'PATCH', body: JSON.stringify({ tags }) }),
+  setChargeCostReview: (vehicleId: string, chargeId: string, reviewed: boolean) =>
+    request<any>(
+      `/vehicles/${vehicleId}/charges/${chargeId}/cost-review`,
+      { method: 'PATCH', body: JSON.stringify({ reviewed }) },
+      reviewed ? t('shell.api.chargeCostConfirmed') : undefined
+    ),
   setDriveTollReview: (vehicleId: string, driveId: string, reviewed: boolean) =>
     request<any>(
       `/vehicles/${vehicleId}/drives/${driveId}/toll-review`,
@@ -302,7 +310,7 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ drive_ids: driveIds }) },
       t('shell.api.tripSuggestionDismiss')
     ),
-  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[] }) =>
+  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[]; expected_version?: number }) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteTripGroup: (vehicleId: string, groupId: string, deleteExpenses = false) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}?delete_expenses=${deleteExpenses}`, { method: 'DELETE' }),
@@ -564,7 +572,7 @@ export const api = {
   getTariffPlans: () => request<{ plans: TariffPlan[] }>('/tariffs/plans'),
   createTariffPlan: (data: Partial<TariffPlan>) =>
     request<TariffPlan>('/tariffs/plans', { method: 'POST', body: JSON.stringify(data) }),
-  updateTariffPlan: (id: string, data: Partial<TariffPlan>) =>
+  updateTariffPlan: (id: string, data: Partial<TariffPlan> & { expected_version?: number }) =>
     request<TariffPlan>(`/tariffs/plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTariffPlan: (id: string) =>
     request<{ success: boolean }>(`/tariffs/plans/${id}`, { method: 'DELETE' }),
@@ -593,6 +601,7 @@ export const api = {
 
 export interface MaintenanceReminder {
   id: string
+  version: number
   vehicle_id: string
   title: string
   category: string
@@ -721,6 +730,7 @@ export interface MileageRate {
 
 export interface TariffPlan {
   id: string
+  version: number
   user_id: string
   name: string
   plan_type: 'FLAT' | 'TIME_OF_USE' | 'BANDS'

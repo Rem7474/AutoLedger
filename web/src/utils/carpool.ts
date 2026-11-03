@@ -190,6 +190,12 @@ function driveCostOf(l: any): Partial<Record<CostKey, number>> {
 /** A trip with at least one leg made from a drive: its amounts follow the drives unless it is frozen. */
 export const hasLinkedLegs = (trip: any): boolean => (trip?.legs || []).some((l: any) => !!l.drive_id)
 
+/** Of a selection of carpools: the ones still following their drives (can be frozen) and the frozen ones (can follow again). A carpool entered by distance has no drive to follow, so it is in neither. */
+export function splitByFreeze(trips: any[]): { freezable: any[]; resyncable: any[] } {
+  const linked = trips.filter(hasLinkedLegs)
+  return { freezable: linked.filter((tr) => !tr.costs_frozen_at), resyncable: linked.filter((tr) => !!tr.costs_frozen_at) }
+}
+
 /** The amount of a category differs from what the drive costs (the leg is adjusted, or its carpool is frozen). */
 export function differsFromDrive(leg: Pick<LegForm, 'drive_id' | 'drive_cost'> & Record<string, any>, key: CostKey): boolean {
   return !!leg.drive_id && !!leg.drive_cost && cents(leg[key]) !== cents(leg.drive_cost[key] ?? 0)

@@ -54,17 +54,18 @@ func (h *ExpenseHandler) ListCharges(w http.ResponseWriter, r *http.Request) {
 }
 
 type SaveChargeRequest struct {
-	Date       string       `json:"date"`
-	EndDate    *string      `json:"end_date"`
-	Address    *string      `json:"address"`
-	PlaceID    *string      `json:"place_id"`
-	KwhAdded   float64      `json:"kwh_added"`
-	Cost       *money.Cents `json:"cost"`
-	Currency   string       `json:"currency"`
-	FxRate     *float64     `json:"fx_rate"`
-	Odometer   *float64     `json:"odometer"`
-	Notes      *string      `json:"notes"`
-	DocumentID *string      `json:"document_id"`
+	ExpectedVersion *int64       `json:"expected_version"` // The version the client read; absent: not checked
+	Date            string       `json:"date"`
+	EndDate         *string      `json:"end_date"`
+	Address         *string      `json:"address"`
+	PlaceID         *string      `json:"place_id"`
+	KwhAdded        float64      `json:"kwh_added"`
+	Cost            *money.Cents `json:"cost"`
+	Currency        string       `json:"currency"`
+	FxRate          *float64     `json:"fx_rate"`
+	Odometer        *float64     `json:"odometer"`
+	Notes           *string      `json:"notes"`
+	DocumentID      *string      `json:"document_id"`
 }
 
 func buildCharge(vehicleID, baseCurrency string, req *SaveChargeRequest) (*models.ChargeLog, error) {
@@ -128,6 +129,7 @@ func decodeCharge(w http.ResponseWriter, r *http.Request, vehicleID, baseCurrenc
 		writeAPIError(w, http.StatusBadRequest, costRequired)
 		return nil, false
 	}
+	c.ExpectedVersion = req.ExpectedVersion
 	return c, true
 }
 
@@ -216,3 +218,29 @@ func (h *ExpenseHandler) DeleteManualCharge(w http.ResponseWriter, r *http.Reque
 // ============================================================================
 // Documents & Invoices
 // ============================================================================
+
+// ChargeCostReviewRequest confirms (or reopens) the 0 cost of a synchronised charge.
+type ChargeCostReviewRequest struct {
+	Reviewed bool `json:"reviewed"`
+}
+
+// SetChargeCostReview confirms that the 0 cost of a charge is right, as a drive is reviewed without toll, or reopens it.
+func (h *ExpenseHandler) SetChargeCostReview(w http.ResponseWriter, r *http.Request) {
+	vehicleID := chi.URLParam(r, "vehicleId")
+	chargeID := chi.URLParam(r, "chargeId")
+	if v := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleEditor); v == nil {
+		return
+	}
+
+	var req ChargeCostReviewRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
+		return
+	}
+
+	if err := h.repo.SetChargeCostReviewed(r.Context(), chargeID, vehicleID, req.Reviewed); err != nil {
+		writeRepoError(w, r, err, "Failed to update the cost review")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"success": true, "reviewed": req.Reviewed})
+}

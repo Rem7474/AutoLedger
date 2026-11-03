@@ -4,6 +4,7 @@ import { t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch } from 'vue'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDocumentAttach } from '@/composables/useDocumentAttach'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -18,7 +19,7 @@ import { useSubmit } from '@/composables/useSubmit'
 import { useSessionTariffCost } from '@/composables/useSessionTariffCost'
 import { sessionPriceRequest } from '@/utils/tariffSession'
 import { chargeFieldAccess, chargeOriginKey } from '@/utils/chargeProvenance'
-import { teslamateChargeCostUrl, teslamateChargeUrl } from '@/utils/teslamateCharges'
+import { chargeCostToReview, teslamateChargeUrl, teslamateCostEditUrl } from '@/utils/teslamateCharges'
 
 // Records a charge, or edits `editing`: the facts reported by TeslaMate are read-only, the cost and the notes are AutoLedger's.
 const props = defineProps<{ vehicleId: string; editing: any | null; documents: ExpenseDocumentHeader[]; currentOdometer: number }>()
@@ -36,6 +37,7 @@ const { isUploadingDocument, onSelectExistingDoc, onFileInputChange } = useDocum
   (doc) => emit('document-added', doc)
 )
 
+const { explainStaleWrite } = useStaleWrite()
 const editingCharge = computed(() => props.editing)
 const baseCurrency = computed(() => vehicleStore.currency)
 const sourceLocked = computed(() => chargeFieldAccess(editingCharge.value).sourceLocked)
@@ -137,7 +139,7 @@ async function handleSaveChargeAction() {
   }
   try {
     if (editingCharge.value) {
-      await api.updateCharge(props.vehicleId, editingCharge.value.id, payload)
+      await api.updateCharge(props.vehicleId, editingCharge.value.id, { ...payload, expected_version: editingCharge.value.version })
     } else {
       await api.createCharge(props.vehicleId, payload)
       rememberCharge(props.vehicleId, { kwh: payload.kwh_added, cost: payload.cost, address: payload.address })
@@ -145,13 +147,32 @@ async function handleSaveChargeAction() {
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
 const handleSaveCharge = () => runOnce(handleSaveChargeAction)
 
+// A 0 reported by TeslaMate is confirmed as free here, or reopened to be completed.
+const canConfirmFree = computed(() => !!editingCharge.value && editingCharge.value.cost !== null && chargeCostToReview(editingCharge.value))
+const canReopenCost = computed(() => !!editingCharge.value?.cost_reviewed_at && editingCharge.value.cost_source !== 'MANUAL')
+async function reviewCost(reviewed: boolean) {
+  try {
+    await api.setChargeCostReview(props.vehicleId, editingCharge.value.id, reviewed)
+    open.value = false
+    emit('saved')
+  } catch (err: any) {
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+  }
+}
+
 const detailsUrl = computed(() => teslamateChargeUrl(vehicleStore.activeVehicle, editingCharge.value))
-const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehicle, editingCharge.value))
+// The cost of a synchronised charge that TeslaMate still reads again is set there: the form shows it, read-only
+const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicle, editingCharge.value))
 </script>
 
 <template>
@@ -164,14 +185,17 @@ const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehi
           </h3>
           <p v-if="editingCharge" class="text-xs text-slate-400 mt-1">
             <span class="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">{{ $t(chargeOriginKey(editingCharge)) }}</span>
-            <span v-if="sourceLocked" class="ml-1.5">{{ $t('expenses.chargeModal.sourceLocked') }}</span>
+            <span v-if="sourceLocked" class="ml-1.5">{{ $t(setCostUrl ? 'expenses.chargeModal.sourceLockedCostInTeslaMate' : 'expenses.chargeModal.sourceLocked') }}</span>
           </p>
-          <p v-if="detailsUrl || setCostUrl" class="text-xs mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+          <p v-if="detailsUrl || canConfirmFree || canReopenCost" class="text-xs mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+            <button v-if="canConfirmFree" type="button" class="text-info-400 hover:text-info-300 font-medium" :title="$t('expenses.costReview.confirmFreeHint')" @click="reviewCost(true)">
+              {{ $t('expenses.costReview.confirmFree') }}
+            </button>
+            <button v-if="canReopenCost" type="button" class="text-info-400 hover:text-info-300 font-medium" @click="reviewCost(false)">
+              {{ $t('expenses.costReview.reopen') }}
+            </button>
             <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-info-400 hover:text-info-300 font-medium">
               <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
-            </a>
-            <a v-if="setCostUrl" :href="setCostUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-info-400 hover:text-info-300 font-medium" :title="$t('expenses.teslamateLinks.setCostHint')">
-              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.setCost') }}
             </a>
           </p>
         </div>
@@ -204,12 +228,18 @@ const setCostUrl = computed(() => teslamateChargeCostUrl(vehicleStore.activeVehi
           id-prefix="charge-form"
           required
           :energy-readonly="sourceLocked"
+          :cost-readonly="!!setCostUrl"
           :currency="chargeForm.currency"
           :suggested-price="suggestedPrice"
           :tariff="tariffCost"
         >
           <template #cost-action>
+            <a v-if="setCostUrl" :href="setCostUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium">
+              <ExternalLink class="w-3.5 h-3.5" />
+              {{ $t('expenses.chargeModal.costInTeslaMate') }}
+            </a>
             <button
+              v-else
               type="button"
               @click="showPublicCalc = true"
               class="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 font-medium"

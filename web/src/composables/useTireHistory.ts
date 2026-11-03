@@ -38,12 +38,14 @@ export function useTireHistory(options: {
 
   // Mount session form (add / edit / paste) and the session kept by the "copy" button
   const editingSessionId = ref<string | null>(null)
+  const editingSessionVersion = ref<number | null>(null)
   const sessionInitialForm = ref<SessionForm>(emptySessionForm())
   const copiedSession = ref<SessionForm | null>(null)
   const sessionToDuplicate = ref<any | null>(null)
 
   // Tread depth log form
   const editingLogId = ref<string | null>(null)
+  const editingLogVersion = ref<number | null>(null)
   const logInitialForm = ref<TireLogForm>({ depth_mm: 6.5, odometer: 0, notes: '', date: todayIso() })
 
   let historyRequest = 0
@@ -132,6 +134,7 @@ export function useTireHistory(options: {
 
   function openEditSessionModal(s: any) {
     editingSessionId.value = s.id
+    editingSessionVersion.value = s.version ?? null
     sessionInitialForm.value = sessionFormFromSession(s)
     showSessionModal.value = true
   }
@@ -175,6 +178,7 @@ export function useTireHistory(options: {
   function openLogModal(tire: any, log?: any) {
     selectedTire.value = tire.tire
     editingLogId.value = log ? log.id : null
+    editingLogVersion.value = log?.version ?? null
     logInitialForm.value = log
       ? { depth_mm: log.depth_mm, odometer: Math.round(log.odometer), notes: log.notes || '', date: toIsoDay(log.date) }
       : {
@@ -218,10 +222,12 @@ export function useTireHistory(options: {
     tireSessions,
     tireLogs,
     editingSessionId,
+    editingSessionVersion,
     sessionInitialForm,
     copiedSession,
     sessionToDuplicate,
     editingLogId,
+    editingLogVersion,
     logInitialForm,
     openHistoryModal,
     openTimelineTire,

@@ -91,20 +91,20 @@ func updateTireTx(ctx context.Context, tx pgx.Tx, t *models.Tire) error {
 		    purchase_date = $5, purchase_price = $6,
 		    initial_depth_mm = $7, min_legal_depth_mm = $8, dot_code = $9,
 		    initial_distance_km = $10, estimated_lifespan_km = $11,
-		    updated_at = NOW()
-		WHERE id::text = $12 AND vehicle_id = $13;
+		    version = version + 1, updated_at = NOW()
+		WHERE id::text = $12 AND vehicle_id = $13 AND ($14::bigint IS NULL OR version = $14::bigint);
 	`,
 		t.Brand, t.Model, t.Dimension, t.Season,
 		t.PurchaseDate, t.PurchasePrice,
 		t.InitialDepthMm, t.MinLegalDepthMm, t.DotCode,
 		t.InitialDistanceKm, lifespan,
-		t.ID, t.VehicleID,
+		t.ID, t.VehicleID, t.ExpectedVersion,
 	)
 	if err != nil {
 		return err
 	}
 	if tag.RowsAffected() == 0 {
-		return ErrNotFound
+		return staleOrNotFound(ctx, tx, "tires", t.ID, *t.VehicleID, t.ExpectedVersion)
 	}
 	return recalcTireDistance(ctx, tx, t.ID)
 }
@@ -154,7 +154,7 @@ func (r *Repository) DisposeTire(ctx context.Context, vehicleID, tireID string, 
 			return err
 		}
 	}
-	if _, err := tx.Exec(ctx, `UPDATE tires SET current_position = 'DISPOSED', updated_at = NOW() WHERE id = $1;`, tireID); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE tires SET current_position = 'DISPOSED', version = version + 1, updated_at = NOW() WHERE id = $1;`, tireID); err != nil {
 		return err
 	}
 	if err := recalcTireDistance(ctx, tx, tireID); err != nil {
@@ -168,7 +168,7 @@ const tireColumns = `
 	purchase_date, purchase_price, current_position,
 	initial_depth_mm, min_legal_depth_mm, dot_code, is_archived,
 	mounted_odometer, initial_distance_km, accumulated_distance_km, estimated_lifespan_km,
-	created_at, updated_at
+	created_at, updated_at, version
 `
 
 func scanTire(row pgx.Row, t *models.Tire) error {
@@ -177,7 +177,7 @@ func scanTire(row pgx.Row, t *models.Tire) error {
 		&t.PurchaseDate, &t.PurchasePrice, &t.CurrentPosition,
 		&t.InitialDepthMm, &t.MinLegalDepthMm, &t.DotCode, &t.IsArchived,
 		&t.MountedOdometer, &t.InitialDistanceKm, &t.AccumulatedDistanceKm, &t.EstimatedLifespanKm,
-		&t.CreatedAt, &t.UpdatedAt,
+		&t.CreatedAt, &t.UpdatedAt, &t.Version,
 	)
 }
 

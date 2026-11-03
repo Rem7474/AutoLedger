@@ -192,7 +192,7 @@ func (r *Repository) applyTirePositions(ctx context.Context, tx pgx.Tx, vehicleI
 				return fmt.Errorf("failed to open mount session of tire %s: %w", tireID, err)
 			}
 		}
-		if _, err := tx.Exec(ctx, `UPDATE tires SET current_position = $1, updated_at = NOW() WHERE id = $2;`, newPos, tireID); err != nil {
+		if _, err := tx.Exec(ctx, `UPDATE tires SET current_position = $1, version = version + 1, updated_at = NOW() WHERE id = $2;`, newPos, tireID); err != nil {
 			return fmt.Errorf("failed to update position of tire %s: %w", tireID, err)
 		}
 		if err := recalcTireDistance(ctx, tx, tireID); err != nil {

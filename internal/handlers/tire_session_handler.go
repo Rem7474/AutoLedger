@@ -19,6 +19,7 @@ type MountSessionPayload struct {
 	DismountedOdometer *float64            `json:"dismounted_odometer"`
 	DistanceKm         float64             `json:"distance_km"`
 	Notes              *string             `json:"notes"`
+	ExpectedVersion    *int64              `json:"expected_version"` // The version the client read; absent: not checked
 }
 
 func parseSessionPayload(req *MountSessionPayload) (time.Time, *time.Time, error) {
@@ -75,6 +76,7 @@ func decodeMountSession(w http.ResponseWriter, r *http.Request, vehicleID, tireI
 		DismountedOdometer: req.DismountedOdometer,
 		DistanceKm:         req.DistanceKm,
 		Notes:              req.Notes,
+		ExpectedVersion:    req.ExpectedVersion,
 	}, true
 }
 

@@ -48,6 +48,8 @@ func writeRepoError(w http.ResponseWriter, r *http.Request, err error, fallback 
 		writeErr(w, http.StatusBadRequest, err)
 	case errors.Is(err, database.ErrNotFound):
 		writeAPIError(w, http.StatusNotFound, apierror.New("request.not_found", "Item not found"))
+	case errors.Is(err, database.ErrStaleWrite):
+		writeAPIError(w, http.StatusConflict, apierror.New("request.stale", "The item was changed since you opened it: reload it and make your changes again"))
 	case errors.Is(err, database.ErrForeignReference):
 		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_reference", "Invalid reference: the drive, group or tire does not exist for this vehicle"))
 	default:

@@ -183,6 +183,7 @@ export interface PendingCharge {
   odometer?: number | null
   notes?: string | null
   document_id?: string | null
+  version?: number
 }
 
 // The update endpoint validates date and energy, then keeps the TeslaMate values but overwrites notes and
@@ -200,6 +201,7 @@ export function buildPendingCostPayload(charge: PendingCharge, costText: string,
     odometer: charge.odometer ?? null,
     notes: charge.notes ?? null,
     document_id: charge.document_id ?? null,
+    expected_version: charge.version,
   }
 }
 

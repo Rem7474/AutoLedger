@@ -6,11 +6,17 @@ import { Fuel, Gauge, Trash2 } from 'lucide-vue-next'
 import EmptyState from '@/components/EmptyState.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
+import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
+import RowSelectBox from '@/components/RowSelectBox.vue'
+import SelectionHint from '@/components/SelectionHint.vue'
+import { useRowSelection } from '@/composables/useRowSelection'
+import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import KpiCard from '@/components/KpiCard.vue'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
 import { api } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { distanceUnit, formatDistance, formatDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
 import { canRefuel } from '@/utils/vehicles'
@@ -35,7 +41,9 @@ const sinceLastReading = computed(() => {
   return lastReading.value && Number.isFinite(current) && current >= lastReading.value.odometer ? current - lastReading.value.odometer : null
 })
 const loading = ref(false)
+const { explainStaleWrite } = useStaleWrite()
 const editingId = ref<string | null>(null)
+const editingVersion = ref<number | undefined>(undefined)
 const form = ref({
   date: new Date().toISOString().substring(0, 10),
   odometer: '',
@@ -61,6 +69,7 @@ async function load() {
 
 function resetForm() {
   editingId.value = null
+  editingVersion.value = undefined
   form.value = {
     date: new Date().toISOString().substring(0, 10),
     odometer: props.vehicle?.current_odometer ? String(Math.round(props.vehicle.current_odometer)) : '',
@@ -70,6 +79,7 @@ function resetForm() {
 
 function startEdit(r: any) {
   editingId.value = r.id
+  editingVersion.value = r.version
   form.value = {
     date: new Date(r.date).toISOString().substring(0, 10),
     odometer: String(Math.round(r.odometer)),
@@ -92,7 +102,7 @@ async function saveAction() {
       notes: form.value.notes.trim() || undefined,
     }
     if (editingId.value) {
-      await api.updateOdometerCheckpoint(props.vehicle.id, editingId.value, payload)
+      await api.updateOdometerCheckpoint(props.vehicle.id, editingId.value, { ...payload, expected_version: editingVersion.value })
     } else {
       await api.createOdometerCheckpoint(props.vehicle.id, payload)
     }
@@ -102,6 +112,11 @@ async function saveAction() {
     await vehicleStore.fetchVehicles()
     vehicleStore.lastSyncTimestamp = Date.now()
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      resetForm()
+      await load()
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
@@ -123,6 +138,34 @@ async function remove(r: any) {
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
+
+async function removeMany(items: any[]) {
+  if (items.length === 1) return remove(items[0])
+  const ok = await showConfirm({
+    title: t('manual.odometerReadingsPanel.deleteTitle'),
+    message: t('manual.odometerReadingsPanel.deleteManyMessage', { count: items.length }),
+    confirmText: t('common.delete'),
+    type: 'danger',
+  })
+  if (!ok) return
+  try {
+    for (const item of items) await api.deleteOdometerCheckpoint(props.vehicle.id, item.id)
+  } catch (err: any) {
+    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+  }
+  await load()
+  vehicleStore.lastSyncTimestamp = Date.now()
+}
+
+// Only the manual readings can be edited or deleted: fill-ups and Home Assistant readings are listed for context
+const isManualReading = (r: any) => r.kind !== 'FUEL' && r.source !== 'HA'
+const manualReadings = computed(() => history.value.filter(isManualReading))
+const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(
+  manualReadings,
+  computed(() => props.canEdit),
+  (r) => startEdit(r),
+)
+const actions = computed<SelectionAction[]>(() => editDeleteActions(selected.value, { edit: (r) => startEdit(r), remove: removeMany }))
 
 watch(() => props.vehicle?.id, () => {
   resetForm()
@@ -222,16 +265,25 @@ onMounted(() => {
       <EmptyState v-else-if="history.length === 0" compact :title="$t('manual.odometerReadingsPanel.noManualReadingYet')" />
 
       <div v-else class="space-y-2">
+        <BulkSelectionBar v-if="canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
+        <SelectionHint v-if="canEdit && manualReadings.length > 0" />
         <div
           v-for="r in history"
           :key="r.key"
-          class="relative bg-slate-950/70 border border-slate-800/80 hover:border-slate-700/90 rounded-xl p-3.5 flex items-center justify-between gap-3 transition-colors"
+          class="relative bg-slate-950/70 border border-slate-800/80 hover:border-slate-700/90 rounded-xl p-3.5 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+          :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(r) }"
         >
           <CardOpenButton
-            v-if="canEdit && r.kind !== 'FUEL' && r.source !== 'HA'"
+            v-if="canEdit && isManualReading(r)"
             :label="$t('manual.odometerReadingsPanel.editReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })"
-            @click="startEdit(r)"
+            @click="onRowClick(r)"
+            @pointerdown="onPointerdown($event, r)"
+            @pointermove="press.onPointermove"
+            @pointerup="press.onPointerup"
+            @pointercancel="press.onPointercancel"
+            @contextmenu="press.onContextmenu"
           />
+          <RowSelectBox v-if="showBox && isManualReading(r)" :id="r.key" :checked="isSelected(r)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(r)" />
           <div class="flex items-center gap-3 min-w-0">
             <div class="p-2 bg-slate-800/80 rounded-lg shrink-0" :class="r.kind === 'FUEL' ? 'text-slate-400' : 'text-sky-400'">
               <Fuel v-if="r.kind === 'FUEL'" class="w-4 h-4" />

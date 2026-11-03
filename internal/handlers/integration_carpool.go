@@ -68,6 +68,7 @@ type IntegrationCarpoolTrip struct {
 	DriverCost IntegrationAmount             `json:"driver_cost_share" jsonschema:"the part of the cost the driver keeps"`
 	Passengers []IntegrationCarpoolPassenger `json:"passengers" jsonschema:"who rode, named"`
 	Notes      *string                       `json:"notes" jsonschema:"free note on the trip, user text; null when none"`
+	Version    int64                         `json:"version" jsonschema:"counts the saves of the carpool: give it back as expected_version to update_carpool; 0 for a carpool that was only previewed"`
 }
 
 // IntegrationCarpool lists the carpool trips of a vehicle, the most recent first.
@@ -116,7 +117,7 @@ func integrationCarpoolTrip(t models.CarpoolTripWithPassengers, currency string)
 		ID: t.ID, Title: t.Title, Date: t.Date.UTC().Format(time.RFC3339), Distance: kilometres(t.DistanceKm), Stops: stops,
 		TotalCost: amountOf(t.TotalCost, currency), Energy: amountOf(t.ElectricityCost, currency), Tolls: amountOf(t.TollsCost, currency),
 		Revenue: amountOf(t.TotalRevenue, currency), NetCost: amountOf(t.NetCost, currency), DriverCost: amountOf(t.DriverCostShare, currency),
-		Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes),
+		Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes), Version: t.Version,
 	}
 	for _, p := range t.Passengers {
 		item.Passengers = append(item.Passengers, IntegrationCarpoolPassenger{

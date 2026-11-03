@@ -49,7 +49,13 @@
       "tire": "pneu sélectionné | pneus sélectionnés",
       "carpool": "covoiturage sélectionné | covoiturages sélectionnés",
       "drive": "trajet sélectionné | trajets sélectionnés"
-    }
+    },
+    "selectOne": "Sélectionnez une seule ligne",
+    "cannotDelete": "Suppression impossible",
+    "moreActions": "Plus d'actions",
+    "hint": "Appuyez longuement sur une ligne pour la sélectionner",
+    "hintDismiss": "Compris",
+    "selectRow": "Sélectionner cette ligne"
   },
   "app": {
     "loadingYourVehicle": "Chargement de votre véhicule...",
@@ -69,6 +75,10 @@
     "comparison": "Comparatif",
     "vehicles": "Véhicules",
     "account": "Compte"
+  },
+  "stale": {
+    "title": "Modifié ailleurs",
+    "message": "Cet élément a été modifié depuis son ouverture, par quelqu'un d'autre ou dans une autre fenêtre. Rien n'a été enregistré : la dernière version est rechargée, refaites vos modifications dessus."
   },
   "confirm": {
     "title": "Confirmation",
@@ -108,6 +118,7 @@
     "notReady": "Erreur ({status}): La base de données ou le service n'est pas prêt",
     "requestFailed": "La requête a échoué ({status})",
     "driveNoToll": "Trajet marqué sans péage",
+    "chargeCostConfirmed": "Coût de la recharge confirmé",
     "tripSuggestionDismiss": "Voyage détecté écarté",
     "toll": "Péage / parking de {amount}",
     "tollEdit": "Modification de péage / parking",

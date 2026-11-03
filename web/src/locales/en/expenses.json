@@ -37,11 +37,26 @@
     "energyTitle": "Energy",
     "energySubtitle": "Consumption, charging sessions and fill-ups",
     "fixedCosts": "Fixed costs",
-    "fillUps": "Fill-ups"
+    "fillUps": "Fill-ups",
+    "deleteManyMessage": "Delete these {count} entries?"
+  },
+  "costReview": {
+    "confirmFree": "Confirm €0",
+    "confirmFreeHint": "TeslaMate reports 0 for a cost it does not know: confirm that this charge was free.",
+    "toConfirm": "Cost to confirm",
+    "free": "Free",
+    "reopen": "Reopen the cost",
+    "enterCost": "Cost",
+    "enterCostLong": "Enter the cost",
+    "setInTeslaMate": "Set in TeslaMate",
+    "enterCostHint": "Enter the cost of this charge",
+    "freeHint": "Confirm that this charge was free",
+    "toComplete": "To complete ({count})",
+    "toCompleteHint": "The charges whose cost is missing or to confirm: the TCO is underestimated until they are completed.",
+    "openCharge": "Open the charge of {date}"
   },
   "teslamateLinks": {
     "details": "Details in TeslaMate",
-    "setCost": "Set the cost in TeslaMate",
     "setCostHint": "The cost entered in TeslaMate is read again by the next synchronisation."
   },
   "chargeModal": {
@@ -65,7 +80,9 @@
     "editCharge": "Edit the charge",
     "start": "Charge start",
     "endOptional": "Charge end (optional)",
-    "sourceLocked": "Reported by TeslaMate and read-only; the cost and the notes are yours and survive synchronisations."
+    "sourceLocked": "Reported by TeslaMate and read-only; the cost and the notes are yours and survive synchronisations.",
+    "sourceLockedCostInTeslaMate": "Reported by TeslaMate and read-only. The cost is set in TeslaMate and read again by the next synchronisation; the notes are yours.",
+    "costInTeslaMate": "Set in TeslaMate"
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} charge(s) shown out of {chargesTotal}",
@@ -75,8 +92,6 @@
     "viewTheReceipt": "View the receipt",
     "correctedCost": "Corrected cost",
     "kwh2": "+{kwh_added} kWh",
-    "chargeSWithoutACost": "{chargesWithoutCost} charge(s) without a cost: the TCO is underestimated. Click to complete them.",
-    "showingOnlyTheChargesWithout": "Showing only the charges without a cost — click to show everything",
     "automaticallyIncludedInTheTco": "(automatically included in the TCO).",
     "kwh3": "{estimated_price_per_kwh}/kWh",
     "kwh100km": "{estimated_kwh_100km} kWh/100 {unit}",
@@ -89,7 +104,8 @@
     "at": "at",
     "monthSummary": "{count} · {kwh} kWh · {cost}",
     "averagePrice": "{price}/kWh on average",
-    "monthCount": "{count} charge | {count} charges"
+    "monthCount": "{count} charge | {count} charges",
+    "syncedCannotDelete": "Synced from TeslaMate, cannot be deleted"
   },
   "completeReminderModal": {
     "confirmTheMaintenance": "Confirm the maintenance",

@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
@@ -527,7 +528,7 @@ func (s *EnergyStatsService) Compute(ctx context.Context, vehicleID string) (*En
 		SELECT TO_CHAR(date AT TIME ZONE $2, 'YYYY-MM') AS m, date, end_date, kwh_added::float8, kwh_used::float8,
 		       start_battery_level, end_battery_level,
 		       origin = 'WEBHOOK' AND kwh_used IS NULL AS grid_side,
-		       CASE WHEN cost IS NULL THEN NULL
+		       CASE WHEN `+database.ChargeCostToReviewSQL("")+` THEN NULL
 		            WHEN currency = (SELECT currency FROM vehicles WHERE id = $1) THEN ROUND(cost, 2)
 		            WHEN fx_rate IS NOT NULL THEN ROUND(cost * fx_rate, 2) END AS cost_eur
 		FROM charge_logs

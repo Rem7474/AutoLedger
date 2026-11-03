@@ -49,7 +49,13 @@
       "tire": "tire selected | tires selected",
       "carpool": "carpool selected | carpools selected",
       "drive": "drive selected | drives selected"
-    }
+    },
+    "selectOne": "Select a single row",
+    "cannotDelete": "Cannot be deleted",
+    "moreActions": "More actions",
+    "hint": "Press and hold a row to select it",
+    "hintDismiss": "Got it",
+    "selectRow": "Select this row"
   },
   "app": {
     "loadingYourVehicle": "Loading your vehicle...",
@@ -69,6 +75,10 @@
     "comparison": "Comparison",
     "vehicles": "Vehicles",
     "account": "Account"
+  },
+  "stale": {
+    "title": "Changed elsewhere",
+    "message": "This item was changed since you opened it, by someone else or in another window. Nothing was saved: the latest version is loaded again, make your changes on it."
   },
   "confirm": {
     "title": "Confirmation",
@@ -108,6 +118,7 @@
     "notReady": "Error ({status}): The database or the service is not ready",
     "requestFailed": "The request failed ({status})",
     "driveNoToll": "Drive marked as toll-free",
+    "chargeCostConfirmed": "Charge cost confirmed",
     "tripSuggestionDismiss": "Detected trip ruled out",
     "toll": "Toll / parking of {amount}",
     "tollEdit": "Toll / parking edit",

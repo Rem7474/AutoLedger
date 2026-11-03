@@ -48,5 +48,15 @@ export function apiErrorMessage(body: ApiErrorBody | null | undefined, fallback:
   return body?.error || body?.message || fallback
 }
 
+/** The error of a save refused because the item was changed since it was opened (409, code request.stale). */
+export class StaleWriteError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'StaleWriteError'
+  }
+}
+
+export const isStaleWrite = (err: unknown): err is StaleWriteError => err instanceof StaleWriteError
+
 /** Same for a message object of a payload (a warning, an assumption, a label). */
 export const apiMessageText = (message: ApiErrorBody | null | undefined): string => apiErrorMessage(message, '')

@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/teslacost/teslacost/internal/models"
+	"github.com/teslacost/teslacost/internal/money"
 )
 
 // Charging session ingestion and manual charge entries.
@@ -62,10 +63,11 @@ func (r *Repository) GetLatestTeslaMateChargeDate(ctx context.Context, vehicleID
 	return &t, nil
 }
 
-const chargeSelectColumns = `
+var chargeSelectColumns = `
 	c.id, c.vehicle_id, c.teslamate_charge_id, c.date, c.end_date,
 	c.address, c.kwh_added, c.kwh_used, c.cost, c.cost_source, c.currency, c.fx_rate, c.odometer, c.is_manual, c.notes,
-	c.document_id, doc.filename, c.created_at, c.origin, c.place_id::text
+	c.document_id, doc.filename, c.created_at, c.origin, c.place_id::text, c.version,
+	(` + ChargeCostToReviewSQL("c") + `) AS cost_to_review, c.cost_reviewed_at
 `
 
 func scanCharge(row pgx.Row, c *models.ChargeLog) error {
@@ -74,19 +76,55 @@ func scanCharge(row pgx.Row, c *models.ChargeLog) error {
 		&c.Address, &c.KwhAdded, &c.KwhUsed, &c.Cost, &c.CostSource, &c.Currency, &c.FxRate, &c.Odometer,
 		&c.IsManual, &c.Notes,
 		&c.DocumentID, &c.DocumentFilename,
-		&c.CreatedAt, &c.Origin, &c.PlaceID,
+		&c.CreatedAt, &c.Origin, &c.PlaceID, &c.Version, &c.CostToReview, &c.CostReviewedAt,
 	)
+}
+
+// ChargeUnconfirmedZeroSQL is true for a synchronised charge priced 0 that the owner did not confirm as free.
+// TeslaMate reports a cost it does not know as 0, like a charge that really was free; a 0 typed in AutoLedger,
+// imported or sent by a webhook is deliberate. The alias is the one of charge_logs in the query, empty for none.
+func ChargeUnconfirmedZeroSQL(alias string) string {
+	p := alias
+	if p != "" {
+		p += "."
+	}
+	return "(" + p + "origin = 'TESLAMATE' AND " + p + "cost_source = 'TESLAMATE' AND " + p + "cost = 0 AND " + p + "cost_reviewed_at IS NULL)"
+}
+
+// ChargeCostToReviewSQL is true for a charge whose cost is still to be completed: unknown, or a 0 nobody confirmed.
+func ChargeCostToReviewSQL(alias string) string {
+	p := alias
+	if p != "" {
+		p += "."
+	}
+	return "(" + p + "cost IS NULL OR " + ChargeUnconfirmedZeroSQL(alias) + ")"
+}
+
+// SetChargeCostReviewed confirms (or reopens) a 0 cost as the right one.
+func (r *Repository) SetChargeCostReviewed(ctx context.Context, chargeID, vehicleID string, reviewed bool) error {
+	tag, err := r.pool.Exec(ctx, `
+		UPDATE charge_logs
+		SET cost_reviewed_at = CASE WHEN $1 THEN NOW() ELSE NULL END, version = version + 1
+		WHERE id::text = $2 AND vehicle_id = $3 AND deleted_upstream_at IS NULL;
+	`, reviewed, chargeID, vehicleID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // ListCharges lists charges; missingCostOnly restricts to charges whose cost is still unknown.
 func (r *Repository) ListCharges(ctx context.Context, vehicleID string, missingCostOnly bool, limit, offset int) ([]models.ChargeLog, int, error) {
-	whereCount := `vehicle_id = $1 AND deleted_upstream_at IS NULL AND (NOT $2 OR cost IS NULL)`
+	whereCount := `vehicle_id = $1 AND deleted_upstream_at IS NULL AND (NOT $2 OR ` + ChargeCostToReviewSQL("") + `)`
 	var total int
 	if err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM charge_logs WHERE `+whereCount, vehicleID, missingCostOnly).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
-	whereSelect := `c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL AND (NOT $2 OR c.cost IS NULL)`
+	whereSelect := `c.vehicle_id = $1 AND c.deleted_upstream_at IS NULL AND (NOT $2 OR ` + ChargeCostToReviewSQL("c") + `)`
 	rows, err := r.pool.Query(ctx, `
 		SELECT `+chargeSelectColumns+`
 		FROM charge_logs c
@@ -111,10 +149,10 @@ func (r *Repository) ListCharges(ctx context.Context, vehicleID string, missingC
 	return list, total, rows.Err()
 }
 
-// CountChargesWithoutCost counts charges with an unknown cost.
+// CountChargesWithoutCost counts the charges whose cost is still to be completed (see ChargeCostToReviewSQL).
 func (r *Repository) CountChargesWithoutCost(ctx context.Context, vehicleID string) (int, error) {
 	var count int
-	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM charge_logs WHERE vehicle_id = $1 AND cost IS NULL AND deleted_upstream_at IS NULL;`, vehicleID).Scan(&count)
+	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM charge_logs WHERE vehicle_id = $1 AND `+ChargeCostToReviewSQL("")+` AND deleted_upstream_at IS NULL;`, vehicleID).Scan(&count)
 	return count, err
 }
 
@@ -127,11 +165,11 @@ func (r *Repository) CreateManualCharge(ctx context.Context, c *models.ChargeLog
 			vehicle_id, date, end_date, address, kwh_added, cost, cost_source,
 			currency, fx_rate, odometer, is_manual, notes, document_id, origin, source_batch_id, place_id
 		) VALUES ($1, $2, $3, $4, $5, $6, 'MANUAL', $7, $8, $9, TRUE, $10, $11, COALESCE(NULLIF($12, ''), 'MANUAL'), $13, $14::uuid)
-		RETURNING id, created_at;
+		RETURNING id, created_at, version;
 	`,
 		c.VehicleID, c.Date, c.EndDate, c.Address, c.KwhAdded, c.Cost,
 		c.Currency, c.FxRate, c.Odometer, c.Notes, c.DocumentID, c.Origin, c.SourceBatchID, c.PlaceID,
-	).Scan(&c.ID, &c.CreatedAt)
+	).Scan(&c.ID, &c.CreatedAt, &c.Version)
 	if err != nil {
 		return err
 	}
@@ -165,22 +203,27 @@ func (r *Repository) UpdateCharge(ctx context.Context, c *models.ChargeLog) erro
 		c.KwhAdded, c.Odometer = existing.KwhAdded, existing.Odometer
 	}
 
-	cmdTag, err := r.pool.Exec(ctx, `
+	// The cost of a synchronised charge belongs to TeslaMate until it is changed here: saving the notes, the place or
+	// the receipt leaves it to the synchronisation, which keeps reading what is typed in TeslaMate.
+	keepsSyncedCost := existing.Origin == "TESLAMATE" && existing.CostSource == "TESLAMATE" && sameCost(existing.Cost, c.Cost) && existing.Currency == c.Currency
+	var ignored int64
+	err = r.pool.QueryRow(ctx, `
 		UPDATE charge_logs
 		SET date = $1, end_date = $2, address = $3, kwh_added = $4, odometer = $5,
-		    cost = $6, cost_source = 'MANUAL', currency = $7, fx_rate = $8, notes = $9,
-		    document_id = $10, place_id = $11::uuid
-		WHERE id::text = $12 AND vehicle_id = $13;
+		    cost = $6, cost_source = CASE WHEN $15 THEN cost_source ELSE 'MANUAL' END, currency = $7, fx_rate = $8, notes = $9,
+		    document_id = $10, place_id = $11::uuid, version = version + 1
+		WHERE id::text = $12 AND vehicle_id = $13 AND ($14::bigint IS NULL OR version = $14::bigint)
+		RETURNING version;
 	`,
 		c.Date, c.EndDate, c.Address, c.KwhAdded, c.Odometer,
 		c.Cost, c.Currency, c.FxRate, c.Notes, c.DocumentID, c.PlaceID,
-		c.ID, c.VehicleID,
-	)
+		c.ID, c.VehicleID, c.ExpectedVersion, keepsSyncedCost,
+	).Scan(&ignored)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, r.pool, "charge_logs", c.ID, c.VehicleID, c.ExpectedVersion)
+	}
 	if err != nil {
 		return err
-	}
-	if cmdTag.RowsAffected() == 0 {
-		return ErrNotFound
 	}
 
 	return scanCharge(r.pool.QueryRow(ctx, `
@@ -189,6 +232,13 @@ func (r *Repository) UpdateCharge(ctx context.Context, c *models.ChargeLog) erro
 		LEFT JOIN expense_documents doc ON c.document_id = doc.id
 		WHERE c.id::text = $1 AND c.vehicle_id = $2;
 	`, c.ID, c.VehicleID), c)
+}
+
+func sameCost(a, b *money.Cents) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	return *a == *b
 }
 
 // DeleteManualCharge deletes a manually entered charge (TeslaMate charges would come back on next sync).

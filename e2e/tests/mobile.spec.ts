@@ -68,8 +68,13 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect(dialog).toHaveCount(0)
   await expect(page.getByText(title).first()).toBeVisible()
 
-  await page.locator('div.rounded-2xl', { hasText: title }).getByRole('button', { name: 'More actions' }).first().click()
-  await page.getByRole('menuitem', { name: 'Delete', exact: true }).click()
+  // On a phone the row has no menu: a long press selects the carpool and the bar carries the delete action
+  const box = (await page.locator('div.rounded-2xl', { hasText: title }).first().boundingBox())!
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
+  await expect(page.locator('[data-selection-bar]')).toBeVisible()
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await page.locator('[data-selection-bar]').getByRole('button', { name: 'Delete' }).click()
   await page.getByRole('dialog').last().getByRole('button', { name: 'Delete', exact: true }).click()
   await expect(page.getByText(title)).toHaveCount(0)
 })
@@ -118,4 +123,29 @@ test('a sheet is also closed by pulling its content down, but not from a field',
   // The content, scrolled to the top, follows the finger like the handle does
   await swipeDown(page, box.x + 40, box.y + box.height - 120, 300)
   await expect(dialog).toBeHidden()
+})
+
+test('the Back gesture leaves the selection instead of the page', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const row = page.locator('div.relative.rounded-2xl', { has: page.getByRole('button', { name: /^Open the cost breakdown/ }) }).first()
+  const box = (await row.boundingBox())!
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
+  const bar = page.locator('[data-selection-bar]')
+  await expect(bar).toBeVisible()
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+
+  await page.goBack()
+  await expect(bar).toHaveCount(0)
+  expect(new URL(page.url()).pathname).toBe('/drives')
+
+  // The selection closed by its own button leaves no extra entry behind: Back then leaves the page
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
+  await expect(bar).toBeVisible()
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await bar.getByRole('button').first().tap()
+  await expect(bar).toHaveCount(0)
+  await page.goBack()
+  await page.waitForLoadState('networkidle')
+  expect(new URL(page.url()).pathname).not.toBe('/drives')
 })
