@@ -10,6 +10,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import { Gauge as PageIcon } from 'lucide-vue-next'
 import { ref, onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Car, Zap, Gauge, Users, RefreshCw, Award, TrendingDown, ChevronRight } from 'lucide-vue-next'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { Chart, registerables } from 'chart.js'
 import { api, type FleetSummaryResponse } from '@/services/api'
 import { formatAmount, formatAmountOrUnknown } from '@/currency'
@@ -75,8 +76,10 @@ function submitBudget() {
   void saveBudget(amount)
 }
 
-async function loadFleetSummary() {
-  loading.value = true
+useRefreshHandler(() => loadFleetSummary(true))
+
+async function loadFleetSummary(silent = false) {
+  if (!silent) loading.value = true
   loadError.value = null
   try {
     const data = await api.getFleetSummary()
@@ -217,7 +220,7 @@ onBeforeUnmount(() => {
       {{ t('fleet.subtitle') }}
       <template #actions>
       <button
-        @click="loadFleetSummary"
+        @click="loadFleetSummary()"
         :disabled="loading"
         class="btn btn-secondary"
       >
@@ -228,7 +231,7 @@ onBeforeUnmount(() => {
       </template>
     </PageHeader>
 
-    <LoadError v-if="loadError !== null" :message="loadError" @retry="loadFleetSummary" />
+    <LoadError v-if="loadError !== null" :message="loadError" @retry="loadFleetSummary()" />
     <ListSkeleton v-else-if="loading && !summary" :rows="3" />
 
     <!-- KPI Grid -->

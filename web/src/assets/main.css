@@ -531,3 +531,8 @@ select option:disabled {
 ::view-transition-new(root) {
   animation-duration: 150ms;
 }
+
+/* The shell scrolls inside this element and pulls to refresh itself: the browser's own pull would reload the whole app */
+.app-scroll {
+  overscroll-behavior-y: contain;
+}

@@ -19,6 +19,7 @@ import { toggleTag } from '@/utils/drives'
 import { carpoolCsvHeaders, carpoolCsvRows, driveCostGapCents, recentPassengerNames } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import { Users, Plus } from 'lucide-vue-next'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import EmptyState from '@/components/EmptyState.vue'
 
 // The page loads the trips and owns the selection and which trip the modal edits; the summary, the list and the
@@ -97,9 +98,11 @@ function exportSelectedCarpools() {
   downloadCsv(`${t('carpool.carpoolView.csvFileName')}_${new Date().toISOString().slice(0, 10)}.csv`, carpoolCsvHeaders(vehicleStore.currency), carpoolCsvRows(selected))
 }
 
-async function loadData() {
+useRefreshHandler(() => loadData(true))
+
+async function loadData(silent = false) {
   if (!vehicleStore.activeVehicle) return
-  loading.value = true
+  if (!silent) loading.value = true
   loadError.value = null
   try {
     const res = await api.getCarpools(vehicleStore.activeVehicle.id)
@@ -393,7 +396,7 @@ onMounted(async () => {
     </div>
 
     <!-- Empty State -->
-    <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadData" />
+    <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadData()" />
 
     <EmptyState v-else-if="trips.length === 0" :icon="Users" :title="$t('carpool.carpoolView.noCarpooledTripYet')">
       {{ $t('carpool.carpoolView.selectTheLegsOfYour', { APP_NAME }) }}
@@ -457,7 +460,7 @@ onMounted(async () => {
       :create-options="createOptions"
       :open-token="openToken"
       :recent-names="recentNames"
-      @saved="loadData"
+      @saved="loadData()"
     />
   </div>
 </template>

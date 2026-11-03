@@ -145,5 +145,8 @@
     "tracking": "Suivi",
     "costs": "Coûts",
     "management": "Gestion"
+  },
+  "pullRefresh": {
+    "refreshing": "Actualisation"
   }
 }

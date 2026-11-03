@@ -35,6 +35,7 @@ import WebhookModal from '@/components/expenses/WebhookModal.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
 import QualifyChargesModal from '@/components/expenses/QualifyChargesModal.vue'
 import { Zap, Eye } from 'lucide-vue-next'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 
 // The page owns the lists, the active tab and which modal is open; each modal owns its form and its API
 // call and reports back with "saved".
@@ -140,6 +141,7 @@ async function checkPendingCharges() {
 }
 
 const refreshData = () => loadData(true)
+useRefreshHandler(refreshData)
 
 async function onChargesAssigned() {
   await refreshData()
