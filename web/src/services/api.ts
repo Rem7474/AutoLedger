@@ -2,7 +2,7 @@ import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 // AutoLedger API Service
 import { newIdempotencyKey } from '@/services/offlineQueue'
-import { apiErrorMessage } from '@/services/apiError'
+import { apiErrorMessage, StaleWriteError } from '@/services/apiError'
 import { csvImportForm, type CSVExecuteResult, type CSVImportBatch, type CSVImportOptions, type CSVImportProfile, type CSVPreviewResult } from '@/services/csvImport'
 import { fetchWithSessionRefresh, isPublicAuthRequest } from '@/services/sessionFetch'
 
@@ -107,7 +107,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}, offlineLa
   }
 
   if (!res.ok) {
-    throw new Error(apiErrorMessage(data, t('shell.api.requestFailed', { status: res.status })))
+    const message = apiErrorMessage(data, t('shell.api.requestFailed', { status: res.status }))
+    if (res.status === 409 && data?.code === 'request.stale') throw new StaleWriteError(message)
+    throw new Error(message)
   }
 
   return data as T
@@ -302,7 +304,7 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ drive_ids: driveIds }) },
       t('shell.api.tripSuggestionDismiss')
     ),
-  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[] }) =>
+  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[]; expected_version?: number }) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteTripGroup: (vehicleId: string, groupId: string, deleteExpenses = false) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}?delete_expenses=${deleteExpenses}`, { method: 'DELETE' }),
@@ -548,8 +550,8 @@ export const api = {
     request<APITokenCreatedResponse>('/auth/tokens', { method: 'POST', body: JSON.stringify(data) }),
   previewOAuthAuthorization: (params: OAuthAuthorizeParams) =>
     request<OAuthAuthorizePreview>(`/oauth/authorize?${new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => typeof e[1] === 'string'))}`),
-  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny', vehicleIds: string[] | null = null) =>
-    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision, vehicle_ids: vehicleIds }) }),
+  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny', vehicleIds: string[] | null = null, allowWrite = false) =>
+    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision, vehicle_ids: vehicleIds, allow_write: allowWrite }) }),
   revokeAPIToken: (tokenId: string) =>
     request<{ success: boolean }>(`/auth/tokens/${tokenId}`, { method: 'DELETE' }),
 
@@ -564,7 +566,7 @@ export const api = {
   getTariffPlans: () => request<{ plans: TariffPlan[] }>('/tariffs/plans'),
   createTariffPlan: (data: Partial<TariffPlan>) =>
     request<TariffPlan>('/tariffs/plans', { method: 'POST', body: JSON.stringify(data) }),
-  updateTariffPlan: (id: string, data: Partial<TariffPlan>) =>
+  updateTariffPlan: (id: string, data: Partial<TariffPlan> & { expected_version?: number }) =>
     request<TariffPlan>(`/tariffs/plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTariffPlan: (id: string) =>
     request<{ success: boolean }>(`/tariffs/plans/${id}`, { method: 'DELETE' }),
@@ -593,6 +595,7 @@ export const api = {
 
 export interface MaintenanceReminder {
   id: string
+  version: number
   vehicle_id: string
   title: string
   category: string
@@ -665,7 +668,8 @@ export interface APITokenInfo {
   id: string
   name: string
   token_prefix: string
-  scope: APITokenScope
+  /** An assistant's grant can also be 'write'; a token created from the account page is 'ingest' or 'read'. */
+  scope: APITokenScope | 'write'
   /** True for a grant an assistant obtained by OAuth; expires_at is then when it lapses unless renewed. */
   oauth: boolean
   /** The only vehicles the token can read; null is every vehicle of the account. */
@@ -720,6 +724,7 @@ export interface MileageRate {
 
 export interface TariffPlan {
   id: string
+  version: number
   user_id: string
   name: string
   plan_type: 'FLAT' | 'TIME_OF_USE' | 'BANDS'

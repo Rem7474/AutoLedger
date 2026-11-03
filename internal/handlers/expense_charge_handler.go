@@ -54,17 +54,18 @@ func (h *ExpenseHandler) ListCharges(w http.ResponseWriter, r *http.Request) {
 }
 
 type SaveChargeRequest struct {
-	Date       string       `json:"date"`
-	EndDate    *string      `json:"end_date"`
-	Address    *string      `json:"address"`
-	PlaceID    *string      `json:"place_id"`
-	KwhAdded   float64      `json:"kwh_added"`
-	Cost       *money.Cents `json:"cost"`
-	Currency   string       `json:"currency"`
-	FxRate     *float64     `json:"fx_rate"`
-	Odometer   *float64     `json:"odometer"`
-	Notes      *string      `json:"notes"`
-	DocumentID *string      `json:"document_id"`
+	ExpectedVersion *int64       `json:"expected_version"` // The version the client read; absent: not checked
+	Date            string       `json:"date"`
+	EndDate         *string      `json:"end_date"`
+	Address         *string      `json:"address"`
+	PlaceID         *string      `json:"place_id"`
+	KwhAdded        float64      `json:"kwh_added"`
+	Cost            *money.Cents `json:"cost"`
+	Currency        string       `json:"currency"`
+	FxRate          *float64     `json:"fx_rate"`
+	Odometer        *float64     `json:"odometer"`
+	Notes           *string      `json:"notes"`
+	DocumentID      *string      `json:"document_id"`
 }
 
 func buildCharge(vehicleID, baseCurrency string, req *SaveChargeRequest) (*models.ChargeLog, error) {
@@ -128,6 +129,7 @@ func decodeCharge(w http.ResponseWriter, r *http.Request, vehicleID, baseCurrenc
 		writeAPIError(w, http.StatusBadRequest, costRequired)
 		return nil, false
 	}
+	c.ExpectedVersion = req.ExpectedVersion
 	return c, true
 }
 

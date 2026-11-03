@@ -64,7 +64,7 @@ func newMCPFixture(t *testing.T) *mcpFixture {
 	f.readTok = f.newToken(t, owner.ID, auth.ScopeRead)
 	f.otherTok = f.newToken(t, other.ID, auth.ScopeRead)
 
-	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo)).WithComparison(services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC"))).WithMileage(services.NewMileageService(repo, "UTC"), "UTC").WithTariffs(services.NewTariffServiceIn("UTC"))
+	read := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithFleet(services.NewFleetService(repo, services.NewTCOService(repo.Pool(), "UTC"))).WithResidual(services.NewResidualService(repo, nil)).WithTires(services.NewTireWearService(repo)).WithComparison(services.NewComparisonService(services.NewTCOService(repo.Pool(), "UTC"))).WithMileage(services.NewMileageService(repo, "UTC"), "UTC").WithTariffs(services.NewTariffServiceIn("UTC")).WithCarpool(services.NewCarpoolService(repo.Pool(), repo))
 	f.server = httptest.NewServer(NewMCPHandler(read, repo, "https://ledger.example/", "test").Endpoint())
 	t.Cleanup(f.server.Close)
 	return f
@@ -130,13 +130,15 @@ func TestMCPEndpointOnlyOpensToAReadTokenAndSaysWhereToAuthorize(t *testing.T) {
 		}
 		if got := resp.Header.Get("WWW-Authenticate"); !strings.Contains(got, `resource_metadata="https://ledger.example/.well-known/oauth-protected-resource/mcp"`) {
 			t.Errorf("%s: a client finds the authorization server through WWW-Authenticate, got %q", name, got)
+		} else if strings.Contains(got, "scope=") {
+			t.Errorf("%s: the challenge names a scope, a client would ask for that one only and never for write: %q", name, got)
 		}
 	}
 
 	resp := f.post(ingest)
 	_ = resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden {
-		t.Errorf("a token that can push events must not read through MCP: status %d, want 403", resp.StatusCode)
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("a token that can push events must not read through MCP: status %d, want 401", resp.StatusCode)
 	}
 
 	resp = f.post(f.readTok)
@@ -152,7 +154,8 @@ func TestMCPEndpointOnlyOpensToAReadTokenAndSaysWhereToAuthorize(t *testing.T) {
 	}
 }
 
-func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *testing.T) {
+// Writing tools are named here on purpose: one added later fails this test until it is reviewed.
+func TestMCPToolsAreReadOnlyExceptTheWritingOnesAndServeTheAccountsVehiclesWithoutIdentifiers(t *testing.T) {
 	f := newMCPFixture(t)
 	ctx := context.Background()
 	session := f.connect(t, f.readTok)
@@ -164,11 +167,18 @@ func TestMCPToolsAreReadOnlyAndServeTheAccountsVehiclesWithoutIdentifiers(t *tes
 	var names []string
 	for _, tool := range tools.Tools {
 		names = append(names, tool.Name)
+		// Whether the tool overwrites records: creating adds, changing a carpool replaces what it held
+		if overwrites, writes := map[string]bool{"create_carpool_from_drives": false, "update_carpool": true}[tool.Name]; writes {
+			if tool.Annotations == nil || tool.Annotations.ReadOnlyHint || tool.Annotations.DestructiveHint == nil || *tool.Annotations.DestructiveHint != overwrites {
+				t.Errorf("%s: destructive hint must be %v: %+v", tool.Name, overwrites, tool.Annotations)
+			}
+			continue
+		}
 		if tool.Annotations == nil || !tool.Annotations.ReadOnlyHint {
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles" {
+	if strings.Join(names, ",") != "create_carpool_from_drives,estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles,update_carpool" {
 		t.Errorf("tools: %v", names)
 	}
 
@@ -262,7 +272,7 @@ func TestMCPResourceMetadataNamesTheAuthorizationServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	if meta.Resource != "https://ledger.example/mcp" || len(meta.AuthorizationServers) != 1 || meta.AuthorizationServers[0] != "https://ledger.example" ||
-		len(meta.ScopesSupported) != 1 || meta.ScopesSupported[0] != "read" {
+		len(meta.ScopesSupported) != 2 || meta.ScopesSupported[0] != "read" || meta.ScopesSupported[1] != "write" {
 		t.Errorf("metadata: %s", rec.Body.String())
 	}
 }

@@ -25,16 +25,17 @@ func NewExpenseHandler(repo *database.Repository, storageService *storage.FileSt
 }
 
 type CreateDriveExpenseRequest struct {
-	TripGroupID *string     `json:"trip_group_id"`
-	DriveID     *string     `json:"drive_id"`
-	DriveIDs    []string    `json:"drive_ids"`
-	Type        string      `json:"type"` // TOLL, PARKING, etc.
-	Amount      money.Cents `json:"amount"`
-	Currency    string      `json:"currency"`
-	FxRate      *float64    `json:"fx_rate"`
-	Date        string      `json:"date"`
-	Notes       *string     `json:"notes"`
-	DocumentID  *string     `json:"document_id"`
+	ExpectedVersion *int64      `json:"expected_version"` // The version the client read; absent: not checked
+	TripGroupID     *string     `json:"trip_group_id"`
+	DriveID         *string     `json:"drive_id"`
+	DriveIDs        []string    `json:"drive_ids"`
+	Type            string      `json:"type"` // TOLL, PARKING, etc.
+	Amount          money.Cents `json:"amount"`
+	Currency        string      `json:"currency"`
+	FxRate          *float64    `json:"fx_rate"`
+	Date            string      `json:"date"`
+	Notes           *string     `json:"notes"`
+	DocumentID      *string     `json:"document_id"`
 }
 
 // buildDriveExpense validates a drive expense payload.
@@ -59,16 +60,17 @@ func buildDriveExpense(vehicleID, baseCurrency string, req *CreateDriveExpenseRe
 	}
 
 	return &models.DriveExpense{
-		VehicleID:   vehicleID,
-		TripGroupID: req.TripGroupID,
-		DriveID:     req.DriveID,
-		Type:        expType,
-		Amount:      req.Amount,
-		Currency:    curr,
-		FxRate:      fxRate,
-		Date:        expDate,
-		Notes:       req.Notes,
-		DocumentID:  req.DocumentID,
+		ExpectedVersion: req.ExpectedVersion,
+		VehicleID:       vehicleID,
+		TripGroupID:     req.TripGroupID,
+		DriveID:         req.DriveID,
+		Type:            expType,
+		Amount:          req.Amount,
+		Currency:        curr,
+		FxRate:          fxRate,
+		Date:            expDate,
+		Notes:           req.Notes,
+		DocumentID:      req.DocumentID,
 	}, nil
 }
 

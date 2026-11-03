@@ -33,6 +33,11 @@ const deciding = ref(false)
 const finished = ref<'approve' | 'deny' | null>(null)
 
 // Which vehicles the access covers: all of them by default, or the ones the user ticks.
+// An application that asks to record carpools only gets to when the user ticks the box.
+const asksToWrite = computed(() => preview.value?.scope === 'write')
+const allowWrite = ref(false)
+const writes = computed(() => asksToWrite.value && allowWrite.value)
+
 const vehicleMode = ref<GrantVehicleMode>('all')
 const selected = ref<ReadonlySet<string>>(new Set())
 const choices = computed(() => preview.value?.vehicles ?? [])
@@ -55,7 +60,7 @@ async function decide(decision: 'approve' | 'deny') {
   error.value = ''
   try {
     const vehicleIds = decision === 'approve' && canChoose.value ? grantedVehicleIds(vehicleMode.value, selected.value, choices.value) : null
-    const { redirect_url } = await api.decideOAuthAuthorization(params.value, decision, vehicleIds)
+    const { redirect_url } = await api.decideOAuthAuthorization(params.value, decision, vehicleIds, writes.value)
     finished.value = decision
     // Back to the assistant: a local address it listens on, or the application it opens.
     window.location.assign(redirect_url)
@@ -88,7 +93,7 @@ async function decide(decision: 'approve' | 'deny') {
 
       <template v-else-if="preview">
         <p class="text-sm text-slate-300">
-          {{ t('oauth.authorize.intro', { name: preview.client_name }) }}
+          {{ t(asksToWrite ? 'oauth.authorize.introWrite' : 'oauth.authorize.intro', { name: preview.client_name }) }}
         </p>
 
         <div>
@@ -98,8 +103,16 @@ async function decide(decision: 'approve' | 'deny') {
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canCosts') }}</li>
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canGaps') }}</li>
             <li class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canNames') }}</li>
+            <li v-if="writes" class="flex items-start gap-2"><Check class="w-4 h-4 text-success-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.canWrite') }}</li>
           </ul>
         </div>
+        <fieldset v-if="asksToWrite" class="space-y-2 min-w-0">
+          <legend class="text-xs font-semibold text-slate-400 mb-2">{{ t('oauth.authorize.writeTitle') }}</legend>
+          <label class="flex items-start gap-2 text-sm text-slate-200">
+            <input v-model="allowWrite" type="checkbox" class="mt-1 shrink-0" />
+            <span>{{ t('oauth.authorize.writeAllow') }}</span>
+          </label>
+        </fieldset>
         <fieldset v-if="canChoose" class="space-y-2 min-w-0">
           <legend class="text-xs font-semibold text-slate-400 mb-2">{{ t('oauth.authorize.vehiclesTitle') }}</legend>
           <label class="flex items-start gap-2 text-sm text-slate-200">
@@ -124,7 +137,7 @@ async function decide(decision: 'approve' | 'deny') {
         <div>
           <h2 class="text-xs font-semibold text-slate-400 mb-2">{{ t('oauth.authorize.cannotTitle') }}</h2>
           <ul class="space-y-1.5 text-sm text-slate-200">
-            <li class="flex items-start gap-2"><X class="w-4 h-4 text-danger-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.cannotWrite') }}</li>
+            <li class="flex items-start gap-2"><X class="w-4 h-4 text-danger-400 shrink-0 mt-0.5" />{{ t(writes ? 'oauth.authorize.cannotEdit' : 'oauth.authorize.cannotWrite') }}</li>
             <li class="flex items-start gap-2"><X class="w-4 h-4 text-danger-400 shrink-0 mt-0.5" />{{ t('oauth.authorize.cannotPrivate') }}</li>
           </ul>
         </div>

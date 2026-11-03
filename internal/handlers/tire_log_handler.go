@@ -12,10 +12,11 @@ import (
 )
 
 type AddTireLogRequest struct {
-	DepthMm  float64 `json:"depth_mm"`
-	Odometer float64 `json:"odometer"`
-	Notes    *string `json:"notes"`
-	Date     string  `json:"date"`
+	DepthMm         float64 `json:"depth_mm"`
+	Odometer        float64 `json:"odometer"`
+	Notes           *string `json:"notes"`
+	Date            string  `json:"date"`
+	ExpectedVersion *int64  `json:"expected_version"` // The version the client read; absent: not checked
 }
 
 func (h *TireHandler) AddLog(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +92,7 @@ func (h *TireHandler) UpdateLog(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, err)
 		return
 	}
-	l := &models.TireLog{ID: chi.URLParam(r, "logId"), TireID: chi.URLParam(r, "tireId"), Date: date, Odometer: req.Odometer, DepthMm: req.DepthMm, Notes: req.Notes}
+	l := &models.TireLog{ID: chi.URLParam(r, "logId"), TireID: chi.URLParam(r, "tireId"), Date: date, Odometer: req.Odometer, DepthMm: req.DepthMm, Notes: req.Notes, ExpectedVersion: req.ExpectedVersion}
 	if err := h.repo.UpdateTireLog(r.Context(), vehicleID, l); err != nil {
 		writeRepoError(w, r, err, "Failed to update tire log")
 		return

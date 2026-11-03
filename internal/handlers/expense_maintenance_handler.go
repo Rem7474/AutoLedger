@@ -15,6 +15,7 @@ import (
 )
 
 type CreateMaintenanceRequest struct {
+	ExpectedVersion          *int64      `json:"expected_version"` // The version the client read; absent: not checked
 	Category                 string      `json:"category"`
 	Amount                   money.Cents `json:"amount"`
 	Currency                 string      `json:"currency"`
@@ -109,6 +110,7 @@ func buildMaintenanceExpense(vehicleID, baseCurrency string, req *CreateMaintena
 	}
 
 	return &models.MaintenanceExpense{
+		ExpectedVersion:          req.ExpectedVersion,
 		VehicleID:                vehicleID,
 		Category:                 category,
 		Amount:                   req.Amount,
