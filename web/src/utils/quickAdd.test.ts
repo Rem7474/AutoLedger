@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   checkOdometer,
+  quickKindForRoute,
   describeQuickDate,
   buildChargePayload,
   buildExpensePayload,
@@ -324,5 +325,29 @@ describe('unit price helpers', () => {
     expect(unitPriceText(10, null, 4)).toBe('')
     expect(unitPriceText(10, 0, 4)).toBe('')
     expect(unitPriceText(-5, 10, 4)).toBe('')
+  })
+})
+
+describe('quickKindForRoute', () => {
+  const ev = { canCharge: true, canRefuel: false }
+  const fuel = { canCharge: false, canRefuel: true }
+  const hybrid = { canCharge: true, canRefuel: true }
+
+  it('opens on the charge or the fill-up from Energy, whichever the vehicle takes', () => {
+    expect(quickKindForRoute('energy', ev)).toBe('CHARGE')
+    expect(quickKindForRoute('energy', fuel)).toBe('FUEL')
+    expect(quickKindForRoute('energy', hybrid)).toBe('CHARGE')
+    expect(quickKindForRoute('energy', { canCharge: false, canRefuel: false })).toBeNull()
+  })
+
+  it('opens on an expense from Expenses and Maintenance', () => {
+    expect(quickKindForRoute('expenses', ev)).toBe('EXPENSE')
+    expect(quickKindForRoute('maintenance', fuel)).toBe('EXPENSE')
+  })
+
+  it('leaves the choice to the sheet anywhere else', () => {
+    expect(quickKindForRoute('dashboard', ev)).toBeNull()
+    expect(quickKindForRoute('drives', ev)).toBeNull()
+    expect(quickKindForRoute(undefined, ev)).toBeNull()
   })
 })

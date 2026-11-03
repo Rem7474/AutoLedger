@@ -26,6 +26,7 @@ import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
 import { groupNavItems } from '@/utils/navigation'
+import { quickKindForRoute } from '@/utils/quickAdd'
 import SheetGrabber from '@/components/SheetGrabber.vue'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
@@ -61,6 +62,7 @@ const navItems = computed(() =>
 )
 
 const currentRouteName = computed(() => route.name)
+const openQuickAdd = () => quickAdd.open(quickKindForRoute(route.name, vehicleStore))
 const navSections = computed(() => groupNavItems(navItems.value))
 
 // Phone bar: the everyday pages, the quick entry button in the middle, everything else behind "Plus".
@@ -118,7 +120,7 @@ function handleLogout() {
       v-if="canQuickAdd"
       type="button"
       class="btn btn-primary mb-3"
-      @click="quickAdd.open()"
+      @click="openQuickAdd"
     >
       <Plus class="h-4 w-4" aria-hidden="true" />
       {{ $t('shell.navigation.quickAdd') }}
@@ -198,7 +200,7 @@ function handleLogout() {
           type="button"
           class="-mt-5 flex h-14 w-14 items-center justify-center rounded-full bg-rose-600 text-white shadow-lg shadow-rose-600/40 ring-4 ring-slate-950 transition-colors hover:bg-rose-500 active:bg-rose-700"
           :aria-label="$t('shell.navigation.quickAdd')"
-          @click="quickAdd.open()"
+          @click="openQuickAdd"
         >
           <Plus class="h-7 w-7" aria-hidden="true" />
         </button>

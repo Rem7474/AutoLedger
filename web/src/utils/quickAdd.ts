@@ -4,6 +4,16 @@ import { t } from '@/i18n'
 
 export type QuickKind = 'PENDING' | 'CHARGE' | 'FUEL' | 'EXPENSE'
 
+/**
+ * The tab the quick entry opens on from a page: a charge or a fill-up on Energy (whichever the vehicle takes), an
+ * expense on Expenses and Maintenance. Anywhere else the sheet picks its own first tab (null).
+ */
+export function quickKindForRoute(name: unknown, vehicle: { canCharge: boolean; canRefuel: boolean }): QuickKind | null {
+  if (name === 'energy') return vehicle.canCharge ? 'CHARGE' : vehicle.canRefuel ? 'FUEL' : null
+  if (name === 'expenses' || name === 'maintenance') return 'EXPENSE'
+  return null
+}
+
 export type ExpenseType = 'TOLL' | 'PARKING' | 'FERRY' | 'OTHER'
 
 // Last values entered on a vehicle, used to prefill the next entry.
