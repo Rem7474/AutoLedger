@@ -37,6 +37,8 @@ import CSVImportModal from '@/components/CSVImportModal.vue'
 import EmptySourceHints from '@/components/EmptySourceHints.vue'
 import { Layers, List, RotateCcw, Plus, UploadCloud } from 'lucide-vue-next'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
+import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import {
   filterTrips,
   currentYearMonth,
@@ -93,21 +95,28 @@ function onCSVImported() {
   loadDrives()
 }
 
-async function handleDeleteManualDrive(drive: any) {
-  if (!vehicleStore.activeVehicle || !drive.is_manual) return
-  const ok = await showConfirm({
-    title: t('drives.drivesView.deleteDriveTitle'),
-    message: t('drives.drivesView.deleteDriveMessage'),
-    confirmText: t('common.delete'),
-    type: 'danger',
+// A single drive goes at once and comes back with Undo, the server is asked when that time is over
+function handleDeleteManualDrive(drive: any) {
+  const vehicle = vehicleStore.activeVehicle
+  if (!vehicle || !drive.is_manual) return
+  const index = drives.value.findIndex((d) => d.id === drive.id)
+  deleteWithUndo({
+    message: t('drives.drivesView.driveDeleted'),
+    hide: () => {
+      drives.value = drives.value.filter((d) => d.id !== drive.id)
+      total.value = Math.max(0, total.value - 1)
+    },
+    restore: () => {
+      if (drives.value.some((d) => d.id === drive.id)) return
+      const next = [...drives.value]
+      next.splice(Math.min(Math.max(index, 0), next.length), 0, drive)
+      drives.value = next
+      total.value += 1
+    },
+    commit: () => api.deleteDrive(vehicle.id, drive.id),
+    committed: () => void loadDrives(true),
+    onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
   })
-  if (!ok) return
-  try {
-    await api.deleteDrive(vehicleStore.activeVehicle.id, drive.id)
-    await loadDrives()
-  } catch (err: any) {
-    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
 }
 
 // The delete of the contextual bar: one confirmation for the whole selection, the drives entered by hand only
@@ -571,9 +580,8 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
         <span>{{ $t('drives.drivesView.pageOf', { page, totalPages }) }}</span>
       </div>
 
+      <SwipeToDelete v-for="d in drives" :key="d.id" :disabled="!d.is_manual || selectedDriveIds.length > 0" @delete="handleDeleteManualDrive(d)">
       <DriveCard
-        v-for="d in drives"
-        :key="d.id"
         :d="d"
         :selected="selectedDriveIds.includes(d.id)"
         :selecting="selectedDriveIds.length > 0"
@@ -585,6 +593,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
         @delete="handleDeleteManualDrive"
         @carpool="(drive) => openCarpoolEditor({ driveIds: [drive.id] })"
       />
+      </SwipeToDelete>
 
       <DrivesPagination
         :page="page"

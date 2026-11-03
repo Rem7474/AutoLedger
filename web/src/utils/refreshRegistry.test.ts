@@ -1,24 +1,15 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { currentRefresh, registerRefresh } from './refreshRegistry'
 
 describe('refresh registry', () => {
-  afterEach(() => {
-    // Whatever a test left registered
-    registerRefresh(() => {})()
-  })
-
   it('has nothing to refresh until a page registers', () => {
     expect(currentRefresh()).toBeNull()
   })
 
-  it('serves the page that registered', () => {
+  it('serves the page that registered, and forgets it once it withdraws', () => {
     const refresh = () => 'reloaded'
-    registerRefresh(refresh)
+    const withdraw = registerRefresh(refresh)
     expect(currentRefresh()).toBe(refresh)
-  })
-
-  it('forgets the page once it withdraws', () => {
-    const withdraw = registerRefresh(() => {})
     withdraw()
     expect(currentRefresh()).toBeNull()
   })
@@ -27,8 +18,24 @@ describe('refresh registry', () => {
     // Moving between pages mounts the new one before the old one unmounts.
     const withdrawOld = registerRefresh(() => 'old')
     const next = () => 'new'
-    registerRefresh(next)
+    const withdrawNext = registerRefresh(next)
     withdrawOld()
     expect(currentRefresh()).toBe(next)
+    withdrawNext()
+    expect(currentRefresh()).toBeNull()
+  })
+
+  it('gives the pull back to the page when a panel inside it goes', () => {
+    const page = () => 'page'
+    const panel = () => 'panel'
+    const withdrawPage = registerRefresh(page)
+    const withdrawPanel = registerRefresh(panel)
+    expect(currentRefresh()).toBe(panel)
+    withdrawPanel()
+    expect(currentRefresh()).toBe(page)
+    withdrawPage()
+    // Withdrawing twice changes nothing
+    withdrawPage()
+    expect(currentRefresh()).toBeNull()
   })
 })
