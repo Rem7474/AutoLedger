@@ -417,5 +417,18 @@
     "kmShare": "Poids de la distance (%)",
     "healthWeight": "Poids de la santé",
     "advancedHint": "La valeur combine l’âge, le kilométrage et la santé de la batterie. Ces poids règlent la part de chacun : laissez les valeurs par défaut si vous hésitez."
+  },
+  "sheets": {
+    "breakdown": "Répartition des coûts",
+    "breakdownHint": "Part de chaque poste de coût",
+    "mileageLast": "{month} : {distance} parcourus",
+    "batteryNow": "État de santé : {pct}",
+    "resaleNow": "Vaut environ {value} aujourd’hui",
+    "mileage": "Kilométrage et coût par distance",
+    "mileageHint": "Distance et coût par distance, mois par mois",
+    "battery": "Santé de la batterie",
+    "batteryHint": "Relevés de capacité et état de santé",
+    "resale": "Valeur de revente",
+    "resaleHint": "Valeur estimée aujourd’hui et en fin de contrat"
   }
 }

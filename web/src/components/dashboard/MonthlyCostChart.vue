@@ -156,7 +156,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="lg:col-span-2 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+  <div class="lg:col-span-2 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
       <h3 class="text-sm font-bold text-white flex items-center gap-2">
         <span>{{ $t('dashboard.monthlyCostChart.monthlyExpenseTrend', { cur: currencySymbol(currency) }) }}</span>

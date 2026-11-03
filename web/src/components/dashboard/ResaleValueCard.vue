@@ -11,7 +11,7 @@ import { ChevronDown, TrendingDown } from 'lucide-vue-next'
 // What the vehicle is worth today and what it should fetch at the end of the holding period, from the purchase
 // price, the expected resale value and the holding period of its ownership.
 // Without those figures there is nothing to estimate: the card says what is missing and links to where to enter it.
-const props = defineProps<{ vehicleId: string; hasBattery: boolean; refreshKey?: number }>()
+const props = defineProps<{ vehicleId: string; hasBattery: boolean; refreshKey?: number; bare?: boolean }>()
 const vehicleStore = useVehicleStore()
 
 interface Residual {
@@ -80,7 +80,7 @@ const marker = computed(() => {
 </script>
 
 <template>
-  <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 text-xs shadow-sm" aria-labelledby="resale-title">
+  <section class="space-y-4 text-xs" :class="{ 'rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm': !bare }" aria-labelledby="resale-title">
     <h3 id="resale-title" class="flex items-center gap-2 text-sm font-bold text-white">
       <TrendingDown class="h-4 w-4 text-slate-300" aria-hidden="true" />
       {{ $t('dashboard.resale.title') }}

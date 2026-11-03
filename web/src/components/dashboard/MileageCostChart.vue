@@ -14,7 +14,7 @@ import { distanceUnit, formatDistanceValue, kmToDisplayDistance, perDistance } f
 Chart.register(...registerables)
 
 // Monthly distance and cost per distance, each on its own chart and axis; a click on a month opens its detail
-const props = defineProps<{ monthlyCosts: any[] | null }>()
+const props = defineProps<{ monthlyCosts: any[] | null; bare?: boolean }>()
 const emit = defineEmits<{ 'open-month': [month: any] }>()
 const vehicleStore = useVehicleStore()
 
@@ -143,7 +143,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
+  <div class="space-y-3" :class="{ 'bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm': !bare }">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <div>
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
