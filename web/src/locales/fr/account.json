@@ -7,6 +7,8 @@
     "thisDevice": "Cet appareil",
     "loading": "Chargement…",
     "signOutEverywhere": "Tout déconnecter",
+    "showAllDevices": "Afficher les {count} appareils",
+    "showFewerDevices": "Afficher moins d’appareils",
     "connectedDevices": "Appareils connectés",
     "otherDevicesAreSignedOut": "Les autres appareils sont déconnectés après un changement de mot de passe.",
     "confirmTheNewPassword": "Confirmer le nouveau mot de passe",
