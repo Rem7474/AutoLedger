@@ -27,6 +27,7 @@ import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
 import ChargeModal from '@/components/expenses/ChargeModal.vue'
 import ChargingPlacesModal from '@/components/expenses/ChargingPlacesModal.vue'
 import ChargingInsights from '@/components/expenses/ChargingInsights.vue'
+import SheetRow from '@/components/SheetRow.vue'
 import UploadDocumentModal from '@/components/expenses/UploadDocumentModal.vue'
 import ReminderModal from '@/components/expenses/ReminderModal.vue'
 import CompleteReminderModal from '@/components/expenses/CompleteReminderModal.vue'
@@ -408,14 +409,22 @@ function openUploadDocumentModal() {
       :can-edit="vehicleStore.canEdit"
     />
 
-    <ChargingInsights
+    <SheetRow
       v-if="activeTab === 'CHARGES' && vehicleStore.canCharge && vehicleStore.activeVehicle"
-      :vehicle-id="vehicleStore.activeVehicle.id"
-      :currency="vehicleStore.currency"
-      :has-charges="chargesTotal > 0"
-      :sync-key="insightsKey"
-      @manage-places="showPlacesModal = true"
-    />
+      v-slot="{ bare, close }"
+      :title="$t('expenses.analysis.title')"
+      :enabled="chargesTotal > 0"
+      :hint="$t('expenses.chargingInsights.analysisHint')"
+    >
+      <ChargingInsights
+        :vehicle-id="vehicleStore.activeVehicle.id"
+        :currency="vehicleStore.currency"
+        :has-charges="chargesTotal > 0"
+        :sync-key="insightsKey"
+        :bare="bare"
+        @manage-places="close(); showPlacesModal = true"
+      />
+    </SheetRow>
 
     <ChargesPanel
       v-if="activeTab === 'CHARGES' && vehicleStore.canCharge"

@@ -5,10 +5,11 @@ import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import ListSummary from '@/components/ListSummary.vue'
 import CostHistory from '@/components/costs/CostHistory.vue'
+import SheetRow from '@/components/SheetRow.vue'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { computed, ref } from 'vue'
-import { Repeat, Plus, Trash2, Paperclip, FileDown, Landmark, Wrench } from 'lucide-vue-next'
+import { Repeat, Plus, Trash2, Paperclip, FileDown, Landmark, Wrench, BookOpen } from 'lucide-vue-next'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { saveBlob } from '@/utils/download'
@@ -84,7 +85,9 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
     <div v-else class="space-y-3">
       <BulkSelectionBar v-if="vehicleStore.canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
       <SelectionHint v-if="vehicleStore.canEdit" />
-      <CostHistory :vehicle-id="vehicleId" :kind="kind" :currency="vehicleStore.currency" :sync-key="maintenanceExpenses" />
+      <SheetRow v-slot="{ bare }" :title="$t('expenses.analysis.title')" :hint="$t('expenses.costHistory.analysisHint')">
+        <CostHistory :vehicle-id="vehicleId" :kind="kind" :currency="vehicleStore.currency" :sync-key="maintenanceExpenses" :bare="bare" />
+      </SheetRow>
       <div class="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
         <label class="sr-only" for="maint-filter-category">{{ $t('expenses.maintenancePanel.categoryFilter') }}</label>
         <select id="maint-filter-category" v-model="filter.category" class="field !w-auto">
@@ -100,22 +103,24 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
       <ListSummary :chips="[]">
         {{ $t('expenses.maintenancePanel.count', { n: visible.length }, visible.length) }}
       </ListSummary>
-      <div v-if="kind === 'service'" class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3">
-        <button
-          type="button"
-          class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700 inline-flex items-center gap-2 disabled:opacity-50"
-          :disabled="bookLoading"
-          @click="downloadServiceBook"
-        >
-          <FileDown class="w-4 h-4" />
-          {{ $t('expenses.maintenancePanel.serviceBook') }}
-        </button>
-        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-          <input v-model="bookWithProofs" type="checkbox" class="select-box" />
-          {{ $t('expenses.maintenancePanel.serviceBookWithProofs') }}
-        </label>
-        <p class="text-xs text-slate-400 basis-full">{{ $t('expenses.maintenancePanel.serviceBookHint') }}</p>
-      </div>
+      <SheetRow v-if="kind === 'service'" v-slot="{ bare }" :title="$t('expenses.maintenancePanel.serviceBook')" :hint="$t('expenses.maintenancePanel.serviceBookShort')" :icon="BookOpen">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2" :class="bare ? '' : 'rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3'">
+          <button
+            type="button"
+            class="btn btn-secondary max-sm:w-full max-sm:justify-center"
+            :disabled="bookLoading"
+            @click="downloadServiceBook"
+          >
+            <FileDown class="w-4 h-4" />
+            {{ $t('expenses.maintenancePanel.serviceBook') }}
+          </button>
+          <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+            <input v-model="bookWithProofs" type="checkbox" class="select-box" />
+            {{ $t('expenses.maintenancePanel.serviceBookWithProofs') }}
+          </label>
+          <p class="text-xs text-slate-400 basis-full">{{ $t('expenses.maintenancePanel.serviceBookHint') }}</p>
+        </div>
+      </SheetRow>
       <EmptyState v-if="!visible.length">{{ $t('expenses.maintenancePanel.noMatch') }}</EmptyState>
       <div
         v-for="m in visible"

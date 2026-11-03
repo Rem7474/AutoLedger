@@ -222,7 +222,8 @@
     "serviceBook": "Carnet d'entretien (PDF)",
     "serviceBookWithProofs": "Joindre les justificatifs (images)",
     "serviceBookHint": "Le carnet reprend les entretiens du véhicule, sans les frais fixes, pour l'année choisie ci-dessus ou toutes les années.",
-    "noFixedExpenseHint": "Assurance, taxe, abonnement, financement."
+    "noFixedExpenseHint": "Assurance, taxe, abonnement, financement.",
+    "serviceBookShort": "Export PDF, avec ou sans justificatifs"
   },
   "reminderModal": {
     "sendAnAutomaticWebhookNotification": "Envoyer une notification webhook automatique (Discord / Telegram / Gotify) lors du franchissement du seuil",
@@ -522,7 +523,8 @@
     "estimated": "Estimé avant le suivi",
     "estimatedPart": "dont {kwh} kWh estimés sur {distance} roulés avant le suivi",
     "estimatedCost": "dont {amount} estimés avant le suivi",
-    "emptyPeriod": "Aucune recharge sur cette période."
+    "emptyPeriod": "Aucune recharge sur cette période.",
+    "analysisHint": "Période, graphiques et lieux"
   },
   "costHistory": {
     "title": "Historique : {label}",
@@ -537,6 +539,10 @@
     "months": "{count} mois | {count} mois",
     "smoothed": "Moyenne sur 12 mois",
     "monthly": "Payé par mois ({cur})",
-    "noFullMonth": "Cette plage ne couvre aucun mois complet. Choisissez-en une qui en couvre au moins un."
+    "noFullMonth": "Cette plage ne couvre aucun mois complet. Choisissez-en une qui en couvre au moins un.",
+    "analysisHint": "Période, moyenne mensuelle et graphique"
+  },
+  "analysis": {
+    "title": "Analyse"
   }
 }

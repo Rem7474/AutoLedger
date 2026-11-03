@@ -22,6 +22,8 @@ const props = defineProps<{
   currency: string
   /** Changes when the list below was edited: the history is loaded again. */
   syncKey?: unknown
+  /** Inside a sheet, which already is the frame: no card of its own. */
+  bare?: boolean
 }>()
 
 const AXIS_TEXT = '#94a3b8'
@@ -109,13 +111,13 @@ onBeforeUnmount(() => chart?.destroy())
 
 <template>
   <LoadError v-if="failed" @retry="load" />
-  <section v-else-if="loaded" class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-4" :aria-label="$t('expenses.costHistory.title', { label })">
+  <section v-else-if="loaded" :class="bare ? 'space-y-4' : 'space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-4'" :aria-label="$t('expenses.costHistory.title', { label })">
     <header class="space-y-2">
-      <h3 class="text-sm font-bold text-white">{{ $t('expenses.costHistory.title', { label }) }}</h3>
+      <h3 class="text-sm font-bold text-white" :class="{ 'sr-only': bare }">{{ $t('expenses.costHistory.title', { label }) }}</h3>
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-slate-300">{{ $t('expenses.costHistory.period') }}</span>
-        <MonthlyRangeSelector v-model="range" :custom="customRange !== null" :label="$t('expenses.costHistory.period')" @pick="customRange = null" />
-        <AppDateRangePicker v-model="customRange" :max="today" :aria-label="$t('expenses.costHistory.period')" />
+        <span class="text-xs font-semibold text-slate-300 max-sm:basis-full">{{ $t('expenses.costHistory.period') }}</span>
+        <MonthlyRangeSelector class="max-sm:basis-full" v-model="range" :custom="customRange !== null" :label="$t('expenses.costHistory.period')" @pick="customRange = null" />
+        <div class="max-sm:basis-full"><AppDateRangePicker v-model="customRange" :max="today" :aria-label="$t('expenses.costHistory.period')" /></div>
       </div>
     </header>
 
