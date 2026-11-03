@@ -181,7 +181,7 @@ const handleCompleteReminder = () => runOnce(handleCompleteReminderAction)
       <button type="button" @click="open = false" class="btn btn-lg btn-secondary">
         {{ $t('common.cancel') }}
       </button>
-      <button :disabled="submitting" type="submit" form="complete-reminder-form" class="px-4 py-2 bg-success-600 hover:bg-success-500 text-white text-xs font-semibold rounded-xl transition-colors">
+      <button :disabled="submitting" type="submit" form="complete-reminder-form" class="btn btn-lg btn-primary">
         {{ $t('expenses.completeReminderModal.confirmTheMaintenance') }}
       </button>
     </template>

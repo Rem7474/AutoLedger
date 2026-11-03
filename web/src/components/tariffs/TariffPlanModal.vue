@@ -165,8 +165,8 @@ async function save() {
                   :key="d"
                   type="button"
                   :aria-pressed="rule.days.includes(d)"
-                  class="px-2.5 py-1 rounded-lg border text-xs font-medium"
-                  :class="rule.days.includes(d) ? 'border-primary-500 bg-primary-500/20 text-primary-200' : 'border-slate-700 text-slate-400 hover:text-white'"
+                  class="chip"
+                  :class="{ 'chip-selected': rule.days.includes(d) }"
                   @click="toggleDay(rule, d)"
                 >
                   {{ dayLabel(d) }}

@@ -103,8 +103,8 @@ function onCustomDateChange() {
         type="button"
         @click="setPeriodMode(m)"
         :aria-pressed="periodMode === m"
-        class="rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors"
-        :class="periodMode === m ? 'border-slate-600 bg-slate-700 text-white' : 'border-transparent text-slate-400 hover:text-white'"
+        class="chip"
+        :class="{ 'chip-selected': periodMode === m }"
       >
         {{ $t(`drives.drivesToolbar.units.${m}`) }}
       </button>

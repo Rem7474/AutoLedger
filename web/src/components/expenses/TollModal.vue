@@ -228,8 +228,8 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
             type="button"
             @click="associationMode = 'NONE'"
             :aria-pressed="associationMode === 'NONE'"
-            class="py-1.5 px-2 text-xs font-medium rounded-lg transition-colors text-center border"
-            :class="associationMode === 'NONE' ? 'bg-warning-500/20 text-warning-300 border-warning-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
+            class="chip"
+            :class="{ 'chip-selected': associationMode === 'NONE' }"
           >
             {{ $t('expenses.tollModal.noDrive') }}
           </button>
@@ -237,8 +237,8 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
             type="button"
             @click="associationMode = 'SINGLE'"
             :aria-pressed="associationMode === 'SINGLE'"
-            class="py-1.5 px-2 text-xs font-medium rounded-lg transition-colors text-center border"
-            :class="associationMode === 'SINGLE' ? 'bg-warning-500/20 text-warning-300 border-warning-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
+            class="chip"
+            :class="{ 'chip-selected': associationMode === 'SINGLE' }"
           >
             {{ $t('expenses.tollModal.singleDrive') }}
           </button>
@@ -246,8 +246,8 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
             type="button"
             @click="associationMode = 'MULTI'"
             :aria-pressed="associationMode === 'MULTI'"
-            class="py-1.5 px-2 text-xs font-medium rounded-lg transition-colors text-center border"
-            :class="associationMode === 'MULTI' ? 'bg-warning-500/20 text-warning-300 border-warning-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
+            class="chip"
+            :class="{ 'chip-selected': associationMode === 'MULTI' }"
           >
             {{ $t('expenses.tollModal.multiLeg') }}
           </button>
@@ -285,10 +285,10 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
               :aria-checked="selectedDriveIds.includes(d.id)"
               @click="toggleMultiDrive(d.id)"
               class="flex items-center justify-between p-2 rounded-lg cursor-pointer text-xs border transition-colors"
-              :class="selectedDriveIds.includes(d.id) ? 'bg-warning-500/10 border-warning-500/40 text-warning-200' : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-800'"
+              :class="selectedDriveIds.includes(d.id) ? 'bg-rose-500/10 border-rose-500/40 text-rose-200' : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-800'"
             >
               <div class="flex items-center gap-2">
-                <CheckSquare v-if="selectedDriveIds.includes(d.id)" class="w-4 h-4 text-warning-400" />
+                <CheckSquare v-if="selectedDriveIds.includes(d.id)" class="w-4 h-4 text-rose-400" />
                 <Square v-else class="w-4 h-4 text-slate-400" />
                 <span>{{ formatDayTime(d.start_time) }}{{ $t('expenses.tollModal.dateSeparator') }}{{ (d.start_address || $t('expenses.tollModal.start')).split(',')[0] }} → {{ (d.end_address || $t('expenses.tollModal.destination')).split(',')[0] }}</span>
               </div>
