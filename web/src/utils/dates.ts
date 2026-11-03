@@ -35,15 +35,16 @@ export function formatDayTime(dateStr: string) {
   })
 }
 
-const day = (d: Date) => d.toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short', year: 'numeric' })
+const day = (d: Date, withYear = true) => d.toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short', ...(withYear ? { year: 'numeric' as const } : {}) })
 const clock = (d: Date) => d.toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
 
-/** A session window: "02 mai 2026, 22:00 → 05:30", the end repeating its day only when it differs; just the start when the end is missing or not after it. */
-export function formatChargeWindow(start: string, end?: string | null): string {
+/** A session window: "02 mai 2026, 22:00 → 05:30", the end repeating its day only when it differs; just the start when the end is missing or not after it.
+ * `withYear: false` gives "02 mai, 22:00 → 05:30" for a list that already says the year (a month heading). */
+export function formatChargeWindow(start: string, end?: string | null, withYear = true): string {
   const s = new Date(start)
-  const head = `${day(s)}, ${clock(s)}`
+  const head = `${day(s, withYear)}, ${clock(s)}`
   const e = end ? new Date(end) : null
   if (!e || Number.isNaN(e.getTime()) || e <= s) return head
   const sameDay = s.toDateString() === e.toDateString()
-  return `${head} → ${sameDay ? '' : `${day(e)}, `}${clock(e)}`
+  return `${head} → ${sameDay ? '' : `${day(e, withYear)}, `}${clock(e)}`
 }

@@ -17,8 +17,10 @@ const props = withDefaults(
     tariff?: { cost: number; plan: string } | null
     /** The energy is fixed (a synchronised charge): shown, but only the price and the cost are edited. */
     energyReadonly?: boolean
+    /** The cost is set elsewhere (TeslaMate): the price and the cost are shown, not edited. */
+    costReadonly?: boolean
   }>(),
-  { variant: 'form', idPrefix: 'charge', required: false, energyReadonly: false },
+  { variant: 'form', idPrefix: 'charge', required: false, energyReadonly: false, costReadonly: false },
 )
 const kwh = defineModel<string>('kwh', { required: true })
 const cost = defineModel<string>('cost', { required: true })
@@ -44,7 +46,7 @@ const followsTariff = computed(() => !followsPlan.value && driver.value === 'tar
 
     <div>
       <label :for="`${idPrefix}-price`" :class="labelClass">{{ $t('quickadd.quickChargeForm.pricePerKwh', { cur: currencySymbol(currency) }) }}</label>
-      <NumberInput text :id="`${idPrefix}-price`" v-model="price" min="0" :class="inputClass" @input="onPriceInput" />
+      <NumberInput text :id="`${idPrefix}-price`" v-model="price" min="0" :disabled="costReadonly" :class="inputClass" @input="onPriceInput" />
     </div>
 
     <div>
@@ -53,8 +55,8 @@ const followsTariff = computed(() => !followsPlan.value && driver.value === 'tar
         <slot name="cost-action" />
       </div>
       <div class="flex gap-2">
-        <NumberInput text :id="`${idPrefix}-cost`" v-model="cost" min="0" :required="required" :class="[inputClass, 'min-w-0']" @input="onCostInput" />
-        <button type="button" :class="quick ? 'quick-chip shrink-0 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700' : 'btn btn-secondary shrink-0'" @click="setFree">{{ $t('quickadd.quickChargeForm.free') }}</button>
+        <NumberInput text :id="`${idPrefix}-cost`" v-model="cost" min="0" :required="required" :disabled="costReadonly" :class="[inputClass, 'min-w-0']" @input="onCostInput" />
+        <button v-if="!costReadonly" type="button" :class="quick ? 'quick-chip shrink-0 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700' : 'btn btn-secondary shrink-0'" @click="setFree">{{ $t('quickadd.quickChargeForm.free') }}</button>
       </div>
       <p class="mt-1.5 min-h-4 text-xs text-slate-400" aria-live="polite">
         <template v-if="followsPlan">{{ $t('quickadd.quickChargeForm.calculatedWithTariff', { plan: tariff!.plan }) }}</template>

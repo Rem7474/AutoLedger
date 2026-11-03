@@ -118,6 +118,7 @@
     "notReady": "Error ({status}): The database or the service is not ready",
     "requestFailed": "The request failed ({status})",
     "driveNoToll": "Drive marked as toll-free",
+    "chargeCostConfirmed": "Charge cost confirmed",
     "tripSuggestionDismiss": "Detected trip ruled out",
     "toll": "Toll / parking of {amount}",
     "tollEdit": "Toll / parking edit",

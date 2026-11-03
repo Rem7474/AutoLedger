@@ -131,7 +131,7 @@ type Charge struct {
 	Address           string         `json:"address"`
 	ChargeEnergyAdded float64        `json:"charge_energy_added"`
 	ChargeEnergyUsed  float64        `json:"charge_energy_used"`
-	Cost              *float64       `json:"cost"` // nil when no tariff is configured in TeslaMate
+	Cost              *float64       `json:"cost"` // 0 when the cost is not set in TeslaMate, like a free charge; nil only if the field is absent
 	DurationMin       int            `json:"duration_min"`
 	DurationStr       string         `json:"duration_str"`
 	BatteryDetails    BatteryDetails `json:"battery_details"`

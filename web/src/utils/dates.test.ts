@@ -66,6 +66,11 @@ describe('formatChargeWindow', () => {
     expect(formatChargeWindow(at(1, 22), at(2, 5, 30))).toMatch(/→ 02 May 2026, /)
   })
 
+  it('can leave the year out where a heading already gives it', () => {
+    setLocale('en')
+    expect(formatChargeWindow(at(1, 22), at(2, 5, 30), false)).toMatch(/^01 May, 22:00 → 02 May, 0?5:30/)
+  })
+
   it('falls back to the start when the end is missing or not after it', () => {
     setLocale('en')
     const start = at(2, 8)
