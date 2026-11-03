@@ -159,6 +159,26 @@ test('pulling the page down from the top reloads the list, and a short pull does
   expect(new URL(page.url()).pathname).toBe('/drives')
 })
 
+// Each pull starts where there is no field: a pull that starts on one is left to the field.
+for (const [path, endpoint, startY] of [
+  ['/tires', /\/api\/vehicles\/[^/]+\/tires$/, 200],
+  ['/comparison', /\/api\/comparison-scenarios$/, 200],
+  ['/account', /\/api\/auth\/sessions$/, 160],
+] as const) {
+  test(`pulling ${path} down reloads its data without swapping the page for a skeleton`, async ({ page }) => {
+    await useVehicle(page, ev.id, path)
+    await page.waitForLoadState('networkidle')
+    const skeletons = page.locator('[aria-busy="true"]')
+    await expect(skeletons).toHaveCount(0)
+    const reload = page.waitForRequest((req) => endpoint.test(new URL(req.url()).pathname))
+    await swipeDown(page, 195, startY, 260)
+    await reload
+    await expect(skeletons).toHaveCount(0)
+    await expect(page.getByRole('status').filter({ hasText: 'Refreshing' })).toHaveCount(0)
+    expect(new URL(page.url()).pathname).toBe(path)
+  })
+}
+
 test('a sheet is closed by pulling it down by its handle, and a short pull lets it settle back', async ({ page }) => {
   await useVehicle(page, ev.id, '/expenses')
   await page.getByRole('button', { name: /^Add/ }).first().click()

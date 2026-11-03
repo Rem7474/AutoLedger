@@ -3,6 +3,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import { Car as PageIcon } from 'lucide-vue-next'
 import { t } from '@/i18n'
 import { ref, onMounted, watch } from 'vue'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useRoute, useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
@@ -65,6 +66,11 @@ onMounted(async () => {
 
 watch(() => route.query.add, () => {
   checkAddQuery()
+})
+
+useRefreshHandler(async () => {
+  await vehicleStore.fetchVehicles()
+  await loadOwnerships()
 })
 
 function openCreateModal() {

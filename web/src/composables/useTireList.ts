@@ -34,10 +34,12 @@ export function useTireList() {
 
   const disposedTires = computed(() => tires.value.filter((t) => t.tire.current_position === 'DISPOSED'))
 
-  async function loadTires() {
+  // `silent` reloads behind the list that is already shown (pull to refresh) instead of swapping it for the skeleton.
+  // Compared strictly: the function is also bound as an event handler, which passes the event.
+  async function loadTires(silent?: boolean) {
     if (!vehicleStore.activeVehicle) return
     const id = vehicleStore.activeVehicle.id
-    loading.value = true
+    if (silent !== true) loading.value = true
     loadError.value = ''
     loadFailed.value = false
     try {

@@ -3,6 +3,7 @@ import TabBar, { type TabItem } from '@/components/TabBar.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { useTireHistory } from '@/composables/useTireHistory'
 import { useTireList } from '@/composables/useTireList'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useTireSelection } from '@/composables/useTireSelection'
 import LoadError from '@/components/LoadError.vue'
 import ListSkeleton from '@/components/ListSkeleton.vue'
@@ -164,6 +165,7 @@ onMounted(() => {
   loadTires()
   loadStartOdometer()
 })
+useRefreshHandler(() => loadTires(true))
 
 function openPackSwapModal() {
   if (!vehicleStore.activeVehicle) return

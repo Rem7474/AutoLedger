@@ -8,6 +8,7 @@ import VolumeUnitSwitcher from '@/components/VolumeUnitSwitcher.vue'
 import ApiTokensSection from '@/components/account/ApiTokensSection.vue'
 import TariffPlansPanel from '@/components/tariffs/TariffPlansPanel.vue'
 import { computed, onMounted, ref } from 'vue'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useRoute, useRouter } from 'vue-router'
 import { KeyRound, Laptop, LogOut, SlidersHorizontal, Smartphone, UserRound } from 'lucide-vue-next'
 import { api } from '@/services/api'
@@ -71,8 +72,9 @@ async function loadSsoConfig() {
   if (route.query.sso) router.replace({ query: {} })
 }
 
-async function load() {
-  loading.value = true
+// `silent` reloads behind the list that is already shown (pull to refresh) instead of swapping it for the loading state.
+async function load(silent = false) {
+  if (!silent) loading.value = true
   loadError.value = ''
   try {
     sessions.value = await api.getSessions()
@@ -170,6 +172,7 @@ onMounted(() => {
   load()
   loadSsoConfig()
 })
+useRefreshHandler(() => load(true))
 </script>
 
 <template>
