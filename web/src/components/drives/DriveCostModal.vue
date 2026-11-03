@@ -148,7 +148,7 @@ async function handleDriverChange(event: Event) {
           >
             <ArrowLeft class="w-4 h-4" />
           </button>
-          <div class="p-2 rounded-xl shrink-0" :class="selectedCostDrive.is_trip_group ? 'bg-sky-500/10 text-sky-400' : 'bg-success-500/10 text-success-400'">
+          <div class="p-2 rounded-xl shrink-0 bg-slate-800 text-slate-300">
             <component :is="selectedCostDrive.is_trip_group ? Layers : Coins" class="w-5 h-5" />
           </div>
           <div class="min-w-0 truncate">

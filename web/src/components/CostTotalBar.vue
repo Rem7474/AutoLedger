@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * The "total cost + cost per distance" bar closing a cost breakdown.
- * `strong` brightens the border (the trip costs the driver nothing); the default slot adds
+ * `strong` turns the bar green, the status "good" (the trip costs the driver nothing); the default slot adds
  * detail below the headline figures, separated by the bar's own spacing.
  */
 withDefaults(defineProps<{
@@ -19,16 +19,16 @@ withDefaults(defineProps<{
 <template>
   <div
     class="bg-gradient-to-r from-slate-800 to-slate-800/80 border p-4 rounded-2xl space-y-3 shadow-lg"
-    :class="strong ? 'border-success-500/40' : 'border-success-500/30'"
+    :class="strong ? 'border-success-500/40' : 'border-slate-700'"
   >
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <span class="text-xs font-semibold text-success-400">{{ totalLabel }}</span>
+        <span class="text-xs font-semibold" :class="strong ? 'text-success-400' : 'text-slate-400'">{{ totalLabel }}</span>
         <div class="text-2xl font-black text-white" data-testid="cost-total">{{ total }}</div>
       </div>
       <div class="text-right shrink-0">
         <span class="text-xs font-semibold text-slate-400">{{ perDistanceLabel }}</span>
-        <div class="text-lg font-extrabold text-success-400 font-mono" data-testid="cost-per-distance">{{ perDistance }}</div>
+        <div class="text-lg font-extrabold tabular-nums" :class="strong ? 'text-success-400' : 'text-white'" data-testid="cost-per-distance">{{ perDistance }}</div>
       </div>
     </div>
     <slot />

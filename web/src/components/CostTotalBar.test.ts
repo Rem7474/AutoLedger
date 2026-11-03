@@ -17,11 +17,13 @@ describe('CostTotalBar', () => {
     expect(html).toContain('0,155 €/km')
     expect(html).toContain('Total')
     expect(html).toContain('Cost per km')
-    expect(html).toContain('border-success-500/30')
+    expect(html).not.toContain('success')
   })
 
-  it('brightens the border when strong', async () => {
-    expect(await render({ ...base, strong: true })).toContain('border-success-500/40')
+  it('turns green when strong: the trip costs the driver nothing', async () => {
+    const html = await render({ ...base, strong: true })
+    expect(html).toContain('border-success-500/40')
+    expect(html).toContain('text-success-400')
   })
 
   it('renders the slot below the figures', async () => {
