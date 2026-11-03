@@ -44,7 +44,10 @@ async function connect(page: Page, baseURL: string, name: string, choose?: (page
   expect(provider.info?.client_id, 'the client registered itself').toBeTruthy()
 
   await page.goto(provider.authorizationUrl!.toString())
-  await expect(page.getByText(`${name} asks to read your AutoLedger data.`)).toBeVisible()
+  // The client asks for what the endpoint announces (read and write), so the consent page offers the writing box,
+  // which stays unticked here: these tests connect with a read grant.
+  await expect(page.getByText(`${name} asks to read your AutoLedger data`)).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: /Also let it/ })).toBeVisible()
   await choose?.(page)
   await page.getByRole('button', { name: 'Approve' }).click()
   await expect.poll(() => { try { return callback().searchParams.get('code') } catch { return null } }).not.toBeNull()
@@ -82,8 +85,17 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
 
   const { tools } = await client.listTools()
   expect(tools.length).toBeGreaterThan(0)
+  // The tools that write are named here on purpose: a new one has to be added to this list in review.
+  const writing = ['create_carpool_from_drives', 'update_carpool']
+  // Creating adds records; changing a carpool replaces what it held
+  const overwrites = ['update_carpool']
   for (const tool of tools) {
-    expect(tool.annotations?.readOnlyHint, `${tool.name} must be read-only`).toBe(true)
+    if (writing.includes(tool.name)) {
+      expect(tool.annotations?.readOnlyHint, `${tool.name} writes`).not.toBe(true)
+      expect(tool.annotations?.destructiveHint, `${tool.name} destructive hint`).toBe(overwrites.includes(tool.name))
+    } else {
+      expect(tool.annotations?.readOnlyHint, `${tool.name} must be read-only`).toBe(true)
+    }
     expect(tool.outputSchema, `${tool.name} declares what it returns`).toBeDefined()
   }
 
@@ -92,7 +104,16 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   const vehicles: { id: string; currency: string }[] = listed.data.vehicles
   expect(vehicles.length).toBeGreaterThan(0)
 
-  for (const tool of tools) {
+  // A grant is read-only unless the user ticked the writing box: the writing tool refuses it
+  for (const name of writing) {
+    const refused = await call(client, name, name === 'update_carpool'
+      ? { vehicle_id: vehicles[0].id, carpool_id: '00000000-0000-4000-8000-000000000001', expected_version: 1, title: 'x' }
+      : { vehicle_id: vehicles[0].id, drive_ids: ['00000000-0000-4000-8000-000000000001'] })
+    expect(refused.isError, `${name} on a read grant`).toBe(true)
+    expect(refused.text).toContain('can only read')
+  }
+
+  for (const tool of tools.filter((tool) => !writing.includes(tool.name))) {
     const res = await call(client, tool.name, argumentsFor(tool, vehicles[0].id))
     expect(res.isError, `${tool.name}: ${res.text}`).toBe(false)
     expect(Object.keys(res.data).length, `${tool.name} answers with structured content`).toBeGreaterThan(0)
@@ -120,7 +141,8 @@ test('a grant limited to one vehicle sees only that vehicle', async ({ page, bas
   let chosen = ''
   const client = await connect(page, baseURL!, 'Limited assistant', async (consent) => {
     await consent.getByLabel('Only the vehicles I choose').check()
-    const boxes = consent.locator('input[type=checkbox]')
+    // The writing box is a checkbox too: the vehicles are the others
+    const boxes = consent.locator('label:not(:has-text("Also let it")) input[type=checkbox]')
     expect(await boxes.count(), 'the demo account has several vehicles to choose from').toBeGreaterThan(1)
     chosen = (await boxes.first().locator('xpath=ancestor::label').innerText()).trim()
     await boxes.first().check()

@@ -65,7 +65,7 @@ func (r *Repository) GetLatestTeslaMateChargeDate(ctx context.Context, vehicleID
 const chargeSelectColumns = `
 	c.id, c.vehicle_id, c.teslamate_charge_id, c.date, c.end_date,
 	c.address, c.kwh_added, c.kwh_used, c.cost, c.cost_source, c.currency, c.fx_rate, c.odometer, c.is_manual, c.notes,
-	c.document_id, doc.filename, c.created_at, c.origin, c.place_id::text
+	c.document_id, doc.filename, c.created_at, c.origin, c.place_id::text, c.version
 `
 
 func scanCharge(row pgx.Row, c *models.ChargeLog) error {
@@ -74,7 +74,7 @@ func scanCharge(row pgx.Row, c *models.ChargeLog) error {
 		&c.Address, &c.KwhAdded, &c.KwhUsed, &c.Cost, &c.CostSource, &c.Currency, &c.FxRate, &c.Odometer,
 		&c.IsManual, &c.Notes,
 		&c.DocumentID, &c.DocumentFilename,
-		&c.CreatedAt, &c.Origin, &c.PlaceID,
+		&c.CreatedAt, &c.Origin, &c.PlaceID, &c.Version,
 	)
 }
 
@@ -127,11 +127,11 @@ func (r *Repository) CreateManualCharge(ctx context.Context, c *models.ChargeLog
 			vehicle_id, date, end_date, address, kwh_added, cost, cost_source,
 			currency, fx_rate, odometer, is_manual, notes, document_id, origin, source_batch_id, place_id
 		) VALUES ($1, $2, $3, $4, $5, $6, 'MANUAL', $7, $8, $9, TRUE, $10, $11, COALESCE(NULLIF($12, ''), 'MANUAL'), $13, $14::uuid)
-		RETURNING id, created_at;
+		RETURNING id, created_at, version;
 	`,
 		c.VehicleID, c.Date, c.EndDate, c.Address, c.KwhAdded, c.Cost,
 		c.Currency, c.FxRate, c.Odometer, c.Notes, c.DocumentID, c.Origin, c.SourceBatchID, c.PlaceID,
-	).Scan(&c.ID, &c.CreatedAt)
+	).Scan(&c.ID, &c.CreatedAt, &c.Version)
 	if err != nil {
 		return err
 	}
@@ -165,22 +165,24 @@ func (r *Repository) UpdateCharge(ctx context.Context, c *models.ChargeLog) erro
 		c.KwhAdded, c.Odometer = existing.KwhAdded, existing.Odometer
 	}
 
-	cmdTag, err := r.pool.Exec(ctx, `
+	var ignored int64
+	err = r.pool.QueryRow(ctx, `
 		UPDATE charge_logs
 		SET date = $1, end_date = $2, address = $3, kwh_added = $4, odometer = $5,
 		    cost = $6, cost_source = 'MANUAL', currency = $7, fx_rate = $8, notes = $9,
-		    document_id = $10, place_id = $11::uuid
-		WHERE id::text = $12 AND vehicle_id = $13;
+		    document_id = $10, place_id = $11::uuid, version = version + 1
+		WHERE id::text = $12 AND vehicle_id = $13 AND ($14::bigint IS NULL OR version = $14::bigint)
+		RETURNING version;
 	`,
 		c.Date, c.EndDate, c.Address, c.KwhAdded, c.Odometer,
 		c.Cost, c.Currency, c.FxRate, c.Notes, c.DocumentID, c.PlaceID,
-		c.ID, c.VehicleID,
-	)
+		c.ID, c.VehicleID, c.ExpectedVersion,
+	).Scan(&ignored)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, r.pool, "charge_logs", c.ID, c.VehicleID, c.ExpectedVersion)
+	}
 	if err != nil {
 		return err
-	}
-	if cmdTag.RowsAffected() == 0 {
-		return ErrNotFound
 	}
 
 	return scanCharge(r.pool.QueryRow(ctx, `

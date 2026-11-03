@@ -23,7 +23,7 @@ import (
 
 // mcpInstructions is what a client shows its model about the server. It states the conventions every tool's output
 // follows, so a model does not have to infer them from field names.
-const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools only read.
+const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools read; create_carpool_from_drives and update_carpool are the only ones that write, and only on a connection the owner allowed to. No carpool or drive is deleted; update_carpool can take a passenger out of a carpool.
 Amounts are decimal strings in the currency of their vehicle and are never converted between currencies: do not add amounts of different currencies together.
 Distances are in kilometres. A null value means the figure is unknown, not zero.
 Costs are the cash spent, the purchase of the vehicle excluded. Call get_vehicle_data_gaps before drawing conclusions from a vehicle's costs: it says what the records are missing.
@@ -32,7 +32,8 @@ Resources: autoledger://glossary defines the cost terms, autoledger://account gi
 A list that is cut says so (truncated, matching or next_cursor): never present it as complete.`
 
 // MCPHandler serves the Model Context Protocol endpoint (Streamable HTTP, stateless) on top of the read API: the same
-// narrow views, so an assistant sees no more than a read token does through /api/integrations/v1. It is read-only.
+// narrow views, so an assistant sees no more than a read token does through /api/integrations/v1. It reads, except for the
+// tools that need a grant allowed to write (create_carpool_from_drives, update_carpool).
 type MCPHandler struct {
 	read    *IntegrationReadHandler
 	tokens  middleware.APITokenValidator
@@ -63,7 +64,9 @@ func NewMCPHandler(read *IntegrationReadHandler, tokens middleware.APITokenValid
 	})
 	h.handler = auth.RequireBearerToken(h.verifyToken, &auth.RequireBearerTokenOptions{
 		ResourceMetadataURL: h.issuer + "/.well-known/oauth-protected-resource/mcp",
-		Scopes:              []string{appAuth.ScopeRead},
+		// No scope is named in the challenge: a client that finds one asks for exactly that, and would never offer the
+		// owner the writing box. It falls back to the scopes of the protected resource metadata. Every grant holds
+		// read, which is all this endpoint needs; the writing tools check for write themselves.
 		// The validator already refuses an expired token and does not report the expiry.
 		AllowMissingExpiration: true,
 	})(streamable)
@@ -86,7 +89,7 @@ func (h *MCPHandler) ResourceMetadata() http.Handler {
 	return auth.ProtectedResourceMetadataHandler(&oauthex.ProtectedResourceMetadata{
 		Resource:               h.issuer + "/mcp",
 		AuthorizationServers:   []string{h.issuer},
-		ScopesSupported:        []string{appAuth.ScopeRead},
+		ScopesSupported:        []string{appAuth.ScopeRead, appAuth.ScopeWrite},
 		BearerMethodsSupported: []string{"header"},
 		ResourceName:           "AutoLedger",
 	})
@@ -101,7 +104,15 @@ func (h *MCPHandler) verifyToken(ctx context.Context, token string, _ *http.Requ
 	if err != nil {
 		return nil, auth.ErrInvalidToken
 	}
+	if !appAuth.CanRead(grant.Scope) {
+		// A token that can push events must not read, and the challenge no longer names a required scope
+		return nil, auth.ErrInvalidToken
+	}
 	info := &auth.TokenInfo{UserID: grant.UserID, Scopes: []string{grant.Scope}, Extra: map[string]any{mcpTokenIDExtra: grant.TokenID}}
+	if grant.Scope == appAuth.ScopeWrite {
+		// Writing includes reading, and the endpoint asks for read
+		info.Scopes = []string{appAuth.ScopeRead, appAuth.ScopeWrite}
+	}
 	if len(grant.VehicleIDs) > 0 {
 		info.Extra[mcpVehicleIDsExtra] = grant.VehicleIDs
 	}
@@ -228,6 +239,8 @@ func (h *MCPHandler) addTools() {
 	h.addSourceTools(readOnly)
 	h.addComparisonTools(readOnly)
 	h.addTariffTools(readOnly)
+	h.addCarpoolWriteTools()
+	h.addCarpoolUpdateTools()
 
 	mcp.AddTool(h.server, &mcp.Tool{
 		Name:        "list_vehicles",

@@ -8,7 +8,10 @@ import (
 
 // Drive represents a single vehicle trip.
 type Drive struct {
-	ID               string `json:"id"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version          int64  `json:"version"`
+	ExpectedVersion  *int64 `json:"-"`
 	VehicleID        string `json:"vehicle_id"`
 	TeslaMateDriveID *int   `json:"teslamate_drive_id,omitempty"`
 	// Origin is the source that wrote the drive (TESLAMATE, WEBHOOK, CSV, MANUAL); empty means MANUAL on insert.
@@ -108,12 +111,15 @@ type TollDetection struct {
 
 // TripGroup allows grouping multiple drives (e.g. holiday trip with stops).
 type TripGroup struct {
-	ID        string    `json:"id"`
-	VehicleID string    `json:"vehicle_id"`
-	Name      string    `json:"name"`
-	Notes     *string   `json:"notes,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version         int64     `json:"version"`
+	ExpectedVersion *int64    `json:"-"`
+	VehicleID       string    `json:"vehicle_id"`
+	Name            string    `json:"name"`
+	Notes           *string   `json:"notes,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 
 	// Summary (listing only)
 	DriveIDs      []string    `json:"drive_ids"`
@@ -128,7 +134,10 @@ type TripGroup struct {
 
 // DriveExpense holds costs directly attached to a drive or a trip group (tolls, parking).
 type DriveExpense struct {
-	ID                string       `json:"id"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version           int64        `json:"version"`
+	ExpectedVersion   *int64       `json:"-"`
 	VehicleID         string       `json:"vehicle_id"`
 	TripGroupID       *string      `json:"trip_group_id,omitempty"`
 	TripGroupName     *string      `json:"trip_group_name,omitempty"`

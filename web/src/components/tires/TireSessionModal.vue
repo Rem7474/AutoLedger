@@ -7,6 +7,7 @@ import { ClipboardPaste } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { emptySessionForm, formatDate, type SessionForm } from '@/utils/tires'
 import { useOdometerPrefill } from '@/composables/useOdometerPrefill'
 import { distanceUnit } from '@/units'
@@ -18,11 +19,13 @@ const props = defineProps<{
   selectedTire: any | null
   copiedSession: SessionForm | null
   editingSessionId: string | null
+  editingSessionVersion: number | null
   initialForm: SessionForm
 }>()
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
+const { explainStaleWrite } = useStaleWrite()
 
 const sessionForm = ref<SessionForm>(emptySessionForm())
 
@@ -99,7 +102,7 @@ async function handleSaveSessionAction() {
     }
 
     if (props.editingSessionId) {
-      await api.updateTireSession(props.vehicleId, props.selectedTire.id, props.editingSessionId, payload)
+      await api.updateTireSession(props.vehicleId, props.selectedTire.id, props.editingSessionId, { ...payload, expected_version: props.editingSessionVersion ?? undefined })
     } else {
       await api.createTireSession(props.vehicleId, props.selectedTire.id, payload)
     }
@@ -107,6 +110,11 @@ async function handleSaveSessionAction() {
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }
