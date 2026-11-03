@@ -78,7 +78,7 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect(page.getByText(title).first()).toBeVisible()
 
   // On a phone the row has no menu: a long press selects the carpool and the bar carries the delete action
-  const box = (await page.locator('div.card', { hasText: title }).first().boundingBox())!
+  const box = (await page.locator('div.rounded-2xl', { hasText: title }).first().boundingBox())!
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
   await expect(page.locator('[data-selection-bar]')).toBeVisible()
