@@ -229,3 +229,18 @@ test('saving a charge deep in the list keeps the page where it was', async ({ pa
   const after = await scroller.evaluate((e) => e.scrollTop)
   expect(Math.abs(after - before)).toBeLessThan(60)
 })
+
+test('a sheet never scrolls sideways, whichever control it holds', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await page.getByRole('button', { name: /Filters/ }).first().click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  // The sheet sits in a backdrop: a hidden control wider than the screen would make the whole sheet slide left
+  const sideways = () => dialog.evaluate((e) => e.parentElement!.scrollWidth - e.parentElement!.clientWidth)
+  expect(await sideways()).toBe(0)
+  await dialog.getByRole('button', { name: 'Month', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Range', exact: true }).click()
+  expect(await sideways()).toBe(0)
+  expect(await dialog.evaluate((e) => e.parentElement!.scrollLeft)).toBe(0)
+})
+

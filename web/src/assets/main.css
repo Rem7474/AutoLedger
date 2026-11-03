@@ -237,6 +237,13 @@
     min-height: 2.75rem;
   }
 }
+/* A control hidden on a phone (max-sm:sr-only) keeps its 1px box: its 44px hit area would widen what a sheet can scroll. */
+@media (width < 40rem) {
+  .tap.max-sm\:sr-only {
+    min-width: 0;
+    min-height: 0;
+  }
+}
 
 /* Every control meets the minimum hit area without a per-component class: 36px with a mouse,
    44px on touch screens. :where() keeps the specificity at zero, .no-tap opts out. */
