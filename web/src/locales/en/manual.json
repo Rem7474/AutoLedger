@@ -63,6 +63,7 @@
     "deleteTitle": "Delete the fill-up",
     "deleteMessage": "Delete the fill-up of {date} ({amount})?",
     "deleteFailed": "Could not delete.",
+    "deleteManyMessage": "Delete these {count} fill-ups?",
     "saving": "Saving…",
     "noFillUpHint": "Enter the date, mileage and amount of each fill-up: the cost per {unit} is calculated from these readings."
   },
@@ -87,6 +88,7 @@
     "validOdometer": "Please enter a valid odometer mileage",
     "deleteTitle": "Delete the odometer reading",
     "deleteMessage": "Delete the {km} {unit} reading of {date}?",
+    "deleteManyMessage": "Delete these {count} readings?",
     "edit": "Edit the reading",
     "update": "Update",
     "onDate": "on {date}",

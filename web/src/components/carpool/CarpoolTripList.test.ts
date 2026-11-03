@@ -6,10 +6,22 @@ import CarpoolTripList from './CarpoolTripList.vue'
 
 const vehicleStore = reactive<{ canEdit: boolean; currency: string }>({ canEdit: true, currency: 'EUR' })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
+// The overflow actions only render in the open "More" menu: the stub lists every action of the bar with its state
+vi.mock('@/components/BulkSelectionBar.vue', async () => {
+  const { defineComponent, h } = await import('vue')
+  return {
+    default: defineComponent({
+      props: ['count', 'noun', 'actions'],
+      render() {
+        return h('ul', (this.actions as any[]).map((a) => h('li', { 'data-key': a.key, 'data-disabled': String(!!a.disabled), title: a.disabled ? a.reason : '' }, a.label)))
+      },
+    }),
+  }
+})
 
 const trip = { id: 't1', title: 'Lyon to Nice', date: '2026-10-10T08:00:00Z', distance_km: 470, legs: [{}, {}], passengers: [{}], total_cost: 100, total_revenue: 60, net_cost: 40, notes: '' }
-const render = (trips: any[] = [trip]) =>
-  renderToString(createSSRApp({ render: () => h(CarpoolTripList as any, { trips, selectedTripIds: [], recalculating: false }) }).use(i18n))
+const render = (trips: any[] = [trip], selectedTripIds: string[] = []) =>
+  renderToString(createSSRApp({ render: () => h(CarpoolTripList as any, { trips, selectedTripIds, recalculating: false }) }).use(i18n))
 
 afterEach(() => {
   vehicleStore.canEdit = true
@@ -35,5 +47,19 @@ describe('CarpoolTripList', () => {
     const html = await render()
     expect(html).not.toContain('carpool-select-')
     expect(html).not.toContain('aria-haspopup="menu"')
+  })
+
+  it('offers to freeze or resync the selected carpools made from drives, with how many each applies to', async () => {
+    const linked = { ...trip, id: 'a', legs: [{ drive_id: 'd1' }] }
+    const frozen = { ...trip, id: 'b', legs: [{ drive_id: 'd2' }], costs_frozen_at: '2026-10-10T08:00:00Z' }
+    const html = await render([linked, frozen, { ...trip, id: 'c' }], ['a', 'b', 'c'])
+    expect(html).toContain('data-key="freeze" data-disabled="false" title>Figer les montants (1)')
+    expect(html).toContain('data-key="resync" data-disabled="false" title>Resynchroniser (1)')
+  })
+
+  it('keeps the freeze action visible but disabled when no selected carpool is made from drives', async () => {
+    const html = await render([trip], ['t1'])
+    expect(html).toContain('data-key="freeze" data-disabled="true" title="Aucun covoiturage lié aux trajets à figer">Figer les montants (0)')
+    expect(html).toContain('data-key="resync" data-disabled="true" title="Aucun covoiturage figé à resynchroniser">Resynchroniser (0)')
   })
 })

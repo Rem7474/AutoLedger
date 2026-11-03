@@ -44,7 +44,8 @@
     "noScrappedTire": "Aucun pneu au rebut",
     "noScrappedTireHint": "Les pneus mis au rebut (usés, crevés, vendus) apparaissent ici avec leur kilométrage et leur coût final.",
     "noTireYet": "Aucun pneu enregistré",
-    "noTireYetHint": "Ajoutez le jeu monté sur le véhicule pour suivre son usure, son kilométrage et son coût par distance."
+    "noTireYetHint": "Ajoutez le jeu monté sur le véhicule pour suivre son usure, son kilométrage et son coût par distance.",
+    "scrapNone": "Seuls les pneus montés ou stockés peuvent être mis au rebut"
   },
   "tireAddModal": {
     "createTheTires": "Créer les pneus",

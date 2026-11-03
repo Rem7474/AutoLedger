@@ -49,7 +49,8 @@
     "carpooled": "Carpooled",
     "carpooledDrivesTitle": "Drives shared in a carpool",
     "notCarpooled": "Not carpooled",
-    "notCarpooledTitle": "Drives never shared in a carpool"
+    "notCarpooledTitle": "Drives never shared in a carpool",
+    "deleteDrivesMessage": "Delete these {count} manual drives?"
   },
   "addToTripModal": {
     "add": "Add",
@@ -63,6 +64,7 @@
     "driver": "Driver",
     "chooseDriver": "Choose…",
     "changeDriver": "Set the driver of the selected drives",
+    "changeDriverAction": "Change driver",
     "addToTrip": "Add to trip",
     "export": "Export",
     "exportTheSelectionAsCsv": "Export the selection as CSV",
@@ -75,7 +77,9 @@
     "carpoolMany": "Carpool ({count})",
     "carpool": "Carpool",
     "applying": "Applying...",
-    "autoToll": "Auto toll ({count})"
+    "autoToll": "Auto toll ({count})",
+    "syncedCannotEdit": "Synced from TeslaMate, cannot be edited",
+    "syncedCannotDelete": "Synced from TeslaMate, cannot be deleted"
   },
   "driveCard": {
     "carpool": "Carpool",

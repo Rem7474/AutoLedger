@@ -182,7 +182,7 @@ async function loadData() {
   }
 }
 
-const { handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, loadData)
+const { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, loadData)
 
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value, vehicleStore.lastSyncTimestamp],
@@ -325,6 +325,7 @@ function openUploadDocumentModal() {
       @add="openAddTollModal"
       @edit="openEditTollModal"
       @delete="handleDeleteToll"
+      @delete-many="handleDeleteTolls"
       @view-document="viewOrDownloadDocument"
     />
 
@@ -337,6 +338,7 @@ function openUploadDocumentModal() {
       @add="openAddMaintModal"
       @edit="openEditMaintModal"
       @delete="handleDeleteMaint"
+      @delete-many="handleDeleteMaints"
       @view-document="viewOrDownloadDocument"
     />
 
@@ -419,6 +421,7 @@ function openUploadDocumentModal() {
       @load-more="loadMoreCharges"
       @edit="openEditChargeModal"
       @delete="handleDeleteCharge"
+      @delete-many="handleDeleteCharges"
       @view-document="viewOrDownloadDocument"
     />
 

@@ -181,6 +181,27 @@ async function handleDelete(trip: any) {
   }
 }
 
+// The delete of the contextual bar: one confirmation for the whole selection
+async function handleDeleteMany(list: any[]) {
+  const vehicle = vehicleStore.activeVehicle
+  if (!vehicle || list.length === 0) return
+  if (list.length === 1) return handleDelete(list[0])
+  const ok = await showConfirm({
+    title: t('carpool.carpoolView.deleteTitle'),
+    message: t('carpool.carpoolView.deleteManyMessage', { count: list.length }),
+    confirmText: t('common.delete'),
+    type: 'danger',
+  })
+  if (!ok) return
+  try {
+    for (const trip of list) await api.deleteCarpool(vehicle.id, trip.id)
+  } catch (err: any) {
+    void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+  }
+  clearTripSelection()
+  await loadData()
+}
+
 async function handleRecalculateSingle(trip: any) {
   if (!vehicleStore.activeVehicle) return
   recalculating.value = true
@@ -230,6 +251,46 @@ async function handleUnfreeze(trip: any) {
   } finally {
     recalculating.value = false
   }
+}
+
+// Freezing or resyncing several carpools at once: one request per carpool, a failure does not stop the others
+async function applyFreezeToMany(list: any[], call: (vehicleId: string, id: string) => Promise<unknown>) {
+  const vehicle = vehicleStore.activeVehicle
+  if (!vehicle || list.length === 0) return
+  recalculating.value = true
+  let firstError = ''
+  try {
+    for (const trip of list) {
+      try {
+        await call(vehicle.id, trip.id)
+      } catch (err: any) {
+        firstError ||= err.message
+      }
+    }
+    if (firstError) void showAlert(t('carpool.linked.error', { message: firstError }), t('shell.confirm.error'), 'danger')
+    clearTripSelection()
+    await loadData()
+  } finally {
+    recalculating.value = false
+  }
+}
+
+const handleFreezeMany = (list: any[]) => applyFreezeToMany(list, api.freezeCarpool)
+
+// Like one carpool: the total difference with what the drives cost now is shown before the amounts are replaced
+async function handleUnfreezeMany(list: any[]) {
+  if (list.length === 0) return
+  const gap = list.reduce((sum, trip) => sum + driveCostGapCents(trip.legs || []), 0)
+  if (gap !== 0) {
+    const ok = await showConfirm({
+      title: t('carpool.linked.resyncManyTitle', { count: list.length }),
+      message: t('carpool.linked.resyncMessage', { amount: formatAmount(Math.abs(gap) / 100, vehicleStore.currency), direction: gap > 0 ? t('carpool.linked.more') : t('carpool.linked.less') }),
+      confirmText: t('carpool.linked.resync'),
+      type: 'warning',
+    })
+    if (!ok) return
+  }
+  await applyFreezeToMany(list, api.unfreezeCarpool)
 }
 
 async function handleBatchRecalculate() {
@@ -359,6 +420,9 @@ onMounted(async () => {
       @open="openDetail"
       @edit="openEditModal"
       @delete="handleDelete"
+      @delete-many="handleDeleteMany"
+      @batch-freeze="handleFreezeMany"
+      @batch-resync="handleUnfreezeMany"
     />
 
     <CarpoolDetailModal

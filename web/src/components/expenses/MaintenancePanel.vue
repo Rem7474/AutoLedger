@@ -16,15 +16,27 @@ import { t } from '@/i18n'
 import { categoryLabel, categoryStyle, expensesOfKind, filterMaintenance, formatDate, maintenanceYears } from '@/utils/expenses'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
+import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
+import RowSelectBox from '@/components/RowSelectBox.vue'
+import SelectionHint from '@/components/SelectionHint.vue'
+import { useRowSelection } from '@/composables/useRowSelection'
+import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 
 const props = defineProps<{ vehicleId: string; maintenanceExpenses: any[]; loading: boolean; kind: 'service' | 'fixed' }>()
 const emit = defineEmits<{
   add: []
   edit: [expense: any]
   delete: [expense: any]
+  'delete-many': [expenses: any[]]
   'view-document': [docId: string | null | undefined, filename?: string | null, download?: boolean]
 }>()
 const vehicleStore = useVehicleStore()
+const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(
+  computed(() => props.maintenanceExpenses),
+  computed(() => vehicleStore.canEdit),
+  (m) => emit('edit', m),
+)
+const actions = computed<SelectionAction[]>(() => editDeleteActions(selected.value, { edit: (m) => emit('edit', m), remove: (items) => emit('delete-many', items) }))
 const { showAlert } = useConfirm()
 const bookWithProofs = ref(false)
 const bookLoading = ref(false)
@@ -70,6 +82,8 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
       </template>
     </EmptyState>
     <div v-else class="space-y-3">
+      <BulkSelectionBar v-if="vehicleStore.canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
+      <SelectionHint v-if="vehicleStore.canEdit" />
       <CostHistory :vehicle-id="vehicleId" :kind="kind" :currency="vehicleStore.currency" :sync-key="maintenanceExpenses" />
       <div class="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
         <label class="sr-only" for="maint-filter-category">{{ $t('expenses.maintenancePanel.categoryFilter') }}</label>
@@ -106,10 +120,20 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
       <div
         v-for="m in visible"
         :key="m.id"
-        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 border-l-4 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors"
-        :class="categoryStyle(m.category).accent"
+        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 border-l-4 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        :class="[categoryStyle(m.category).accent, { '!border-rose-500/40 bg-slate-800/40': isSelected(m) }]"
       >
-        <CardOpenButton v-if="vehicleStore.canEdit" :label="$t('expenses.maintenancePanel.editThisExpense')" @click="emit('edit', m)" />
+        <CardOpenButton
+          v-if="vehicleStore.canEdit"
+          :label="$t('expenses.maintenancePanel.editThisExpense')"
+          @click="onRowClick(m)"
+          @pointerdown="onPointerdown($event, m)"
+          @pointermove="press.onPointermove"
+          @pointerup="press.onPointerup"
+          @pointercancel="press.onPointercancel"
+          @contextmenu="press.onContextmenu"
+        />
+        <RowSelectBox v-if="showBox" :id="m.id" :checked="isSelected(m)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(m)" />
         <div class="space-y-1 min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-xs px-2 py-0.5 rounded-full font-bold border shrink-0" :class="categoryStyle(m.category).badge">

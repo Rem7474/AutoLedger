@@ -81,5 +81,26 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
     }
   }
 
-  return { handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument }
+  // One confirmation for a selection, then the rows are deleted one by one; the list reloads even when one fails
+  async function deleteMany(items: any[], title: string, message: string, remove: (vehicleId: string, id: string) => Promise<unknown>) {
+    const vehicle = vehicleStore.activeVehicle
+    if (!vehicle || items.length === 0) return
+    const ok = await showConfirm({ title, message, confirmText: t('common.delete'), type: 'danger' })
+    if (!ok) return
+    try {
+      for (const item of items) await remove(vehicle.id, item.id)
+    } catch (err: any) {
+      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
+    }
+    await reload()
+  }
+  const deleteManyMessage = (count: number) => t('expenses.expensesView.deleteManyMessage', { count })
+  const handleDeleteTolls = (items: any[]) =>
+    items.length === 1 ? handleDeleteToll(items[0]) : deleteMany(items, t('expenses.expensesView.deleteExpenseTitle'), deleteManyMessage(items.length), (v, id) => api.deleteDriveExpense(v, id))
+  const handleDeleteMaints = (items: any[]) =>
+    items.length === 1 ? handleDeleteMaint(items[0]) : deleteMany(items, t('expenses.expensesView.deleteExpenseTitle'), deleteManyMessage(items.length), (v, id) => api.deleteMaintenance(v, id))
+  const handleDeleteCharges = (items: any[]) =>
+    items.length === 1 ? handleDeleteCharge(items[0]) : deleteMany(items, t('expenses.expensesView.deleteChargeTitle'), deleteManyMessage(items.length), (v, id) => api.deleteCharge(v, id))
+
+  return { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument }
 }

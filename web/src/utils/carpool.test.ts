@@ -9,6 +9,7 @@ import {
   driveCostGapCents,
   followDrives,
   hasLinkedLegs,
+  splitByFreeze,
   keepOverrides,
   legState,
   titleShowsRoute,
@@ -331,5 +332,22 @@ describe('title and route', () => {
     expect(titleShowsRoute('Week-end au lac', ['Lyon', 'Annecy'])).toBe(false)
     expect(titleShowsRoute('', ['Lyon', 'Annecy'])).toBe(false)
     expect(titleShowsRoute(null, ['Lyon'])).toBe(false)
+  })
+})
+
+describe('splitByFreeze', () => {
+  const linked = { id: 'a', legs: [{ drive_id: 'd1' }] }
+  const frozen = { id: 'b', legs: [{ drive_id: 'd2' }], costs_frozen_at: '2026-10-10T08:00:00Z' }
+  const byDistance = { id: 'c', legs: [{ drive_id: null }] }
+
+  it('sorts the linked carpools into the ones that follow their drives and the frozen ones', () => {
+    const { freezable, resyncable } = splitByFreeze([linked, frozen, byDistance])
+    expect(freezable.map((tr) => tr.id)).toEqual(['a'])
+    expect(resyncable.map((tr) => tr.id)).toEqual(['b'])
+  })
+
+  it('leaves out a carpool entered by distance, which has no drive to follow', () => {
+    expect(splitByFreeze([byDistance])).toEqual({ freezable: [], resyncable: [] })
+    expect(splitByFreeze([])).toEqual({ freezable: [], resyncable: [] })
   })
 })
