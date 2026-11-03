@@ -215,8 +215,8 @@ async function testModalConnection() {
             class="p-2.5 rounded-xl border flex items-center gap-2.5 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
             :class="form.powertrain === p ? 'bg-rose-500/10 border-rose-500/50 text-white shadow-sm ring-1 ring-rose-500/20' : 'bg-slate-800/40 border-slate-700/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'"
           >
-            <Flame v-if="p === 'ICE'" class="w-4 h-4 text-orange-400 shrink-0" />
-            <Zap v-else class="w-4 h-4 text-warning-400 shrink-0" />
+            <Flame v-if="p === 'ICE'" class="w-4 h-4 text-slate-300 shrink-0" />
+            <Zap v-else class="w-4 h-4 text-slate-300 shrink-0" />
             <span class="text-xs font-semibold leading-tight">{{ $t(`vehicles.powertrainOptions.${p}`) }}</span>
           </button>
         </div>

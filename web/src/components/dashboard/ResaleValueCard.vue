@@ -108,7 +108,7 @@ const marker = computed(() => {
       <!-- From the purchase price to the expected resale value, with where the vehicle stands -->
       <div>
         <div class="h-2 overflow-hidden rounded-full bg-slate-800" role="meter" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progressPct" :aria-label="$t('dashboard.resale.progress')">
-          <div class="h-full rounded-full bg-sky-500 transition-all" :style="{ width: `${progressPct}%` }"></div>
+          <div class="h-full rounded-full bg-slate-300 transition-all" :style="{ width: `${progressPct}%` }"></div>
         </div>
         <div class="mt-1.5 flex justify-between gap-2 text-slate-400">
           <span>{{ isLease ? $t('dashboard.resale.leaseStart') : $t('dashboard.resale.purchase') }} <strong class="text-slate-200">{{ formatAmount(residual.purchase_price, cur) }}</strong></span>

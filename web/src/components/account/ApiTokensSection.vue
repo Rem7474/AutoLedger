@@ -135,12 +135,12 @@ onMounted(() => {
     </div>
 
     <!-- Home Assistant integration Info Banner -->
-    <div class="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div class="flex items-start gap-2.5">
-        <Sparkles class="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+        <Sparkles class="h-4 w-4 text-slate-300 shrink-0 mt-0.5" />
         <div>
-          <h3 class="text-xs font-semibold text-blue-200">{{ t('account.tokens.haIntegrationTitle') }}</h3>
-          <p class="text-xs text-blue-300/80 mt-0.5">
+          <h3 class="text-xs font-semibold text-slate-200">{{ t('account.tokens.haIntegrationTitle') }}</h3>
+          <p class="text-xs text-slate-400 mt-0.5">
             {{ t('account.tokens.haIntegrationSubtitle') }}
           </p>
         </div>
@@ -149,7 +149,7 @@ onMounted(() => {
         href="https://github.com/Rem7474/autoledger-homeassistant"
         target="_blank"
         rel="noopener noreferrer"
-        class="tap-text justify-center gap-1.5 px-3 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/40 text-blue-200 text-xs font-medium transition-colors shrink-0"
+        class="tap-text justify-center gap-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-colors shrink-0"
       >
         <ExternalLink class="h-3 w-3" />
         {{ t('account.tokens.haIntegrationLink') }}
@@ -177,7 +177,7 @@ onMounted(() => {
             <span v-if="!tok.oauth" class="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
               {{ tok.token_prefix }}...
             </span>
-            <span v-else class="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
+            <span v-else class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
               {{ t('account.tokens.oauthBadge') }}
             </span>
             <span class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">

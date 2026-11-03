@@ -322,7 +322,7 @@ function openUploadDocumentModal() {
       <span>{{ $t('expenses.expensesView.youAreViewingThisVehicle') }} <strong>{{ $t('expenses.expensesView.readOnly') }}</strong>{{ $t('expenses.expensesView.modeAdditionsAndChangesAre') }}</span>
     </div>
 
-    <TabBar :model-value="activeTab" :tabs="tabs" :label="pageTitle" id-prefix="expenses-tab" @update:model-value="activeTab = $event as ExpensesTab" />
+    <TabBar v-if="tabs.length > 1" :model-value="activeTab" :tabs="tabs" :label="pageTitle" id-prefix="expenses-tab" @update:model-value="activeTab = $event as ExpensesTab" />
 
     <LoadError v-if="loadError !== null" :message="loadError" @retry="loadData" />
 

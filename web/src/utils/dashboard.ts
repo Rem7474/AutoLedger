@@ -252,11 +252,11 @@ export function buildLeaseSummary(tco: any, now = new Date()) {
   }
 
   // Color for mileage bar
-  let mileageColor = 'bg-gradient-to-r from-success-500 to-teal-500'
+  let mileageColor = 'bg-success-500'
   if (kmAllowanceToDate > 0 && kmDriven > kmAllowanceToDate) {
-    mileageColor = 'bg-gradient-to-r from-danger-500 to-red-500'
+    mileageColor = 'bg-danger-500'
   } else if (kmAllowanceToDate > 0 && kmDriven / kmAllowanceToDate > 0.92) {
-    mileageColor = 'bg-gradient-to-r from-warning-500 to-orange-500'
+    mileageColor = 'bg-warning-500'
   }
 
   return {

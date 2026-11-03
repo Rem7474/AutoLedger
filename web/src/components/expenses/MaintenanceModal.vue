@@ -239,7 +239,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
     v-model:open="open"
     :title="editingMaintId ? $t('expenses.maintenanceModal.edit') : $t('expenses.maintenanceModal.add')"
     :icon="Wrench"
-    icon-class="text-pink-400"
+    icon-class="text-slate-300"
   >
     <form id="maint-modal-form" @submit.prevent="handleCreateMaint" class="space-y-4">
       <div>
@@ -346,7 +346,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
             type="button"
             @click="pickAmortization('NONE')"
             class="py-1.5 px-1 text-xs font-medium rounded-lg transition-colors text-center border"
-            :class="maintForm.amortization_mode === 'NONE' ? 'bg-pink-500/20 text-pink-300 border-pink-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
+            :class="maintForm.amortization_mode === 'NONE' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
           >
             {{ $t('expenses.maintenanceModal.immediate') }}
           </button>
@@ -354,7 +354,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
             type="button"
             @click="pickAmortization('DISTANCE')"
             class="py-1.5 px-1 text-xs font-medium rounded-lg transition-colors text-center border"
-            :class="maintForm.amortization_mode === 'DISTANCE' ? 'bg-success-500/20 text-success-300 border-success-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
+            :class="maintForm.amortization_mode === 'DISTANCE' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
           >
             {{ $t('expenses.maintenanceModal.perKm', { unit: distanceUnit() }) }}
           </button>
@@ -362,7 +362,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
             type="button"
             @click="pickAmortization('DURATION')"
             class="py-1.5 px-1 text-xs font-medium rounded-lg transition-colors text-center border"
-            :class="maintForm.amortization_mode === 'DURATION' ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
+            :class="maintForm.amortization_mode === 'DURATION' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
           >
             {{ $t('expenses.maintenanceModal.byDuration') }}
           </button>
@@ -370,7 +370,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
             type="button"
             @click="pickAmortization('HYBRID')"
             class="py-1.5 px-1 text-xs font-medium rounded-lg transition-colors text-center border"
-            :class="maintForm.amortization_mode === 'HYBRID' ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
+            :class="maintForm.amortization_mode === 'HYBRID' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'"
           >
             {{ $t('expenses.maintenanceModal.mixed') }}
           </button>

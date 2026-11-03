@@ -27,11 +27,11 @@ export function getConditionBadge(condition: string) {
 export function getSeasonIcon(season: string) {
   switch (season) {
     case 'WINTER':
-      return { icon: Snowflake, color: 'text-info-400', label: t('tires.season.winter') }
+      return { icon: Snowflake, color: 'text-slate-300', label: t('tires.season.winter') }
     case 'ALL_SEASON':
-      return { icon: CloudSun, color: 'text-warning-400', label: t('tires.season.allSeason') }
+      return { icon: CloudSun, color: 'text-slate-300', label: t('tires.season.allSeason') }
     default:
-      return { icon: Sun, color: 'text-orange-400', label: t('tires.season.summer') }
+      return { icon: Sun, color: 'text-slate-300', label: t('tires.season.summer') }
   }
 }
 

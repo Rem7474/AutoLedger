@@ -242,7 +242,7 @@ const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicl
               v-else
               type="button"
               @click="showPublicCalc = true"
-              class="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 font-medium"
+              class="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 font-medium"
             >
               <Calculator class="w-3.5 h-3.5" />
               {{ $t('tariffs.publicModal.openCalculator') }}
