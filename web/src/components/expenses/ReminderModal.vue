@@ -5,6 +5,7 @@ import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { api, type MaintenanceReminder } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useMaintenanceChoices } from '@/composables/useMaintenanceChoices'
 import { Bell, Sparkles } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
@@ -18,6 +19,7 @@ const props = defineProps<{ vehicleId: string; editing: MaintenanceReminder | nu
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
+const { explainStaleWrite } = useStaleWrite()
 
 const editingReminderId = computed(() => props.editing?.id ?? null)
 
@@ -158,7 +160,7 @@ async function handleSaveReminderAction() {
       maintenance_id: reminderForm.value.maintenance_id || null,
     }
     if (editingReminderId.value) {
-      await api.updateReminder(props.vehicleId, editingReminderId.value, payload)
+      await api.updateReminder(props.vehicleId, editingReminderId.value, { ...payload, expected_version: props.editing?.version })
       void showAlert(t('expenses.reminderModal.updated'), t('common.success'), 'success')
     } else {
       await api.createReminder(props.vehicleId, payload)
@@ -167,6 +169,11 @@ async function handleSaveReminderAction() {
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

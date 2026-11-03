@@ -3,6 +3,7 @@ import { t } from '@/i18n'
 import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useVehicleStore } from '@/stores/vehicle'
 import { Users, Lock, ChevronLeft, ChevronRight, Pencil } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
@@ -31,6 +32,7 @@ const props = defineProps<{
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert, showConfirm } = useConfirm()
+const { explainStaleWrite } = useStaleWrite()
 
 const editingTripId = computed<string | null>(() => props.editing?.id ?? null)
 const modalSubmitting = ref(false)
@@ -331,13 +333,20 @@ async function handleSave() {
       })),
     }
     if (editingTripId.value) {
-      await api.updateCarpool(props.vehicleId, editingTripId.value, payload)
+      // The update is refused when the carpool was saved since it was loaded, instead of overwriting that change
+      await api.updateCarpool(props.vehicleId, editingTripId.value, { ...payload, expected_version: props.editing?.version })
     } else {
       await api.createCarpool(props.vehicleId, payload)
     }
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      // The list loads the carpool again; the user opens it and redoes the change
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('carpool.carpoolTripModal.saveError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     modalSubmitting.value = false

@@ -30,14 +30,15 @@ func NewFuelHandler(repo *database.Repository) *FuelHandler {
 // SaveFuelLogRequest is the payload shared by Create and Update. Amount, liters and price per liter
 // are linked: any two of them determine the third.
 type SaveFuelLogRequest struct {
-	Date          string       `json:"date"`
-	Odometer      *float64     `json:"odometer"` // Optional: estimated from the odometer readings when absent
-	Amount        *money.Cents `json:"amount"`
-	Liters        *float64     `json:"liters"`
-	PricePerLiter *float64     `json:"price_per_liter"`
-	FuelType      *string      `json:"fuel_type"`
-	IsFullTank    *bool        `json:"is_full_tank"` // Defaults to true
-	Notes         *string      `json:"notes"`
+	ExpectedVersion *int64       `json:"expected_version"` // The version the client read; absent: not checked
+	Date            string       `json:"date"`
+	Odometer        *float64     `json:"odometer"` // Optional: estimated from the odometer readings when absent
+	Amount          *money.Cents `json:"amount"`
+	Liters          *float64     `json:"liters"`
+	PricePerLiter   *float64     `json:"price_per_liter"`
+	FuelType        *string      `json:"fuel_type"`
+	IsFullTank      *bool        `json:"is_full_tank"` // Defaults to true
+	Notes           *string      `json:"notes"`
 }
 
 func positiveOrNil(v *float64) *float64 {
@@ -119,7 +120,8 @@ func buildFuelLog(vehicleID string, req *SaveFuelLogRequest, locations ...*time.
 	}
 
 	return &models.FuelLog{
-		VehicleID: vehicleID, Date: date, Odometer: req.Odometer, Amount: amount,
+		ExpectedVersion: req.ExpectedVersion,
+		VehicleID:       vehicleID, Date: date, Odometer: req.Odometer, Amount: amount,
 		Liters: liters, PricePerLiter: price, FuelType: fuelType, IsFullTank: isFull, Notes: notes,
 	}, nil
 }

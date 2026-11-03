@@ -5,6 +5,7 @@ vi.mock('@/stores/auth', () => ({ useAuthStore: () => ({ user: { id: 'account-A'
 vi.mock('@/stores/offline', () => ({ useOfflineStore: () => ({ queue }) }))
 
 import { api } from './api'
+import { isStaleWrite } from './apiError'
 
 function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
@@ -26,6 +27,19 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('request', () => {
+  it('tells a save refused as out of date from any other failure', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'changed', code: 'request.stale' }, 409))
+    const stale = await api.updateCarpool('v1', 'c1', { title: 'x', expected_version: 3 }).catch((err) => err)
+    expect(isStaleWrite(stale)).toBe(true)
+    expect(stale.message).toContain('modifié depuis son ouverture')
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ expected_version: 3 })
+
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'name taken', code: 'charging_place.name_taken' }, 409))
+    const other = await api.updateCarpool('v1', 'c1', { title: 'x' }).catch((err) => err)
+    expect(isStaleWrite(other)).toBe(false)
+    expect(other).toBeInstanceOf(Error)
+  })
+
   it('sends credentials and a JSON content type, and returns the parsed body', async () => {
     fetchMock.mockResolvedValue(jsonResponse([{ id: 'v1' }]))
     expect(await api.getVehicles()).toEqual([{ id: 'v1' }])
@@ -396,8 +410,8 @@ describe('endpoint contract', () => {
     ['getAPITokenCalls', () => api.getAPITokenCalls('k1'), 'GET', '/auth/tokens/k1/calls'],
     ['revokeAPIToken', () => api.revokeAPIToken('k1'), 'DELETE', '/auth/tokens/k1'],
     ['previewOAuthAuthorization', () => api.previewOAuthAuthorization({ client_id: 'c1', redirect_uri: 'http://127.0.0.1:1/cb', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', state: 'a b' }), 'GET', '/oauth/authorize?client_id=c1&redirect_uri=http%3A%2F%2F127.0.0.1%3A1%2Fcb&response_type=code&code_challenge=ch&code_challenge_method=S256&state=a+b'],
-    ['decideOAuthAuthorization', () => api.decideOAuthAuthorization({ client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256' }, 'deny'), 'POST', '/oauth/authorize', { client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', decision: 'deny', vehicle_ids: null }],
-    ['decideOAuthAuthorization limited to vehicles', () => api.decideOAuthAuthorization({ client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256' }, 'approve', ['v1', 'v2']), 'POST', '/oauth/authorize', { client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', decision: 'approve', vehicle_ids: ['v1', 'v2'] }],
+    ['decideOAuthAuthorization', () => api.decideOAuthAuthorization({ client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256' }, 'deny'), 'POST', '/oauth/authorize', { client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', decision: 'deny', vehicle_ids: null, allow_write: false }],
+    ['decideOAuthAuthorization limited to vehicles', () => api.decideOAuthAuthorization({ client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256' }, 'approve', ['v1', 'v2'], true), 'POST', '/oauth/authorize', { client_id: 'c1', redirect_uri: 'r', response_type: 'code', code_challenge: 'ch', code_challenge_method: 'S256', decision: 'approve', vehicle_ids: ['v1', 'v2'], allow_write: true }],
     ['getMileageRates', () => api.getMileageRates(), 'GET', '/mileage-rates/'],
     ['createMileageRate', () => api.createMileageRate({ label: 'l', year: 2026, from_km: 0, to_km: null, rate_per_km: 0.5 }), 'POST', '/mileage-rates/', { label: 'l', year: 2026, from_km: 0, to_km: null, rate_per_km: 0.5 }],
     ['deleteMileageRate', () => api.deleteMileageRate('r1'), 'DELETE', '/mileage-rates/r1'],

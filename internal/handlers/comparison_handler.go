@@ -29,15 +29,16 @@ func NewComparisonHandler(repo *database.Repository, service *services.Compariso
 
 // SaveComparisonRequest is the payload shared by Create and Update.
 type SaveComparisonRequest struct {
-	VehicleID *string                `json:"vehicle_id"`
-	Name      string                 `json:"name"`
-	Currency  string                 `json:"currency"`
-	Mode      string                 `json:"mode"`
-	AnnualKm  float64                `json:"annual_km"`
-	Years     int                    `json:"years"`
-	ICE       models.ICEInputs       `json:"ice"`
-	Tracked   *models.TrackedInputs  `json:"tracked"`
-	Options   models.ScenarioOptions `json:"options"`
+	VehicleID       *string                `json:"vehicle_id"`
+	Name            string                 `json:"name"`
+	Currency        string                 `json:"currency"`
+	Mode            string                 `json:"mode"`
+	AnnualKm        float64                `json:"annual_km"`
+	Years           int                    `json:"years"`
+	ICE             models.ICEInputs       `json:"ice"`
+	Tracked         *models.TrackedInputs  `json:"tracked"`
+	Options         models.ScenarioOptions `json:"options"`
+	ExpectedVersion *int64                 `json:"expected_version"` // The version the client read; absent: not checked
 }
 
 func validateRange(v, min, max float64, failure *apierror.Error) error {
@@ -143,6 +144,8 @@ func (r *SaveComparisonRequest) toScenario(userID string) *models.ComparisonScen
 		ICE:       r.ICE,
 		Tracked:   r.Tracked,
 		Options:   r.Options,
+
+		ExpectedVersion: r.ExpectedVersion,
 	}
 }
 

@@ -57,19 +57,21 @@ type ScenarioOptions struct {
 
 // ComparisonScenario is a saved EV vs ICE comparison. It is informative only and never changes real data.
 type ComparisonScenario struct {
-	ID        string          `json:"id"`
-	UserID    string          `json:"user_id"`
-	VehicleID *string         `json:"vehicle_id,omitempty"` // Reference tracked vehicle (required in RETROSPECTIVE mode)
-	Name      string          `json:"name"`
-	Currency  string          `json:"currency"`
-	Mode      string          `json:"mode"`
-	AnnualKm  float64         `json:"annual_km"`
-	Years     int             `json:"years"`
-	ICE       ICEInputs       `json:"ice"`
-	Tracked   *TrackedInputs  `json:"tracked,omitempty"`
-	Options   ScenarioOptions `json:"options"`
-	CreatedAt time.Time       `json:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at"`
+	ID              string          `json:"id"`
+	UserID          string          `json:"user_id"`
+	VehicleID       *string         `json:"vehicle_id,omitempty"` // Reference tracked vehicle (required in RETROSPECTIVE mode)
+	Name            string          `json:"name"`
+	Currency        string          `json:"currency"`
+	Mode            string          `json:"mode"`
+	AnnualKm        float64         `json:"annual_km"`
+	Years           int             `json:"years"`
+	ICE             ICEInputs       `json:"ice"`
+	Tracked         *TrackedInputs  `json:"tracked,omitempty"`
+	Options         ScenarioOptions `json:"options"`
+	CreatedAt       time.Time       `json:"created_at"`
+	UpdatedAt       time.Time       `json:"updated_at"`
+	Version         int64           `json:"version"`
+	ExpectedVersion *int64          `json:"-"`
 }
 
 // ComparisonInputLimits is the API contract shared by validation and the what-if editor.

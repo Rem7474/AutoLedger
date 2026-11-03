@@ -3,12 +3,14 @@ import ModalShell from '@/components/ModalShell.vue'
 import { t } from '@/i18n'
 import { ref, watch } from 'vue'
 import { api } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useConfirm } from '@/composables/useConfirm'
 import { Layers } from 'lucide-vue-next'
 import DrivePicker from '@/components/drives/DrivePicker.vue'
 import { toDateInputString } from '@/utils/carpool'
 
 // Edits a trip group: its name, its notes and its legs (the drives ticked in the picker, around the date of the trip).
+const { explainStaleWrite } = useStaleWrite()
 const props = defineProps<{ vehicleId: string; trip: any | null }>()
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -47,10 +49,16 @@ async function handleSave() {
       name: form.value.name,
       notes: form.value.notes || null,
       drive_ids: selectedDriveIds.value,
+      expected_version: props.trip?.version,
     })
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
     saving.value = false
