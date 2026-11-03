@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteComponent, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { rememberLoginRedirect, takeLoginRedirect } from '@/utils/loginRedirect'
+import { installViewTransitions } from '@/utils/viewTransition'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
 // A page that needs a signed-in session.
@@ -150,6 +151,8 @@ router.beforeEach(async (to, _from, next) => {
     next()
   }
 })
+
+installViewTransitions(router)
 
 // A new deployment removes the hashed chunks of the previous build: a navigation that fails to fetch one reloads the
 // page on the target route once, which gets the current index and its chunks.
