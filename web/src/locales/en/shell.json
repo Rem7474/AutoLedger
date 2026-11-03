@@ -93,7 +93,10 @@
     "dateTimePlaceholder": "DD/MM/YYYY HH:mm",
     "today": "Today",
     "confirm": "Apply",
-    "rangePlaceholder": "Pick a date range"
+    "rangePlaceholder": "Pick a date range",
+    "clear": "Clear the date",
+    "rangeFrom": "From",
+    "rangeTo": "To"
   },
   "language": {
     "label": "Language"

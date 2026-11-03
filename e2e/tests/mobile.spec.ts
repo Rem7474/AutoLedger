@@ -25,14 +25,23 @@ for (const route of ['/drives', '/carpools', '/comparison', '/tires', '/maintena
   })
 }
 
-test('a date field inside a form is 16px so the page does not zoom on focus', async ({ page }) => {
+test('a date field inside a form is the native one on a phone, 16px so the page does not zoom on focus', async ({ page }) => {
   await useVehicle(page, ev.id, '/expenses')
   await page.getByRole('button', { name: /^Add/ }).first().click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
-  const sizes = await dialog.locator('input.dp--input').evaluateAll((els) => els.map((e) => getComputedStyle(e).fontSize))
-  expect(sizes.length).toBeGreaterThan(0)
+  // No floating calendar: the browser's own picker opens from a plain date field
+  await expect(dialog.locator('input.dp--input')).toHaveCount(0)
+  const fields = dialog.locator('input[type=date], input[type=datetime-local]')
+  expect(await fields.count()).toBeGreaterThan(0)
+  const sizes = await fields.evaluateAll((els) => els.map((e) => getComputedStyle(e).fontSize))
   expect(sizes).toEqual(sizes.map(() => '16px'))
+
+  // A value typed in the field stays as typed
+  const first = fields.first()
+  const withTime = (await first.getAttribute('type')) === 'datetime-local'
+  await first.fill(withTime ? '2026-02-03T08:30' : '2026-02-03')
+  await expect(first).toHaveValue(withTime ? '2026-02-03T08:30' : '2026-02-03')
 })
 
 test('a carpool is built in three steps on a phone: legs, passengers, then the recap', async ({ page }) => {

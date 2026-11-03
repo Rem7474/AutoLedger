@@ -120,11 +120,11 @@ function onCustomDateChange() {
       >
         <ChevronLeft class="h-4 w-4" />
       </button>
-      <div v-if="unit === 'MONTH'" class="w-40 sm:w-44">
+      <div v-if="unit === 'MONTH'" class="w-52 sm:w-44">
         <label for="drives-month-select" class="sr-only">{{ $t('drives.drivesToolbar.selectTheMonth') }}</label>
         <AppDatePicker id="drives-month-select" v-model="selectedMonth" month-picker size="xs" :clearable="false" @change="onMonthChange" />
       </div>
-      <div v-else-if="unit === 'DAY'" class="w-36">
+      <div v-else-if="unit === 'DAY'" class="w-40 sm:w-36">
         <label for="drives-day-select" class="sr-only">{{ $t('drives.drivesToolbar.units.DAY') }}</label>
         <AppDatePicker id="drives-day-select" v-model="anchorDay" size="xs" :clearable="false" @change="onAnchorChange" />
       </div>
@@ -149,13 +149,17 @@ function onCustomDateChange() {
 
     <!-- Custom range, with ready-made ranges -->
     <div v-if="periodMode === 'CUSTOM'" class="flex flex-wrap items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-950 px-2.5 py-1 text-xs">
-      <label for="drives-filter-from" class="shrink-0 text-slate-400">{{ $t('drives.drivesToolbar.from') }}</label>
-      <div class="w-36">
-        <AppDatePicker id="drives-filter-from" v-model="customFrom" size="xs" @change="onCustomDateChange" />
+      <div class="flex items-center gap-2">
+        <label for="drives-filter-from" class="shrink-0 text-slate-400">{{ $t('drives.drivesToolbar.from') }}</label>
+        <div class="w-40 sm:w-36">
+          <AppDatePicker id="drives-filter-from" v-model="customFrom" size="xs" @change="onCustomDateChange" />
+        </div>
       </div>
-      <label for="drives-filter-to" class="shrink-0 text-slate-400">{{ $t('drives.drivesToolbar.to') }}</label>
-      <div class="w-36">
-        <AppDatePicker id="drives-filter-to" v-model="customTo" size="xs" @change="onCustomDateChange" />
+      <div class="flex items-center gap-2">
+        <label for="drives-filter-to" class="shrink-0 text-slate-400">{{ $t('drives.drivesToolbar.to') }}</label>
+        <div class="w-40 sm:w-36">
+          <AppDatePicker id="drives-filter-to" v-model="customTo" size="xs" @change="onCustomDateChange" />
+        </div>
       </div>
       <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
         <button
