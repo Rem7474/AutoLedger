@@ -46,6 +46,7 @@
     "free": "Gratuite",
     "reopen": "Rouvrir le coût",
     "enterCost": "Coût",
+    "enterCostLong": "Saisir le coût",
     "enterCostHint": "Saisir le coût de cette recharge",
     "freeHint": "Confirmer que cette recharge était gratuite",
     "toComplete": "À compléter ({count})",

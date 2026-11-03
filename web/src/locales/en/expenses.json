@@ -46,6 +46,7 @@
     "free": "Free",
     "reopen": "Reopen the cost",
     "enterCost": "Cost",
+    "enterCostLong": "Enter the cost",
     "enterCostHint": "Enter the cost of this charge",
     "freeHint": "Confirm that this charge was free",
     "toComplete": "To complete ({count})",

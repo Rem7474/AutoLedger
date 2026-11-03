@@ -66,6 +66,7 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
 
     <div v-if="chargesWithoutCost > 0 || missingCostOnly" class="flex flex-wrap items-center gap-2">
       <ToQualifyFilter
+        class="max-sm:min-h-11 max-sm:rounded-xl max-sm:text-sm"
         :count="chargesWithoutCost"
         :active="missingCostOnly"
         :label="$t('expenses.costReview.toComplete', { count: chargesWithoutCost })"
