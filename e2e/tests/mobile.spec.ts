@@ -149,3 +149,20 @@ test('the Back gesture leaves the selection instead of the page', async ({ page 
   await page.waitForLoadState('networkidle')
   expect(new URL(page.url()).pathname).not.toBe('/drives')
 })
+
+test('on the home page every headline figure leads somewhere you can see', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  // The cost per distance opens the totals in a sheet rather than unfolding a block below the fold
+  await page.getByRole('button', { name: 'Cost details' }).first().click()
+  await expect(page.getByRole('dialog', { name: 'Cost details' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+
+  const figures = page.getByRole('main')
+  await figures.getByRole('link', { name: /^Cash paid/ }).click()
+  await expect(page).toHaveURL(/\/expenses/)
+
+  await page.goBack()
+  await figures.getByRole('link', { name: /^Energy/ }).click()
+  await expect(page).toHaveURL(/\/energy/)
+})
