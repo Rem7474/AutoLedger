@@ -139,10 +139,13 @@ const actions = computed<SelectionAction[]>(() => {
     </template>
   </BulkSelectionBar>
 
-  <ModalShell v-model:open="driverSheetOpen" :title="$t('drives.driveBulkActions.driver')" :icon="UserRound" icon-class="text-slate-300" size="sm">
-    <div role="menu" class="space-y-1 [&_.menu-item]:min-h-12 [&_.menu-item]:gap-4 [&_.menu-item]:px-4 [&_.menu-item]:text-base">
-      <button type="button" role="menuitem" class="menu-item" @click="pickDriver(DEFAULT_DRIVER)">{{ defaultDriverLabel }}</button>
-      <button v-for="p in people" :key="p.id" type="button" role="menuitem" class="menu-item" @click="pickDriver(p.id)">{{ p.name }}</button>
-    </div>
-  </ModalShell>
+  <!-- Teleported like the actions sheet: the page container does not span the whole viewport -->
+  <Teleport to="body">
+    <ModalShell v-model:open="driverSheetOpen" :title="$t('drives.driveBulkActions.driver')" :icon="UserRound" icon-class="text-slate-300" size="sm">
+      <div role="menu" class="space-y-1 [&_.menu-item]:min-h-12 [&_.menu-item]:gap-4 [&_.menu-item]:px-4 [&_.menu-item]:text-base">
+        <button type="button" role="menuitem" class="menu-item" @click="pickDriver(DEFAULT_DRIVER)">{{ defaultDriverLabel }}</button>
+        <button v-for="p in people" :key="p.id" type="button" role="menuitem" class="menu-item" @click="pickDriver(p.id)">{{ p.name }}</button>
+      </div>
+    </ModalShell>
+  </Teleport>
 </template>
