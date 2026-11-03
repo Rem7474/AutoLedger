@@ -248,7 +248,7 @@ test('the drive filters sit in a sheet on a phone and in the bar on a wide scree
   const withToll = page.getByRole('button', { name: /With toll/ })
   await expect(toggle).toBeVisible()
   await expect(withToll).toBeHidden()
-  await expect(page.getByPlaceholder(/Search for a city/)).toBeVisible()
+  await expect(page.getByRole('searchbox', { name: /Search for a city/ })).toBeVisible()
   await toggle.click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await withToll.click()
