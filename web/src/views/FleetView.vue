@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
         <li v-for="v in rankedVehicles" :key="v.vehicle_id">
           <button
             type="button"
-            class="flex w-full items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-left transition-colors active:bg-slate-800/60"
+            class="flex w-full items-center gap-3 card p-4 text-left transition-colors active:bg-slate-800/60"
             aria-haspopup="dialog"
             @click="detailId = v.vehicle_id"
           >

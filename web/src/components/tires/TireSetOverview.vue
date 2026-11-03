@@ -26,7 +26,7 @@ const nextDue = computed(() => {
 
 <template>
   <section class="space-y-3">
-    <div v-if="summary.fitted > 0" class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+    <div v-if="summary.fitted > 0" class="card p-4">
       <h2 class="truncate text-base font-bold text-white">{{ set.uniform ? set.name : $t('tires.overview.mixed') }}</h2>
       <p class="mt-0.5 text-xs text-slate-400">
         <span v-if="set.dimension" class="tabular-nums">{{ set.dimension }}</span>

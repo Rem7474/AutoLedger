@@ -230,19 +230,19 @@ onMounted(load)
     </div>
 
     <div v-if="stats && stats.fill_ups > 0" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+      <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.fillUps') }}</div>
         <div class="text-lg font-bold text-white">{{ stats.fill_ups }}</div>
       </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+      <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.totalSpent') }}</div>
         <div class="text-lg font-bold text-white">{{ fmtMoney(stats.total_cost, 0) }}</div>
       </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+      <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averagePricePerLitre', { unit: volumeUnitLabel() }) }}</div>
         <div class="text-lg font-bold text-white">{{ stats.avg_price_per_liter ? `${fmtMoney(perVolume(stats.avg_price_per_liter), 3)}/${volumeUnitLabel()}` : '—' }}</div>
       </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+      <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averageConsumption') }}</div>
         <div class="text-lg font-bold text-white">{{ stats.consumption_l_100km ? `${formatFuelConsumptionValue(stats.consumption_l_100km, 2)} ${fuelConsumptionUnit()}` : $t('manual.fuelLogsPanel.notMeasurable') }}</div>
       </div>
@@ -270,7 +270,7 @@ onMounted(load)
       <li
         v-for="log in logs"
         :key="log.id"
-        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        class="relative hover:border-slate-700/90 card p-3 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
         :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(log) }"
       >
         <CardOpenButton

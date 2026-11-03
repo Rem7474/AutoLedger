@@ -21,7 +21,7 @@ const close = () => (open.value = false)
   <template v-else-if="enabled">
     <button
       type="button"
-      class="flex w-full items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-left transition-colors active:bg-slate-800/60"
+      class="flex w-full items-center gap-3 card px-4 py-3 text-left transition-colors active:bg-slate-800/60"
       aria-haspopup="dialog"
       @click="open = true"
     >

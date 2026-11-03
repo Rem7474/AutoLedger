@@ -146,7 +146,7 @@ onMounted(() => {
     </PageHeader>
 
     <!-- Empty state if no vehicle -->
-    <div v-if="!vehicleStore.activeVehicle" class="p-8 text-center bg-slate-900 border border-slate-800 rounded-2xl">
+    <div v-if="!vehicleStore.activeVehicle" class="p-8 text-center card">
       <p class="text-slate-400 mb-4">{{ $t('dashboard.dashboardView.noVehicleConfigured') }}</p>
       <router-link to="/vehicles" class="btn btn-lg btn-primary">
         {{ $t('dashboard.dashboardView.createYourFirstVehicle') }}
@@ -157,7 +157,7 @@ onMounted(() => {
     <div v-else-if="loading" class="space-y-6 animate-pulse motion-reduce:animate-none">
       <!-- 4 KPI Card Skeletons -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div v-for="i in 4" :key="i" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl h-32 flex flex-col justify-between">
+        <div v-for="i in 4" :key="i" class="p-5 card h-32 flex flex-col justify-between">
           <div class="flex justify-between items-center">
             <div class="h-3 w-20 bg-slate-800 rounded"></div>
             <div class="h-8 w-8 bg-slate-800 rounded-xl"></div>
@@ -182,18 +182,18 @@ onMounted(() => {
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 h-80 flex flex-col justify-between">
+        <div class="lg:col-span-2 card p-5 h-80 flex flex-col justify-between">
           <div class="h-4 w-44 bg-slate-800 rounded"></div>
           <div class="h-56 w-full bg-slate-800/40 rounded-xl"></div>
         </div>
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-80 flex flex-col justify-between">
+        <div class="card p-5 h-80 flex flex-col justify-between">
           <div class="h-4 w-32 bg-slate-800 rounded"></div>
           <div class="h-52 w-52 rounded-full border-8 border-slate-800 mx-auto"></div>
         </div>
       </div>
 
       <!-- Second Chart Skeleton -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-80 flex flex-col justify-between">
+      <div class="card p-5 h-80 flex flex-col justify-between">
         <div class="h-4 w-52 bg-slate-800 rounded"></div>
         <div class="h-56 w-full bg-slate-800/40 rounded-xl"></div>
       </div>

@@ -178,7 +178,7 @@ onMounted(() => {
       {{ $t('account.accountView.signInPasswordAndConnected') }}
     </PageHeader>
 
-    <section class="rounded-2xl border border-slate-800 bg-slate-900 p-5" aria-labelledby="account-identity">
+    <section class="card p-5" aria-labelledby="account-identity">
       <h2 id="account-identity" class="mb-3 flex items-center gap-2 text-sm font-bold text-white">
         <UserRound class="h-4 w-4 text-slate-400" aria-hidden="true" />
         {{ $t('account.accountView.identity') }}
@@ -213,7 +213,7 @@ onMounted(() => {
       </div>
     </section>
 
-    <section class="rounded-2xl border border-slate-800 bg-slate-900 p-5" aria-labelledby="account-preferences">
+    <section class="card p-5" aria-labelledby="account-preferences">
       <h2 id="account-preferences" class="mb-3 flex items-center gap-2 text-sm font-bold text-white">
         <SlidersHorizontal class="h-4 w-4 text-slate-400" aria-hidden="true" />
         {{ $t('account.accountView.preferences') }}
@@ -242,7 +242,7 @@ onMounted(() => {
       <p class="mt-3 text-xs text-slate-400">{{ $t('account.currencyPerVehicle') }}</p>
     </section>
 
-    <section v-if="hasPassword" class="rounded-2xl border border-slate-800 bg-slate-900 p-5" aria-labelledby="account-password">
+    <section v-if="hasPassword" class="card p-5" aria-labelledby="account-password">
       <h2 id="account-password" class="mb-3 flex items-center gap-2 text-sm font-bold text-white">
         <KeyRound class="h-4 w-4 text-slate-400" aria-hidden="true" />
         {{ $t('account.accountView.password') }}
@@ -278,7 +278,7 @@ onMounted(() => {
 
     <ApiTokensSection />
 
-    <section class="rounded-2xl border border-slate-800 bg-slate-900 p-5" aria-labelledby="account-sessions">
+    <section class="card p-5" aria-labelledby="account-sessions">
       <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 id="account-sessions" class="flex items-center gap-2 text-sm font-bold text-white">
           <Laptop class="h-4 w-4 text-slate-400" aria-hidden="true" />

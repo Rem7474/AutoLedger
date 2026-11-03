@@ -165,7 +165,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section v-if="visible && stats" :class="bare ? 'space-y-4' : 'bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4'" aria-labelledby="charging-insights-title">
+  <section v-if="visible && stats" :class="bare ? 'space-y-4' : 'card p-4 space-y-4'" aria-labelledby="charging-insights-title">
     <header class="space-y-2">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h3 id="charging-insights-title" class="text-sm font-bold text-white" :class="{ 'sr-only': bare }">{{ $t('expenses.chargingInsights.title') }}</h3>

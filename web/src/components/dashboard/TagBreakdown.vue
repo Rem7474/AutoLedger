@@ -18,7 +18,7 @@ const hasSharedDrives = computed(() => (props.tco?.tag_breakdown ?? []).some((it
 </script>
 
 <template>
-  <div v-if="hasTags" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+  <div v-if="hasTags" class="card p-5 shadow-sm">
     <h3 class="text-sm font-bold text-white">{{ $t('dashboard.tagBreakdown.breakdownByDriveCategoryWork') }}</h3>
     <p class="mt-0.5 mb-3 text-xs text-slate-400">{{ $t('dashboard.tagBreakdown.costBasis') }}</p>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">

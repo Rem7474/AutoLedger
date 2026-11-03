@@ -74,7 +74,7 @@ async function decide(decision: 'approve' | 'deny') {
 
 <template>
   <div class="max-w-lg mx-auto py-8">
-    <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 space-y-5">
+    <div class="card p-6 space-y-5">
       <div class="flex items-center gap-3">
         <ShieldCheck class="w-6 h-6 text-rose-400 shrink-0" />
         <h1 class="text-xl font-bold text-white">{{ t('oauth.authorize.title') }}</h1>

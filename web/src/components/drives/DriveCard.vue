@@ -57,7 +57,7 @@ function openCarpool() {
 
 <template>
   <div
-    class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-3 sm:p-4 rounded-2xl transition-all flex items-start gap-3 group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+    class="relative hover:border-slate-700/90 p-3 sm:p-4 card transition-all flex items-start gap-3 group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
     :class="{ 'border-rose-500/40 bg-slate-800/40 shadow-lg shadow-rose-950/20': selected }"
   >
     <CardOpenButton

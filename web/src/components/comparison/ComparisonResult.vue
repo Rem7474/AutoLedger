@@ -184,7 +184,7 @@ function printResult() {
         </KpiCard>
       </div>
 
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
+      <div class="card p-4 overflow-x-auto">
         <table class="w-full text-sm">
           <caption class="sr-only">{{ $t('comparison.comparisonView.costByCategoryOverYear', { years_count: result.years_count }) }}</caption>
           <thead>

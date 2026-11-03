@@ -61,7 +61,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs">
+  <div class="p-4 card text-xs">
     <h4 class="font-bold text-white">{{ $t('expenses.remindersPanel.templates.title') }}</h4>
     <div class="mt-3 space-y-3">
       <p class="text-slate-400">{{ $t('expenses.remindersPanel.templates.hint') }}</p>

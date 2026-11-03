@@ -83,7 +83,7 @@ const sourceLabel = computed(() => (health.value?.source ? t(`dashboard.batteryH
 </script>
 
 <template>
-  <section class="space-y-4 text-xs" :class="{ 'rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm': !bare }" aria-labelledby="battery-health-title">
+  <section class="space-y-4 text-xs" :class="{ 'card p-5 shadow-sm': !bare }" aria-labelledby="battery-health-title">
     <h3 id="battery-health-title" class="flex items-center gap-2 text-sm font-bold text-white">
       <BatteryCharging class="h-4 w-4 text-success-400" aria-hidden="true" />
       {{ $t('dashboard.batteryHealth.title') }}

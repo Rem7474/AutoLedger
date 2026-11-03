@@ -25,7 +25,7 @@ const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
 
 <template>
   <div
-    class="relative bg-slate-900 border border-slate-800 hover:border-rose-500/40 rounded-2xl p-4 space-y-3 shadow-sm transition-all group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+    class="relative hover:border-rose-500/40 card p-4 space-y-3 shadow-sm transition-all group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
     :class="{ 'ring-2 ring-rose-500/50 border-rose-500/60': selected }"
   >
     <CardOpenButton

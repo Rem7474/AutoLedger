@@ -22,7 +22,7 @@ const rows = computed(() =>
 </script>
 
 <template>
-  <div :class="{ 'bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm': !bare }">
+  <div :class="{ 'card p-5 shadow-sm': !bare }">
     <div class="flex items-center justify-between gap-2 mb-1">
       <h3 class="text-sm font-bold text-white">{{ $t(mode === 'full' ? 'dashboard.costBreakdownDonut.fullCostBreakdown' : 'dashboard.donut.cashTitle') }}</h3>
       <div class="inline-flex rounded-lg bg-slate-800 p-0.5 text-xs" role="group">

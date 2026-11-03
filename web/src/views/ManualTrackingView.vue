@@ -26,7 +26,7 @@ const vehicleStore = useVehicleStore()
       {{ $t('manual.manualTrackingView.subtitleMileage') }}{{ vehicleStore.activeVehicle ? ` · ${vehicleStore.activeVehicle.name}` : '' }}{{ $t('manual.manualTrackingView.independent') }}
     </PageHeader>
 
-    <div v-if="!vehicleStore.activeVehicle" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-sm text-slate-400">
+    <div v-if="!vehicleStore.activeVehicle" class="card p-6 text-sm text-slate-400">
       {{ $t('manual.manualTrackingView.addAVehicleFirst') }}
     </div>
 
