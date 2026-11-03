@@ -22,24 +22,25 @@ func NewCheckpointHandler(repo *database.Repository) *CheckpointHandler {
 }
 
 type SaveCheckpointRequest struct {
-	Date     string  `json:"date"`
-	Odometer float64 `json:"odometer"`
-	Notes    *string `json:"notes"`
+	ExpectedVersion *int64  `json:"expected_version"` // The version the client read; absent: not checked
+	Date            string  `json:"date"`
+	Odometer        float64 `json:"odometer"`
+	Notes           *string `json:"notes"`
 }
 
 // decodeCheckpointRequest reads and validates the shared payload used by Create and Update.
-func decodeCheckpointRequest(r *http.Request) (time.Time, float64, *string, error) {
+func decodeCheckpointRequest(r *http.Request) (time.Time, float64, *string, *int64, error) {
 	var req SaveCheckpointRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return time.Time{}, 0, nil, apierror.New("request.invalid_body", "Invalid request body")
+		return time.Time{}, 0, nil, nil, apierror.New("request.invalid_body", "Invalid request body")
 	}
 
 	d, err := parseDate(req.Date)
 	if err != nil {
-		return time.Time{}, 0, nil, apierror.New("request.invalid_date", "Invalid date")
+		return time.Time{}, 0, nil, nil, apierror.New("request.invalid_date", "Invalid date")
 	}
 	if req.Odometer < 0 || req.Odometer > 2_000_000 {
-		return time.Time{}, 0, nil, apierror.Newf("odometer.range_checkpoint", "Invalid odometer (must be between 0 and %.0f km)", apierror.Km(2_000_000))
+		return time.Time{}, 0, nil, nil, apierror.Newf("odometer.range_checkpoint", "Invalid odometer (must be between 0 and %.0f km)", apierror.Km(2_000_000))
 	}
 
 	var notes *string
@@ -48,7 +49,7 @@ func decodeCheckpointRequest(r *http.Request) (time.Time, float64, *string, erro
 		notes = &n
 	}
 
-	return d, req.Odometer, notes, nil
+	return d, req.Odometer, notes, req.ExpectedVersion, nil
 }
 
 // checkConsistency rejects a reading that contradicts the other manual readings and fill-ups; id is empty on creation.
@@ -96,7 +97,7 @@ func (h *CheckpointHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, odometer, notes, err := decodeCheckpointRequest(r)
+	d, odometer, notes, _, err := decodeCheckpointRequest(r)
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return
@@ -132,7 +133,7 @@ func (h *CheckpointHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, odometer, notes, err := decodeCheckpointRequest(r)
+	d, odometer, notes, expected, err := decodeCheckpointRequest(r)
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return
@@ -143,11 +144,12 @@ func (h *CheckpointHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := &models.OdometerCheckpoint{
-		ID:        checkpointID,
-		VehicleID: vehicleID,
-		Date:      d,
-		Odometer:  odometer,
-		Notes:     notes,
+		ID:              checkpointID,
+		VehicleID:       vehicleID,
+		Date:            d,
+		Odometer:        odometer,
+		Notes:           notes,
+		ExpectedVersion: expected,
 	}
 
 	if err := h.repo.UpdateOdometerCheckpoint(r.Context(), c); err != nil {

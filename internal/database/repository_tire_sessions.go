@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -157,7 +158,7 @@ func (r *Repository) CopyTireHistory(ctx context.Context, vehicleID, sourceTireI
 func (r *Repository) ListTireMountSessions(ctx context.Context, tireID string) ([]models.TireMountSession, error) {
 	query := `
 		SELECT id, tire_id, vehicle_id, position, mounted_date, mounted_odometer,
-		       dismounted_date, dismounted_odometer, distance_km, notes, created_at, updated_at
+		       dismounted_date, dismounted_odometer, distance_km, notes, created_at, updated_at, version
 		FROM tire_mount_sessions
 		WHERE tire_id::text = $1
 		ORDER BY mounted_date DESC;
@@ -173,7 +174,7 @@ func (r *Repository) ListTireMountSessions(ctx context.Context, tireID string) (
 		var s models.TireMountSession
 		if err := rows.Scan(
 			&s.ID, &s.TireID, &s.VehicleID, &s.Position, &s.MountedDate, &s.MountedOdometer,
-			&s.DismountedDate, &s.DismountedOdometer, &s.DistanceKm, &s.Notes, &s.CreatedAt, &s.UpdatedAt,
+			&s.DismountedDate, &s.DismountedOdometer, &s.DistanceKm, &s.Notes, &s.CreatedAt, &s.UpdatedAt, &s.Version,
 		); err != nil {
 			return nil, err
 		}
@@ -226,11 +227,11 @@ func (r *Repository) CreateTireMountSession(ctx context.Context, s *models.TireM
 			tire_id, vehicle_id, position, mounted_date, mounted_odometer,
 			dismounted_date, dismounted_odometer, distance_km, notes
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`,
 		s.TireID, s.VehicleID, s.Position, s.MountedDate, s.MountedOdometer,
 		s.DismountedDate, s.DismountedOdometer, s.DistanceKm, s.Notes,
-	).Scan(&s.ID, &s.CreatedAt, &s.UpdatedAt)
+	).Scan(&s.ID, &s.CreatedAt, &s.UpdatedAt, &s.Version)
 	if err != nil {
 		return err
 	}
@@ -250,23 +251,25 @@ func (r *Repository) UpdateTireMountSession(ctx context.Context, s *models.TireM
 	}
 	defer tx.Rollback(ctx)
 
-	tag, err := tx.Exec(ctx, `
+	err = tx.QueryRow(ctx, `
 		UPDATE tire_mount_sessions s
 		SET position = $1, mounted_date = $2, mounted_odometer = $3,
 		    dismounted_date = $4, dismounted_odometer = $5, distance_km = $6, notes = $7,
-		    updated_at = NOW()
+		    version = s.version + 1, updated_at = NOW()
 		FROM tires t
-		WHERE s.id::text = $8 AND s.tire_id = t.id AND t.id::text = $9 AND t.vehicle_id = $10;
+		WHERE s.id::text = $8 AND s.tire_id = t.id AND t.id::text = $9 AND t.vehicle_id = $10
+		  AND ($11::bigint IS NULL OR s.version = $11::bigint)
+		RETURNING s.version, s.updated_at;
 	`,
 		s.Position, s.MountedDate, s.MountedOdometer,
 		s.DismountedDate, s.DismountedOdometer, s.DistanceKm, s.Notes,
-		s.ID, s.TireID, s.VehicleID,
-	)
+		s.ID, s.TireID, s.VehicleID, s.ExpectedVersion,
+	).Scan(&s.Version, &s.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, tx, "tire_mount_sessions", s.ID, s.VehicleID, s.ExpectedVersion)
+	}
 	if err != nil {
 		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
 	}
 	if s.DismountedDate == nil {
 		if err := replaceOpenTireSessions(ctx, tx, s.TireID, s.ID); err != nil {

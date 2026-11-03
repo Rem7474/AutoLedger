@@ -52,11 +52,12 @@ Text with no HTTP request to translate through (reminder and sync-failure webhoo
 
 An item that several people or tools can edit carries a `version` column (`BIGINT NOT NULL DEFAULT 1`). Every write made by a user (REST `PUT`, MCP tool, freeze or unfreeze) runs `version = version + 1`; background jobs (sync, geocoding, linked-cost refresh) never advance it, so they cannot raise a conflict.
 
+- Versioned items: carpools, vehicles, manual drives, charges, fill-ups, maintenance expenses, drive expenses, odometer readings, trip groups, tires, tire mount sessions, tread measurements, reminders, tariff plans, comparison scenarios and the acquisition contract. A partial write (drive tags, driver or toll review, the estimated energy, a tire disposal or rotation, completing a reminder) advances the version without checking one. Single-field settings are exempt (see the route-table test).
 - Responses expose `version`. A `PUT` accepts `expected_version` in the body (the offline queue replays the body, not headers). Absent: the write goes through. Present and different from the stored version: `409` with the code `request.stale`; present for an item that does not exist: `404`.
 - The check sits in the `UPDATE ... WHERE (expected IS NULL OR version = expected)` itself, so no write can slip between the test and the write. On zero rows, `staleOrNotFound` (`internal/database/versioning.go`) tells a missing item (`ErrNotFound`) from a changed one (`ErrStaleWrite`); the table must be in `versionedTables`. `writeRepoError` maps `ErrStaleWrite` to `request.stale`.
 - An MCP tool that changes an item requires `expected_version`, read from the matching `get_*` tool; a preview (`dry_run`) compares in memory, a real save is guarded by the SQL.
 - The SPA turns the `409` into a `StaleWriteError` (`services/api.ts`); a modal calls `useStaleWrite().explainStaleWrite(err)`, which shows one alert, then closes the modal and reloads the list. A modal sends `expected_version: props.editing.version`.
-- `TestEveryUpdateRouteIsVersionedOrListed` (`cmd/server/routes_test.go`) fails for a `PUT` or `PATCH` route that is not versioned, not on the list of routes still to version, and not exempt with a reason. A route that edits an item goes in the first list as soon as it has a `version`.
+- `TestEveryUpdateRouteIsVersionedOrListed` (`cmd/server/routes_test.go`) fails for a `PUT` or `PATCH` route that is neither versioned nor exempt with a reason. A route that edits an item goes in the first list as soon as it has a `version`.
 
 ## SonarCloud coverage
 

@@ -184,7 +184,7 @@ func (r *Repository) BatchDisposeTires(ctx context.Context, vehicleID string, ti
 				return err
 			}
 		}
-		if _, err := tx.Exec(ctx, `UPDATE tires SET current_position = 'DISPOSED', updated_at = NOW() WHERE id = $1;`, tireID); err != nil {
+		if _, err := tx.Exec(ctx, `UPDATE tires SET current_position = 'DISPOSED', version = version + 1, updated_at = NOW() WHERE id = $1;`, tireID); err != nil {
 			return err
 		}
 		if err := recalcTireDistance(ctx, tx, tireID); err != nil {
@@ -248,14 +248,14 @@ func (r *Repository) CreateTiresBatch(ctx context.Context, tires []*models.Tire)
 				initial_depth_mm, min_legal_depth_mm, dot_code,
 				mounted_odometer, initial_distance_km, accumulated_distance_km, estimated_lifespan_km
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13, $14)
-			RETURNING id, created_at, updated_at;
+			RETURNING id, created_at, updated_at, version;
 		`
 		if err := tx.QueryRow(ctx, query,
 			t.VehicleID, t.Brand, t.Model, t.Dimension, t.Season,
 			t.PurchaseDate, t.PurchasePrice, t.CurrentPosition,
 			t.InitialDepthMm, t.MinLegalDepthMm, t.DotCode,
 			t.MountedOdometer, t.InitialDistanceKm, lifespan,
-		).Scan(&t.ID, &t.CreatedAt, &t.UpdatedAt); err != nil {
+		).Scan(&t.ID, &t.CreatedAt, &t.UpdatedAt, &t.Version); err != nil {
 			return fmt.Errorf("failed to insert tire: %w", err)
 		}
 		t.AccumulatedDistanceKm = t.InitialDistanceKm

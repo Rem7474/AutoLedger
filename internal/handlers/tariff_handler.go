@@ -55,6 +55,7 @@ type SaveTariffPlanRequest struct {
 	StandingChargeCents *money.Cents        `json:"standing_charge_cents"`
 	ValidFrom           *string             `json:"valid_from"`
 	ValidTo             *string             `json:"valid_to"`
+	ExpectedVersion     *int64              `json:"expected_version"` // The version the client read; absent: not checked
 }
 
 var hhmmPattern = regexp.MustCompile(`^([01]\d|2[0-3]):[0-5]\d$|^24:00$`)
@@ -224,6 +225,7 @@ func (h *TariffHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	existing.StandingChargeCents = req.StandingChargeCents
+	existing.ExpectedVersion = req.ExpectedVersion
 	existing.ValidFrom, existing.ValidTo = blankToNil(req.ValidFrom), blankToNil(req.ValidTo)
 
 	if err := h.repo.UpdateTariffPlan(r.Context(), existing); err != nil {

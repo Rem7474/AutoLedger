@@ -90,21 +90,25 @@ func (r *Repository) SaveDriveExpense(ctx context.Context, exp *models.DriveExpe
 		err = tx.QueryRow(ctx, `
 			INSERT INTO drive_expenses (vehicle_id, trip_group_id, drive_id, type, amount, currency, fx_rate, date, notes, document_id, source)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-			RETURNING id, created_at;
+			RETURNING id, created_at, version;
 		`, exp.VehicleID, exp.TripGroupID, exp.DriveID, exp.Type,
 			exp.Amount, exp.Currency, exp.FxRate, exp.Date, exp.Notes, exp.DocumentID, exp.Source,
-		).Scan(&exp.ID, &exp.CreatedAt)
+		).Scan(&exp.ID, &exp.CreatedAt, &exp.Version)
 	} else {
 		err = tx.QueryRow(ctx, `
 			UPDATE drive_expenses
 			SET trip_group_id = $1, drive_id = $2, type = $3, amount = $4,
-			    currency = $5, fx_rate = $6, date = $7, notes = $8, document_id = $9, source = $10
-			WHERE id::text = $11 AND vehicle_id = $12
-			RETURNING created_at;
+			    currency = $5, fx_rate = $6, date = $7, notes = $8, document_id = $9, source = $10,
+			    version = version + 1
+			WHERE id::text = $11 AND vehicle_id = $12 AND ($13::bigint IS NULL OR version = $13::bigint)
+			RETURNING created_at, version;
 		`, exp.TripGroupID, exp.DriveID, exp.Type, exp.Amount,
 			exp.Currency, exp.FxRate, exp.Date, exp.Notes, exp.DocumentID, exp.Source,
-			exp.ID, exp.VehicleID,
-		).Scan(&exp.CreatedAt)
+			exp.ID, exp.VehicleID, exp.ExpectedVersion,
+		).Scan(&exp.CreatedAt, &exp.Version)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return staleOrNotFound(ctx, tx, "drive_expenses", exp.ID, exp.VehicleID, exp.ExpectedVersion)
+		}
 	}
 	if err != nil {
 		return err
@@ -156,7 +160,7 @@ func (r *Repository) ListDriveExpenses(ctx context.Context, vehicleID, lang stri
 			END,
 			e.type, e.amount, e.currency, e.fx_rate, e.date, e.notes,
 			e.document_id, doc.filename,
-			e.source, e.created_at
+			e.source, e.created_at, e.version
 		FROM drive_expenses e
 		LEFT JOIN drives d ON e.drive_id = d.id AND d.vehicle_id = e.vehicle_id
 		LEFT JOIN trip_groups tg ON e.trip_group_id = tg.id AND tg.vehicle_id = e.vehicle_id
@@ -178,7 +182,7 @@ func (r *Repository) ListDriveExpenses(ctx context.Context, vehicleID, lang stri
 			&e.DriveID, &e.DriveTitle, &e.Type,
 			&e.Amount, &e.Currency, &e.FxRate, &e.Date, &e.Notes,
 			&e.DocumentID, &e.DocumentFilename,
-			&e.Source, &e.CreatedAt,
+			&e.Source, &e.CreatedAt, &e.Version,
 		); err != nil {
 			return nil, err
 		}

@@ -49,7 +49,7 @@ const ownershipColumns = `
 	lease_down_payment, lease_monthly_rent, lease_duration_months, lease_fees, lease_deposit,
 	lease_km_allowance_per_year, lease_excess_km_price, lease_end_fees_estimate, lease_purchase_option_price,
 	lease_includes_maintenance, lease_includes_insurance, lease_includes_tires, option_exercised_date,
-	end_date, sale_price, created_at, updated_at
+	end_date, sale_price, created_at, updated_at, version
 `
 
 func scanOwnership(row pgx.Row, o *models.VehicleOwnership) error {
@@ -60,6 +60,6 @@ func scanOwnership(row pgx.Row, o *models.VehicleOwnership) error {
 		&o.LeaseDownPayment, &o.LeaseMonthlyRent, &o.LeaseDurationMonths, &o.LeaseFees, &o.LeaseDeposit,
 		&o.LeaseKmAllowancePerYear, &o.LeaseExcessKmPrice, &o.LeaseEndFeesEstimate, &o.LeasePurchaseOptionPrice,
 		&o.LeaseIncludesMaintenance, &o.LeaseIncludesInsurance, &o.LeaseIncludesTires, &o.OptionExercisedDate,
-		&o.EndDate, &o.SalePrice, &o.CreatedAt, &o.UpdatedAt,
+		&o.EndDate, &o.SalePrice, &o.CreatedAt, &o.UpdatedAt, &o.Version,
 	)
 }

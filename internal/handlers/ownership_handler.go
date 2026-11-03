@@ -17,6 +17,8 @@ import (
 
 // SaveOwnershipRequest is the payload of a vehicle ownership contract.
 type SaveOwnershipRequest struct {
+	ExpectedVersion *int64 `json:"expected_version"` // The version the client read; absent: not checked
+
 	AcquisitionType string   `json:"acquisition_type"`
 	StartDate       string   `json:"start_date"`
 	StartOdometer   *float64 `json:"start_odometer"`
@@ -77,7 +79,7 @@ func validateMonths(v *int, kind string, required bool) error {
 
 // buildOwnership validates a contract; fields that do not apply to the acquisition type are ignored.
 func buildOwnership(vehicleID string, req *SaveOwnershipRequest) (*models.VehicleOwnership, error) {
-	o := &models.VehicleOwnership{VehicleID: vehicleID, AcquisitionType: strings.ToUpper(strings.TrimSpace(req.AcquisitionType))}
+	o := &models.VehicleOwnership{VehicleID: vehicleID, AcquisitionType: strings.ToUpper(strings.TrimSpace(req.AcquisitionType)), ExpectedVersion: req.ExpectedVersion}
 	switch o.AcquisitionType {
 	case models.AcquisitionCash, models.AcquisitionLoan, models.AcquisitionLOA, models.AcquisitionLLD:
 	default:
