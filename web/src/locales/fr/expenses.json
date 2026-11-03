@@ -25,6 +25,8 @@
     "deleteReceiptTitle": "Supprimer le justificatif",
     "deleteReceiptMessage": "Supprimer le justificatif « {filename} » ? Les dépenses associées seront conservées mais ne pointeront plus vers ce document.",
     "receiptDeleted": "Justificatif supprimé",
+    "costDeleted": "Dépense supprimée",
+    "chargeDeleted": "Recharge supprimée",
     "deleteReminderTitle": "Supprimer le rappel",
     "deleteReminderMessage": "Êtes-vous sûr de vouloir supprimer le rappel d'entretien « {title} » ?",
     "reminderDeleted": "Rappel supprimé",

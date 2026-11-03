@@ -24,6 +24,7 @@
   "atKmCapitalized": "At {km} {unit}",
   "example": "e.g. {value}",
   "done": "Done",
+  "undo": "Undo",
   "emptySources": {
     "intro": "Fill this page another way:",
     "quickAdd": "Quick add",

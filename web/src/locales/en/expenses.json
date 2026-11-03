@@ -25,6 +25,8 @@
     "deleteReceiptTitle": "Delete the receipt",
     "deleteReceiptMessage": "Delete the receipt “{filename}”? The linked expenses are kept but will no longer point to this document.",
     "receiptDeleted": "Receipt deleted",
+    "costDeleted": "Cost deleted",
+    "chargeDeleted": "Charge deleted",
     "deleteReminderTitle": "Delete the reminder",
     "deleteReminderMessage": "Are you sure you want to delete the maintenance reminder “{title}”?",
     "reminderDeleted": "Reminder deleted",
