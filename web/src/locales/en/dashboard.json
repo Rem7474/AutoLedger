@@ -417,5 +417,15 @@
     "kmShare": "Weight of the distance (%)",
     "healthWeight": "Weight of the health",
     "advancedHint": "The value combines age, mileage and battery health. These weights set the share of each: keep the defaults if unsure."
+  },
+  "sheets": {
+    "costs": "Costs by month",
+    "costsHint": "Monthly trend and breakdown of the period",
+    "mileage": "Mileage and cost per distance",
+    "mileageHint": "Distance and cost per distance, month by month",
+    "battery": "Battery health",
+    "batteryHint": "Capacity readings and state of health",
+    "resale": "Resale value",
+    "resaleHint": "Estimated value today and at the end of the contract"
   }
 }

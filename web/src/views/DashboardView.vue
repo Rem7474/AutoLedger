@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import LoadError from '@/components/LoadError.vue'
 import PageHeader from '@/components/PageHeader.vue'
-import { LayoutDashboard as PageIcon } from 'lucide-vue-next'
+import { Activity, BatteryCharging, LayoutDashboard as PageIcon, TrendingDown } from 'lucide-vue-next'
+import SheetRow from '@/components/SheetRow.vue'
 import { ref, onMounted, watch, computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -196,12 +197,18 @@ onMounted(() => {
         summary
       />
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="openMonthDetail" />
-        <CostBreakdownDonut :tco="tco" />
-      </div>
+      <!-- Below sm each block below the figures is one row that opens it in a sheet, so the page is a short list instead of
+           a long stack of charts; a month opened from a sheet takes over from it -->
+      <SheetRow v-slot="{ bare, close }" :title="$t('dashboard.sheets.costs')" :hint="$t('dashboard.sheets.costsHint')">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <MonthlyCostChart :monthly-costs="monthlyCosts" :bare="bare" @open-month="close(); openMonthDetail($event)" />
+          <CostBreakdownDonut :tco="tco" :bare="bare" />
+        </div>
+      </SheetRow>
 
-      <MileageCostChart :monthly-costs="monthlyCosts" @open-month="openMonthDetail" />
+      <SheetRow v-slot="{ bare, close }" :title="$t('dashboard.sheets.mileage')" :hint="$t('dashboard.sheets.mileageHint')" :icon="Activity">
+        <MileageCostChart :monthly-costs="monthlyCosts" :bare="bare" @open-month="close(); openMonthDetail($event)" />
+      </SheetRow>
 
       <!-- Shows itself only once a drive carries a tag -->
       <TagBreakdown v-if="prefs.proPersoEnabled" :tco="tco" />
@@ -210,17 +217,18 @@ onMounted(() => {
       <LeaseContractCard :tco="tco" />
 
       <!-- Two unrelated questions, so two cards: how healthy the battery is, and what the vehicle is worth -->
-      <div v-if="vehicleStore.activeVehicle" class="grid grid-cols-1 items-start gap-6" :class="vehicleStore.canCharge ? 'lg:grid-cols-2' : ''">
-        <BatteryHealthCard
-          v-if="vehicleStore.canCharge"
-          :vehicle-id="vehicleStore.activeVehicle.id"
-          @updated="resaleRefresh++"
-        />
-        <ResaleValueCard
-          :vehicle-id="vehicleStore.activeVehicle.id"
-          :has-battery="vehicleStore.canCharge"
-          :refresh-key="resaleRefresh"
-        />
+      <div v-if="vehicleStore.activeVehicle" class="grid grid-cols-1 items-start gap-4 sm:gap-6" :class="vehicleStore.canCharge ? 'lg:grid-cols-2' : ''">
+        <SheetRow v-if="vehicleStore.canCharge" v-slot="{ bare }" :title="$t('dashboard.sheets.battery')" :hint="$t('dashboard.sheets.batteryHint')" :icon="BatteryCharging">
+          <BatteryHealthCard :vehicle-id="vehicleStore.activeVehicle.id" :bare="bare" @updated="resaleRefresh++" />
+        </SheetRow>
+        <SheetRow v-slot="{ bare }" :title="$t('dashboard.sheets.resale')" :hint="$t('dashboard.sheets.resaleHint')" :icon="TrendingDown">
+          <ResaleValueCard
+            :vehicle-id="vehicleStore.activeVehicle.id"
+            :has-battery="vehicleStore.canCharge"
+            :refresh-key="resaleRefresh"
+            :bare="bare"
+          />
+        </SheetRow>
       </div>
     </div>
 

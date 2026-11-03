@@ -8,7 +8,7 @@ import { donutRows, type DonutMode } from '@/utils/donutBreakdown'
 
 // Share of each cost item: in the full cost of ownership, or in what was actually paid. The amounts are listed under
 // the ring, largest first, so no figure is hidden behind a tooltip.
-const props = defineProps<{ tco: any | null }>()
+const props = defineProps<{ tco: any | null; bare?: boolean }>()
 const vehicleStore = useVehicleStore()
 
 const mode = ref<DonutMode>('full')
@@ -22,7 +22,7 @@ const rows = computed(() =>
 </script>
 
 <template>
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+  <div :class="{ 'bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm': !bare }">
     <div class="flex items-center justify-between gap-2 mb-1">
       <h3 class="text-sm font-bold text-white">{{ $t(mode === 'full' ? 'dashboard.costBreakdownDonut.fullCostBreakdown' : 'dashboard.donut.cashTitle') }}</h3>
       <div class="inline-flex rounded-lg bg-slate-800 p-0.5 text-xs" role="group">

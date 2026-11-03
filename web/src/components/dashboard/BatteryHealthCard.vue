@@ -8,7 +8,7 @@ import { BatteryCharging, ChevronDown, Trash2 } from 'lucide-vue-next'
 
 // The battery health of an electric vehicle: the level as a gauge coloured by value, its history as a line,
 // and the readings it is computed from (kept behind a fold, they are entered rarely).
-const props = defineProps<{ vehicleId: string }>()
+const props = defineProps<{ vehicleId: string; bare?: boolean }>()
 const emit = defineEmits<{ updated: [] }>()
 
 interface Reading { date: string; health_percent?: number; current_capacity_kwh?: number; max_capacity_kwh?: number }
@@ -83,7 +83,7 @@ const sourceLabel = computed(() => (health.value?.source ? t(`dashboard.batteryH
 </script>
 
 <template>
-  <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 text-xs shadow-sm" aria-labelledby="battery-health-title">
+  <section class="space-y-4 text-xs" :class="{ 'rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm': !bare }" aria-labelledby="battery-health-title">
     <h3 id="battery-health-title" class="flex items-center gap-2 text-sm font-bold text-white">
       <BatteryCharging class="h-4 w-4 text-success-400" aria-hidden="true" />
       {{ $t('dashboard.batteryHealth.title') }}
