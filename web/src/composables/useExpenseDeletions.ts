@@ -3,63 +3,51 @@ import { t } from '@/i18n'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
-import { formatAmount } from '@/currency'
-import { formatNumber } from '@/utils/numbers'
+import { deleteWithUndo } from '@/composables/useUndoableDelete'
 
-// Confirm-then-delete handlers of the expenses page; `reload` refreshes the list on screen afterwards.
-export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, reload: () => Promise<void> | void) {
+export interface ExpenseLists {
+  tolls: Ref<any[]>
+  maintenance: Ref<any[]>
+  charges: Ref<any[]>
+}
+
+// Delete handlers of the expenses page; `reload` refreshes the list on screen afterwards. A single row is deleted
+// without a question and can be taken back for a few seconds; a selection and a receipt still ask first.
+export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, reload: () => Promise<void> | void, lists: ExpenseLists) {
   const vehicleStore = useVehicleStore()
   const { showConfirm, showAlert } = useConfirm()
 
-  async function handleDeleteToll(e: any) {
-    if (!vehicleStore.activeVehicle) return
-    const ok = await showConfirm({
-      title: t('expenses.expensesView.deleteExpenseTitle'),
-      message: t('expenses.expensesView.deleteTollMessage', { amount: formatAmount(Number(e.amount), e.currency || vehicleStore.currency) }),
-      confirmText: t('common.delete'),
-      type: 'danger',
+  function deleteRow(list: Ref<any[]>, row: any, message: string, remove: (vehicleId: string, id: string) => Promise<unknown>) {
+    const vehicle = vehicleStore.activeVehicle
+    if (!vehicle) return
+    const index = list.value.findIndex((r) => r.id === row.id)
+    deleteWithUndo({
+      message,
+      hide: () => {
+        list.value = list.value.filter((r) => r.id !== row.id)
+      },
+      restore: () => {
+        if (list.value.some((r) => r.id === row.id)) return
+        const next = [...list.value]
+        next.splice(Math.min(Math.max(index, 0), next.length), 0, row)
+        list.value = next
+      },
+      commit: () => remove(vehicle.id, row.id),
+      committed: () => void reload(),
+      onError: (err: any) => void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger'),
     })
-    if (!ok) return
-    try {
-      await api.deleteDriveExpense(vehicleStore.activeVehicle.id, e.id)
-      await reload()
-    } catch (err: any) {
-      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
   }
 
-  async function handleDeleteMaint(m: any) {
-    if (!vehicleStore.activeVehicle) return
-    const ok = await showConfirm({
-      title: t('expenses.expensesView.deleteExpenseTitle'),
-      message: t('expenses.expensesView.deleteExpenseMessage', { description: m.description, amount: formatAmount(Number(m.amount), m.currency || vehicleStore.currency) }),
-      confirmText: t('common.delete'),
-      type: 'danger',
-    })
-    if (!ok) return
-    try {
-      await api.deleteMaintenance(vehicleStore.activeVehicle.id, m.id)
-      await reload()
-    } catch (err: any) {
-      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
+  function handleDeleteToll(row: any) {
+    deleteRow(lists.tolls, row, t('expenses.expensesView.costDeleted'), (v, id) => api.deleteDriveExpense(v, id))
   }
 
-  async function handleDeleteCharge(c: any) {
-    if (!vehicleStore.activeVehicle) return
-    const ok = await showConfirm({
-      title: t('expenses.expensesView.deleteChargeTitle'),
-      message: t('expenses.expensesView.deleteChargeMessage', { kwh: formatNumber(c.kwh_added, 2) }),
-      confirmText: t('common.delete'),
-      type: 'danger',
-    })
-    if (!ok) return
-    try {
-      await api.deleteCharge(vehicleStore.activeVehicle.id, c.id)
-      await reload()
-    } catch (err: any) {
-      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
+  function handleDeleteMaint(row: any) {
+    deleteRow(lists.maintenance, row, t('expenses.expensesView.costDeleted'), (v, id) => api.deleteMaintenance(v, id))
+  }
+
+  function handleDeleteCharge(row: any) {
+    deleteRow(lists.charges, row, t('expenses.expensesView.chargeDeleted'), (v, id) => api.deleteCharge(v, id))
   }
 
   async function handleDeleteDocument(doc: ExpenseDocumentHeader) {

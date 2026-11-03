@@ -88,6 +88,44 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect(page.getByText(title)).toHaveCount(0)
 })
 
+test('a cost deleted on a phone goes at once, comes back with Undo, and is only deleted once the time to undo is over', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const description = `Undo probe ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/maintenance`, {
+    headers,
+    data: { description, amount: '12.34', date: new Date().toISOString().slice(0, 10), odometer: 1, category: 'OTHER', type: 'OTHER' },
+  })
+  expect(created.status()).toBe(201)
+  const rows = async () => ((await (await request.get(`/api/vehicles/${ev.id}/maintenance`, { headers })).json()) as { description: string }[]).filter((m) => m.description === description).length
+
+  try {
+    await useVehicle(page, ev.id, '/maintenance')
+    const cdp = await page.context().newCDPSession(page)
+    const deleteFromSelection = async () => {
+      const box = (await page.locator('div.card', { hasText: description }).first().boundingBox())!
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
+      await expect(page.locator('[data-selection-bar]')).toBeVisible()
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+      await page.locator('[data-selection-bar]').getByRole('button', { name: 'Delete' }).click()
+    }
+
+    await deleteFromSelection()
+    await expect(page.getByText(description)).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(await rows()).toBe(1)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(page.getByText(description)).toBeVisible()
+    expect(await rows()).toBe(1)
+
+    await deleteFromSelection()
+    await expect.poll(rows, { timeout: 12_000 }).toBe(0)
+    await expect(page.getByText(description)).toHaveCount(0)
+  } finally {
+    const left = (await (await request.get(`/api/vehicles/${ev.id}/maintenance`, { headers })).json()) as { id: string; description: string }[]
+    for (const m of left.filter((x) => x.description === description)) await request.delete(`/api/vehicles/${ev.id}/maintenance/${m.id}`, { headers })
+  }
+})
+
 // A finger on the screen: Playwright has no swipe, so the touch is dispatched through the browser's input domain.
 async function swipeDown(page: Page, x: number, y: number, distance: number, steps = 10) {
   const cdp = await page.context().newCDPSession(page)

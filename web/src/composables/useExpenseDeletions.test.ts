@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { t } from '@/i18n'
 import { useExpenseDeletions } from './useExpenseDeletions'
+import { UNDO_MS } from './useUndoableDelete'
+import { useToast } from './useToast'
+
+const { toasts } = useToast()
 
 const api = vi.hoisted(() => ({ deleteDriveExpense: vi.fn(), deleteMaintenance: vi.fn(), deleteCharge: vi.fn(), deleteDocument: vi.fn() }))
 vi.mock('@/services/api', () => ({ api }))
@@ -12,13 +16,19 @@ vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => confirm }))
 
 const setup = () => {
   const documents = ref<any[]>([{ id: 'doc1', filename: 'a.pdf' }, { id: 'doc2', filename: 'b.pdf' }])
+  const lists = {
+    tolls: ref<any[]>([{ id: 'x1' }, { id: 't1' }, { id: 't2' }]),
+    maintenance: ref<any[]>([{ id: 'x1' }, { id: 'm1' }]),
+    charges: ref<any[]>([{ id: 'x1' }, { id: 'c1' }]),
+  }
   const reload = vi.fn().mockResolvedValue(undefined)
-  return { documents, reload, h: useExpenseDeletions(documents, reload) }
+  return { documents, lists, reload, h: useExpenseDeletions(documents, reload, lists) }
 }
 
 describe('useExpenseDeletions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers()
     store.activeVehicle = { id: 'v1' }
     confirm.showConfirm.mockResolvedValue(true)
     for (const fn of Object.values(api)) fn.mockResolvedValue(undefined)
@@ -31,14 +41,31 @@ describe('useExpenseDeletions', () => {
     ['charges', 'handleDeleteCharges', 'deleteCharge'],
   ] as const
 
+  const listOf = { tolls: 'tolls', 'maintenance entries': 'maintenance', charges: 'charges' } as const
+
   for (const [label, handler, call] of kinds) {
-    it(`deletes a single one of the ${label} after its own confirmation, then reloads`, async () => {
-      const { h, reload } = setup()
+    it(`takes a single one of the ${label} off the list at once and deletes it once the time to undo is over`, async () => {
+      const { h, reload, lists } = setup()
+      const list = lists[listOf[label]]
       await h[handler]([{ id: 'x1', amount: '12', kwh_added: 30, description: 'Oil' }])
-      expect(confirm.showConfirm).toHaveBeenCalledTimes(1)
-      expect(confirm.showConfirm.mock.calls[0][0].message).not.toBe(t('expenses.expensesView.deleteManyMessage', { count: 1 }))
+      expect(confirm.showConfirm).not.toHaveBeenCalled()
+      expect(list.value.map((r) => r.id)).not.toContain('x1')
+      expect(api[call]).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
       expect(api[call]).toHaveBeenCalledWith('v1', 'x1')
       expect(reload).toHaveBeenCalledTimes(1)
+    })
+
+    it(`puts a single one of the ${label} back where it was when the deletion is taken back`, async () => {
+      const { h, reload, lists } = setup()
+      const list = lists[listOf[label]]
+      const before = list.value.map((r) => r.id)
+      await h[handler]([{ id: 'x1' }])
+      toasts.value.at(-1)!.action!.run()
+      expect(list.value.map((r) => r.id)).toEqual(before)
+      await vi.advanceTimersByTimeAsync(UNDO_MS * 2)
+      expect(api[call]).not.toHaveBeenCalled()
+      expect(reload).not.toHaveBeenCalled()
     })
 
     it(`asks once for a selection of ${label}, deletes them one by one and reloads`, async () => {
@@ -58,10 +85,13 @@ describe('useExpenseDeletions', () => {
       expect(reload).not.toHaveBeenCalled()
     })
 
-    it(`reports a failure of one single delete of the ${label} without reloading`, async () => {
+    it(`brings a single one of the ${label} back and reports it when the server refuses the delete`, async () => {
       api[call].mockRejectedValueOnce(new Error('boom'))
-      const { h, reload } = setup()
-      await h[handler]([{ id: 'x1', amount: '1', kwh_added: 1 }])
+      const { h, reload, lists } = setup()
+      const list = lists[listOf[label]]
+      await h[handler]([{ id: 'x1' }])
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(list.value.map((r) => r.id)).toContain('x1')
       expect(confirm.showAlert).toHaveBeenCalledWith(t('common.deleteError', { message: 'boom' }), t('shell.confirm.error'), 'danger')
       expect(reload).not.toHaveBeenCalled()
     })
@@ -89,14 +119,6 @@ describe('useExpenseDeletions', () => {
     await h.handleDeleteDocument({ id: 'doc1', filename: 'a.pdf' } as any)
     expect(confirm.showConfirm).not.toHaveBeenCalled()
     expect(reload).not.toHaveBeenCalled()
-  })
-
-  it('formats a single amount in the row currency, falling back to the vehicle one', async () => {
-    const { h } = setup()
-    await h.handleDeleteToll({ id: 't1', amount: '5', currency: 'USD' })
-    await h.handleDeleteToll({ id: 't2', amount: '5' })
-    const [usd, eur] = confirm.showConfirm.mock.calls.map((c) => c[0].message as string)
-    expect(usd).not.toBe(eur)
   })
 
   it('removes a deleted receipt from the list, confirms it and reloads', async () => {
