@@ -33,10 +33,16 @@ export function browserEnv(win: Window = window, doc: Document = document): Tran
 
 type StartViewTransition = (update: () => Promise<void>) => unknown
 
+/** The browser's `startViewTransition`, bound to the document; null where there is none. */
+export function browserStart(doc: Document | undefined = typeof document === 'undefined' ? undefined : document): StartViewTransition | null {
+  const start = (doc as (Document & { startViewTransition?: StartViewTransition }) | undefined)?.startViewTransition
+  return typeof start === 'function' ? start.bind(doc) : null
+}
+
 export function installViewTransitions(
   router: Pick<Router, 'beforeResolve' | 'afterEach' | 'onError'>,
   env: () => TransitionEnv = browserEnv,
-  start: () => StartViewTransition | null = () => (typeof document !== 'undefined' && 'startViewTransition' in document ? (document as unknown as { startViewTransition: StartViewTransition }).startViewTransition.bind(document) : null),
+  start: () => StartViewTransition | null = browserStart,
 ) {
   let finish: (() => void) | null = null
   const end = () => {

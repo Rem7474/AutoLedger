@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { HOLD_MS, installViewTransitions, shouldAnimate, type TransitionEnv } from './viewTransition'
+import { browserEnv, browserStart, HOLD_MS, installViewTransitions, shouldAnimate, type TransitionEnv } from './viewTransition'
 
 const phone: TransitionEnv = { supported: true, phone: true, reducedMotion: false }
 
@@ -81,5 +81,24 @@ describe('installViewTransitions', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('the browser', () => {
+  const win = (matches: Record<string, boolean>) => ({ matchMedia: (query: string) => ({ matches: Object.entries(matches).some(([part, on]) => on && query.includes(part)) }) }) as unknown as Window
+
+  it('reads the phone width, the motion preference and the API from the window and document', () => {
+    const withApi = { startViewTransition: () => {} } as unknown as Document
+    expect(browserEnv(win({ 'max-width': true }), withApi)).toEqual({ supported: true, phone: true, reducedMotion: false })
+    expect(browserEnv(win({ 'prefers-reduced-motion': true }), {} as Document)).toEqual({ supported: false, phone: false, reducedMotion: true })
+  })
+
+  it('finds startViewTransition on the document, bound to it, or nothing', () => {
+    const calls: unknown[] = []
+    const doc = { startViewTransition(this: unknown) { calls.push(this) } } as unknown as Document
+    browserStart(doc)!(async () => {})
+    expect(calls).toEqual([doc])
+    expect(browserStart({} as Document)).toBeNull()
+    expect(browserStart(undefined)).toBeNull()
   })
 })
