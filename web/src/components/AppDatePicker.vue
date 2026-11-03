@@ -3,7 +3,10 @@ import { computed } from 'vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { enGB, fr } from 'date-fns/locale'
 import { format } from 'date-fns'
+import { X } from 'lucide-vue-next'
 import { currentLocale, t } from '@/i18n'
+import { useIsMobile } from '@/composables/useIsMobile'
+import { nativeKind, supportsNativeInput, toNativeValue } from '@/utils/nativeDate'
 
 const props = withDefaults(
   defineProps<{
@@ -34,6 +37,24 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'change', value: string): void
 }>()
+
+// On a phone the field is the browser's own: the wheels of iOS, the dialog of Android. The floating calendar stays on
+// the desktop, and wherever the browser has no picker for the kind (month on some browsers).
+const isMobile = useIsMobile()
+const kind = computed(() => nativeKind(props))
+const native = computed(() => isMobile.value && supportsNativeInput(kind.value))
+const nativeValue = computed(() => toNativeValue(props.modelValue, kind.value))
+
+function onNativeChange(e: Event) {
+  const value = (e.target as HTMLInputElement).value
+  emit('update:modelValue', value)
+  emit('change', value)
+}
+
+function clearNative() {
+  emit('update:modelValue', '')
+  emit('change', '')
+}
 
 const dateLocale = computed(() => (currentLocale() === 'fr' ? fr : enGB))
 
@@ -127,7 +148,20 @@ const actionRowConfig = computed(() => ({
 </script>
 
 <template>
-  <div :class="['app-datepicker-wrapper', `size-${size}`, { 'is-disabled': disabled }]">
+  <div v-if="native" class="flex items-center gap-1">
+    <input
+      :id="id"
+      :type="kind"
+      :value="nativeValue"
+      :disabled="disabled"
+      class="field app-native-date"
+      @change="onNativeChange"
+    />
+    <button v-if="isClearable && nativeValue && !disabled" type="button" class="tap shrink-0 text-slate-400" :aria-label="$t('shell.datePicker.clear')" @click="clearNative">
+      <X class="h-4 w-4" aria-hidden="true" />
+    </button>
+  </div>
+  <div v-else :class="['app-datepicker-wrapper', `size-${size}`, { 'is-disabled': disabled }]">
     <VueDatePicker
       :uid="id"
       v-model="internalValue"
@@ -150,6 +184,21 @@ const actionRowConfig = computed(() => ({
 </template>
 
 <style scoped>
+/* iOS draws a date field with its own height and centres the value: align it with the other fields. */
+.app-native-date {
+  appearance: none;
+  min-height: 2.75rem;
+  text-align: left;
+}
+
+.app-native-date::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.app-native-date::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+}
+
 .app-datepicker-wrapper {
   width: 100%;
 }

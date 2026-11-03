@@ -93,7 +93,10 @@
     "dateTimePlaceholder": "JJ/MM/AAAA HH:mm",
     "today": "Aujourd'hui",
     "confirm": "Valider",
-    "rangePlaceholder": "Choisir une période"
+    "rangePlaceholder": "Choisir une période",
+    "clear": "Effacer la date",
+    "rangeFrom": "Du",
+    "rangeTo": "Au"
   },
   "language": {
     "label": "Langue"
