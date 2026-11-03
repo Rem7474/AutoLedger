@@ -219,12 +219,8 @@ onMounted(load)
 
 <template>
   <div class="space-y-3">
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2 text-sm font-semibold text-white">
-        <Fuel class="w-4 h-4 text-warning-400" /> {{ $t('manual.fuelLogsPanel.fuelFillUps') }}
-      </div>
+    <div v-if="canEdit" class="flex items-center justify-end gap-3">
       <button
-        v-if="canEdit"
         type="button"
         class="btn btn-lg btn-primary"
         @click="openAdd"
@@ -288,7 +284,7 @@ onMounted(load)
           @contextmenu="press.onContextmenu"
         />
         <RowSelectBox v-if="showBox" :id="log.id" :checked="isSelected(log)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(log)" />
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
             {{ fmtDate(log.date) }}
             <template v-if="log.odometer != null"> · {{ formatDistance(log.odometer) }}</template>
@@ -299,7 +295,7 @@ onMounted(load)
             {{ fmtMoney(log.amount) }}
             <template v-if="log.liters"> · {{ formatVolumeValue(log.liters, 2) }} {{ volumeUnitLabel() }}</template>
             <template v-if="log.price_per_liter"> · {{ fmtMoney(perVolume(log.price_per_liter), 3) }}/{{ volumeUnitLabel() }}</template>
-            <template v-if="log.consumption_l_100km"> · <span class="text-success-300">{{ log.segment_estimated ? '≈ ' : '' }}{{ formatFuelConsumptionValue(log.consumption_l_100km, 2) }} {{ fuelConsumptionUnit() }}</span></template>
+            <template v-if="log.consumption_l_100km"> · <span class="text-slate-300">{{ log.segment_estimated ? '≈ ' : '' }}{{ formatFuelConsumptionValue(log.consumption_l_100km, 2) }} {{ fuelConsumptionUnit() }}</span></template>
             <template v-if="log.cost_per_km"> · {{ fmtMoney(perDistance(log.cost_per_km), 3) }}/{{ distanceUnit() }}</template>
           </div>
         </div>

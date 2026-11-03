@@ -148,7 +148,7 @@ async function handleDriverChange(event: Event) {
           >
             <ArrowLeft class="w-4 h-4" />
           </button>
-          <div class="p-2 rounded-xl shrink-0" :class="selectedCostDrive.is_trip_group ? 'bg-sky-500/10 text-sky-400' : 'bg-success-500/10 text-success-400'">
+          <div class="p-2 rounded-xl shrink-0 bg-slate-800 text-slate-300">
             <component :is="selectedCostDrive.is_trip_group ? Layers : Coins" class="w-5 h-5" />
           </div>
           <div class="min-w-0 truncate">
@@ -197,7 +197,7 @@ async function handleDriverChange(event: Event) {
               class="px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all"
               :class="
                 selectedCostDrive.tags?.includes('Pro')
-                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/40 shadow-sm'
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               "
             >
@@ -209,7 +209,7 @@ async function handleDriverChange(event: Event) {
               class="px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all"
               :class="
                 selectedCostDrive.tags?.includes('Perso')
-                  ? 'bg-success-500/20 text-success-400 border-success-500/40 shadow-sm'
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               "
             >

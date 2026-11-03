@@ -140,7 +140,7 @@ onMounted(() => {
   <ModalShell v-model:open="open" size="md" nested body-class="space-y-4 text-xs">
     <template #title>
         <div class="flex items-center gap-2">
-          <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+          <div class="p-2 bg-slate-800 text-slate-300 rounded-lg">
             <Calculator class="w-4 h-4" />
           </div>
           <div>
@@ -156,7 +156,7 @@ onMounted(() => {
           <select
             id="public-preset-select"
             v-model="selectedPresetId"
-            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-slate-400 focus:outline-none"
           >
             <option value="">{{ t('tariffs.publicModal.customPricing') }}</option>
             <option v-for="p in presets" :key="p.id" :value="p.id">
@@ -174,7 +174,7 @@ onMounted(() => {
               v-model="kwh"
               min="0"
               placeholder="0.00"
-              class="field focus:border-blue-500"
+              class="field focus:border-slate-400"
             />
           </div>
           <div>
@@ -187,7 +187,7 @@ onMounted(() => {
               step="1"
               min="0"
               placeholder="0"
-              class="field focus:border-blue-500"
+              class="field focus:border-slate-400"
             />
           </div>
           <div>
@@ -200,7 +200,7 @@ onMounted(() => {
               step="1"
               min="0"
               placeholder="0"
-              class="field focus:border-blue-500"
+              class="field focus:border-slate-400"
             />
           </div>
         </div>
@@ -216,7 +216,7 @@ onMounted(() => {
                 v-model="connectionFee"
                 min="0"
                 placeholder="0.00"
-                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-blue-500 focus:outline-none"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-slate-400 focus:outline-none"
               />
             </div>
             <div>
@@ -226,7 +226,7 @@ onMounted(() => {
                 v-model="costPerKwh"
                 min="0"
                 placeholder="0.00"
-                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-blue-500 focus:outline-none"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-slate-400 focus:outline-none"
               />
             </div>
             <div>
@@ -236,7 +236,7 @@ onMounted(() => {
                 v-model="costPerMinute"
                 min="0"
                 placeholder="0.00"
-                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-blue-500 focus:outline-none"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-slate-400 focus:outline-none"
               />
             </div>
             <div>
@@ -246,7 +246,7 @@ onMounted(() => {
                 v-model="idleFeePerMinute"
                 min="0"
                 placeholder="0.00"
-                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-blue-500 focus:outline-none"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-slate-400 focus:outline-none"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ onMounted(() => {
               step="1"
               min="0"
               placeholder="ex: 5 min"
-              class="w-1/2 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-blue-500 focus:outline-none"
+              class="w-1/2 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-slate-400 focus:outline-none"
             />
           </div>
         </div>
@@ -271,7 +271,7 @@ onMounted(() => {
             <button
               type="button"
               @click="showSavePreset = true"
-              class="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-medium"
+              class="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 font-medium"
             >
               <BookmarkPlus class="w-3.5 h-3.5" />
               {{ t('tariffs.publicModal.saveAsPreset') }}
@@ -284,7 +284,7 @@ onMounted(() => {
               v-model="savePresetName"
               type="text"
               placeholder="ex: Ionity Direct"
-              class="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-blue-500 focus:outline-none"
+              class="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-slate-400 focus:outline-none"
             />
             <button
               type="button"
@@ -305,15 +305,15 @@ onMounted(() => {
         </div>
 
         <!-- Breakdown Result -->
-        <div v-if="breakdown" class="p-3.5 bg-blue-950/20 border border-blue-500/30 rounded-xl space-y-2">
+        <div v-if="breakdown" class="p-3.5 bg-slate-800/50 border border-slate-700 rounded-xl space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-bold text-white text-sm">{{ t('tariffs.publicModal.estimatedTotal') }}</span>
-            <span class="font-extrabold text-base text-blue-400">
+            <span class="font-extrabold text-base text-white">
               {{ formatAmount(breakdown.total_cost, currency) }}
             </span>
           </div>
 
-          <div class="space-y-1 pt-2 border-t border-blue-500/20 text-xs text-slate-300">
+          <div class="space-y-1 pt-2 border-t border-slate-700 text-xs text-slate-300">
             <div v-if="breakdown.connection_cost > 0" class="flex justify-between">
               <span>{{ t('tariffs.publicModal.breakdownConnection') }}</span>
               <span>{{ formatAmount(breakdown.connection_cost, currency) }}</span>

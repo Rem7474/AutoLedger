@@ -30,12 +30,12 @@ const live = computed(() => allocate(props.trip?.legs || [], props.trip?.passeng
 const revenue = computed(() => passengers.value.reduce((sum, p) => sum + cents(p.amount_paid), 0))
 // Same icons, colors and labels as the cost rows of the drive detail
 const ROWS = {
-  energy: { icon: Zap, tone: 'sky', label: 'drives.driveCostModal.electricEnergy' },
-  tires: { icon: Disc, tone: 'emerald', label: 'drives.driveCostModal.tireWear' },
-  maintenance: { icon: Wrench, tone: 'pink', label: 'drives.driveCostModal.maintenanceProvision' },
-  insurance: { icon: Shield, tone: 'purple', label: 'drives.driveCostModal.insuranceShareFixedCost' },
-  tolls: { icon: Receipt, tone: 'amber', label: 'drives.driveCostModal.tollsAndRoadCosts' },
-  other: { icon: Receipt, tone: 'slate', label: 'dashboard.breakdown.other' },
+  energy: { icon: Zap, label: 'drives.driveCostModal.electricEnergy' },
+  tires: { icon: Disc, label: 'drives.driveCostModal.tireWear' },
+  maintenance: { icon: Wrench, label: 'drives.driveCostModal.maintenanceProvision' },
+  insurance: { icon: Shield, label: 'drives.driveCostModal.insuranceShareFixedCost' },
+  tolls: { icon: Receipt, label: 'drives.driveCostModal.tollsAndRoadCosts' },
+  other: { icon: Receipt, label: 'dashboard.breakdown.other' },
 } as const
 const stops = computed(() => stopNames(props.trip?.legs || []))
 // The default title is the route: the route is written again only for a title the user changed
@@ -152,7 +152,6 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
               <CostItemRow
                 v-if="item.amount > 0 || item.key !== 'other'"
                 :icon="ROWS[item.key as keyof typeof ROWS].icon"
-                :tone="ROWS[item.key as keyof typeof ROWS].tone"
                 :label="$t(ROWS[item.key as keyof typeof ROWS].label)"
                 :amount="item.amount"
                 :share-pct="item.sharePct"

@@ -261,7 +261,7 @@ watch(
   <div class="bg-slate-800/40 border border-slate-800 p-3 rounded-xl space-y-2">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="p-2 bg-warning-500/10 text-warning-400 rounded-lg">
+        <div class="p-2 bg-slate-800 text-slate-300 rounded-lg">
           <Receipt class="w-4 h-4" />
         </div>
         <div>
@@ -273,8 +273,8 @@ watch(
       </div>
       <div class="flex items-center gap-2">
         <div class="text-right">
-          <div class="text-sm font-bold text-warning-400 font-mono">{{ formatAmount(selectedCostDrive.costs?.tolls_cost || 0, vehicleCurrency) }}</div>
-          <div class="text-xs text-slate-400 font-normal font-sans">({{ formatPercent(breakdown.byKey.tolls.sharePct) }}) · <span class="text-success-400">{{ formatAmount(perDistance(breakdown.byKey.tolls.costPerKm), vehicleCurrency, 3) }}/{{ distanceUnit() }}</span></div>
+          <div class="text-sm font-bold tabular-nums text-white">{{ formatAmount(selectedCostDrive.costs?.tolls_cost || 0, vehicleCurrency) }}</div>
+          <div class="text-xs text-slate-400 font-normal font-sans">({{ formatPercent(breakdown.byKey.tolls.sharePct) }}) · <span>{{ formatAmount(perDistance(breakdown.byKey.tolls.costPerKm), vehicleCurrency, 3) }}/{{ distanceUnit() }}</span></div>
         </div>
         <button
           v-if="canDetectTolls"

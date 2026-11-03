@@ -461,7 +461,7 @@ onBeforeUnmount(() => {
       <div v-if="showDrivers" class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
         <div class="border-b border-slate-800/80 pb-3">
           <h2 class="text-base font-semibold text-white flex items-center gap-2">
-            <Users class="w-4 h-4 text-blue-400" />
+            <Users class="w-4 h-4 text-slate-300" />
             {{ t('fleet.drivers.title') }}
           </h2>
           <p class="text-xs text-slate-400 mt-1">{{ t('fleet.drivers.subtitle') }}</p>
@@ -475,13 +475,13 @@ onBeforeUnmount(() => {
           >
             <div class="flex items-center justify-between text-xs">
               <span class="font-medium text-slate-200 truncate">{{ member.display_name }}</span>
-              <span class="text-slate-400 shrink-0 font-mono">
+              <span class="text-slate-400 shrink-0 tabular-nums">
                 {{ formatDistance(member.distance_km) }} ({{ formatPercent(member.percentage) }})
               </span>
             </div>
             <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(Math.min(100, Math.max(0, member.percentage)))" :aria-label="member.display_name">
               <div
-                class="h-full bg-gradient-to-r from-blue-500 to-sky-500 rounded-full transition-all duration-500"
+                class="h-full bg-slate-300 rounded-full transition-all duration-500"
                 :style="{ width: `${Math.min(100, Math.max(0, member.percentage))}%` }"
               ></div>
             </div>

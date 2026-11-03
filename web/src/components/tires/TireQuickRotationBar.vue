@@ -41,7 +41,7 @@ const handleQuickRotate = (mode: 'FRONT_BACK' | 'CROSS') => runOnce(() => quickR
         :title="$t('tires.tiresView.rotateTooltip', { pairs: 'FL ⇄ RL, FR ⇄ RR' })"
         class="tap btn btn-secondary"
       >
-        <ArrowUpDown class="w-3.5 h-3.5 text-blue-400" />
+        <ArrowUpDown class="w-3.5 h-3.5 text-slate-400" />
         {{ $t('tires.tiresView.frontRear') }}
       </button>
       <button

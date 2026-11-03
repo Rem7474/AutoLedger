@@ -112,11 +112,11 @@ function openCarpool() {
         </span>
         <span
           v-if="prefs.proPersoEnabled && d.tags?.includes('Pro')"
-          class="px-2 py-0.5 rounded-full font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30"
+          class="px-2 py-0.5 rounded-full font-semibold bg-slate-800 text-slate-300 border border-slate-700/60"
         >{{ $t('drives.driveCard.work') }}</span>
         <span
           v-if="prefs.proPersoEnabled && d.tags?.includes('Perso')"
-          class="px-2 py-0.5 rounded-full font-semibold bg-success-500/15 text-success-300 border border-success-500/30"
+          class="px-2 py-0.5 rounded-full font-semibold bg-slate-800 text-slate-300 border border-slate-700/60"
         >{{ $t('drives.driveCard.personal') }}</span>
         <span v-if="d.is_manual && showManualBadge" class="px-2 py-0.5 rounded-full font-semibold bg-slate-800 text-slate-300 border border-slate-700/60">{{ $t('drives.drivesView.manual') }}</span>
         <button

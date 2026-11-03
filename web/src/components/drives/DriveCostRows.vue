@@ -12,7 +12,6 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
   <!-- 1. Électricité -->
   <CostItemRow
     :icon="Zap"
-    tone="sky"
     :label="$t('drives.driveCostModal.electricEnergy')"
     :sub="$t('drives.driveCostModal.kwhKwh', { electricity_kwh: drive.costs?.electricity_kwh || 0, electricity_rate: formatAmount(drive.costs?.electricity_rate ?? 0, currency, 3) })"
     :amount="drive.costs?.electricity_cost || 0"
@@ -29,7 +28,6 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
   <!-- 2. Pneus -->
   <CostItemRow
     :icon="Disc"
-    tone="emerald"
     :label="$t('drives.driveCostModal.tireWear')"
     :sub="`${formatDistance(drive.distance_km, 1)} × ${formatAmount(perDistance(drive.costs?.tires_rate ?? 0), currency, 3)}/${distanceUnit()}`"
     :amount="drive.costs?.tires_cost || 0"
@@ -46,7 +44,6 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
   <!-- 3. Entretien -->
   <CostItemRow
     :icon="Wrench"
-    tone="pink"
     :label="$t('drives.driveCostModal.maintenanceProvision')"
     :sub="`${formatDistance(drive.distance_km, 1)} × ${formatAmount(perDistance(drive.costs?.maintenance_rate ?? 0), currency, 3)}/${distanceUnit()}`"
     :amount="drive.costs?.maintenance_cost || 0"
@@ -63,7 +60,6 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
   <!-- 4. Assurance -->
   <CostItemRow
     :icon="Shield"
-    tone="purple"
     :label="$t('drives.driveCostModal.insuranceShareFixedCost')"
     :sub="`${formatDistance(drive.distance_km, 1)} × ${formatAmount(perDistance(drive.costs?.insurance_rate || 0), currency, 3)}/${distanceUnit()}`"
     :amount="drive.costs?.insurance_cost || 0"
@@ -74,7 +70,7 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
     <template #badge>
       <span
         v-if="drive.costs?.insurance_source === 'RECORDED_EXPENSES'"
-        class="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium"
+        class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-medium"
         :title="$t('drives.driveCostModal.premiumsPaidOverTheLast')"
       >
         {{ $t('drives.driveCostModal.actualPremiums') }}

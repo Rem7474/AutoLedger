@@ -261,7 +261,7 @@ async function onLogSaved() {
           class="btn btn-lg btn-secondary"
           :title="$t('tires.tiresView.swapTheFittedSetWith')"
         >
-          <Snowflake class="w-4 h-4 text-info-400" />
+          <Snowflake class="w-4 h-4 text-slate-300" />
           <span>{{ $t('tires.tiresView.changeSet') }}</span>
         </button>
 

@@ -71,7 +71,7 @@ const leaseContract = computed(() => buildLeaseSummary(props.tco))
         <!-- Progress Bar Track -->
         <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(Math.min(100, leaseContract.durationProgressPct))" :aria-label="$t('dashboard.leaseContractCard.durationProgress')">
           <div
-            class="h-full bg-gradient-to-r from-sky-500 to-sky-500 rounded-full transition-all duration-500"
+            class="h-full bg-slate-300 rounded-full transition-all duration-500"
             :style="{ width: `${leaseContract.durationProgressPct}%` }"
           ></div>
         </div>

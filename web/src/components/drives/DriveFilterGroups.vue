@@ -76,7 +76,7 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
         @click="selectedTag = 'Pro'"
         :aria-pressed="selectedTag === 'Pro'"
         class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-        :class="selectedTag === 'Pro' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
+        :class="selectedTag === 'Pro' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
       >
         {{ $t('drives.drivesView.work') }}
       </button>
@@ -84,7 +84,7 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
         @click="selectedTag = 'Perso'"
         :aria-pressed="selectedTag === 'Perso'"
         class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-        :class="selectedTag === 'Perso' ? 'bg-success-500/20 text-success-400 border border-success-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
+        :class="selectedTag === 'Perso' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
       >
         {{ $t('drives.drivesView.personal') }}
       </button>
