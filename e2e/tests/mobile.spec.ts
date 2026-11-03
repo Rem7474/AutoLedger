@@ -78,7 +78,7 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect(page.getByText(title).first()).toBeVisible()
 
   // On a phone the row has no menu: a long press selects the carpool and the bar carries the delete action
-  const box = (await page.locator('div.rounded-2xl', { hasText: title }).first().boundingBox())!
+  const box = (await page.locator('div.card', { hasText: title }).first().boundingBox())!
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
   await expect(page.locator('[data-selection-bar]')).toBeVisible()
@@ -136,7 +136,7 @@ test('a sheet is also closed by pulling its content down, but not from a field',
 
 test('the Back gesture leaves the selection instead of the page', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
-  const row = page.locator('div.relative.rounded-2xl', { has: page.getByRole('button', { name: /^Open the cost breakdown/ }) }).first()
+  const row = page.locator('div.relative.card', { has: page.getByRole('button', { name: /^Open the cost breakdown/ }) }).first()
   const box = (await row.boundingBox())!
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
