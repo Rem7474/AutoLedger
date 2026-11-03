@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { X, MoreVertical } from 'lucide-vue-next'
 import { barActions, phoneShortcuts, type SelectionAction } from '@/utils/selectionActions'
 import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 import { useIsMobile } from '@/composables/useIsMobile'
 import ModalShell from '@/components/ModalShell.vue'
+import { useBackToClose } from '@/composables/useBackToClose'
 
 const props = withDefaults(
   defineProps<{
@@ -39,6 +40,53 @@ const moreOpen = ref(false)
 const hasMore = computed(() => props.actions.length > 0 && (isMobile.value || props.actions.some((a) => a.overflow && !a.phoneOnly)))
 const moreRoot = ref<HTMLElement | null>(null)
 
+// The bar slides out after the last row is deselected: it keeps showing the last counter while it leaves
+const shownCount = ref(props.count)
+watch(
+  () => props.count,
+  (c) => {
+    if (c > 0) shownCount.value = c
+  }
+)
+
+// On a phone the system Back (gesture or button) leaves the selection instead of the page
+useBackToClose(
+  () => isMobile.value && props.count > 0,
+  () => {
+    if (props.disabled) return false
+    emit('clear')
+    return true
+  }
+)
+
+// Closing the selection hands the focus back to the last row that had it, unless that row is gone. The row takes the
+// focus after the press that started the selection, so it is tracked while the bar is up rather than read when it opens.
+let opener: HTMLElement | null = null
+function onFocusIn(e: FocusEvent) {
+  const el = e.target
+  if (el instanceof HTMLElement && !el.closest('[data-selection-bar], [role="dialog"]')) opener = el
+}
+watch(
+  () => props.count > 0,
+  (on) => {
+    if (on) {
+      if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) opener = document.activeElement
+      document.addEventListener('focusin', onFocusIn)
+      return
+    }
+    document.removeEventListener('focusin', onFocusIn)
+    const el = opener
+    opener = null
+    if (!el) return
+    void nextTick(() => {
+      // The bar is still in the page while it slides out, so the focus can still be on one of its buttons
+      const active = document.activeElement
+      if (el.isConnected && (!active || active === document.body || active.closest('[data-selection-bar]'))) el.focus({ preventScroll: true })
+    })
+  }
+)
+onUnmounted(() => document.removeEventListener('focusin', onFocusIn))
+
 function onKeyDown(e: KeyboardEvent) {
   if (e.key !== 'Escape' || hasOpenEscapeLayer()) return
   if (moreOpen.value) {
@@ -68,9 +116,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <template v-if="count > 0">
-    <Teleport to="body" :disabled="!isMobile">
+  <Teleport to="body" :disabled="!isMobile">
+    <Transition name="selection-bar">
     <div
+      v-if="count > 0"
+      data-selection-bar
       class="fixed inset-x-0 top-0 z-[55] flex items-center justify-between gap-1 rounded-b-2xl border border-t-0 border-slate-800 bg-slate-900 px-2 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] shadow-2xl shadow-black/40 transition-all sm:sticky sm:inset-x-auto sm:bottom-auto sm:top-16 sm:z-30 sm:flex-wrap sm:gap-3 sm:rounded-2xl sm:border-t sm:border-slate-700/80 sm:bg-slate-800/95 sm:p-3 sm:shadow-2xl sm:backdrop-blur-md"
     >
       <!-- Phone: close, counter, shortcuts and "more" on one line. Desktop: counter on the left, buttons on the right -->
@@ -85,11 +135,11 @@ onUnmounted(() => {
           <X class="h-5 w-5" aria-hidden="true" />
         </button>
         <span class="px-2.5 py-0.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg border border-rose-500/30 max-sm:hidden">
-          {{ count }}
+          {{ shownCount }}
         </span>
         <span class="truncate text-lg font-medium text-white sm:text-sm sm:font-semibold sm:text-slate-200">
-          <span class="sm:hidden">{{ count }}</span>
-          {{ $t(`shell.bulkSelectionBar.selected.${noun}`, count) }}
+          <span class="sm:hidden">{{ shownCount }}</span>
+          {{ $t(`shell.bulkSelectionBar.selected.${noun}`, shownCount) }}
         </span>
 
         <span v-if="metricsSummary" class="hidden sm:inline-flex items-center text-xs text-slate-400 border-l border-slate-700/80 pl-2.5 ml-0.5 font-medium">
@@ -185,9 +235,11 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
-    </Teleport>
+    </Transition>
+  </Teleport>
 
-    <!-- Phone: every action, the ones that do not apply greyed with the reason -->
+  <!-- Phone: every action, the ones that do not apply greyed with the reason -->
+  <template v-if="count > 0">
     <Teleport v-if="isMobile" to="body">
       <ModalShell v-model:open="moreOpen" :title="`${count} ${$t(`shell.bulkSelectionBar.selected.${noun}`, count)}`" size="sm">
         <div role="menu" class="space-y-1 [&_.menu-item]:min-h-12 [&_.menu-item]:gap-4 [&_.menu-item]:px-4 [&_.menu-item]:text-base [&_.menu-item_svg]:h-5 [&_.menu-item_svg]:w-5" @click="closeOnAction" @change="moreOpen = false">

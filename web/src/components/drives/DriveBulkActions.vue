@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { t } from '@/i18n'
 import type { VehiclePerson } from '@/services/api'
@@ -45,6 +45,13 @@ function onDriverChange(e: Event) {
 
 // On a phone the driver is picked in its own sheet, opened from the actions sheet
 const driverSheetOpen = ref(false)
+// The selection can end under the sheet (the Back gesture): the sheet goes with it
+watch(
+  () => props.selectedDriveIds.length,
+  (n) => {
+    if (n === 0) driverSheetOpen.value = false
+  }
+)
 function pickDriver(value: string) {
   driverSheetOpen.value = false
   emit('driver', value === DEFAULT_DRIVER ? null : value)

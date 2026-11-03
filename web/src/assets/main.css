@@ -284,6 +284,22 @@ label:has(> .select-box) {
   }
 }
 
+/* The contextual bar of a selection slides in from the top edge on a phone and leaves the same way; with reduced
+   motion it just appears. The desktop bar sits in the page and does not animate. */
+@media (max-width: 639.98px) and (prefers-reduced-motion: no-preference) {
+  .selection-bar-enter-active {
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 150ms ease-out;
+  }
+  .selection-bar-leave-active {
+    transition: transform 150ms ease-in, opacity 120ms ease-in;
+  }
+  .selection-bar-enter-from,
+  .selection-bar-leave-to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
 /* Text buttons, links and chips: same hit area as .tap, laid out inline. */
 .tap-text {
   min-height: 2.25rem;
