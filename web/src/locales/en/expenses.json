@@ -222,7 +222,8 @@
     "serviceBook": "Service book (PDF)",
     "serviceBookWithProofs": "Attach proofs (pictures)",
     "serviceBookHint": "The book lists the vehicle's maintenance, without fixed costs, for the year chosen above or for all years.",
-    "noFixedExpenseHint": "Insurance, tax, subscription, financing."
+    "noFixedExpenseHint": "Insurance, tax, subscription, financing.",
+    "serviceBookShort": "Export as a PDF, with or without proofs"
   },
   "reminderModal": {
     "sendAnAutomaticWebhookNotification": "Send an automatic webhook notification (Discord / Telegram / Gotify) when the threshold is crossed",
@@ -522,7 +523,8 @@
     "estimated": "Estimated before tracking",
     "estimatedPart": "of which {kwh} kWh estimated over {distance} driven before tracking",
     "estimatedCost": "of which {amount} estimated before tracking",
-    "emptyPeriod": "No charge in this period."
+    "emptyPeriod": "No charge in this period.",
+    "analysisHint": "Period, charts and places"
   },
   "costHistory": {
     "title": "{label} history",
@@ -537,6 +539,10 @@
     "months": "{count} month | {count} months",
     "smoothed": "12-month average",
     "monthly": "Paid per month ({cur})",
-    "noFullMonth": "This range covers no full month. Pick a range that spans at least one."
+    "noFullMonth": "This range covers no full month. Pick a range that spans at least one.",
+    "analysisHint": "Period, monthly average and chart"
+  },
+  "analysis": {
+    "title": "Analysis"
   }
 }

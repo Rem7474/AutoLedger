@@ -31,7 +31,8 @@ import AppDateRangePicker from '@/components/AppDateRangePicker.vue'
 Chart.register(...registerables)
 
 // Energy and price of the charges by month and by place, and what charging everything at home would have cost.
-const props = defineProps<{ vehicleId: string; currency: string; hasCharges: boolean; syncKey?: unknown }>()
+// `bare`: shown inside a sheet, which already is the frame.
+const props = defineProps<{ vehicleId: string; currency: string; hasCharges: boolean; syncKey?: unknown; bare?: boolean }>()
 const emit = defineEmits<{ 'manage-places': [] }>()
 
 const AXIS_TEXT = '#94a3b8'
@@ -164,26 +165,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section v-if="visible && stats" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4" aria-labelledby="charging-insights-title">
+  <section v-if="visible && stats" :class="bare ? 'space-y-4' : 'bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4'" aria-labelledby="charging-insights-title">
     <header class="space-y-2">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h3 id="charging-insights-title" class="text-sm font-bold text-white">{{ $t('expenses.chargingInsights.title') }}</h3>
-        <button type="button" class="btn btn-secondary" @click="emit('manage-places')">
+        <h3 id="charging-insights-title" class="text-sm font-bold text-white" :class="{ 'sr-only': bare }">{{ $t('expenses.chargingInsights.title') }}</h3>
+        <button v-if="!bare" type="button" class="btn btn-secondary" @click="emit('manage-places')">
           <MapPin class="w-3.5 h-3.5 text-sky-400" />
           <span>{{ $t('expenses.chargingInsights.places') }}</span>
         </button>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-slate-300">{{ $t('expenses.chargingInsights.period') }}</span>
-        <MonthlyRangeSelector v-model="range" :custom="customRange !== null" :label="$t('expenses.chargingInsights.period')" @pick="customRange = null" />
-        <AppDateRangePicker :model-value="customRange" :max="today" :aria-label="$t('expenses.chargingInsights.period')" @update:model-value="pickRange" />
-        <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/70 sm:ml-auto" role="group">
+        <span class="text-xs font-semibold text-slate-300 max-sm:basis-full">{{ $t('expenses.chargingInsights.period') }}</span>
+        <MonthlyRangeSelector class="max-sm:basis-full" v-model="range" :custom="customRange !== null" :label="$t('expenses.chargingInsights.period')" @pick="customRange = null" />
+        <div class="max-sm:basis-full"><AppDateRangePicker :model-value="customRange" :max="today" :aria-label="$t('expenses.chargingInsights.period')" @update:model-value="pickRange" /></div>
+        <div class="flex items-center gap-1 bg-slate-800/60 p-0.5 rounded-lg max-sm:basis-full sm:ml-auto" role="group">
           <button
             v-for="m in (['energy', 'cost'] as const)"
             :key="m"
             type="button"
             :aria-pressed="mode === m"
-            :class="['px-2.5 py-1 text-xs font-semibold rounded-md transition-colors', mode === m ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white']"
+            :class="['tap-text flex-1 justify-center px-2.5 text-xs font-semibold rounded-md transition-colors sm:flex-none', mode === m ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white']"
             @click="mode = m"
           >
             {{ $t(m === 'energy' ? 'expenses.chargingInsights.byEnergy' : 'expenses.chargingInsights.byCost') }}
@@ -306,6 +307,11 @@ onBeforeUnmount(() => {
       </p>
       <p v-if="stats.summary.zero_kwh_sessions" class="text-xs text-slate-500">{{ $t('expenses.chargingInsights.noteZero', { count: stats.summary.zero_kwh_sessions }, stats.summary.zero_kwh_sessions) }}</p>
     </div>
+    <!-- In a sheet the places come last, a full-width button instead of a lone one at the top -->
+    <button v-if="bare" type="button" class="btn btn-secondary w-full justify-center" @click="emit('manage-places')">
+      <MapPin class="w-3.5 h-3.5 text-sky-400" />
+      <span>{{ $t('expenses.chargingInsights.places') }}</span>
+    </button>
     </template>
   </section>
 </template>

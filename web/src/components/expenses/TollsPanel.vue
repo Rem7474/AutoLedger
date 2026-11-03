@@ -8,6 +8,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { Navigation, Layers, Users, Trash2, Paperclip, Plus, Receipt } from 'lucide-vue-next'
 import ListSummary from '@/components/ListSummary.vue'
 import CostHistory from '@/components/costs/CostHistory.vue'
+import SheetRow from '@/components/SheetRow.vue'
 import { formatDate } from '@/utils/expenses'
 import { formatAmount } from '@/currency'
 import { t } from '@/i18n'
@@ -73,7 +74,9 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
     <div v-else class="space-y-3">
       <BulkSelectionBar v-if="vehicleStore.canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
       <SelectionHint v-if="vehicleStore.canEdit" />
-      <CostHistory :vehicle-id="vehicleId" kind="tolls" :currency="vehicleStore.currency" :sync-key="driveExpenses" />
+      <SheetRow v-slot="{ bare }" :title="$t('expenses.analysis.title')" :hint="$t('expenses.costHistory.analysisHint')">
+        <CostHistory :vehicle-id="vehicleId" kind="tolls" :currency="vehicleStore.currency" :sync-key="driveExpenses" :bare="bare" />
+      </SheetRow>
       <ListSummary :chips="[]">
         {{ $t('expenses.tollsPanel.count', { count: driveExpenses.length }, driveExpenses.length) }}
       </ListSummary>
