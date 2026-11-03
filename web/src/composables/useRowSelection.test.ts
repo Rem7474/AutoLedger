@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { nextTick, ref } from 'vue'
 
 vi.mock('@/composables/useIsMobile', () => ({ useIsMobile: () => ref(true) }))
+const hint = vi.hoisted(() => ({ markSelectionHintSeen: vi.fn() }))
+vi.mock('@/composables/useSelectionHint', () => hint)
 
 import { useRowSelection } from './useRowSelection'
 
@@ -41,5 +43,27 @@ describe('useRowSelection', () => {
     items.value = [items.value[1], items.value[2]]
     await nextTick()
     expect(sel.selectedIds.value).toEqual(['b'])
+  })
+
+  it('keeps the selection untouched when the list changes but still holds every selected row', async () => {
+    const items = rows()
+    const sel = useRowSelection(items, ref(true), vi.fn())
+    sel.toggle(items.value[1])
+    const before = sel.selectedIds.value
+    items.value = [...items.value, { id: 'd' }]
+    await nextTick()
+    expect(sel.selectedIds.value).toBe(before)
+  })
+
+  it('marks the selection hint as seen when a selection starts, not when it ends', async () => {
+    hint.markSelectionHintSeen.mockClear()
+    const items = rows()
+    const sel = useRowSelection(items, ref(true), vi.fn())
+    sel.toggle(items.value[0])
+    await nextTick()
+    expect(hint.markSelectionHintSeen).toHaveBeenCalledTimes(1)
+    sel.clear()
+    await nextTick()
+    expect(hint.markSelectionHintSeen).toHaveBeenCalledTimes(1)
   })
 })
