@@ -26,7 +26,10 @@ func (r VehicleRole) CanEdit() bool {
 
 // Vehicle represents an automobile owned by a user.
 type Vehicle struct {
-	ID                       string      `json:"id"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version                  int64       `json:"version"`
+	ExpectedVersion          *int64      `json:"-"`
 	UserID                   string      `json:"user_id"`
 	Role                     VehicleRole `json:"role,omitempty"`
 	Name                     string      `json:"name"`
@@ -160,11 +163,14 @@ type UpdateVehicleMemberRoleRequest struct {
 
 // OdometerCheckpoint represents a manual odometer milestone at a specific date.
 type OdometerCheckpoint struct {
-	ID        string    `json:"id"`
-	VehicleID string    `json:"vehicle_id"`
-	Date      time.Time `json:"date"`
-	Odometer  float64   `json:"odometer"`
-	Notes     *string   `json:"notes,omitempty"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version         int64     `json:"version"`
+	ExpectedVersion *int64    `json:"-"`
+	VehicleID       string    `json:"vehicle_id"`
+	Date            time.Time `json:"date"`
+	Odometer        float64   `json:"odometer"`
+	Notes           *string   `json:"notes,omitempty"`
 	// Source is "MANUAL" (entered by a user) or "HA" (reported by the Home Assistant integration).
 	Source        string    `json:"source"`
 	SourceBatchID *string   `json:"-"`
@@ -222,8 +228,10 @@ type VehicleOwnership struct {
 	EndDate   *time.Time   `json:"end_date,omitempty"`
 	SalePrice *money.Cents `json:"sale_price,omitempty"`
 
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	Version         int64     `json:"version"`
+	ExpectedVersion *int64    `json:"-"`
 }
 
 // IsLease reports whether the vehicle is under a LOA or LLD contract.

@@ -57,11 +57,13 @@ type TariffPlan struct {
 	StandingChargeCents *money.Cents `json:"standing_charge_cents,omitempty"`
 	// ValidFrom and ValidTo (YYYY-MM-DD, inclusive) bound the dates the prices apply to. Plans of one user that
 	// share a name are the successive versions of one tariff: the one covering the session date prices it.
-	ValidFrom *string   `json:"valid_from,omitempty"`
-	ValidTo   *string   `json:"valid_to,omitempty"`
-	IsDefault bool      `json:"is_default"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ValidFrom       *string   `json:"valid_from,omitempty"`
+	ValidTo         *string   `json:"valid_to,omitempty"`
+	IsDefault       bool      `json:"is_default"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	Version         int64     `json:"version"`
+	ExpectedVersion *int64    `json:"-"`
 }
 
 // AppliesOn reports whether the plan prices the given day (YYYY-MM-DD).

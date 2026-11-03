@@ -26,6 +26,7 @@ func TestCreateTokenRequiresAKnownScope(t *testing.T) {
 		"no scope":       `{"name":"dash"}`,
 		"unknown scope":  `{"name":"dash","scope":"admin"}`,
 		"another casing": `{"name":"dash","scope":"READ"}`,
+		"write":          `{"name":"dash","scope":"write"}`, // only an assistant's grant can write
 	} {
 		if got := create(body); got != http.StatusBadRequest {
 			t.Errorf("%s: got %d, want 400", name, got)

@@ -72,6 +72,9 @@ type UpsertCarpoolRequest struct {
 	InsuranceCost   money.Cents `json:"insurance_cost"`
 	OtherCost       money.Cents `json:"other_cost"`
 	Notes           *string     `json:"notes"`
+	// ExpectedVersion is the version of the trip as the editor loaded it: an update is refused with 409 when the trip
+	// was saved since. Left out, the update replaces whatever is stored.
+	ExpectedVersion *int64 `json:"expected_version"`
 	// CostsFrozen keeps the amounts of the legs as sent instead of following their drives
 	CostsFrozen bool               `json:"costs_frozen"`
 	Legs        []LegPayload       `json:"legs"`
@@ -321,7 +324,7 @@ func (h *CarpoolHandler) save(w http.ResponseWriter, r *http.Request, tripID str
 	if tripID == "" {
 		err = h.repo.CreateCarpoolTrip(r.Context(), trip, legs, passengers)
 	} else {
-		trip.ID = tripID
+		trip.ID, trip.ExpectedVersion = tripID, req.ExpectedVersion
 		status = http.StatusOK
 		err = h.repo.UpdateCarpoolTrip(r.Context(), trip, legs, passengers)
 	}
