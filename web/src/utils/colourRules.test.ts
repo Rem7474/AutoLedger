@@ -27,4 +27,16 @@ describe('colour rules', () => {
     }
     expect(found).toEqual([])
   })
+
+  // The primary action is rose in every dialog; a solid green button reads as a status, not as the main action.
+  it('keeps solid green fills for the confirmation dialog of a success', () => {
+    const root = join(__dirname, '..')
+    const found: string[] = []
+    for (const file of sources(root)) {
+      const rel = relative(root, file)
+      if (rel === 'components/ConfirmModal.vue') continue
+      if (/<button[^>]*\bbg-success-[56]00\b(?!\/)/.test(readFileSync(file, 'utf8'))) found.push(rel)
+    }
+    expect(found).toEqual([])
+  })
 })

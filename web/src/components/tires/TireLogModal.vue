@@ -125,7 +125,7 @@ const handleAddLog = () => runOnce(handleAddLogAction)
       <button :disabled="submitting"
         type="button"
         @click="handleAddLog"
-        class="bg-success-600 hover:bg-success-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
+        class="btn btn-lg btn-primary"
       >
         {{ $t('tires.tireLogModal.saveTheReading') }}
       </button>

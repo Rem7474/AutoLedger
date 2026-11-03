@@ -272,7 +272,7 @@ async function handleExecute() {
       <div class="pt-2 flex justify-end">
         <button
           @click="close"
-          class="px-4 py-2 bg-success-600 hover:bg-success-500 text-white text-xs font-semibold rounded-xl transition-colors"
+          class="btn btn-lg btn-primary"
         >
           {{ $t('common.close') }}
         </button>

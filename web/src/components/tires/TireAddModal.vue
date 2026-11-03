@@ -137,8 +137,8 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
           type="button"
           @click="addType = 'SET_4'"
           :aria-pressed="addType === 'SET_4'"
-          class="p-2.5 rounded-xl border text-left transition-all"
-          :class="addType === 'SET_4' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
+          class="choice"
+          :class="{ 'choice-selected': addType === 'SET_4' }"
         >
           {{ $t('tires.tireAddModal.fullSetFitted4Tires') }}
         </button>
@@ -146,8 +146,8 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
           type="button"
           @click="addType = 'SET_4_STORAGE'"
           :aria-pressed="addType === 'SET_4_STORAGE'"
-          class="p-2.5 rounded-xl border text-left transition-all"
-          :class="addType === 'SET_4_STORAGE' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
+          class="choice"
+          :class="{ 'choice-selected': addType === 'SET_4_STORAGE' }"
         >
           {{ $t('tires.tireAddModal.setInStorage4Winter') }}
         </button>
@@ -155,8 +155,8 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
           type="button"
           @click="addType = 'SET_2_FRONT'"
           :aria-pressed="addType === 'SET_2_FRONT'"
-          class="p-2.5 rounded-xl border text-left transition-all"
-          :class="addType === 'SET_2_FRONT' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
+          class="choice"
+          :class="{ 'choice-selected': addType === 'SET_2_FRONT' }"
         >
           {{ $t('tires.tireAddModal.frontAxleFitted2Tires') }}
         </button>
@@ -164,8 +164,8 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
           type="button"
           @click="addType = 'SET_2_REAR'"
           :aria-pressed="addType === 'SET_2_REAR'"
-          class="p-2.5 rounded-xl border text-left transition-all"
-          :class="addType === 'SET_2_REAR' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
+          class="choice"
+          :class="{ 'choice-selected': addType === 'SET_2_REAR' }"
         >
           {{ $t('tires.tireAddModal.rearAxleFitted2Tires') }}
         </button>
@@ -173,8 +173,8 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
           type="button"
           @click="addType = 'SET_2_STORAGE'"
           :aria-pressed="addType === 'SET_2_STORAGE'"
-          class="p-2.5 rounded-xl border text-left transition-all"
-          :class="addType === 'SET_2_STORAGE' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
+          class="choice"
+          :class="{ 'choice-selected': addType === 'SET_2_STORAGE' }"
         >
           {{ $t('tires.tireAddModal.pairInStorage2Tires') }}
         </button>
@@ -182,8 +182,8 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
           type="button"
           @click="addType = 'SINGLE'"
           :aria-pressed="addType === 'SINGLE'"
-          class="p-2.5 rounded-xl border text-left transition-all"
-          :class="addType === 'SINGLE' ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 font-bold' : 'bg-slate-800/60 text-slate-400 border-slate-700'"
+          class="choice"
+          :class="{ 'choice-selected': addType === 'SINGLE' }"
         >
           {{ $t('tires.tireAddModal.singleTireOnePurchase') }}
         </button>

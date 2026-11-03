@@ -24,8 +24,8 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
     />
     <button
       @click="hasTollOnly = !hasTollOnly"
-      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
-      :class="hasTollOnly ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-sky-400/80 hover:text-sky-300 border border-transparent'"
+      class="chip"
+      :class="{ 'chip-selected': hasTollOnly }"
       :title="$t('drives.drivesView.drivesWithATollExpense')"
     >
       <Receipt class="w-3.5 h-3.5" />
@@ -46,8 +46,8 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
     <button
       @click="carpoolFilter = carpoolFilter === 'yes' ? '' : 'yes'"
       :aria-pressed="carpoolFilter === 'yes'"
-      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
-      :class="carpoolFilter === 'yes' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-sky-400/80 hover:text-sky-300 border border-transparent'"
+      class="chip"
+      :class="{ 'chip-selected': carpoolFilter === 'yes' }"
       :title="$t('drives.drivesView.carpooledDrivesTitle')"
     >
       <Users class="w-3.5 h-3.5" />
@@ -56,8 +56,8 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
     <button
       @click="carpoolFilter = carpoolFilter === 'no' ? '' : 'no'"
       :aria-pressed="carpoolFilter === 'no'"
-      class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-      :class="carpoolFilter === 'no' ? 'bg-slate-700 text-white border border-slate-600' : 'text-slate-400 hover:text-white border border-transparent'"
+      class="chip"
+      :class="{ 'chip-selected': carpoolFilter === 'no' }"
       :title="$t('drives.drivesView.notCarpooledTitle')"
     >
       {{ $t('drives.drivesView.notCarpooled') }}
@@ -67,24 +67,24 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
       <button
         @click="selectedTag = ''"
         :aria-pressed="selectedTag === ''"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-        :class="selectedTag === '' ? 'bg-slate-700 text-white border border-slate-600' : 'text-slate-400 hover:text-white border border-transparent'"
+        class="chip"
+        :class="{ 'chip-selected': selectedTag === '' }"
       >
         {{ $t('drives.drivesView.all') }}
       </button>
       <button
         @click="selectedTag = 'Pro'"
         :aria-pressed="selectedTag === 'Pro'"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-        :class="selectedTag === 'Pro' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
+        class="chip"
+        :class="{ 'chip-selected': selectedTag === 'Pro' }"
       >
         {{ $t('drives.drivesView.work') }}
       </button>
       <button
         @click="selectedTag = 'Perso'"
         :aria-pressed="selectedTag === 'Perso'"
-        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-        :class="selectedTag === 'Perso' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-400 hover:text-white border border-transparent'"
+        class="chip"
+        :class="{ 'chip-selected': selectedTag === 'Perso' }"
       >
         {{ $t('drives.drivesView.personal') }}
       </button>

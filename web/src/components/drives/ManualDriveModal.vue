@@ -243,16 +243,16 @@ async function handleSubmit() {
             <button
               type="button"
               @click="selectedTag = selectedTag === 'Pro' ? '' : 'Pro'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
-              :class="selectedTag === 'Pro' ? 'bg-sky-500/20 text-sky-300 border-sky-500' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'"
+              class="chip"
+              :class="{ 'chip-selected': selectedTag === 'Pro' }"
             >
               Pro
             </button>
             <button
               type="button"
               @click="selectedTag = selectedTag === 'Perso' ? '' : 'Perso'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
-              :class="selectedTag === 'Perso' ? 'bg-success-500/20 text-success-300 border-success-500' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'"
+              class="chip"
+              :class="{ 'chip-selected': selectedTag === 'Perso' }"
             >
               Perso
             </button>
