@@ -36,7 +36,7 @@ const isMobile = useIsMobile()
 
 // The "More" popover holds the occasional actions, so the bar keeps one primary action and a few secondary ones
 const moreOpen = ref(false)
-const hasMore = computed(() => props.actions.length > 0 && (isMobile.value || props.actions.some((a) => a.overflow)))
+const hasMore = computed(() => props.actions.length > 0 && (isMobile.value || props.actions.some((a) => a.overflow && !a.phoneOnly)))
 const moreRoot = ref<HTMLElement | null>(null)
 
 function onKeyDown(e: KeyboardEvent) {
@@ -191,9 +191,9 @@ onUnmounted(() => {
     <Teleport v-if="isMobile" to="body">
       <ModalShell v-model:open="moreOpen" :title="`${count} ${$t(`shell.bulkSelectionBar.selected.${noun}`, count)}`" size="sm">
         <div role="menu" class="space-y-1 [&_.menu-item]:min-h-12 [&_.menu-item]:gap-4 [&_.menu-item]:px-4 [&_.menu-item]:text-base [&_.menu-item_svg]:h-5 [&_.menu-item_svg]:w-5" @click="closeOnAction" @change="moreOpen = false">
+          <template v-for="(a, i) in actions" :key="a.key">
+          <hr v-if="i > 0 && a.overflow && !actions[i - 1].overflow" role="separator" class="!my-2 border-slate-800" />
           <button
-            v-for="a in actions"
-            :key="a.key"
             type="button"
             role="menuitem"
             class="menu-item disabled:opacity-40"
@@ -207,7 +207,7 @@ onUnmounted(() => {
               <span v-if="a.disabled && a.reason" class="block text-xs font-normal text-slate-400">{{ a.reason }}</span>
             </span>
           </button>
-          <slot name="more" />
+          </template>
         </div>
       </ModalShell>
     </Teleport>

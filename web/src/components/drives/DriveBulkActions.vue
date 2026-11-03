@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { t } from '@/i18n'
 import type { VehiclePerson } from '@/services/api'
 import { defaultDriver } from '@/utils/vehicles'
 import { usePreferencesStore } from '@/stores/preferences'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
-import { Receipt, Layers, Users, Plus, Download, Pencil, Trash2, ExternalLink, ListChecks, Briefcase, User } from 'lucide-vue-next'
+import ModalShell from '@/components/ModalShell.vue'
+import { Receipt, Layers, Users, Plus, Download, Pencil, Trash2, ExternalLink, ListChecks, Briefcase, User, UserRound } from 'lucide-vue-next'
 import type { SelectionAction } from '@/utils/selectionActions'
 import { teslamateDriveUrl } from '@/utils/drives'
 
@@ -39,6 +40,13 @@ function onDriverChange(e: Event) {
   const value = el.value
   el.value = ''
   if (!value) return
+  emit('driver', value === DEFAULT_DRIVER ? null : value)
+}
+
+// On a phone the driver is picked in its own sheet, opened from the actions sheet
+const driverSheetOpen = ref(false)
+function pickDriver(value: string) {
+  driverSheetOpen.value = false
   emit('driver', value === DEFAULT_DRIVER ? null : value)
 }
 
@@ -97,6 +105,9 @@ const actions = computed<SelectionAction[]>(() => {
     list.push({ key: 'work', label: t('drives.driveBulkActions.work'), icon: Briefcase, run: () => emit('tag', 'Pro'), overflow: true })
     list.push({ key: 'personal', label: t('drives.driveBulkActions.personal'), icon: User, run: () => emit('tag', 'Perso'), overflow: true })
   }
+  if (props.people.length) {
+    list.push({ key: 'driver', label: t('drives.driveBulkActions.changeDriverAction'), icon: UserRound, run: () => (driverSheetOpen.value = true), overflow: true, phoneOnly: true })
+  }
   const tmUrl = props.selectedDrives.length === 1 ? teslamateDriveUrl(vehicleStore.activeVehicle, props.selectedDrives[0]) : null
   if (tmUrl) {
     list.push({ key: 'teslamate', label: t('expenses.teslamateLinks.details'), icon: ExternalLink, run: () => window.open(tmUrl, '_blank', 'noopener,noreferrer'), overflow: true })
@@ -127,4 +138,11 @@ const actions = computed<SelectionAction[]>(() => {
       </label>
     </template>
   </BulkSelectionBar>
+
+  <ModalShell v-model:open="driverSheetOpen" :title="$t('drives.driveBulkActions.driver')" :icon="UserRound" icon-class="text-slate-300" size="sm" nested>
+    <div role="menu" class="space-y-1 [&_.menu-item]:min-h-12 [&_.menu-item]:gap-4 [&_.menu-item]:px-4 [&_.menu-item]:text-base">
+      <button type="button" role="menuitem" class="menu-item" @click="pickDriver(DEFAULT_DRIVER)">{{ defaultDriverLabel }}</button>
+      <button v-for="p in people" :key="p.id" type="button" role="menuitem" class="menu-item" @click="pickDriver(p.id)">{{ p.name }}</button>
+    </div>
+  </ModalShell>
 </template>

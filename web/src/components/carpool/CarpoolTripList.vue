@@ -8,6 +8,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock, ListChecks } from 'lucide-vue-next'
+import RowLeading from '@/components/RowLeading.vue'
 import { formatDate, hasLinkedLegs, splitByFreeze } from '@/utils/carpool'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import { t } from '@/i18n'
@@ -129,10 +130,11 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         @contextmenu="press.onContextmenu"
       />
       <!-- Select Checkbox -->
+      <RowLeading :icon="Users" :selected="selectedTripIds.includes(trip.id)" />
       <label
         v-if="showBox"
         :for="'carpool-select-' + trip.id"
-        class="row-check relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
+        class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer max-sm:sr-only max-sm:pointer-events-none"
         :title="$t('carpool.carpoolTripList.selectThisCarpool')"
       >
         <span class="sr-only">{{ $t('carpool.carpoolTripList.selectThisCarpool') }}</span>

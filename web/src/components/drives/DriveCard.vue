@@ -3,8 +3,9 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
-import { MapPin, Clock, Users, Pencil, Trash2, ExternalLink } from 'lucide-vue-next'
+import { Navigation, Clock, Users, Pencil, Trash2, ExternalLink } from 'lucide-vue-next'
 import CardOpenButton from '@/components/CardOpenButton.vue'
+import RowLeading from '@/components/RowLeading.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
 import { useLongPress } from '@/composables/useLongPress'
@@ -68,11 +69,13 @@ function openCarpool() {
       @pointercancel="press.onPointercancel"
       @contextmenu="press.onContextmenu"
     />
-    <!-- Selection checkbox -->
+    <!-- Phone: the glyph of the row, the check once it is selected -->
+    <RowLeading :icon="carpoolSummary ? Users : Navigation" :selected="selected" />
+    <!-- Selection checkbox (desktop; on a phone it stays for screen readers only) -->
     <label
       v-if="showBox"
       :for="'drive-select-' + d.id"
-      class="row-check relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
+      class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer max-sm:sr-only max-sm:pointer-events-none"
       :title="$t('drives.driveCard.selectThisDrive')"
     >
       <span class="sr-only">{{ $t('drives.driveCard.selectThisDrive') }}</span>
@@ -83,7 +86,7 @@ function openCarpool() {
       <!-- What matters: where, and what it cost -->
       <div class="flex items-start justify-between gap-3">
         <div class="text-sm text-white flex items-center gap-1.5 flex-wrap min-w-0">
-          <MapPin class="w-3.5 h-3.5 text-rose-400 shrink-0" />
+          <Navigation class="w-3.5 h-3.5 text-rose-400 shrink-0 max-sm:hidden" />
           <span class="truncate max-w-[140px] sm:max-w-[220px] md:max-w-xs font-semibold" :title="d.start_address">{{ d.start_address || $t('drives.driveCard.unknownStart') }}</span>
           <span class="text-slate-400 shrink-0">→</span>
           <span class="truncate max-w-[140px] sm:max-w-[220px] md:max-w-xs font-semibold" :title="d.end_address">{{ d.end_address || $t('drives.driveCard.unknownEnd') }}</span>
