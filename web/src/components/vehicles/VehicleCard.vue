@@ -4,8 +4,10 @@ import { ref } from 'vue'
 import { distanceUnit, formatDistance, formatDistanceValue, formatPerDistanceValue, perDistance } from '@/units'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
+import RowMenu from '@/components/RowMenu.vue'
+import CardOpenButton from '@/components/CardOpenButton.vue'
 import { api } from '@/services/api'
-import { Car, Plus, Trash2, Edit2, RefreshCw, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database } from 'lucide-vue-next'
+import { Car, Plus, Trash2, Edit2, RefreshCw, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database, Check } from 'lucide-vue-next'
 import { canCharge, canRefuel, hasEnergyEstimate, isElectricOnly, ownershipSummary, roleLabel } from '@/utils/vehicles'
 
 // One vehicle of the list, with its contract summary and a TeslaMate connection test of its own
@@ -38,12 +40,19 @@ function clearCardTestResult() {
 
 <template>
   <div
-    class="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative transition-all"
+    class="bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl relative transition-all"
     :class="{ 'border-rose-500/40 shadow-lg shadow-rose-500/5': vehicleStore.activeVehicleId === v.id }"
   >
+    <!-- On a phone the card itself selects the vehicle; the other actions are in its menu -->
+    <CardOpenButton
+      v-if="vehicleStore.activeVehicleId !== v.id"
+      class="sm:hidden"
+      :label="$t('vehicles.vehicleCard.selectNamed', { name: v.name })"
+      @click="vehicleStore.setActiveVehicle(v.id)"
+    />
     <div class="flex items-start justify-between gap-2">
       <div class="flex min-w-0 items-center gap-3">
-        <div class="shrink-0 p-3 bg-slate-800 rounded-xl text-rose-400">
+        <div class="shrink-0 p-2.5 sm:p-3 bg-slate-800 rounded-xl text-rose-400">
           <Car class="w-6 h-6" />
         </div>
         <div class="min-w-0">
@@ -60,12 +69,44 @@ function clearCardTestResult() {
             >
               {{ roleLabel(v.role) }}
             </span>
+            <span
+              v-if="vehicleStore.activeVehicleId === v.id"
+              class="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-300 sm:hidden"
+            >
+              <Check class="h-3 w-3" aria-hidden="true" />{{ $t('vehicles.vehicleCard.active') }}
+            </span>
           </div>
           <p v-if="v.vin" class="break-all text-xs text-slate-400 font-mono">{{ v.vin }}</p>
         </div>
       </div>
 
-      <div v-if="v.role === 'OWNER'" class="flex shrink-0 items-center gap-1">
+      <div class="shrink-0 sm:hidden">
+        <RowMenu phone :label="$t('common.moreActions')" :heading="v.name">
+          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item" @click="emit('edit', v)">
+            <Edit2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.edit') }}
+          </button>
+          <button type="button" role="menuitem" class="menu-item" @click="emit('members', v)">
+            <Users class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.sharingAndAccess') }}
+          </button>
+          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item" @click="emit('ownership', v)">
+            <FileText class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.acquisitionAndFinancing') }}
+          </button>
+          <button type="button" role="menuitem" class="menu-item" @click="emit('dataSources', v)">
+            <Database class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.dataSources') }}
+          </button>
+          <router-link to="/odometer" role="menuitem" class="menu-item" @click="vehicleStore.setActiveVehicle(v.id)">
+            <Gauge class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.manualTracking') }}
+          </router-link>
+          <button v-if="v.role === 'OWNER' && v.teslamate_api_url" type="button" role="menuitem" class="menu-item" :disabled="cardTest?.loading" @click="testCardConnection()">
+            <Link2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.testApi') }}
+          </button>
+          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', v.id)">
+            <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
+          </button>
+        </RowMenu>
+      </div>
+
+      <div v-if="v.role === 'OWNER'" class="flex shrink-0 items-center gap-1 max-sm:hidden">
         <button
           @click="emit('edit', v)"
           class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
@@ -84,7 +125,7 @@ function clearCardTestResult() {
     </div>
 
     <!-- Telemetry & Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-4 pt-4 border-t border-slate-800 text-xs">
+    <div class="grid grid-cols-2 gap-x-4 gap-y-3 mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-slate-800 text-xs">
       <div>
         <span class="text-slate-400">{{ $t('vehicles.vehicleCard.currentOdometer') }}</span>
         <p class="text-sm font-bold text-slate-200 flex items-center gap-1.5 mt-0.5">
@@ -93,12 +134,12 @@ function clearCardTestResult() {
         </p>
       </div>
 
-      <div v-if="v.role === 'OWNER'">
-        <span class="text-slate-400 block mb-1">{{ $t('vehicles.vehicleCard.acquisitionAndContract') }}</span>
+      <div v-if="v.role === 'OWNER'" class="max-sm:order-last max-sm:col-span-2">
+        <span class="text-slate-400 block mb-1 max-sm:sr-only">{{ $t('vehicles.vehicleCard.acquisitionAndContract') }}</span>
         <button
           type="button"
           @click="emit('ownership', v)"
-          class="group text-left inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border"
+          class="group relative z-10 text-left inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border"
           :class="
             ownership
               ? 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border-sky-500/30'
@@ -163,7 +204,7 @@ function clearCardTestResult() {
 
     <!-- Actions -->
     <!-- A grid of two on a phone: wrapped flex rows left one button alone and misaligned -->
-    <div class="mt-4 pt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+    <div class="mt-4 pt-3 grid grid-cols-2 gap-2 max-sm:hidden sm:flex sm:flex-wrap sm:items-center sm:justify-between">
       <button
         @click="emit('members', v)"
         class="btn btn-secondary"

@@ -27,6 +27,8 @@
     "managedByAdmin": "Gérée par l'administrateur",
     "testing": "Test...",
     "testApi": "Tester l'API",
+    "selectNamed": "Sélectionner {name}",
+    "active": "Actif",
     "dataSources": "Sources de données"
   },
   "vehicleFormModal": {

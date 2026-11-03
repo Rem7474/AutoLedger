@@ -8,7 +8,9 @@ import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 // The "..." of a list row: the actions that are not "open it" (the row itself opens it) in a small popover, so a
 // list does not repeat a row of icons. Entries are `.menu-item` buttons in the slot; a click on one closes it.
 // On a phone the menu is a bottom sheet with large touch targets, pulled down to close, instead of a popover.
-const props = defineProps<{ label: string; heading?: string }>()
+// A list row has its actions in the selection bar on a phone, so the button is hidden there; a card that is not a selectable
+// row (a vehicle) passes `phone` to keep it.
+const props = defineProps<{ label: string; heading?: string; phone?: boolean }>()
 const isMobile = useIsMobile()
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -29,8 +31,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="root" class="relative z-10 shrink-0 max-sm:hidden">
-    <button type="button" class="tap row-action max-sm:!min-w-7 max-sm:!px-0.5 max-sm:-mr-1.5" :aria-label="label" :title="label" aria-haspopup="menu" :aria-expanded="open" @click="open = !open">
+  <div ref="root" class="relative z-10 shrink-0" :class="{ 'max-sm:hidden': !phone }">
+    <button type="button" class="tap row-action" :class="{ 'max-sm:!min-w-7 max-sm:!px-0.5 max-sm:-mr-1.5': !phone }" :aria-label="label" :title="label" aria-haspopup="menu" :aria-expanded="open" @click="open = !open">
       <MoreHorizontal class="h-4 w-4" aria-hidden="true" />
     </button>
     <Teleport v-if="isMobile" to="body">
