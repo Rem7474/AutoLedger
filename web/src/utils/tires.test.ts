@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   copiedSessionFromSession,
+  describeFittedSet,
   defaultTargetTireIds,
   getConditionBadge,
   getLastDismountInfo,
@@ -281,5 +282,20 @@ describe('summarizeFittedTires', () => {
   it('leaves the figures unknown without a fitted tire or a forecast', () => {
     expect(summarizeFittedTires({ FL: null, FR: null, RL: null, RR: null })).toEqual({ fitted: 0, mostWorn: null, nextReplacement: null })
     expect(summarizeFittedTires({ FL: stat(10) }).nextReplacement).toBeNull()
+  })
+})
+
+describe('describeFittedSet', () => {
+  const stat = (brand: string, model: string, dimension = '235/45 R18') => ({ tire: { brand, model, dimension } })
+
+  it('names the set when every fitted wheel carries the same tire', () => {
+    const set = describeFittedSet({ FL: stat('A', 'Sport'), FR: stat('A', 'Sport'), RL: stat('A', 'Sport'), RR: null })
+    expect(set).toEqual({ uniform: true, name: 'A Sport', dimension: '235/45 R18' })
+  })
+
+  it('is a mix when a model or a dimension differs, or when nothing is fitted', () => {
+    expect(describeFittedSet({ FL: stat('A', 'Sport'), FR: stat('A', 'Sport', '245/40 R19') }).uniform).toBe(false)
+    expect(describeFittedSet({ FL: stat('A', 'Sport'), FR: stat('B', 'Sport') }).uniform).toBe(false)
+    expect(describeFittedSet({ FL: null, FR: null }).uniform).toBe(false)
   })
 })

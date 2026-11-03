@@ -233,3 +233,12 @@ export function summarizeFittedTires(mounted: Record<string, any | null>): TireS
   }
   return { fitted, mostWorn, nextReplacement }
 }
+
+/** What the fitted tires have in common: one set (same brand, model and dimension on every fitted wheel) or a mix. */
+export function describeFittedSet(mounted: Record<string, any | null>): { uniform: boolean; name: string; dimension: string } {
+  const fitted = Object.values(mounted).filter(Boolean)
+  const keys = new Set(fitted.map((s) => `${s.tire.brand}|${s.tire.model}|${s.tire.dimension ?? ''}`))
+  if (fitted.length === 0 || keys.size !== 1) return { uniform: false, name: '', dimension: '' }
+  const first = fitted[0].tire
+  return { uniform: true, name: `${first.brand} ${first.model}`.trim(), dimension: first.dimension ?? '' }
+}
