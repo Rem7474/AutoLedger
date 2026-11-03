@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { intlLocale, t } from '@/i18n'
-import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch, onMounted } from 'vue'
-import { Fuel, Gauge, Trash2 } from 'lucide-vue-next'
+import { Fuel, Gauge, Plus, Trash2 } from 'lucide-vue-next'
+import ModalShell from '@/components/ModalShell.vue'
+import OdometerReadingForm from '@/components/manual/OdometerReadingForm.vue'
+import { useIsMobile } from '@/composables/useIsMobile'
 import EmptyState from '@/components/EmptyState.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
@@ -12,7 +14,6 @@ import SelectionHint from '@/components/SelectionHint.vue'
 import { useRowSelection } from '@/composables/useRowSelection'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import KpiCard from '@/components/KpiCard.vue'
-import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
 import { api } from '@/services/api'
@@ -44,6 +45,9 @@ const loading = ref(false)
 const { explainStaleWrite } = useStaleWrite()
 const editingId = ref<string | null>(null)
 const editingVersion = ref<number | undefined>(undefined)
+const isMobile = useIsMobile()
+// On a phone the form is a sheet: it opens for a new reading or an edit, and closes once saved or dismissed
+const formOpen = ref(false)
 const form = ref({
   date: new Date().toISOString().substring(0, 10),
   odometer: '',
@@ -77,7 +81,13 @@ function resetForm() {
   }
 }
 
+function openNew() {
+  resetForm()
+  formOpen.value = true
+}
+
 function startEdit(r: any) {
+  formOpen.value = true
   editingId.value = r.id
   editingVersion.value = r.version
   form.value = {
@@ -106,6 +116,7 @@ async function saveAction() {
     } else {
       await api.createOdometerCheckpoint(props.vehicle.id, payload)
     }
+    formOpen.value = false
     resetForm()
     await load()
     // A reading raises the odometer of a combustion vehicle and reshapes the monthly smoothing
@@ -113,6 +124,7 @@ async function saveAction() {
     vehicleStore.lastSyncTimestamp = Date.now()
   } catch (err: any) {
     if (await explainStaleWrite(err)) {
+      formOpen.value = false
       resetForm()
       await load()
       return
@@ -167,6 +179,10 @@ const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPoin
 )
 const actions = computed<SelectionAction[]>(() => editDeleteActions(selected.value, { edit: (r) => startEdit(r), remove: removeMany }))
 
+// Dismissing the sheet drops an edit in progress, so the next "Add" starts from a clean form
+watch(formOpen, (open) => {
+  if (!open) resetForm()
+})
 watch(() => props.vehicle?.id, () => {
   resetForm()
   load()
@@ -179,7 +195,7 @@ onMounted(() => {
 
 <template>
   <div class="space-y-5">
-    <p class="text-xs text-slate-400">
+    <p class="text-xs text-slate-400 max-sm:hidden">
       {{ $t('manual.odometerReadingsPanel.odometerReadingsSpreadTheUntracked') }}
     </p>
 
@@ -207,57 +223,43 @@ onMounted(() => {
       />
     </div>
 
-    <form v-if="canEdit" class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-4" @submit.prevent="save">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-sky-400">
-          {{ editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new') }}
-        </span>
-        <button v-if="editingId" type="button" class="text-xs text-slate-400 hover:text-white" @click="resetForm">
-          {{ $t('manual.odometerReadingsPanel.cancelTheEdit') }}
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div>
-          <label for="checkpoint-date" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.odometerReadingsPanel.readingDate') }}</label>
-          <AppDatePicker id="checkpoint-date" v-model="form.date" required size="sm" />
-        </div>
-        <div>
-          <label for="checkpoint-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.odometerReadingsPanel.mileageKm', { unit: distanceUnit() }) }}</label>
-          <DistanceInput text
-            id="checkpoint-odometer"
-            v-model="form.odometer"
-            step="1"
-            min="0"
-            max="2000000"
-            required
-            :placeholder="$t('common.example', { value: '45000' })"
-            class="field"
-          />
-        </div>
-        <div>
-          <label for="checkpoint-notes" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.odometerReadingsPanel.reasonEvent') }}</label>
-          <input
-            id="checkpoint-notes"
-            v-model="form.notes"
-            type="text"
-            :placeholder="$t('manual.odometerReadingsPanel.eGRoadworthinessInspection')"
-            class="field"
-          />
-        </div>
-      </div>
-
-      <div class="flex justify-end pt-1">
-        <button type="submit" :disabled="submitting" class="btn btn-lg btn-primary">
-          <span>{{ editingId ? $t('manual.odometerReadingsPanel.update') : $t('manual.odometerReadingsPanel.add') }}</span>
-        </button>
-      </div>
-    </form>
+    <!-- A phone adds and edits in a sheet, opened by the Add button of the history -->
+    <OdometerReadingForm
+      v-if="canEdit && !isMobile"
+      v-model:date="form.date"
+      v-model:odometer="form.odometer"
+      v-model:notes="form.notes"
+      :editing="!!editingId"
+      :submitting="submitting"
+      @submit="save"
+      @cancel="resetForm"
+    />
+    <Teleport v-if="canEdit && isMobile" to="body">
+      <ModalShell v-model:open="formOpen" :title="editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new')" size="sm">
+        <p class="mb-4 text-xs text-slate-400">{{ $t('manual.odometerReadingsPanel.odometerReadingsSpreadTheUntracked') }}</p>
+        <OdometerReadingForm
+          v-model:date="form.date"
+          v-model:odometer="form.odometer"
+          v-model:notes="form.notes"
+          in-sheet
+          :editing="!!editingId"
+          :submitting="submitting"
+          @submit="save"
+          @cancel="formOpen = false"
+        />
+      </ModalShell>
+    </Teleport>
 
     <div class="space-y-3">
       <div class="flex items-center justify-between">
         <h4 class="text-xs font-bold text-white">{{ $t('manual.odometerReadingsPanel.historyOfRecordedReadings') }}</h4>
-        <span class="text-xs text-slate-400">{{ $t('manual.odometerReadingsPanel.pointS', { length: history.length }) }}</span>
+        <div v-if="isMobile" class="flex items-center gap-1">
+          <button v-if="canEdit" type="button" class="btn btn-primary" @click="openNew">
+            <Plus class="h-4 w-4" aria-hidden="true" />{{ $t('manual.odometerReadingsPanel.add') }}
+          </button>
+          <slot name="tools" />
+        </div>
+        <span v-else class="text-xs text-slate-400">{{ $t('manual.odometerReadingsPanel.pointS', { length: history.length }) }}</span>
       </div>
 
       <div v-if="loading" class="py-8 text-center text-xs text-slate-400">{{ $t('manual.odometerReadingsPanel.loadingTheReadings') }}</div>

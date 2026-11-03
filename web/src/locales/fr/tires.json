@@ -45,7 +45,9 @@
     "noScrappedTireHint": "Les pneus mis au rebut (usés, crevés, vendus) apparaissent ici avec leur kilométrage et leur coût final.",
     "noTireYet": "Aucun pneu enregistré",
     "noTireYetHint": "Ajoutez le jeu monté sur le véhicule pour suivre son usure, son kilométrage et son coût par distance.",
-    "scrapNone": "Seuls les pneus montés ou stockés peuvent être mis au rebut"
+    "scrapNone": "Seuls les pneus montés ou stockés peuvent être mis au rebut",
+    "timelineRow": "Pneus par kilométrage",
+    "timelineHint": "Quel train a roulé sur quelle distance"
   },
   "tireAddModal": {
     "createTheTires": "Créer les pneus",
@@ -382,5 +384,10 @@
     "mostWorn": "Pneu le plus usé",
     "ofLifespan": "de sa durée de vie",
     "nextReplacement": "Prochain remplacement"
+  },
+  "overview": {
+    "mixed": "Pneus différents selon les roues",
+    "partlyFitted": "{count} roues sur {total} équipées",
+    "due": "À changer {date}"
   }
 }

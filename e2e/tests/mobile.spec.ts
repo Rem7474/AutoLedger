@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { useVehicle, vehicles, type Vehicle } from './helpers'
+import { authHeaders, useVehicle, vehicles, type Vehicle } from './helpers'
 
 // A phone: touch pointer, so the 44px hit areas and the 16px fields of main.css apply.
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
@@ -165,4 +165,36 @@ test('on the home page every headline figure leads somewhere you can see', async
   await page.goBack()
   await figures.getByRole('link', { name: /^Energy/ }).click()
   await expect(page).toHaveURL(/\/energy/)
+})
+
+test('a tire opens from its wheel tile, and the fitted set is one card instead of four', async ({ page }) => {
+  await useVehicle(page, ev.id, '/tires')
+  const tiles = page.getByRole('main').getByRole('button', { name: /^Open / })
+  await expect(tiles.first()).toBeVisible()
+  // The four wheels fit in the first screen of the page
+  const last = (await tiles.last().boundingBox())!
+  expect(last.y + last.height).toBeLessThan(844)
+  await tiles.first().click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+})
+
+test('an odometer reading is added from a sheet on a phone, the history comes first', async ({ page, request }) => {
+  await useVehicle(page, ev.id, '/odometer')
+  const main = page.getByRole('main')
+  await expect(main.locator('form')).toHaveCount(0)
+  await main.getByRole('button', { name: 'Add the reading' }).click()
+  const sheet = page.getByRole('dialog', { name: 'New odometer reading' })
+  await expect(sheet).toBeVisible()
+  // A reading is unique per vehicle, day and mileage: a fresh value keeps the test repeatable on a reused database
+  const reading = 30000 + (Date.now() % 9000)
+  await sheet.getByLabel(/^Mileage/).fill(String(reading))
+  await sheet.getByRole('button', { name: 'Add the reading' }).click()
+  await expect(sheet).toBeHidden()
+  await expect(main.getByText(reading.toLocaleString('en-GB')).first()).toBeVisible()
+
+  // Leave the shared demo vehicle as it was found
+  const headers = await authHeaders(request)
+  const list = await (await request.get(`/api/vehicles/${ev.id}/odometer-checkpoints`, { headers })).json()
+  const created = list.find((c: { odometer: number }) => c.odometer === reading)
+  expect((await request.delete(`/api/vehicles/${ev.id}/odometer-checkpoints/${created.id}`, { headers })).ok()).toBeTruthy()
 })

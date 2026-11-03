@@ -45,7 +45,9 @@
     "noScrappedTireHint": "Tires you scrap (worn, punctured, sold) appear here with their final mileage and cost.",
     "noTireYet": "No tire recorded yet",
     "noTireYetHint": "Add the set fitted on the vehicle to track its wear, mileage and cost per distance.",
-    "scrapNone": "Only tires mounted or in storage can be scrapped"
+    "scrapNone": "Only tires mounted or in storage can be scrapped",
+    "timelineRow": "Tires by mileage",
+    "timelineHint": "Which set was fitted over which distance"
   },
   "tireAddModal": {
     "createTheTires": "Create the tires",
@@ -382,5 +384,10 @@
     "mostWorn": "Most worn tire",
     "ofLifespan": "of its lifespan",
     "nextReplacement": "Next replacement"
+  },
+  "overview": {
+    "mixed": "Different tires on the wheels",
+    "partlyFitted": "{count} of {total} wheels fitted",
+    "due": "Replace {date}"
   }
 }

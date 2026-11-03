@@ -3,6 +3,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import { ClipboardList as PageIcon } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { UploadCloud, Download } from 'lucide-vue-next'
+import RowMenu from '@/components/RowMenu.vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import OdometerReadingsPanel from '@/components/manual/OdometerReadingsPanel.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
@@ -30,7 +31,7 @@ const vehicleStore = useVehicleStore()
     </div>
 
     <template v-else>
-      <div class="flex justify-end">
+      <div class="flex justify-end max-sm:hidden">
         <div class="flex items-center gap-2">
           <button
             v-if="vehicleStore.canEdit"
@@ -52,7 +53,19 @@ const vehicleStore = useVehicleStore()
         </div>
       </div>
 
-      <OdometerReadingsPanel :key="reloadKey" :vehicle="vehicleStore.activeVehicle" :can-edit="vehicleStore.canEdit" />
+      <OdometerReadingsPanel :key="reloadKey" :vehicle="vehicleStore.activeVehicle" :can-edit="vehicleStore.canEdit">
+        <!-- Import and export are rare: a menu next to the Add button on a phone, two buttons above on a wide screen -->
+        <template #tools>
+          <RowMenu phone class="sm:hidden" :label="$t('common.moreActions')" :heading="$t('shell.nav.odometer')">
+            <button v-if="vehicleStore.canEdit" type="button" role="menuitem" class="menu-item" @click="showImport = true">
+              <UploadCloud class="w-3.5 h-3.5 text-slate-400" />{{ $t('expenses.expensesView.importCsv') }}
+            </button>
+            <button type="button" role="menuitem" class="menu-item" @click="showExport = true">
+              <Download class="w-3.5 h-3.5 text-slate-400" />{{ $t('import.export') }}
+            </button>
+          </RowMenu>
+        </template>
+      </OdometerReadingsPanel>
       <ExportDataModal v-model:open="showExport" :vehicle-id="vehicleStore.activeVehicle.id" />
       <CSVImportModal
         v-model:open="showImport"

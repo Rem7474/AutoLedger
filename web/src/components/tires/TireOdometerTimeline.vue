@@ -9,7 +9,7 @@ import { useEscapeToClose } from '@/composables/useEscapeToClose'
 
 // The tires fitted over the odometer, one thin bar per axle or wheel. A segment shows its detail in a card anchored to
 // it: on hover for a glance, pinned by a click (or a tap) to reach the tire sheets.
-const props = defineProps<{ tires: any[]; currentOdometer: number; startOdometer?: number | null }>()
+const props = defineProps<{ tires: any[]; currentOdometer: number; startOdometer?: number | null; bare?: boolean }>()
 const emit = defineEmits<{ (e: 'select-tire', tireId: string): void }>()
 
 const timeline = computed(() => buildTireTimeline(props.tires, Math.round(props.currentOdometer || 0), props.startOdometer ?? null))
@@ -88,7 +88,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
 </script>
 
 <template>
-  <div ref="root" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-sm">
+  <div ref="root" class="space-y-3" :class="{ 'bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-sm': !bare }">
     <div class="flex items-center justify-between flex-wrap gap-2">
       <h3 class="text-sm font-bold text-white">{{ $t('tires.tireOdometerTimeline.tiresFittedByMileage') }}</h3>
       <span class="text-xs text-slate-400">{{ fmtKm(timeline.minKm) }} → {{ fmtKm(timeline.maxKm) }}</span>

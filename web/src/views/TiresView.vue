@@ -18,6 +18,8 @@ import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import TireQuickRotationBar from '@/components/tires/TireQuickRotationBar.vue'
 import TireSetSummary from '@/components/tires/TireSetSummary.vue'
 import TireOdometerTimeline from '@/components/tires/TireOdometerTimeline.vue'
+import TireSetOverview from '@/components/tires/TireSetOverview.vue'
+import { useIsMobile } from '@/composables/useIsMobile'
 import TireWheelCard from '@/components/tires/TireWheelCard.vue'
 import TireStorageCard from '@/components/tires/TireStorageCard.vue'
 import TireDisposedCard from '@/components/tires/TireDisposedCard.vue'
@@ -32,7 +34,8 @@ import TireBatchSessionModal from '@/components/tires/TireBatchSessionModal.vue'
 import TireDuplicateSessionModal from '@/components/tires/TireDuplicateSessionModal.vue'
 import TireBatchDisposeModal from '@/components/tires/TireBatchDisposeModal.vue'
 import TireCopyHistoryModal from '@/components/tires/TireCopyHistoryModal.vue'
-import { Archive, Copy, Disc, History, Package, Pencil, Plus, Snowflake } from 'lucide-vue-next'
+import { Archive, ChartGantt, Copy, Disc, History, Package, Pencil, Plus, Snowflake } from 'lucide-vue-next'
+import SheetRow from '@/components/SheetRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { getLastDismountInfo } from '@/utils/tires'
 
@@ -63,6 +66,7 @@ const tabs = computed<TabItem[]>(() => [
   { key: 'disposed', label: t('tires.tiresView.scrapped', { length: disposedTires.value.length }), icon: Archive, muted: disposedTires.value.length === 0 },
 ])
 
+const isMobile = useIsMobile()
 const wheels = [
   { pos: 'FL', labelKey: 'tires.wheels.FL' },
   { pos: 'FR', labelKey: 'tires.wheels.FR' },
@@ -309,16 +313,31 @@ async function onLogSaved() {
 
     <!-- TAB 1: CHASSIS INTERACTIF (PNEUS MONTÉS) -->
     <div v-if="ready && activeTab === 'chassis'" class="space-y-6">
-      <TireSetSummary v-if="hasMountedTires" :mounted="mountedTires" />
-      <TireOdometerTimeline
-        :tires="tires"
-        :current-odometer="vehicleStore.activeVehicle?.current_odometer || 0"
-        :start-odometer="startOdometer"
-        @select-tire="openTimelineTire"
+      <!-- Below sm the set is one card and a tile per wheel instead of three figures and four near-identical cards -->
+      <TireSetOverview
+        v-if="isMobile && tires.length > 0"
+        :mounted="mountedTires"
+        :wheels="wheels"
+        :selected-ids="selectedTireIds"
+        :can-mount="vehicleStore.canEdit"
+        @open="openHistoryModal"
+        @toggle="toggleTireSelection"
+        @mount="mountOnEmptyWheel"
       />
+      <TireSetSummary v-else-if="hasMountedTires" :mounted="mountedTires" />
+      <SheetRow v-slot="{ bare, close }" :title="$t('tires.tiresView.timelineRow')" :hint="$t('tires.tiresView.timelineHint')" :icon="ChartGantt" :enabled="tires.length > 0">
+        <TireOdometerTimeline
+          :tires="tires"
+          :current-odometer="vehicleStore.activeVehicle?.current_odometer || 0"
+          :start-odometer="startOdometer"
+          :bare="bare"
+          @select-tire="close(); openTimelineTire($event)"
+        />
+      </SheetRow>
       <TireQuickRotationBar v-if="vehicleStore.canEdit" :has-mounted-tires="hasMountedTires" @rotated="loadTires" />
 
-      <div v-if="vehicleStore.canEdit && currentTabTireIds.length > 0" class="flex items-center justify-between text-xs text-slate-400 px-2">
+      <!-- On a phone the wheels are tiles: a long press starts the selection there -->
+      <div v-if="vehicleStore.canEdit && currentTabTireIds.length > 0" class="flex items-center justify-between text-xs text-slate-400 px-2 max-sm:hidden">
         <SelectAllToggle
           :checked="isCurrentTabAllSelected"
           :indeterminate="isCurrentTabPartlySelected"
@@ -338,7 +357,7 @@ async function onLogSaved() {
       </EmptyState>
 
       <!-- Cartes des 4 roues -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div v-else-if="!isMobile" class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <TireWheelCard
           v-for="w in wheels"
           :key="w.pos"
