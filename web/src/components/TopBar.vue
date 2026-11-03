@@ -39,7 +39,7 @@ function onVehicleChange(event: Event) {
 
 <template>
   <div>
-    <header class="bg-slate-900/60 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
+    <header class="[view-transition-name:top-bar] bg-slate-900/60 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
       <!-- Vehicle Selector -->
       <div class="flex min-w-0 flex-1 items-center gap-3">
         <div class="hidden sm:block p-2 bg-slate-800 rounded-lg text-slate-400">

@@ -510,3 +510,8 @@ select option:disabled {
   }
 }
 
+/* The crossfade between two pages of a phone (installViewTransitions) is a short fade, like any other transition */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 150ms;
+}

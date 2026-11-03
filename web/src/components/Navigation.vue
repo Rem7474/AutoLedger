@@ -180,7 +180,7 @@ function handleLogout() {
   </aside>
 
   <!-- Mobile Bottom Navigation Bar -->
-  <nav :aria-label="$t('shell.navigation.mainNavigation')" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-1 safe-area-pb">
+  <nav :aria-label="$t('shell.navigation.mainNavigation')" class="md:hidden fixed bottom-0 left-0 right-0 z-50 [view-transition-name:bottom-bar] bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-1 safe-area-pb">
     <ul class="flex items-stretch">
       <li v-for="item in leftItems" :key="item.name" class="flex-1">
         <router-link
