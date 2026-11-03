@@ -139,8 +139,10 @@ async function checkPendingCharges() {
   }
 }
 
+const refreshData = () => loadData(true)
+
 async function onChargesAssigned() {
-  await loadData()
+  await refreshData()
 }
 
 // The fill-ups panel loads its own data when mounted: remounting it shows what an import added
@@ -150,9 +152,11 @@ function onImported() {
   loadData()
 }
 
-async function loadData() {
+// A new vehicle, tab or filter shows the skeleton. After an action on a row (save, delete, "Free") the list stays on
+// screen with the pages already loaded: a skeleton there collapses the page and throws a phone back to the top.
+async function loadData(keepList = false) {
   if (!vehicleStore.activeVehicle) return
-  loading.value = true
+  if (!keepList) loading.value = true
   loadError.value = null
   try {
     if (activeTab.value === 'TOLLS') {
@@ -162,9 +166,15 @@ async function loadData() {
     } else if (activeTab.value === 'REMINDERS') {
       await loadReminders()
     } else if (activeTab.value === 'CHARGES' && vehicleStore.canCharge) {
-      chargesPage.value = 1
-      const res = await api.getCharges(vehicleStore.activeVehicle.id, { missingCost: missingCostOnly.value })
-      charges.value = res.charges
+      const pages = keepList ? chargesPage.value : 1
+      const loaded: any[] = []
+      let res: any
+      for (let page = 1; page <= pages; page++) {
+        res = await api.getCharges(vehicleStore.activeVehicle.id, { page, missingCost: missingCostOnly.value })
+        loaded.push(...res.charges)
+      }
+      chargesPage.value = pages
+      charges.value = loaded
       chargesTotal.value = res.total || 0
       chargesWithoutCost.value = res.charges_without_cost || 0
       checkPendingCharges()
@@ -183,7 +193,7 @@ async function loadData() {
   }
 }
 
-const { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, loadData)
+const { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, refreshData)
 
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value, vehicleStore.lastSyncTimestamp],
@@ -258,7 +268,7 @@ async function loadMoreCharges() {
 async function reviewChargeCost(c: any, reviewed: boolean) {
   try {
     await api.setChargeCostReview(vehicleId.value, c.id, reviewed)
-    await loadData()
+    await refreshData()
   } catch (err: any) {
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
@@ -324,7 +334,7 @@ function openUploadDocumentModal() {
 
     <TabBar v-if="tabs.length > 1" :model-value="activeTab" :tabs="tabs" :label="pageTitle" id-prefix="expenses-tab" @update:model-value="activeTab = $event as ExpensesTab" />
 
-    <LoadError v-if="loadError !== null" :message="loadError" @retry="loadData" />
+    <LoadError v-if="loadError !== null" :message="loadError" @retry="loadData()" />
 
     <!-- Content -->
     <TollsPanel
@@ -459,7 +469,7 @@ function openUploadDocumentModal() {
       :vehicle-id="vehicleId"
       :editing="editingToll"
       :documents="documents"
-      @saved="loadData"
+      @saved="refreshData"
       @document-added="onDocumentAdded"
       @view-document="viewOrDownloadDocument"
     />
@@ -472,12 +482,12 @@ function openUploadDocumentModal() {
       :maintenance-expenses="maintenanceExpenses"
       :current-odometer="currentOdometer"
       :default-category="newExpenseCategory"
-      @saved="loadData"
+      @saved="refreshData"
       @document-added="onDocumentAdded"
       @view-document="viewOrDownloadDocument"
     />
 
-    <ChargingPlacesModal v-model:open="showPlacesModal" :vehicle-id="vehicleId" :can-edit="vehicleStore.canEdit" @changed="() => { placesVersion++; loadData() }" />
+    <ChargingPlacesModal v-model:open="showPlacesModal" :vehicle-id="vehicleId" :can-edit="vehicleStore.canEdit" @changed="() => { placesVersion++; refreshData() }" />
 
     <ChargeModal
       v-model:open="showChargeModal"
@@ -485,7 +495,7 @@ function openUploadDocumentModal() {
       :editing="editingCharge"
       :documents="documents"
       :current-odometer="currentOdometer"
-      @saved="loadData"
+      @saved="refreshData"
       @document-added="onDocumentAdded"
       @view-document="viewOrDownloadDocument"
     />
