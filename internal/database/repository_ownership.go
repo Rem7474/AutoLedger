@@ -23,9 +23,10 @@ func (r *Repository) GetVehicleOwnership(ctx context.Context, vehicleID string) 
 	return &o, nil
 }
 
-// SaveVehicleOwnership creates or replaces the ownership contract of a vehicle.
+// SaveVehicleOwnership creates or replaces the ownership contract of a vehicle. A replace that names the version it read
+// is refused with ErrStaleWrite when the contract has been saved since.
 func (r *Repository) SaveVehicleOwnership(ctx context.Context, o *models.VehicleOwnership) error {
-	return scanOwnership(r.pool.QueryRow(ctx, `
+	err := scanOwnership(r.pool.QueryRow(ctx, `
 		INSERT INTO vehicle_ownership (
 			vehicle_id, acquisition_type, start_date, start_odometer,
 			purchase_price, purchase_fees, incentives, expected_resale_value, expected_holding_months,
@@ -52,7 +53,8 @@ func (r *Repository) SaveVehicleOwnership(ctx context.Context, o *models.Vehicle
 			lease_includes_maintenance = EXCLUDED.lease_includes_maintenance,
 			lease_includes_insurance = EXCLUDED.lease_includes_insurance, lease_includes_tires = EXCLUDED.lease_includes_tires,
 			option_exercised_date = EXCLUDED.option_exercised_date, end_date = EXCLUDED.end_date,
-			sale_price = EXCLUDED.sale_price, updated_at = NOW()
+			sale_price = EXCLUDED.sale_price, version = vehicle_ownership.version + 1, updated_at = NOW()
+		WHERE $30::bigint IS NULL OR vehicle_ownership.version = $30::bigint
 		RETURNING `+ownershipColumns+`;
 	`,
 		o.VehicleID, o.AcquisitionType, o.StartDate, o.StartOdometer,
@@ -61,8 +63,13 @@ func (r *Repository) SaveVehicleOwnership(ctx context.Context, o *models.Vehicle
 		o.LeaseDownPayment, o.LeaseMonthlyRent, o.LeaseDurationMonths, o.LeaseFees, o.LeaseDeposit,
 		o.LeaseKmAllowancePerYear, o.LeaseExcessKmPrice, o.LeaseEndFeesEstimate, o.LeasePurchaseOptionPrice,
 		o.LeaseIncludesMaintenance, o.LeaseIncludesInsurance, o.LeaseIncludesTires, o.OptionExercisedDate,
-		o.EndDate, o.SalePrice,
+		o.EndDate, o.SalePrice, o.ExpectedVersion,
 	), o)
+	// The conflict clause matched a contract whose version moved on: nothing was written and nothing returned.
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrStaleWrite
+	}
+	return err
 }
 
 // DeleteVehicleOwnership removes the ownership contract of a vehicle.

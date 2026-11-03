@@ -8,16 +8,18 @@ import { Ruler } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { type TireLogForm, validateTreadDepth } from '@/utils/tires'
 import { todayIso } from '@/utils/dates'
 import { distanceUnit } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
 
 // Adds or edits (editingLogId set) a tread depth measurement of selectedTire; initialForm seeds the fields when the modal opens
-const props = defineProps<{ vehicleId: string; selectedTire: any | null; editingLogId: string | null; initialForm: TireLogForm }>()
+const props = defineProps<{ vehicleId: string; selectedTire: any | null; editingLogId: string | null; editingLogVersion: number | null; initialForm: TireLogForm }>()
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
+const { explainStaleWrite } = useStaleWrite()
 
 const newLogForm = ref<TireLogForm>({
   depth_mm: 6.5,
@@ -52,13 +54,18 @@ async function handleAddLogAction() {
       date: new Date(newLogForm.value.date).toISOString(),
     }
     if (props.editingLogId) {
-      await api.updateTireLog(props.vehicleId, props.selectedTire.id, props.editingLogId, payload)
+      await api.updateTireLog(props.vehicleId, props.selectedTire.id, props.editingLogId, { ...payload, expected_version: props.editingLogVersion ?? undefined })
     } else {
       await api.addTireLog(props.vehicleId, props.selectedTire.id, payload)
     }
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

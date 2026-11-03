@@ -42,6 +42,7 @@ type ReminderPayload struct {
 	LeadKm              int      `json:"lead_km"`
 	LeadDays            int      `json:"lead_days"`
 	WebhookEnabled      bool     `json:"webhook_enabled"`
+	ExpectedVersion     *int64   `json:"expected_version"` // The version the client read; absent: not checked
 }
 
 func (h *ReminderHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -227,6 +228,7 @@ func (h *ReminderHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	rem, err := h.buildReminder(req, vehicleID, reminderID)
 	if err == nil {
+		rem.ExpectedVersion = req.ExpectedVersion
 		err = h.applyMaintenanceLink(r.Context(), rem)
 	}
 	if err != nil {

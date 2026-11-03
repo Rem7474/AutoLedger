@@ -15,6 +15,8 @@ import (
 
 var (
 	ErrNotFound = errors.New("record not found")
+	// ErrStaleWrite means the record was saved by someone else since the caller read it.
+	ErrStaleWrite = errors.New("record changed since it was read")
 )
 
 // Repository encapsulates database operations.
