@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { intlLocale, t } from '@/i18n'
 import { computed, ref, watch, onMounted } from 'vue'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { Fuel, Gauge, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/components/ModalShell.vue'
 import OdometerReadingForm from '@/components/manual/OdometerReadingForm.vue'
@@ -54,8 +55,9 @@ const form = ref({
   notes: '',
 })
 
-async function load() {
-  loading.value = true
+// `silent` reloads behind the list that is already shown (pull to refresh) instead of swapping it for the loading state.
+async function load(silent = false) {
+  if (!silent) loading.value = true
   try {
     const refuels = canRefuel(props.vehicle.powertrain)
     const [list, fuel] = await Promise.all([
@@ -191,6 +193,7 @@ onMounted(() => {
   resetForm()
   load()
 })
+useRefreshHandler(() => load(true))
 </script>
 
 <template>

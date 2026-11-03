@@ -29,6 +29,20 @@ describe('useTireList', () => {
     expect(list.loading.value).toBe(false)
   })
 
+  it('reloads behind the list on a silent load, but not when the event of a handler is passed', async () => {
+    let answer: (v: any) => void = () => {}
+    vi.mocked(api.getTires).mockReturnValue(new Promise((resolve) => { answer = resolve }) as any)
+    const list = useTireList()
+    const silent = list.loadTires(true)
+    expect(list.loading.value).toBe(false)
+    answer([tire('a', 'FL')])
+    await silent
+
+    vi.mocked(api.getTires).mockReturnValue(new Promise(() => {}) as any)
+    void list.loadTires(new Event('saved') as any)
+    expect(list.loading.value).toBe(true)
+  })
+
   it('treats a null answer as no tires', async () => {
     vi.mocked(api.getTires).mockResolvedValue(null as any)
     const list = useTireList()

@@ -10,6 +10,7 @@ import DistanceInput from '@/components/DistanceInput.vue'
 import { distanceUnit, formatDistanceValue, fuelConsumptionUnit, volumeUnitLabel } from '@/units'
 import { apiMessageText } from '@/services/apiError'
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { Plus, Trash2, Pencil, ArrowLeft, ArrowRight, Info, ChevronDown, GitCompare } from 'lucide-vue-next'
 import RowMenu from '@/components/RowMenu.vue'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -99,8 +100,10 @@ function fmtKm(v: number): string {
   return formatDistanceValue(Number(v || 0))
 }
 
-async function loadScenarios() {
-  loading.value = true
+// `silent` reloads behind the list that is already shown (pull to refresh) instead of swapping it for the skeleton.
+// Compared strictly: the function is also bound as an event handler, which passes the event.
+async function loadScenarios(silent?: boolean) {
+  if (silent !== true) loading.value = true
   loadError.value = null
   try {
     scenarios.value = await api.getComparisonScenarios()
@@ -284,6 +287,7 @@ async function openCompare() {
 onMounted(async () => {
   await loadScenarios()
 })
+useRefreshHandler(() => loadScenarios(true))
 </script>
 
 <template>
