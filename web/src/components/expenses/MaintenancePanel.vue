@@ -6,6 +6,7 @@ import RowMenu from '@/components/RowMenu.vue'
 import ListSummary from '@/components/ListSummary.vue'
 import CostHistory from '@/components/costs/CostHistory.vue'
 import SheetRow from '@/components/SheetRow.vue'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { computed, ref } from 'vue'
@@ -122,9 +123,8 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
         </div>
       </SheetRow>
       <EmptyState v-if="!visible.length">{{ $t('expenses.maintenancePanel.noMatch') }}</EmptyState>
+      <SwipeToDelete v-for="m in visible" :key="m.id" :disabled="!vehicleStore.canEdit || selectedIds.length > 0" @delete="emit('delete', m)">
       <div
-        v-for="m in visible"
-        :key="m.id"
         class="relative hover:border-slate-700/90 border-l-4 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
         :class="[categoryStyle(m.category).accent, { '!border-rose-500/40 bg-slate-800/40': isSelected(m) }]"
       >
@@ -185,6 +185,7 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
           </RowMenu>
         </div>
       </div>
+      </SwipeToDelete>
     </div>
   </div>
 </template>

@@ -2,6 +2,7 @@
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -80,9 +81,8 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       <ListSummary :chips="[]">
         {{ $t('expenses.tollsPanel.count', { count: driveExpenses.length }, driveExpenses.length) }}
       </ListSummary>
+      <SwipeToDelete v-for="e in driveExpenses" :key="e.id" :disabled="!vehicleStore.canEdit || selectedIds.length > 0" @delete="emit('delete', e)">
       <div
-        v-for="e in driveExpenses"
-        :key="e.id"
         class="relative hover:border-slate-700/90 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
         :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(e) }"
       >
@@ -142,6 +142,7 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
           </RowMenu>
         </div>
       </div>
+      </SwipeToDelete>
     </div>
   </div>
 </template>
