@@ -19,6 +19,7 @@ const loading = ref(true)
 const loadError = ref<string | null>(null)
 const modalOpen = ref(false)
 const editingId = ref<string | null>(null)
+const editingVersion = computed(() => plans.value.find((p) => p.id === editingId.value)?.version ?? null)
 const seed = ref<PlanForm | null>(null)
 
 const groups = computed(() => groupVersions(plans.value))
@@ -123,6 +124,6 @@ onMounted(load)
       </li>
     </ul>
 
-    <TariffPlanModal v-model:open="modalOpen" :plan-id="editingId" :seed="seed" :currency="vehicleStore.currency" @saved="load" />
+    <TariffPlanModal v-model:open="modalOpen" :plan-id="editingId" :plan-version="editingVersion" :seed="seed" :currency="vehicleStore.currency" @saved="load" />
   </section>
 </template>

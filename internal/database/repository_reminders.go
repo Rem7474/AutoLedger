@@ -15,7 +15,7 @@ import (
 
 const reminderColumns = `r.id, r.vehicle_id, r.title, r.category, r.interval_km, r.interval_months, r.scheduled_date, r.repeat_yearly,
 		       r.last_service_odometer, r.last_service_date, r.maintenance_id, r.lead_km, r.lead_days,
-		       r.webhook_enabled, r.last_notified_at, r.last_notified_odometer, r.created_at, r.updated_at,
+		       r.webhook_enabled, r.last_notified_at, r.last_notified_odometer, r.created_at, r.updated_at, r.version,
 		       m.date, m.category, m.description, m.odometer`
 
 func scanReminder(row pgx.Row) (*models.MaintenanceReminder, error) {
@@ -26,7 +26,7 @@ func scanReminder(row pgx.Row) (*models.MaintenanceReminder, error) {
 	if err := row.Scan(
 		&rem.ID, &rem.VehicleID, &rem.Title, &rem.Category, &rem.IntervalKm, &rem.IntervalMonths, &rem.ScheduledDate, &rem.RepeatYearly,
 		&rem.LastServiceOdometer, &rem.LastServiceDate, &rem.MaintenanceID, &rem.LeadKm, &rem.LeadDays,
-		&rem.WebhookEnabled, &rem.LastNotifiedAt, &rem.LastNotifiedOdometer, &rem.CreatedAt, &rem.UpdatedAt,
+		&rem.WebhookEnabled, &rem.LastNotifiedAt, &rem.LastNotifiedOdometer, &rem.CreatedAt, &rem.UpdatedAt, &rem.Version,
 		&mDate, &mCategory, &mDescription, &mOdometer,
 	); err != nil {
 		return nil, err
@@ -124,13 +124,13 @@ func (r *Repository) CreateMaintenanceReminder(ctx context.Context, rem *models.
 			last_service_odometer, last_service_date, lead_km, lead_days,
 			webhook_enabled, scheduled_date, repeat_yearly, maintenance_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`
 	return r.pool.QueryRow(ctx, query,
 		rem.VehicleID, rem.Title, rem.Category, rem.IntervalKm, rem.IntervalMonths,
 		rem.LastServiceOdometer, rem.LastServiceDate, rem.LeadKm, rem.LeadDays,
 		rem.WebhookEnabled, rem.ScheduledDate, rem.RepeatYearly, rem.MaintenanceID,
-	).Scan(&rem.ID, &rem.CreatedAt, &rem.UpdatedAt)
+	).Scan(&rem.ID, &rem.CreatedAt, &rem.UpdatedAt, &rem.Version)
 }
 
 func (r *Repository) UpdateMaintenanceReminder(ctx context.Context, rem *models.MaintenanceReminder) error {
@@ -138,21 +138,20 @@ func (r *Repository) UpdateMaintenanceReminder(ctx context.Context, rem *models.
 		UPDATE maintenance_reminders
 		SET title = $1, category = $2, interval_km = $3, interval_months = $4,
 		    last_service_odometer = $5, last_service_date = $6, lead_km = $7, lead_days = $8,
-		    webhook_enabled = $9, scheduled_date = $10, repeat_yearly = $11, maintenance_id = $12, updated_at = NOW()
-		WHERE id::text = $13 AND vehicle_id = $14;
+		    webhook_enabled = $9, scheduled_date = $10, repeat_yearly = $11, maintenance_id = $12,
+		    version = version + 1, updated_at = NOW()
+		WHERE id::text = $13 AND vehicle_id = $14 AND ($15::bigint IS NULL OR version = $15::bigint)
+		RETURNING version, updated_at;
 	`
-	cmdTag, err := r.pool.Exec(ctx, query,
+	err := r.pool.QueryRow(ctx, query,
 		rem.Title, rem.Category, rem.IntervalKm, rem.IntervalMonths,
 		rem.LastServiceOdometer, rem.LastServiceDate, rem.LeadKm, rem.LeadDays,
-		rem.WebhookEnabled, rem.ScheduledDate, rem.RepeatYearly, rem.MaintenanceID, rem.ID, rem.VehicleID,
-	)
-	if err != nil {
-		return err
+		rem.WebhookEnabled, rem.ScheduledDate, rem.RepeatYearly, rem.MaintenanceID, rem.ID, rem.VehicleID, rem.ExpectedVersion,
+	).Scan(&rem.Version, &rem.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, r.pool, "maintenance_reminders", rem.ID, rem.VehicleID, rem.ExpectedVersion)
 	}
-	if cmdTag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	return nil
+	return err
 }
 
 // CompleteMaintenanceReminder restarts a reminder from a service done on `completedDate`; `maintenanceID`, when given,
@@ -160,7 +159,7 @@ func (r *Repository) UpdateMaintenanceReminder(ctx context.Context, rem *models.
 func (r *Repository) CompleteMaintenanceReminder(ctx context.Context, vehicleID, reminderID string, completedDate time.Time, completedOdo float64, maintenanceID *string) error {
 	query := `
 		UPDATE maintenance_reminders
-		SET last_service_date = $1, last_service_odometer = $2, maintenance_id = $3, last_notified_at = NULL, last_notified_odometer = NULL, updated_at = NOW()
+		SET last_service_date = $1, last_service_odometer = $2, maintenance_id = $3, last_notified_at = NULL, last_notified_odometer = NULL, version = version + 1, updated_at = NOW()
 		WHERE id::text = $4 AND vehicle_id = $5;
 	`
 	cmdTag, err := r.pool.Exec(ctx, query, completedDate, completedOdo, maintenanceID, reminderID, vehicleID)

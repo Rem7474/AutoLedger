@@ -5,6 +5,7 @@ import { intlLocale, t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useConfirm } from '@/composables/useConfirm'
 import {
   RefreshCw,
@@ -38,6 +39,7 @@ const props = withDefaults(
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
+const { explainStaleWrite } = useStaleWrite()
 const vehicleStore = useVehicleStore()
 const existingVehicles = computed(() => props.vehicles ?? vehicleStore.vehicles)
 
@@ -125,13 +127,18 @@ async function handleSaveAction() {
     }
 
     if (isEditing.value && editingId.value) {
-      await api.updateVehicle(editingId.value, payload)
+      await api.updateVehicle(editingId.value, { ...payload, expected_version: props.editing?.version })
     } else {
       await api.createVehicle(payload)
     }
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

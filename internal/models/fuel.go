@@ -13,19 +13,22 @@ const MaxFuelPricePerLiter = 999_999_999.999
 // Amount is the minimum; the odometer is optional (it is then estimated from the odometer readings)
 // and Liters (or price per liter) enables consumption figures.
 type FuelLog struct {
-	ID            string      `json:"id"`
-	VehicleID     string      `json:"vehicle_id"`
-	Date          time.Time   `json:"date"`
-	Odometer      *float64    `json:"odometer,omitempty"`
-	Amount        money.Cents `json:"amount"`
-	Liters        *float64    `json:"liters,omitempty"`
-	PricePerLiter *float64    `json:"price_per_liter,omitempty"`
-	FuelType      *string     `json:"fuel_type,omitempty"`
-	IsFullTank    bool        `json:"is_full_tank"`
-	Notes         *string     `json:"notes,omitempty"`
-	SourceBatchID *string     `json:"-"`
-	CreatedAt     time.Time   `json:"created_at"`
-	UpdatedAt     time.Time   `json:"updated_at"`
+	ID string `json:"id"`
+	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
+	Version         int64       `json:"version"`
+	ExpectedVersion *int64      `json:"-"`
+	VehicleID       string      `json:"vehicle_id"`
+	Date            time.Time   `json:"date"`
+	Odometer        *float64    `json:"odometer,omitempty"`
+	Amount          money.Cents `json:"amount"`
+	Liters          *float64    `json:"liters,omitempty"`
+	PricePerLiter   *float64    `json:"price_per_liter,omitempty"`
+	FuelType        *string     `json:"fuel_type,omitempty"`
+	IsFullTank      bool        `json:"is_full_tank"`
+	Notes           *string     `json:"notes,omitempty"`
+	SourceBatchID   *string     `json:"-"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       time.Time   `json:"updated_at"`
 }
 
 // OdometerPoint is a manually entered odometer value: a reading or a fill-up that carries a mileage.

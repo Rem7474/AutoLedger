@@ -82,10 +82,15 @@ func TestVerifyPKCE(t *testing.T) {
 }
 
 func TestNormalizeScope(t *testing.T) {
-	for raw, want := range map[string]bool{"": true, "read": true, " read ": true, "read read": true, "write": false, "read write": false, "ingest": false} {
+	for raw, want := range map[string]string{"": "read", "read": "read", " read ": "read", "read read": "read", "write": "write", "read write": "write", "write read": "write"} {
 		scope, ok := NormalizeScope(raw)
-		if ok != want || (ok && scope != "read") {
-			t.Errorf("NormalizeScope(%q) = %q, %v", raw, scope, ok)
+		if !ok || scope != want {
+			t.Errorf("NormalizeScope(%q) = %q, %v, want %q", raw, scope, ok, want)
+		}
+	}
+	for _, raw := range []string{"ingest", "read ingest", "admin", "WRITE"} {
+		if scope, ok := NormalizeScope(raw); ok {
+			t.Errorf("NormalizeScope(%q) = %q, want a refusal", raw, scope)
 		}
 	}
 }

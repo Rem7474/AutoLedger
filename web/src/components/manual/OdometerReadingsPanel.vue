@@ -16,6 +16,7 @@ import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
 import { api } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { distanceUnit, formatDistance, formatDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
 import { canRefuel } from '@/utils/vehicles'
@@ -40,7 +41,9 @@ const sinceLastReading = computed(() => {
   return lastReading.value && Number.isFinite(current) && current >= lastReading.value.odometer ? current - lastReading.value.odometer : null
 })
 const loading = ref(false)
+const { explainStaleWrite } = useStaleWrite()
 const editingId = ref<string | null>(null)
+const editingVersion = ref<number | undefined>(undefined)
 const form = ref({
   date: new Date().toISOString().substring(0, 10),
   odometer: '',
@@ -66,6 +69,7 @@ async function load() {
 
 function resetForm() {
   editingId.value = null
+  editingVersion.value = undefined
   form.value = {
     date: new Date().toISOString().substring(0, 10),
     odometer: props.vehicle?.current_odometer ? String(Math.round(props.vehicle.current_odometer)) : '',
@@ -75,6 +79,7 @@ function resetForm() {
 
 function startEdit(r: any) {
   editingId.value = r.id
+  editingVersion.value = r.version
   form.value = {
     date: new Date(r.date).toISOString().substring(0, 10),
     odometer: String(Math.round(r.odometer)),
@@ -97,7 +102,7 @@ async function saveAction() {
       notes: form.value.notes.trim() || undefined,
     }
     if (editingId.value) {
-      await api.updateOdometerCheckpoint(props.vehicle.id, editingId.value, payload)
+      await api.updateOdometerCheckpoint(props.vehicle.id, editingId.value, { ...payload, expected_version: editingVersion.value })
     } else {
       await api.createOdometerCheckpoint(props.vehicle.id, payload)
     }
@@ -107,6 +112,11 @@ async function saveAction() {
     await vehicleStore.fetchVehicles()
     vehicleStore.lastSyncTimestamp = Date.now()
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      resetForm()
+      await load()
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

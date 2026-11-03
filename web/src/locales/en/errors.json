@@ -24,6 +24,7 @@
     "invalid_status": "Status must be overdue, due_soon or ok",
     "invalid_date": "Invalid date",
     "not_found": "Item not found",
+    "stale": "The item was changed since you opened it: reload it and make your changes again",
     "invalid_reference": "Invalid reference: the drive, group or tire does not exist for this vehicle",
     "invalid_date_value": "Invalid date: {p0}",
     "invalid_value": "Invalid value",
