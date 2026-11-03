@@ -207,6 +207,12 @@ describe('groupChargesByMonth', () => {
     expect(months[0].withoutCost).toBe(1)
   })
 
+  it('leaves a 0 still to confirm out of the average price', () => {
+    const [march] = groupChargesByMonth([...charges, { date: at(2026, 3, 3), kwh_added: 10, cost: 0, cost_to_review: true, currency: 'EUR' }], 'EUR')
+    expect(march.kwh).toBe(55)
+    expect(march.pricePerKwh).toBeCloseTo(16 / 40)
+  })
+
   it('averages the price over the charges that have a cost, converting foreign amounts', () => {
     const [march, february] = groupChargesByMonth(charges, 'EUR')
     expect(march.pricePerKwh).toBeCloseTo(16 / 40)

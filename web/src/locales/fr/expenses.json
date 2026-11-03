@@ -40,9 +40,23 @@
     "fillUps": "Pleins",
     "deleteManyMessage": "Supprimer ces {count} éléments ?"
   },
+  "costReview": {
+    "confirmFree": "Confirmer 0 €",
+    "confirmFreeHint": "TeslaMate envoie 0 pour un coût qu'il ne connaît pas : confirme que cette recharge était gratuite.",
+    "toConfirm": "Coût à confirmer",
+    "free": "Gratuite",
+    "reopen": "Rouvrir le coût",
+    "enterCost": "Coût",
+    "enterCostLong": "Saisir le coût",
+    "setInTeslaMate": "Saisir dans TeslaMate",
+    "enterCostHint": "Saisir le coût de cette recharge",
+    "freeHint": "Confirmer que cette recharge était gratuite",
+    "toComplete": "À compléter ({count})",
+    "toCompleteHint": "Les recharges dont le coût est manquant ou à confirmer : le TCO est sous-estimé tant qu'elles ne sont pas complétées.",
+    "openCharge": "Ouvrir la recharge du {date}"
+  },
   "teslamateLinks": {
     "details": "Détails dans TeslaMate",
-    "setCost": "Définir le coût dans TeslaMate",
     "setCostHint": "Le coût saisi dans TeslaMate est relu à la prochaine synchronisation."
   },
   "chargeModal": {
@@ -66,7 +80,9 @@
     "editCharge": "Modifier la recharge",
     "start": "Début de la charge",
     "endOptional": "Fin de la charge (optionnel)",
-    "sourceLocked": "Données remontées par TeslaMate, en lecture seule ; le coût et les notes sont à vous et survivent aux synchronisations."
+    "sourceLocked": "Données remontées par TeslaMate, en lecture seule ; le coût et les notes sont à vous et survivent aux synchronisations.",
+    "sourceLockedCostInTeslaMate": "Données remontées par TeslaMate, en lecture seule. Le coût se saisit dans TeslaMate et est relu à la prochaine synchronisation ; les notes sont à vous.",
+    "costInTeslaMate": "À saisir dans TeslaMate"
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} recharge(s) affichée(s) sur {chargesTotal}",
@@ -76,8 +92,6 @@
     "viewTheReceipt": "Voir le justificatif",
     "correctedCost": "Coût corrigé",
     "kwh2": "+{kwh_added} kWh",
-    "chargeSWithoutACost": "{chargesWithoutCost} recharge(s) sans coût : le TCO est sous-estimé. Cliquer pour les compléter.",
-    "showingOnlyTheChargesWithout": "Affichage des recharges sans coût uniquement — cliquer pour tout afficher",
     "automaticallyIncludedInTheTco": "(intégrée automatiquement dans le TCO).",
     "kwh3": "{estimated_price_per_kwh}/kWh",
     "kwh100km": "{estimated_kwh_100km} kWh/100 {unit}",

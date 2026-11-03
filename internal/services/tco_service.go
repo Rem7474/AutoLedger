@@ -198,9 +198,9 @@ func (s *TCOService) ComputeVehicleTCO(ctx context.Context, vehicleID string) (*
 	var unconvertedCharges int
 	if err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*), COALESCE(SUM(kwh_added), 0),
-		       COALESCE(SUM(kwh_added) FILTER (WHERE cost IS NOT NULL AND (currency = (SELECT currency FROM vehicles WHERE id = $1) OR fx_rate IS NOT NULL)), 0),
-		       COUNT(*) FILTER (WHERE cost IS NULL),
-		       COALESCE(SUM(kwh_added) FILTER (WHERE cost IS NULL), 0),
+		       COALESCE(SUM(kwh_added) FILTER (WHERE NOT `+database.ChargeCostToReviewSQL("")+` AND (currency = (SELECT currency FROM vehicles WHERE id = $1) OR fx_rate IS NOT NULL)), 0),
+		       COUNT(*) FILTER (WHERE `+database.ChargeCostToReviewSQL("")+`),
+		       COALESCE(SUM(kwh_added) FILTER (WHERE `+database.ChargeCostToReviewSQL("")+`), 0),
 		       COUNT(*) FILTER (WHERE cost IS NOT NULL AND currency <> (SELECT currency FROM vehicles WHERE id = $1) AND fx_rate IS NULL)
 		FROM charge_logs
 		WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL;

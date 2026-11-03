@@ -2,7 +2,8 @@
 import { AlertTriangle } from 'lucide-vue-next'
 
 // Filter toggle showing how many items (drives to qualify, trips detected) still wait for a decision.
-defineProps<{ count: number; active: boolean; title: string }>()
+// `label` replaces the drives wording for another list (charges to complete).
+defineProps<{ count: number; active: boolean; title: string; label?: string }>()
 const emit = defineEmits<{ toggle: [] }>()
 </script>
 
@@ -16,6 +17,6 @@ const emit = defineEmits<{ toggle: [] }>()
     :title="title"
   >
     <AlertTriangle class="w-3.5 h-3.5" />
-    {{ $t('drives.drivesView.toQualify', { unqualifiedCount: count }) }}
+    {{ label ?? $t('drives.drivesView.toQualify', { unqualifiedCount: count }) }}
   </button>
 </template>

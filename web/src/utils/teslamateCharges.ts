@@ -5,6 +5,15 @@ const RESYNC_WINDOW_MS = 30 * 24 * 3600 * 1000
 
 const GRAFANA_MARGIN_MS = 60_000
 
+/** True while the cost of a charge is still to be completed: unknown, or a 0 of a synchronised charge that nobody
+ * confirmed as free (TeslaMate reports a cost it does not know as 0, like a free charge). The server decides
+ * (`cost_to_review`); a charge read before the field existed falls back on an unknown cost. */
+export function chargeCostToReview(c: any): boolean {
+  if (!c) return false
+  if (typeof c.cost_to_review === 'boolean') return c.cost_to_review
+  return c.cost === null || c.cost === undefined
+}
+
 function isTeslaMateCharge(c: any): boolean {
   return !!c?.teslamate_charge_id && chargeOrigin(c) === 'TESLAMATE'
 }
@@ -26,11 +35,12 @@ export function teslamateChargeUrl(vehicle: any, c: any): string | null {
   return `${vehicle.teslamate_grafana_url}/d/BHhxFeZRz/charge-details?${params.toString()}`
 }
 
-/** Link to the page of TeslaMate where the cost of a charge is set. Only for a charge whose cost is unknown and
- * that the next synchronisation will read again: the cost typed there comes back on its own. */
-export function teslamateChargeCostUrl(vehicle: any, c: any, now: number = Date.now()): string | null {
+/** Link to the page of TeslaMate where the cost of a synchronised charge is set, or null when the cost can only be
+ * handled in AutoLedger: no TeslaMate URL on the vehicle, a charge older than the synchronisation window (it is not read
+ * again), or a cost already corrected here. Otherwise the cost belongs to TeslaMate: the next synchronisation reads
+ * what is typed there, so it is not edited in AutoLedger. */
+export function teslamateCostEditUrl(vehicle: any, c: any, now: number = Date.now()): string | null {
   if (!vehicle?.teslamate_url || !isTeslaMateCharge(c)) return null
-  if (c.cost !== null && c.cost !== undefined) return null
   if (c.cost_source === 'MANUAL') return null
   if (now - new Date(c.date).getTime() > RESYNC_WINDOW_MS) return null
   return `${vehicle.teslamate_url}/charge-cost/${c.teslamate_charge_id}`

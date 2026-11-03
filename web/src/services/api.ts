@@ -280,6 +280,12 @@ export const api = {
   deleteImportProfile: (id: string) => request<void>(`/import-profiles/${id}`, { method: 'DELETE' }),
   updateDriveTags: (vehicleId: string, driveId: string, tags: string[]) =>
     request<any>(`/vehicles/${vehicleId}/drives/${driveId}/tags`, { method: 'PATCH', body: JSON.stringify({ tags }) }),
+  setChargeCostReview: (vehicleId: string, chargeId: string, reviewed: boolean) =>
+    request<any>(
+      `/vehicles/${vehicleId}/charges/${chargeId}/cost-review`,
+      { method: 'PATCH', body: JSON.stringify({ reviewed }) },
+      reviewed ? t('shell.api.chargeCostConfirmed') : undefined
+    ),
   setDriveTollReview: (vehicleId: string, driveId: string, reviewed: boolean) =>
     request<any>(
       `/vehicles/${vehicleId}/drives/${driveId}/toll-review`,
