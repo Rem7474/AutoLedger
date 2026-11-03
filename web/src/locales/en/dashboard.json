@@ -419,8 +419,11 @@
     "advancedHint": "The value combines age, mileage and battery health. These weights set the share of each: keep the defaults if unsure."
   },
   "sheets": {
-    "costs": "Costs by month",
-    "costsHint": "Monthly trend and breakdown of the period",
+    "breakdown": "Cost breakdown",
+    "breakdownHint": "Share of each cost item",
+    "mileageLast": "{month}: {distance} driven",
+    "batteryNow": "State of health: {pct}",
+    "resaleNow": "Worth about {value} today",
     "mileage": "Mileage and cost per distance",
     "mileageHint": "Distance and cost per distance, month by month",
     "battery": "Battery health",
