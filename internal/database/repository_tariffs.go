@@ -16,7 +16,7 @@ import (
 const tariffPlanColumns = `id, user_id, name, plan_type, currency, flat_rate,
 	peak_rate, offpeak_rate, time_windows, bands, rules, default_band,
 	standing_charge_cents, to_char(valid_from, 'YYYY-MM-DD'), to_char(valid_to, 'YYYY-MM-DD'),
-	is_default, created_at, updated_at`
+	is_default, created_at, updated_at, version`
 
 func scanTariffPlan(row pgx.Row) (*models.TariffPlan, error) {
 	var p models.TariffPlan
@@ -25,7 +25,7 @@ func scanTariffPlan(row pgx.Row) (*models.TariffPlan, error) {
 		&p.ID, &p.UserID, &p.Name, &p.PlanType, &p.Currency, &p.FlatRateCents,
 		&p.PeakRateCents, &p.OffpeakRateCents, &windowsJSON, &bandsJSON, &rulesJSON, &p.DefaultBand,
 		&p.StandingChargeCents, &p.ValidFrom, &p.ValidTo,
-		&p.IsDefault, &p.CreatedAt, &p.UpdatedAt,
+		&p.IsDefault, &p.CreatedAt, &p.UpdatedAt, &p.Version,
 	); err != nil {
 		return nil, err
 	}
@@ -69,13 +69,13 @@ func (r *Repository) CreateTariffPlan(ctx context.Context, p *models.TariffPlan)
 			peak_rate, offpeak_rate, time_windows, bands, rules, default_band,
 			standing_charge_cents, valid_from, valid_to, is_default
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::date, $14::date, $15)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`
 	return r.pool.QueryRow(ctx, query,
 		p.UserID, p.Name, p.PlanType, p.Currency, p.FlatRateCents,
 		p.PeakRateCents, p.OffpeakRateCents, windowsJSON, bandsJSON, rulesJSON, p.DefaultBand,
 		p.StandingChargeCents, p.ValidFrom, p.ValidTo, p.IsDefault,
-	).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt, &p.Version)
 }
 
 func (r *Repository) GetTariffPlanByID(ctx context.Context, id, userID string) (*models.TariffPlan, error) {
@@ -172,31 +172,32 @@ func (r *Repository) ListTariffPlans(ctx context.Context, userID string) ([]mode
 func (r *Repository) UpdateTariffPlan(ctx context.Context, p *models.TariffPlan) error {
 	windowsJSON, bandsJSON, rulesJSON := marshalTariffJSON(p)
 
-	if p.IsDefault {
-		_, _ = r.pool.Exec(ctx, `UPDATE tariff_plans SET is_default = FALSE WHERE user_id = $1 AND id <> $2;`, p.UserID, p.ID)
-	}
-
 	query := `
 		UPDATE tariff_plans
 		SET name = $1, plan_type = $2, currency = $3, flat_rate = $4,
 		    peak_rate = $5, offpeak_rate = $6, time_windows = $7,
 		    bands = $8, rules = $9, default_band = $10, standing_charge_cents = $11,
 		    valid_from = $12::date, valid_to = $13::date,
-		    is_default = $14, updated_at = NOW()
-		WHERE id = $15 AND user_id = $16;
+		    is_default = $14, version = version + 1, updated_at = NOW()
+		WHERE id = $15 AND user_id = $16 AND ($17::bigint IS NULL OR version = $17::bigint)
+		RETURNING version, updated_at;
 	`
-	tag, err := r.pool.Exec(ctx, query,
+	err := r.pool.QueryRow(ctx, query,
 		p.Name, p.PlanType, p.Currency, p.FlatRateCents,
 		p.PeakRateCents, p.OffpeakRateCents, windowsJSON,
 		bandsJSON, rulesJSON, p.DefaultBand, p.StandingChargeCents,
 		p.ValidFrom, p.ValidTo,
-		p.IsDefault, p.ID, p.UserID,
-	)
+		p.IsDefault, p.ID, p.UserID, p.ExpectedVersion,
+	).Scan(&p.Version, &p.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, r.pool, "tariff_plans", p.ID, p.UserID, p.ExpectedVersion)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to update tariff plan: %w", err)
 	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
+	// Only a saved plan takes over the default: a refused save leaves the other plans alone.
+	if p.IsDefault {
+		_, _ = r.pool.Exec(ctx, `UPDATE tariff_plans SET is_default = FALSE WHERE user_id = $1 AND id <> $2;`, p.UserID, p.ID)
 	}
 	return nil
 }

@@ -101,10 +101,12 @@ const {
   tireSessions,
   tireLogs,
   editingSessionId,
+  editingSessionVersion,
   sessionInitialForm,
   copiedSession,
   sessionToDuplicate,
   editingLogId,
+  editingLogVersion,
   logInitialForm,
   openHistoryModal,
   openTimelineTire,
@@ -472,6 +474,7 @@ async function onLogSaved() {
       :selected-tire="selectedTire"
       :copied-session="copiedSession"
       :editing-session-id="editingSessionId"
+      :editing-session-version="editingSessionVersion"
       :initial-form="sessionInitialForm"
       @saved="onSessionSaved"
     />
@@ -481,6 +484,7 @@ async function onLogSaved() {
       :vehicle-id="vehicleId"
       :selected-tire="selectedTire"
       :editing-log-id="editingLogId"
+      :editing-log-version="editingLogVersion"
       :initial-form="logInitialForm"
       @saved="onLogSaved"
     />

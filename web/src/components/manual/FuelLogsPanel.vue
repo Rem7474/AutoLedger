@@ -10,6 +10,7 @@ import { Fuel, Plus, Trash2 } from 'lucide-vue-next'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useVehicleStore } from '@/stores/vehicle'
 import { currencySymbol, formatAmount } from '@/currency'
 import ModalShell from '@/components/ModalShell.vue'
@@ -31,7 +32,9 @@ const loading = ref(false)
 const loadError = ref<string | null>(null)
 const saving = ref(false)
 const showForm = ref(false)
+const { explainStaleWrite } = useStaleWrite()
 const editingId = ref<string | null>(null)
+const editingVersion = ref<number | undefined>(undefined)
 const formError = ref('')
 
 const fuelTypes = [
@@ -97,6 +100,7 @@ async function load() {
 
 function openAdd() {
   editingId.value = null
+  editingVersion.value = undefined
   form.value = emptyForm()
   formError.value = ''
   showForm.value = true
@@ -104,6 +108,7 @@ function openAdd() {
 
 function openEdit(log: any) {
   editingId.value = log.id
+  editingVersion.value = log.version
   form.value = {
     date: toLocalDay(log.date),
     odometer: log.odometer ?? null,
@@ -145,13 +150,18 @@ async function save() {
   saving.value = true
   try {
     if (editingId.value) {
-      await api.updateFuelLog(props.vehicleId, editingId.value, payload())
+      await api.updateFuelLog(props.vehicleId, editingId.value, { ...payload(), expected_version: editingVersion.value })
     } else {
       await api.createFuelLog(props.vehicleId, payload(), currency.value)
     }
     showForm.value = false
     await load()
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      showForm.value = false
+      await load()
+      return
+    }
     formError.value = err?.message || t('manual.fuelLogsPanel.saveFailed')
   } finally {
     saving.value = false

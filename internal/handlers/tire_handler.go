@@ -210,6 +210,7 @@ type UpdateTireRequest struct {
 	DotCode             *string            `json:"dot_code"`
 	InitialDistanceKm   *float64           `json:"initial_distance_km"`
 	EstimatedLifespanKm *int               `json:"estimated_lifespan_km"`
+	ExpectedVersion     *int64             `json:"expected_version"` // The version the client read; absent: not checked
 }
 
 func (h *TireHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -231,6 +232,7 @@ func (h *TireHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
 		return
 	}
+	t.ExpectedVersion = req.ExpectedVersion
 
 	if req.Brand != nil && *req.Brand != "" {
 		t.Brand = *req.Brand

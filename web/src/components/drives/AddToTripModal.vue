@@ -3,12 +3,14 @@ import { t } from '@/i18n'
 import { ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { Plus } from 'lucide-vue-next'
 import ModalShell from '@/components/ModalShell.vue'
 
 // Adds the selected drives to an existing trip group.
 const props = defineProps<{ vehicleId: string; tripGroups: any[]; selectedDriveIds: string[] }>()
 const emit = defineEmits<{ saved: [] }>()
+const { explainStaleWrite } = useStaleWrite()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
 
@@ -23,10 +25,15 @@ async function handleAddToTrip() {
   if (!props.vehicleId || !tg) return
   const driveIds = Array.from(new Set([...(tg.drive_ids || []), ...props.selectedDriveIds]))
   try {
-    await api.updateTripGroup(props.vehicleId, tg.id, { name: tg.name, notes: tg.notes, drive_ids: driveIds })
+    await api.updateTripGroup(props.vehicleId, tg.id, { name: tg.name, notes: tg.notes, drive_ids: driveIds, expected_version: tg.version })
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

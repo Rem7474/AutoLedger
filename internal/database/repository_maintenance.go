@@ -25,13 +25,13 @@ func (r *Repository) CreateMaintenanceExpense(ctx context.Context, m *models.Mai
 			odometer, is_recurring, recurrence_interval_months, recurrence_end_date, description,
 			amortization_mode, coverage_km, coverage_months, closes_maintenance_id, document_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`
 	err := r.pool.QueryRow(ctx, query,
 		m.VehicleID, m.Category, m.Amount, m.Currency, m.FxRate, m.Date,
 		m.Odometer, m.IsRecurring, m.RecurrenceIntervalMonths, m.RecurrenceEndDate, m.Description,
 		m.AmortizationMode, m.CoverageKm, m.CoverageMonths, m.ClosesMaintenanceID, m.DocumentID,
-	).Scan(&m.ID, &m.CreatedAt, &m.UpdatedAt)
+	).Scan(&m.ID, &m.CreatedAt, &m.UpdatedAt, &m.Version)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (r *Repository) ListMaintenanceExpenses(ctx context.Context, vehicleID stri
 		       m.odometer, m.is_recurring, m.recurrence_interval_months, m.recurrence_end_date, m.description,
 		       m.amortization_mode, m.coverage_km, m.coverage_months, m.closes_maintenance_id,
 		       m.document_id, doc.filename,
-		       m.created_at, m.updated_at
+		       m.created_at, m.updated_at, m.version
 		FROM maintenance_expenses m
 		LEFT JOIN expense_documents doc ON m.document_id = doc.id
 		WHERE m.vehicle_id = $1
@@ -69,7 +69,7 @@ func (r *Repository) ListMaintenanceExpenses(ctx context.Context, vehicleID stri
 			&m.Odometer, &m.IsRecurring, &m.RecurrenceIntervalMonths, &m.RecurrenceEndDate, &m.Description,
 			&m.AmortizationMode, &m.CoverageKm, &m.CoverageMonths, &m.ClosesMaintenanceID,
 			&m.DocumentID, &m.DocumentFilename,
-			&m.CreatedAt, &m.UpdatedAt,
+			&m.CreatedAt, &m.UpdatedAt, &m.Version,
 		); err != nil {
 			return nil, err
 		}
@@ -102,18 +102,19 @@ func (r *Repository) UpdateMaintenanceExpense(ctx context.Context, m *models.Mai
 		    coverage_months = $13,
 		    closes_maintenance_id = $14,
 		    document_id = $15,
-		    updated_at = NOW()
-		WHERE id::text = $16 AND vehicle_id = $17
-		RETURNING created_at, updated_at;
+		    updated_at = NOW(),
+		    version = version + 1
+		WHERE id::text = $16 AND vehicle_id = $17 AND ($18::bigint IS NULL OR version = $18::bigint)
+		RETURNING created_at, updated_at, version;
 	`
 	err := r.pool.QueryRow(ctx, query,
 		m.Category, m.Amount, m.Currency, m.FxRate, m.Date,
 		m.Odometer, m.IsRecurring, m.RecurrenceIntervalMonths, m.RecurrenceEndDate, m.Description,
 		m.AmortizationMode, m.CoverageKm, m.CoverageMonths, m.ClosesMaintenanceID, m.DocumentID,
-		m.ID, m.VehicleID,
-	).Scan(&m.CreatedAt, &m.UpdatedAt)
+		m.ID, m.VehicleID, m.ExpectedVersion,
+	).Scan(&m.CreatedAt, &m.UpdatedAt, &m.Version)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrNotFound
+		return staleOrNotFound(ctx, r.pool, "maintenance_expenses", m.ID, m.VehicleID, m.ExpectedVersion)
 	}
 	if err != nil {
 		return err
@@ -122,7 +123,7 @@ func (r *Repository) UpdateMaintenanceExpense(ctx context.Context, m *models.Mai
 	// Reminders that follow from this record keep its date, and its odometer when it has one.
 	if _, err := r.pool.Exec(ctx, `
 		UPDATE maintenance_reminders
-		SET last_service_date = $1, last_service_odometer = COALESCE($2, last_service_odometer), updated_at = NOW()
+		SET last_service_date = $1, last_service_odometer = COALESCE($2, last_service_odometer), version = version + 1, updated_at = NOW()
 		WHERE maintenance_id::text = $3;`, m.Date, m.Odometer, m.ID); err != nil {
 		return err
 	}

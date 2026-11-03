@@ -2,7 +2,10 @@ package database
 
 import (
 	"context"
+	"errors"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/teslacost/teslacost/internal/models"
 )
@@ -11,7 +14,7 @@ import (
 // ListOdometerCheckpoints lists all manual odometer checkpoints for a vehicle, ordered by date ASC, odometer ASC.
 func (r *Repository) ListOdometerCheckpoints(ctx context.Context, vehicleID string) ([]models.OdometerCheckpoint, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT id, vehicle_id, date, odometer, notes, source, created_at, updated_at
+		SELECT id, vehicle_id, date, odometer, notes, source, created_at, updated_at, version
 		FROM odometer_checkpoints
 		WHERE vehicle_id = $1
 		ORDER BY date ASC, odometer ASC;
@@ -24,7 +27,7 @@ func (r *Repository) ListOdometerCheckpoints(ctx context.Context, vehicleID stri
 	list := []models.OdometerCheckpoint{}
 	for rows.Next() {
 		var c models.OdometerCheckpoint
-		if err := rows.Scan(&c.ID, &c.VehicleID, &c.Date, &c.Odometer, &c.Notes, &c.Source, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.VehicleID, &c.Date, &c.Odometer, &c.Notes, &c.Source, &c.CreatedAt, &c.UpdatedAt, &c.Version); err != nil {
 			return nil, err
 		}
 		list = append(list, c)
@@ -43,8 +46,8 @@ func (r *Repository) CreateOdometerCheckpoint(ctx context.Context, c *models.Odo
 	if err := tx.QueryRow(ctx, `
 		INSERT INTO odometer_checkpoints (vehicle_id, date, odometer, notes, source_batch_id)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, source, created_at, updated_at;
-	`, c.VehicleID, c.Date, c.Odometer, c.Notes, c.SourceBatchID).Scan(&c.ID, &c.Source, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		RETURNING id, source, created_at, updated_at, version;
+	`, c.VehicleID, c.Date, c.Odometer, c.Notes, c.SourceBatchID).Scan(&c.ID, &c.Source, &c.CreatedAt, &c.UpdatedAt, &c.Version); err != nil {
 		return err
 	}
 	if err := syncOdometerFromManualPoints(ctx, tx, c.VehicleID); err != nil {
@@ -61,16 +64,17 @@ func (r *Repository) UpdateOdometerCheckpoint(ctx context.Context, c *models.Odo
 	}
 	defer tx.Rollback(ctx)
 
-	tag, err := tx.Exec(ctx, `
+	err = tx.QueryRow(ctx, `
 		UPDATE odometer_checkpoints
-		SET date = $3, odometer = $4, notes = $5, updated_at = NOW()
-		WHERE id = $1 AND vehicle_id = $2 AND source = 'MANUAL';
-	`, c.ID, c.VehicleID, c.Date, c.Odometer, c.Notes)
+		SET date = $3, odometer = $4, notes = $5, updated_at = NOW(), version = version + 1
+		WHERE id = $1 AND vehicle_id = $2 AND source = 'MANUAL' AND ($6::bigint IS NULL OR version = $6::bigint)
+		RETURNING version;
+	`, c.ID, c.VehicleID, c.Date, c.Odometer, c.Notes, c.ExpectedVersion).Scan(&c.Version)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return staleOrNotFound(ctx, tx, "odometer_checkpoints", c.ID, c.VehicleID, c.ExpectedVersion)
+	}
 	if err != nil {
 		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
 	}
 	if err := syncOdometerFromManualPoints(ctx, tx, c.VehicleID); err != nil {
 		return err

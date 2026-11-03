@@ -4,6 +4,7 @@ import { Plus, Trash2, Zap } from 'lucide-vue-next'
 import { api, type TariffPlan } from '@/services/api'
 import { intlLocale, t } from '@/i18n'
 import { currencySymbol } from '@/currency'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import ModalShell from '@/components/ModalShell.vue'
 import NumberInput from '@/components/NumberInput.vue'
 import {
@@ -17,8 +18,9 @@ import {
 } from '@/utils/tariffPlans'
 
 // Creates or edits one tariff plan (one version of a tariff); `seed` carries the values to start from.
-const props = defineProps<{ planId: string | null; seed: PlanForm | null; currency: string }>()
-const emit = defineEmits<{ (e: 'saved', plan: TariffPlan): void }>()
+const props = defineProps<{ planId: string | null; planVersion?: number | null; seed: PlanForm | null; currency: string }>()
+const emit = defineEmits<{ (e: 'saved', plan: TariffPlan | null): void }>()
+const { explainStaleWrite } = useStaleWrite()
 const open = defineModel<boolean>('open', { required: true })
 
 const form = ref<PlanForm>(emptyPlanForm(props.currency))
@@ -55,10 +57,15 @@ async function save() {
   error.value = ''
   try {
     const payload = formToPayload(form.value)
-    const saved = props.planId ? await api.updateTariffPlan(props.planId, payload) : await api.createTariffPlan(payload)
+    const saved = props.planId ? await api.updateTariffPlan(props.planId, { ...payload, expected_version: props.planVersion ?? undefined }) : await api.createTariffPlan(payload)
     emit('saved', saved)
     open.value = false
   } catch (e) {
+    if (await explainStaleWrite(e)) {
+      open.value = false
+      emit('saved', null)
+      return
+    }
     error.value = e instanceof Error ? e.message : t('tariffs.editor.saveFailed')
   } finally {
     saving.value = false
