@@ -27,6 +27,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
 import { groupNavItems } from '@/utils/navigation'
 import { quickKindForRoute } from '@/utils/quickAdd'
+import NavBarItem from '@/components/NavBarItem.vue'
 import SheetGrabber from '@/components/SheetGrabber.vue'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
@@ -183,15 +184,7 @@ function handleLogout() {
   <nav :aria-label="$t('shell.navigation.mainNavigation')" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-1 safe-area-pb">
     <ul class="flex items-stretch">
       <li v-for="item in leftItems" :key="item.name" class="flex-1">
-        <router-link
-          :to="item.path"
-          class="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg text-xs font-medium transition-colors"
-          :class="currentRouteName === item.name ? 'text-rose-400 font-semibold' : 'text-slate-400 hover:text-slate-200'"
-          :aria-current="currentRouteName === item.name ? 'page' : undefined"
-        >
-          <component :is="item.icon" class="h-5 w-5" aria-hidden="true" />
-          <span>{{ $t(item.mobileLabelKey ?? item.labelKey) }}</span>
-        </router-link>
+        <NavBarItem :to="item.path" :icon="item.icon" :label="$t(item.mobileLabelKey ?? item.labelKey)" :active="currentRouteName === item.name" />
       </li>
 
       <li class="flex flex-1 items-center justify-center">
@@ -207,29 +200,11 @@ function handleLogout() {
       </li>
 
       <li v-for="item in rightItems" :key="item.name" class="flex-1">
-        <router-link
-          :to="item.path"
-          class="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg text-xs font-medium transition-colors"
-          :class="currentRouteName === item.name ? 'text-rose-400 font-semibold' : 'text-slate-400 hover:text-slate-200'"
-          :aria-current="currentRouteName === item.name ? 'page' : undefined"
-        >
-          <component :is="item.icon" class="h-5 w-5" aria-hidden="true" />
-          <span>{{ $t(item.mobileLabelKey ?? item.labelKey) }}</span>
-        </router-link>
+        <NavBarItem :to="item.path" :icon="item.icon" :label="$t(item.mobileLabelKey ?? item.labelKey)" :active="currentRouteName === item.name" />
       </li>
 
       <li class="flex-1">
-        <button
-          type="button"
-          class="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-lg text-xs font-medium transition-colors"
-          :class="moreActive || showMore ? 'text-rose-400 font-semibold' : 'text-slate-400 hover:text-slate-200'"
-          aria-haspopup="dialog"
-          :aria-expanded="showMore"
-          @click="showMore = true"
-        >
-          <Ellipsis class="h-5 w-5" aria-hidden="true" />
-          <span>{{ $t('shell.navigation.more') }}</span>
-        </button>
+        <NavBarItem :icon="Ellipsis" :label="$t('shell.navigation.more')" :active="moreActive || showMore" :expanded="showMore" @click="showMore = true" />
       </li>
     </ul>
   </nav>

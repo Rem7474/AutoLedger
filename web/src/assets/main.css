@@ -497,6 +497,22 @@ select option:disabled {
       border-color: transparent;
     }
   }
+  /* A destination of the bottom bar: the pill behind the icon is the active indicator and the pressed feedback */
+  .nav-item {
+    @apply flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-medium text-slate-400 transition-colors hover:text-slate-200;
+  }
+  .nav-pill {
+    @apply flex h-7 w-14 items-center justify-center rounded-full transition-colors;
+  }
+  .nav-item:active .nav-pill {
+    @apply bg-slate-800;
+  }
+  .nav-item-active {
+    @apply font-semibold text-rose-300 hover:text-rose-300;
+  }
+  .nav-item-active .nav-pill {
+    @apply bg-rose-500/20;
+  }
   /* A per-row action: an icon, quiet until hovered, so a list of rows does not repeat a coloured button */
   .row-action {
     @apply inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white;
