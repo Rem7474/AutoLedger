@@ -83,7 +83,7 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       <div
         v-for="e in driveExpenses"
         :key="e.id"
-        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        class="relative hover:border-slate-700/90 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
         :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(e) }"
       >
         <CardOpenButton

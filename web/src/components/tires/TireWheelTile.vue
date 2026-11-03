@@ -32,7 +32,7 @@ const due = computed(() => {
 <template>
   <div
     v-if="stat"
-    class="relative space-y-2 rounded-2xl border border-slate-800 bg-slate-900 p-3.5 select-none [-webkit-touch-callout:none]"
+    class="relative space-y-2 card p-3.5 select-none [-webkit-touch-callout:none]"
     :class="{ 'ring-2 ring-rose-500/50 border-rose-500/60': selected }"
   >
     <CardOpenButton

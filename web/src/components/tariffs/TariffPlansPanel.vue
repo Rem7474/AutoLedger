@@ -75,7 +75,7 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-4" aria-labelledby="account-tariffs">
+  <section class="card p-5 space-y-4" aria-labelledby="account-tariffs">
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
       <div>
         <h2 id="account-tariffs" class="flex items-center gap-2 text-sm font-bold text-white">

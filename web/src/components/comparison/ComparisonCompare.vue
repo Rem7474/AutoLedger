@@ -260,7 +260,7 @@ onBeforeUnmount(() => {
 <template>
   <p v-if="!commonCurrency" class="text-warning-300">{{ $t('comparison.currency.same') }}</p>
   <div v-else class="space-y-5 print-area">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 no-print" data-testid="compare-basis">
+    <div class="card p-4 no-print" data-testid="compare-basis">
       <div class="grid gap-3 sm:grid-cols-2">
         <div>
           <label for="cmp-reference" class="text-xs font-semibold text-slate-300">{{ $t('comparison.comparisonCompare.reference') }}</label>
@@ -300,7 +300,7 @@ onBeforeUnmount(() => {
       <p v-if="electricityKept.length" class="text-xs text-warning-300 mt-1">{{ $t('comparison.comparisonCompare.electricityKept', { names: electricityKept.join(', ') }) }}</p>
     </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
+    <div class="card p-4 overflow-x-auto">
       <div class="flex items-center justify-between mb-3 gap-3">
         <h2 class="text-sm font-semibold text-white">{{ $t('comparison.comparisonCompare.comparisonOfScenarios', { length: rows.length }) }}</h2>
         <button type="button" class="btn btn-secondary no-print" @click="exportCsv">
@@ -345,7 +345,7 @@ onBeforeUnmount(() => {
       </table>
     </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+    <div class="card p-4">
       <div class="flex items-center justify-between gap-3 mb-1">
         <h2 class="text-sm font-semibold text-white">{{ $t('comparison.comparisonCompare.advantageTitle') }}</h2>
         <div class="flex items-center gap-2 no-print">
@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
       <div class="h-72"><canvas ref="curveCanvas" :aria-label="$t('comparison.comparisonCompare.advantageTitle')"></canvas></div>
     </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+    <div class="card p-4">
       <h2 class="text-sm font-semibold text-white mb-3">{{ $t('comparison.comparisonCompare.totalCostPerScenario') }}</h2>
       <div class="h-72"><canvas ref="canvas" :aria-label="$t(sk('comparison.comparisonCompare.totalElectricAndCombustionCost'))"></canvas></div>
     </div>

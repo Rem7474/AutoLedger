@@ -97,7 +97,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
           {{ $t('dashboard.tcoMetricsGrid.sincePurchasePerKm', { amount: perUnit(tco.full_cost_per_km), unit: distanceUnit() }) }}
         </p>
       </KpiCard>
-      <div class="divide-y divide-slate-800 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+      <div class="divide-y divide-slate-800 overflow-hidden card">
         <KpiRow
           v-if="month"
           :label="$t('dashboard.tcoMetricsGrid.currentMonth', { month: formatMonthName(month.month) })"

@@ -280,7 +280,7 @@ async function onLogSaved() {
     <!-- Viewer mode banner -->
     <div
       v-if="!vehicleStore.canEdit"
-      class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center gap-3 text-xs text-slate-400"
+      class="p-3.5 card flex items-center gap-3 text-xs text-slate-400"
     >
       <Disc class="w-4 h-4 text-slate-400 shrink-0" />
       <span>{{ $t('tires.tiresView.youAreViewingThisVehicle') }} <strong>{{ $t('tires.tiresView.readOnly') }}</strong>{{ $t('tires.tiresView.modeChangesToTiresRotations') }}</span>

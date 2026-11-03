@@ -213,7 +213,7 @@ onBeforeUnmount(() => {
     :is="summary ? 'details' : 'section'"
     v-else-if="hasData"
     id="energy-efficiency"
-    class="group scroll-mt-20 rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm"
+    class="group scroll-mt-20 card p-5 shadow-sm"
     :class="summary ? 'open:space-y-4' : 'space-y-4'"
     aria-labelledby="energy-efficiency-title"
   >

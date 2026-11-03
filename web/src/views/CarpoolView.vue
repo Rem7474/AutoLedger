@@ -378,7 +378,7 @@ onMounted(async () => {
     <!-- Viewer mode banner -->
     <div
       v-if="!vehicleStore.canEdit"
-      class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center gap-3 text-xs text-slate-400"
+      class="p-3.5 card flex items-center gap-3 text-xs text-slate-400"
     >
       <Users class="w-4 h-4 text-slate-400 shrink-0" />
       <span>{{ $t('carpool.carpoolView.youAreViewingThisVehicle') }} <strong>{{ $t('carpool.carpoolView.readOnly') }}</strong>{{ $t('carpool.carpoolView.modeCreatingAndEditingCarpools') }}</span>
@@ -389,7 +389,7 @@ onMounted(async () => {
 
     <!-- Loading -->
     <div v-if="loading" class="space-y-4 animate-pulse">
-      <div v-for="i in 2" :key="i" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 h-48"></div>
+      <div v-for="i in 2" :key="i" class="card p-6 h-48"></div>
     </div>
 
     <!-- Empty State -->

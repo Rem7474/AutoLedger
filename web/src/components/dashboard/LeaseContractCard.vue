@@ -18,7 +18,7 @@ const leaseContract = computed(() => buildLeaseSummary(props.tco))
 <template>
   <details
     v-if="leaseContract"
-    class="group bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm open:space-y-4"
+    class="group p-4 sm:p-5 card shadow-sm open:space-y-4"
   >
     <!-- Card Header: the contract state stays visible when the details are closed -->
     <summary class="flex cursor-pointer list-none flex-col sm:flex-row sm:items-center justify-between gap-3 group-open:pb-3 group-open:border-b border-slate-800/80">

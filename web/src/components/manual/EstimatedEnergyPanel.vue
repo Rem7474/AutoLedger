@@ -179,7 +179,7 @@ onMounted(() => {
       </form>
     </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs text-slate-300">
+    <div class="card p-4 flex items-center justify-between gap-3 text-xs text-slate-300">
       <span>{{ $t('manual.estimatedEnergyPanel.aChargeMadeOutsideTeslamate') }}</span>
       <button
         type="button"

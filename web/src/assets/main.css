@@ -486,6 +486,17 @@ select option:disabled {
   .btn-warning {
     @apply bg-warning-600 text-white hover:bg-warning-500;
   }
+  /* The surface of a block of content: one step above the page. Everything that sits inside a card and is not
+     content (a field, an inset row) is one step above the card, slate-800. */
+  .card {
+    @apply rounded-2xl border border-slate-800 bg-slate-900;
+  }
+  /* On a phone the tone separates the card from the page, an outline on top of it only adds noise */
+  @media (width < 40rem) {
+    .card {
+      border-color: transparent;
+    }
+  }
   /* A per-row action: an icon, quiet until hovered, so a list of rows does not repeat a coloured button */
   .row-action {
     @apply inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white;

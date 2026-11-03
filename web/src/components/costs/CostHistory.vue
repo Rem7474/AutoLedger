@@ -111,7 +111,7 @@ onBeforeUnmount(() => chart?.destroy())
 
 <template>
   <LoadError v-if="failed" @retry="load" />
-  <section v-else-if="loaded" :class="bare ? 'space-y-4' : 'space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-4'" :aria-label="$t('expenses.costHistory.title', { label })">
+  <section v-else-if="loaded" :class="bare ? 'space-y-4' : 'space-y-4 card p-4'" :aria-label="$t('expenses.costHistory.title', { label })">
     <header class="space-y-2">
       <h3 class="text-sm font-bold text-white" :class="{ 'sr-only': bare }">{{ $t('expenses.costHistory.title', { label }) }}</h3>
       <div class="flex flex-wrap items-center gap-2">

@@ -320,7 +320,7 @@ onMounted(async () => {
         </button>
       </div>
       <ul class="grid gap-3 md:grid-cols-2">
-        <li v-for="sc in scenarios" :key="sc.id" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3">
+        <li v-for="sc in scenarios" :key="sc.id" class="card p-4 flex items-center justify-between gap-3">
           <label class="tap shrink-0 cursor-pointer">
             <input
               :id="`cmp-select-${sc.id}`"
@@ -369,7 +369,7 @@ onMounted(async () => {
     </div>
 
     <!-- Editor (steps 1 and 2) -->
-    <form v-else-if="view === 'edit'" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5" @submit.prevent="nextStep">
+    <form v-else-if="view === 'edit'" class="card p-5 space-y-5" @submit.prevent="nextStep">
       <div class="text-xs text-slate-400">{{ $t('comparison.comparisonView.stepOf', { step, name: step === 1 ? $t('comparison.comparisonView.usage') : isRetro ? $t('comparison.comparisonView.equivalentIce') : $t('comparison.comparisonView.comparedVehicles') }) }}</div>
 
       <template v-if="step === 1">

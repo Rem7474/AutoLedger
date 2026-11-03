@@ -143,7 +143,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="space-y-3" :class="{ 'bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm': !bare }">
+  <div class="space-y-3" :class="{ 'card p-5 shadow-sm': !bare }">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <div>
         <h3 class="text-sm font-bold text-white flex items-center gap-2">

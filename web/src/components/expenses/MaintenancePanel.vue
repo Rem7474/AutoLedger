@@ -104,7 +104,7 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
         {{ $t('expenses.maintenancePanel.count', { n: visible.length }, visible.length) }}
       </ListSummary>
       <SheetRow v-if="kind === 'service'" v-slot="{ bare }" :title="$t('expenses.maintenancePanel.serviceBook')" :hint="$t('expenses.maintenancePanel.serviceBookShort')" :icon="BookOpen">
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-2" :class="bare ? '' : 'rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3'">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2" :class="bare ? '' : 'card px-4 py-3'">
           <button
             type="button"
             class="btn btn-secondary max-sm:w-full max-sm:justify-center"
@@ -125,7 +125,7 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
       <div
         v-for="m in visible"
         :key="m.id"
-        class="relative bg-slate-900 border border-slate-800 hover:border-slate-700/90 border-l-4 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        class="relative hover:border-slate-700/90 border-l-4 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
         :class="[categoryStyle(m.category).accent, { '!border-rose-500/40 bg-slate-800/40': isSelected(m) }]"
       >
         <CardOpenButton

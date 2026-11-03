@@ -200,7 +200,7 @@ const breakEvenReasonText = computed(() => {
 
 <template>
   <!-- Older cached results without API bounds cannot safely drive the what-if controls. -->
-  <section v-if="limits" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 no-print" data-testid="what-if">
+  <section v-if="limits" class="card p-4 no-print" data-testid="what-if">
     <div class="flex items-center justify-between gap-3 mb-3">
       <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-1.5">
         <SlidersHorizontal class="w-4 h-4 text-slate-400" /> {{ $t('comparison.whatIf.title') }}

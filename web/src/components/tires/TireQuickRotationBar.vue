@@ -29,7 +29,7 @@ const handleQuickRotate = (mode: 'FRONT_BACK' | 'CROSS') => runOnce(() => quickR
 </script>
 
 <template>
-  <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+  <div class="p-3 card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
     <div class="flex items-center gap-2 text-slate-300 font-semibold">
       <RefreshCw class="w-4 h-4 text-rose-400" />
       <span>{{ $t('tires.tiresView.quickVehicleRotationsIn1') }}</span>

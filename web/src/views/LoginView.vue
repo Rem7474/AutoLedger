@@ -68,7 +68,7 @@ async function signIn(emailValue: string, passwordValue: string) {
 
 <template>
   <div class="min-h-screen flex items-center justify-center p-4 bg-slate-950">
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
+    <div class="w-full max-w-md card p-6 sm:p-8 shadow-2xl">
       <div class="text-center mb-8">
         <div class="inline-flex p-3 bg-gradient-to-tr from-rose-500 to-warning-500 rounded-2xl shadow-lg shadow-rose-500/20 mb-3">
           <Zap class="w-8 h-8 text-white" />

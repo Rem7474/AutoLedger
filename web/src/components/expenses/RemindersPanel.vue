@@ -63,7 +63,7 @@ const groups = computed(() => groupRemindersByDue(props.reminders))
     </div>
 
     <div v-if="showSettings" class="space-y-4">
-      <div class="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      <div class="p-4 card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-3">
           <div class="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
             <Radio class="w-5 h-5" />

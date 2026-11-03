@@ -113,7 +113,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-4" aria-labelledby="account-api-tokens">
+  <section class="card p-5 space-y-4" aria-labelledby="account-api-tokens">
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
       <div>
         <h2 id="account-api-tokens" class="flex items-center gap-2 text-sm font-bold text-white">

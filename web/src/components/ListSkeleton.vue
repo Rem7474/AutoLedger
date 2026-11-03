@@ -8,7 +8,7 @@ withDefaults(defineProps<{ rows?: number; label?: string }>(), { rows: 3 })
     <div
       v-for="i in rows"
       :key="i"
-      class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between gap-4 min-h-[5.25rem]"
+      class="p-4 card flex items-center justify-between gap-4 min-h-[5.25rem]"
       aria-hidden="true"
     >
       <div class="flex items-center gap-3 w-2/3">

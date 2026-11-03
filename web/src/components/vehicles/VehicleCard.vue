@@ -40,7 +40,7 @@ function clearCardTestResult() {
 
 <template>
   <div
-    class="bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl relative transition-all"
+    class="p-4 sm:p-5 card relative transition-all"
     :class="{ 'border-rose-500/40 shadow-lg shadow-rose-500/5': vehicleStore.activeVehicleId === v.id }"
   >
     <!-- On a phone the card itself selects the vehicle; the other actions are in its menu -->

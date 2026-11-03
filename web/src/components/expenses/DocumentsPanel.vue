@@ -53,7 +53,7 @@ const linkedCount = computed(() => props.documents.filter((d) => d.linked_expens
       <div
         v-for="d in documents"
         :key="d.id"
-        class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col justify-between gap-3 hover:border-slate-700 transition-colors"
+        class="p-4 card flex flex-col justify-between gap-3 hover:border-slate-700 transition-colors"
       >
         <div class="space-y-2">
           <div class="flex items-start justify-between gap-2">

@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3 animate-pulse">
-    <div v-for="i in 5" :key="i" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between gap-4">
+    <div v-for="i in 5" :key="i" class="p-4 card flex items-center justify-between gap-4">
       <div class="flex items-start gap-3 w-2/3">
         <div class="w-5 h-5 bg-slate-800 rounded mt-1"></div>
         <div class="space-y-2.5 w-full">
