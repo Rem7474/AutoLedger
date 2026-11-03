@@ -60,7 +60,7 @@
     "dateRequired": "Indiquez la date du plein.",
     "saveFailed": "Impossible d'enregistrer le plein.",
     "deleteTitle": "Supprimer le plein",
-    "deleteMessage": "Supprimer le plein du {date} ({amount}) ?",
+    "fillUpDeleted": "Plein supprimé",
     "deleteFailed": "Suppression impossible.",
     "deleteManyMessage": "Supprimer ces {count} pleins ?",
     "saving": "Enregistrement…",

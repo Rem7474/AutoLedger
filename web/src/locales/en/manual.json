@@ -60,7 +60,7 @@
     "dateRequired": "Enter the date of the fill-up.",
     "saveFailed": "Could not save the fill-up.",
     "deleteTitle": "Delete the fill-up",
-    "deleteMessage": "Delete the fill-up of {date} ({amount})?",
+    "fillUpDeleted": "Fill-up deleted",
     "deleteFailed": "Could not delete.",
     "deleteManyMessage": "Delete these {count} fill-ups?",
     "saving": "Saving…",

@@ -399,3 +399,71 @@ test('an odometer reading dragged to the left is deleted with an Undo', async ({
     for (const c of left.filter((x) => x.notes === notes)) await request.delete(`/api/vehicles/${ev.id}/odometer-checkpoints/${c.id}`, { headers })
   }
 })
+
+test('a drive entered by hand dragged to the left is deleted with an Undo', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const address = `Swipe drive ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/drives`, {
+    headers,
+    data: { start_time: new Date().toISOString(), distance_km: 12.3, start_address: address, end_address: 'Swipe end', tags: [] },
+  })
+  expect(created.ok()).toBeTruthy()
+  const listed = async () => {
+    const body = (await (await request.get(`/api/vehicles/${ev.id}/drives?limit=50`, { headers })).json()) as { drives?: { id: string; start_address?: string }[] } | { id: string; start_address?: string }[]
+    return (Array.isArray(body) ? body : (body.drives ?? [])).filter((d) => d.start_address === address)
+  }
+  const count = async () => (await listed()).length
+
+  try {
+    expect(await count()).toBe(1)
+    await useVehicle(page, ev.id, '/drives')
+    const rowOf = () => page.locator('div.card', { hasText: address }).last()
+    await rowOf().scrollIntoViewIfNeeded()
+    const box = (await rowOf().boundingBox())!
+    const y = box.y + box.height / 2
+
+    await drag(page, 340, y, -200, 4)
+    await expect(page.getByText(address)).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(await count()).toBe(1)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(page.getByText(address)).toBeVisible()
+
+    await drag(page, 340, (await rowOf().boundingBox())!.y + box.height / 2, -200, 4)
+    await expect.poll(count, { timeout: 12_000 }).toBe(0)
+  } finally {
+    for (const d of await listed()) await request.delete(`/api/vehicles/${ev.id}/drives/${d.id}`, { headers })
+  }
+})
+
+test('a fill-up dragged to the left is deleted with an Undo', async ({ page, request }) => {
+  const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')!
+  const headers = await authHeaders(request)
+  const odometer = 900000 + (Date.now() % 90000)
+  const created = await request.post(`/api/vehicles/${ice.id}/fuel-logs`, {
+    headers,
+    data: { date: new Date().toISOString(), odometer, liters: 40, amount: 71.23, fuel_type: 'SP95_E10', is_full_tank: true },
+  })
+  expect(created.ok()).toBeTruthy()
+  const logs = async () => (((await (await request.get(`/api/vehicles/${ice.id}/fuel-logs`, { headers })).json()) as { logs: { id: string; odometer: number }[] }).logs ?? []).filter((l) => Math.round(l.odometer) === odometer)
+  const count = async () => (await logs()).length
+
+  try {
+    await useVehicle(page, ice.id, '/energy?tab=FUEL')
+    const rowOf = () => page.locator('div.card', { hasText: odometer.toLocaleString('en-GB') }).last()
+    await rowOf().scrollIntoViewIfNeeded()
+    const box = (await rowOf().boundingBox())!
+    const y = box.y + box.height / 2
+
+    await drag(page, 340, y, -200, 4)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(await count()).toBe(1)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(rowOf()).toBeVisible()
+
+    await drag(page, 340, (await rowOf().boundingBox())!.y + box.height / 2, -200, 4)
+    await expect.poll(count, { timeout: 12_000 }).toBe(0)
+  } finally {
+    for (const l of await logs()) await request.delete(`/api/vehicles/${ice.id}/fuel-logs/${l.id}`, { headers })
+  }
+})

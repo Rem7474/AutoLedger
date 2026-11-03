@@ -22,6 +22,9 @@ import ModalShell from '@/components/ModalShell.vue'
 import { distanceUnit, formatDistance, formatFuelConsumptionValue, formatVolumeValue, fuelConsumptionUnit, litresToDisplayVolume, perDistance, perVolume, volumeUnitLabel } from '@/units'
 import LoadError from '@/components/LoadError.vue'
 import { toLocalDay } from '@/utils/dates'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
+import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
 
 const props = defineProps<{
   vehicleId: string
@@ -90,8 +93,10 @@ function fmtDate(d: string): string {
   return new Date(d).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-async function load() {
-  loading.value = true
+// `silent` reloads behind the list that is already shown instead of swapping it for the loading state.
+// Compared strictly: the function is also bound as an event handler, which passes the event.
+async function load(silent?: boolean) {
+  if (silent !== true) loading.value = true
   loadError.value = null
   try {
     stats.value = await api.getFuelLogs(props.vehicleId)
@@ -173,20 +178,26 @@ async function save() {
   }
 }
 
-async function remove(log: any) {
-  const ok = await showConfirm({
-    title: t('manual.fuelLogsPanel.deleteTitle'),
-    message: t('manual.fuelLogsPanel.deleteMessage', { date: fmtDate(log.date), amount: fmtMoney(log.amount) }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-  try {
-    await api.deleteFuelLog(props.vehicleId, log.id)
-    await load()
-  } catch (err: any) {
-    await showAlert(err?.message || t('manual.fuelLogsPanel.deleteFailed'), t('shell.confirm.error'), 'danger')
+// A single fill-up goes at once and comes back with Undo, the server is asked when that time is over
+function remove(log: any) {
+  const all = () => stats.value?.logs ?? []
+  const index = all().findIndex((l: any) => l.id === log.id)
+  const setLogs = (logs: any[]) => {
+    stats.value = { ...stats.value, logs }
   }
+  deleteWithUndo({
+    message: t('manual.fuelLogsPanel.fillUpDeleted'),
+    hide: () => setLogs(all().filter((l: any) => l.id !== log.id)),
+    restore: () => {
+      if (all().some((l: any) => l.id === log.id)) return
+      const next = [...all()]
+      next.splice(Math.min(Math.max(index, 0), next.length), 0, log)
+      setLogs(next)
+    },
+    commit: () => api.deleteFuelLog(props.vehicleId, log.id),
+    committed: () => void load(true),
+    onError: (err: any) => void showAlert(err?.message || t('manual.fuelLogsPanel.deleteFailed'), t('shell.confirm.error'), 'danger'),
+  })
 }
 
 async function removeMany(items: any[]) {
@@ -213,8 +224,9 @@ const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPoin
 )
 const actions = computed<SelectionAction[]>(() => editDeleteActions(selected.value, { edit: openEdit, remove: removeMany }))
 
-watch(() => props.vehicleId, load)
-onMounted(load)
+watch(() => props.vehicleId, () => load())
+onMounted(() => load())
+useRefreshHandler(() => load(true))
 </script>
 
 <template>
@@ -267,9 +279,9 @@ onMounted(load)
     <BulkSelectionBar v-if="canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
     <SelectionHint v-if="canEdit" />
     <ul class="space-y-2">
-      <li
-        v-for="log in logs"
-        :key="log.id"
+      <li v-for="log in logs" :key="log.id">
+      <SwipeToDelete :disabled="!canEdit || selectedIds.length > 0" @delete="remove(log)">
+      <div
         class="relative hover:border-slate-700/90 card p-3 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
         :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(log) }"
       >
@@ -304,6 +316,8 @@ onMounted(load)
             <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
           </button>
         </RowMenu>
+      </div>
+      </SwipeToDelete>
       </li>
     </ul>
     </template>

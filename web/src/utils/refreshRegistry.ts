@@ -2,16 +2,19 @@
 
 export type Refresh = () => unknown | Promise<unknown>
 
-let current: Refresh | null = null
+// Newest last: a panel inside a page (the fill-ups of the expenses page) takes over while it is shown, and the
+// page's own reload comes back when the panel goes.
+const registered: Refresh[] = []
 
-/** Makes `refresh` what a pull down reloads; the returned function withdraws it unless another page took over since. */
+/** Makes `refresh` what a pull down reloads; the returned function withdraws it. */
 export function registerRefresh(refresh: Refresh): () => void {
-  current = refresh
+  registered.push(refresh)
   return () => {
-    if (current === refresh) current = null
+    const index = registered.lastIndexOf(refresh)
+    if (index !== -1) registered.splice(index, 1)
   }
 }
 
 export function currentRefresh(): Refresh | null {
-  return current
+  return registered[registered.length - 1] ?? null
 }
