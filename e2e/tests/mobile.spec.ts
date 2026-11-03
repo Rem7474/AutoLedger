@@ -98,6 +98,28 @@ async function swipeDown(page: Page, x: number, y: number, distance: number, ste
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 
+test('pulling the page down from the top reloads the list, and a short pull does not', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await page.waitForLoadState('networkidle')
+  const drivesRequests: string[] = []
+  page.on('request', (req) => {
+    if (/\/api\/vehicles\/[^/]+\/drives\?/.test(req.url())) drivesRequests.push(req.url())
+  })
+
+  // A short pull follows the finger and comes back without asking for anything
+  await swipeDown(page, 195, 200, 60)
+  await page.waitForTimeout(700)
+  expect(drivesRequests).toHaveLength(0)
+
+  // A long pull from the top reloads the page's list and shows the badge while it does
+  const reload = page.waitForRequest((req) => /\/api\/vehicles\/[^/]+\/drives\?/.test(req.url()))
+  await swipeDown(page, 195, 200, 260)
+  await reload
+  await expect(page.getByRole('status').filter({ hasText: 'Refreshing' })).toHaveCount(1)
+  await expect(page.getByRole('status').filter({ hasText: 'Refreshing' })).toHaveCount(0)
+  expect(new URL(page.url()).pathname).toBe('/drives')
+})
+
 test('a sheet is closed by pulling it down by its handle, and a short pull lets it settle back', async ({ page }) => {
   await useVehicle(page, ev.id, '/expenses')
   await page.getByRole('button', { name: /^Add/ }).first().click()

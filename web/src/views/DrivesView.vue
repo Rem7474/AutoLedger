@@ -36,6 +36,7 @@ import ManualDriveModal from '@/components/drives/ManualDriveModal.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
 import EmptySourceHints from '@/components/EmptySourceHints.vue'
 import { Layers, List, RotateCcw, Plus, UploadCloud } from 'lucide-vue-next'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import {
   filterTrips,
   currentYearMonth,
@@ -207,6 +208,8 @@ const {
 const selectedSummaryMetrics = computed(() =>
   selectedOffPage.value === 0 && selectedDriveIds.value.length === drives.value.length ? '' : selectionSummary(selectedList.value, vehicleStore.currency)
 )
+
+useRefreshHandler(() => loadDrives(true))
 
 async function loadDrives(silent = false) {
   if (!vehicleStore.activeVehicle) {

@@ -145,5 +145,8 @@
     "tracking": "Tracking",
     "costs": "Costs",
     "management": "Management"
+  },
+  "pullRefresh": {
+    "refreshing": "Refreshing"
   }
 }

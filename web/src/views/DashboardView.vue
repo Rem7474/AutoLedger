@@ -2,6 +2,7 @@
 import LoadError from '@/components/LoadError.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { Activity, BatteryCharging, ChartPie, LayoutDashboard as PageIcon, TrendingDown } from 'lucide-vue-next'
+import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import SheetRow from '@/components/SheetRow.vue'
 import { ref, onMounted, watch, computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -64,6 +65,8 @@ const isMobile = useIsMobile()
 const batteryPercent = ref<number | null>(null)
 const resaleValue = ref<number | null>(null)
 
+useRefreshHandler(() => Promise.all([loadTCO(true), loadRowFigures()]))
+
 async function loadRowFigures() {
   batteryPercent.value = null
   resaleValue.value = null
@@ -95,12 +98,12 @@ function openMonthDetail(m: any) {
   selectedMonth.value = m
 }
 
-async function loadTCO() {
+async function loadTCO(silent = false) {
   if (!vehicleStore.activeVehicle) {
     loading.value = false
     return
   }
-  loading.value = true
+  if (!silent) loading.value = true
   loadError.value = null
   try {
     const [tcoData, remindersData] = await Promise.all([
@@ -200,7 +203,7 @@ onMounted(() => {
     </div>
 
     <!-- REAL CONTENT WHEN LOADED -->
-    <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadTCO" />
+    <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadTCO()" />
 
     <div v-else class="space-y-4 sm:space-y-6">
       <UrgentRemindersBanner :reminders="dashboardReminders" />
