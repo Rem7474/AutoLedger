@@ -198,3 +198,25 @@ test('an odometer reading is added from a sheet on a phone, the history comes fi
   const created = list.find((c: { odometer: number }) => c.odometer === reading)
   expect((await request.delete(`/api/vehicles/${ev.id}/odometer-checkpoints/${created.id}`, { headers })).ok()).toBeTruthy()
 })
+
+test('saving a charge deep in the list keeps the page where it was', async ({ page }) => {
+  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+  const cards = page.getByRole('main').getByRole('button', { name: /^Open the charge of / })
+  await expect(cards.first()).toBeVisible()
+  const last = cards.last()
+  await last.scrollIntoViewIfNeeded()
+  const scroller = page.locator('.app-scroll')
+  const before = await scroller.evaluate((e) => e.scrollTop)
+  expect(before).toBeGreaterThan(400)
+
+  await last.click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+
+  // The list is refreshed behind the sheet without the skeleton: the page stays at the same place
+  await page.waitForTimeout(800)
+  const after = await scroller.evaluate((e) => e.scrollTop)
+  expect(Math.abs(after - before)).toBeLessThan(60)
+})
