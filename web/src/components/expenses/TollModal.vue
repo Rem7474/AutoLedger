@@ -5,6 +5,7 @@ import { t } from '@/i18n'
 import { formatDistance } from '@/units'
 import { computed, ref, watch } from 'vue'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDocumentAttach } from '@/composables/useDocumentAttach'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -33,6 +34,7 @@ const { isUploadingDocument, onSelectExistingDoc, onDropzoneDirectUpload } = use
 
 const vehicleStore = useVehicleStore()
 
+const { explainStaleWrite } = useStaleWrite()
 const editingTollId = computed(() => props.editing?.id ?? null)
 const baseCurrency = computed(() => vehicleStore.currency)
 
@@ -168,13 +170,18 @@ async function handleCreateTollAction() {
     }
 
     if (editingTollId.value) {
-      await api.updateDriveExpense(props.vehicleId, editingTollId.value, payload)
+      await api.updateDriveExpense(props.vehicleId, editingTollId.value, { ...payload, expected_version: props.editing?.version })
     } else {
       await api.createDriveExpense(props.vehicleId, payload)
     }
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

@@ -310,7 +310,7 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ drive_ids: driveIds }) },
       t('shell.api.tripSuggestionDismiss')
     ),
-  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[] }) =>
+  updateTripGroup: (vehicleId: string, groupId: string, payload: { name: string; notes?: string | null; drive_ids?: string[]; expected_version?: number }) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteTripGroup: (vehicleId: string, groupId: string, deleteExpenses = false) =>
     request<any>(`/vehicles/${vehicleId}/trip-groups/${groupId}?delete_expenses=${deleteExpenses}`, { method: 'DELETE' }),
@@ -572,7 +572,7 @@ export const api = {
   getTariffPlans: () => request<{ plans: TariffPlan[] }>('/tariffs/plans'),
   createTariffPlan: (data: Partial<TariffPlan>) =>
     request<TariffPlan>('/tariffs/plans', { method: 'POST', body: JSON.stringify(data) }),
-  updateTariffPlan: (id: string, data: Partial<TariffPlan>) =>
+  updateTariffPlan: (id: string, data: Partial<TariffPlan> & { expected_version?: number }) =>
     request<TariffPlan>(`/tariffs/plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTariffPlan: (id: string) =>
     request<{ success: boolean }>(`/tariffs/plans/${id}`, { method: 'DELETE' }),
@@ -601,6 +601,7 @@ export const api = {
 
 export interface MaintenanceReminder {
   id: string
+  version: number
   vehicle_id: string
   title: string
   category: string
@@ -729,6 +730,7 @@ export interface MileageRate {
 
 export interface TariffPlan {
   id: string
+  version: number
   user_id: string
   name: string
   plan_type: 'FLAT' | 'TIME_OF_USE' | 'BANDS'

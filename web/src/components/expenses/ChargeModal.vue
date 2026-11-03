@@ -4,6 +4,7 @@ import { t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch } from 'vue'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useConfirm } from '@/composables/useConfirm'
 import { useDocumentAttach } from '@/composables/useDocumentAttach'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -36,6 +37,7 @@ const { isUploadingDocument, onSelectExistingDoc, onFileInputChange } = useDocum
   (doc) => emit('document-added', doc)
 )
 
+const { explainStaleWrite } = useStaleWrite()
 const editingCharge = computed(() => props.editing)
 const baseCurrency = computed(() => vehicleStore.currency)
 const sourceLocked = computed(() => chargeFieldAccess(editingCharge.value).sourceLocked)
@@ -137,7 +139,7 @@ async function handleSaveChargeAction() {
   }
   try {
     if (editingCharge.value) {
-      await api.updateCharge(props.vehicleId, editingCharge.value.id, payload)
+      await api.updateCharge(props.vehicleId, editingCharge.value.id, { ...payload, expected_version: editingCharge.value.version })
     } else {
       await api.createCharge(props.vehicleId, payload)
       rememberCharge(props.vehicleId, { kwh: payload.kwh_added, cost: payload.cost, address: payload.address })
@@ -145,6 +147,11 @@ async function handleSaveChargeAction() {
     open.value = false
     emit('saved')
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      open.value = false
+      emit('saved')
+      return
+    }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
 }

@@ -3,12 +3,14 @@ import { t } from '@/i18n'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { formatAmount } from '@/currency'
 import { formatTripDates } from '@/utils/drives'
 
 // Trip groups ("voyages") of the active vehicle: the list, the detected suggestions and their actions.
 // loadDrives reloads the drive list, whose trip badges change with the trips.
 export function useTripGroups({ loadDrives }: { loadDrives: () => unknown }) {
+  const { explainStaleWrite } = useStaleWrite()
   const vehicleStore = useVehicleStore()
   const { showConfirm, showAlert } = useConfirm()
 
@@ -92,13 +94,17 @@ export function useTripGroups({ loadDrives }: { loadDrives: () => unknown }) {
       return
     }
     try {
-      await api.updateTripGroup(vehicleStore.activeVehicle.id, tg.id, { name: tg.name, notes: tg.notes, drive_ids: remaining })
+      await api.updateTripGroup(vehicleStore.activeVehicle.id, tg.id, { name: tg.name, notes: tg.notes, drive_ids: remaining, expected_version: tg.version })
       await loadTripGroups()
       const updated = tripGroups.value.find((g) => g.id === tg.id)
       expandedTripId.value = null
       if (updated) await toggleTripDetails(updated)
       loadDrives()
     } catch (err: any) {
+      if (await explainStaleWrite(err)) {
+        await loadTripGroups()
+        return
+      }
       void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
   }
