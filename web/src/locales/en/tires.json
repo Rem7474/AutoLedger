@@ -44,7 +44,8 @@
     "noScrappedTire": "No scrapped tire",
     "noScrappedTireHint": "Tires you scrap (worn, punctured, sold) appear here with their final mileage and cost.",
     "noTireYet": "No tire recorded yet",
-    "noTireYetHint": "Add the set fitted on the vehicle to track its wear, mileage and cost per distance."
+    "noTireYetHint": "Add the set fitted on the vehicle to track its wear, mileage and cost per distance.",
+    "scrapNone": "Only tires mounted or in storage can be scrapped"
   },
   "tireAddModal": {
     "createTheTires": "Create the tires",

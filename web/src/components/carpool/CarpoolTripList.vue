@@ -7,24 +7,30 @@ import { formatDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
-import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock } from 'lucide-vue-next'
-import { formatDate, hasLinkedLegs } from '@/utils/carpool'
+import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock, ListChecks } from 'lucide-vue-next'
+import RowLeading from '@/components/RowLeading.vue'
+import { formatDate, hasLinkedLegs, splitByFreeze } from '@/utils/carpool'
+import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
+import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 
 // The carpool trips as compact cards (the legs, passengers and costs are in the detail, opened by a click), and the
-// selection actions (recalculate, export). On a phone the checkboxes are hidden at rest: a long press selects a carpool and
+// selection actions (edit, delete, freeze or resync the amounts of the carpools made from drives, recalculate, export). On a phone the checkboxes are hidden at rest: a long press selects a carpool and
 // starts the selection, where the boxes show and a tap toggles the row instead of opening it.
 const props = defineProps<{ trips: any[]; selectedTripIds: string[]; recalculating: boolean }>()
 const emit = defineEmits<{
   clear: []
   open: [trip: any]
   'batch-recalculate': []
+  'batch-freeze': [trips: any[]]
+  'batch-resync': [trips: any[]]
   export: []
   'toggle-all': []
   toggle: [tripId: string]
   recalculate: [trip: any]
   edit: [trip: any]
   delete: [trip: any]
+  'delete-many': [trips: any[]]
 }>()
 const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
@@ -32,6 +38,51 @@ const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 
 // A carpool made from drives follows their cost on its own: only the ones entered by distance are recalculated
 const recalculable = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id) && !hasLinkedLegs(tr)))
+const selectedTrips = computed(() => props.trips.filter((tr) => props.selectedTripIds.includes(tr.id)))
+// The carpools made from drives either follow their cost or hold the amounts as entered (frozen)
+const freezeSplit = computed(() => splitByFreeze(selectedTrips.value))
+const actions = computed<SelectionAction[]>(() => [
+  // On a phone the list has no select-all row (it would push the cards down when the selection starts)
+  {
+    key: 'select-all',
+    label: isAllSelected.value ? t('common.deselectAll') : t('common.selectAll'),
+    icon: ListChecks,
+    run: () => emit('toggle-all'),
+    phoneOnly: true,
+  },
+  ...editDeleteActions(selectedTrips.value, { edit: (tr) => emit('edit', tr), remove: (list) => emit('delete-many', list) }),
+  {
+    key: 'freeze',
+    label: t('carpool.linked.freezeMany', { count: freezeSplit.value.freezable.length }),
+    icon: Lock,
+    run: () => emit('batch-freeze', freezeSplit.value.freezable),
+    busy: props.recalculating,
+    disabled: freezeSplit.value.freezable.length === 0,
+    reason: t('carpool.linked.freezeNone'),
+    overflow: true,
+  },
+  {
+    key: 'resync',
+    label: t('carpool.linked.resyncMany', { count: freezeSplit.value.resyncable.length }),
+    icon: Link2,
+    run: () => emit('batch-resync', freezeSplit.value.resyncable),
+    busy: props.recalculating,
+    disabled: freezeSplit.value.resyncable.length === 0,
+    reason: t('carpool.linked.resyncNone'),
+    overflow: true,
+  },
+  {
+    key: 'recalculate',
+    label: t('carpool.carpoolTripList.recalculateActualCosts', { length: recalculable.value.length }),
+    icon: RotateCw,
+    run: () => emit('batch-recalculate'),
+    busy: props.recalculating,
+    disabled: recalculable.value.length === 0,
+    reason: t('carpool.carpoolTripList.recalculateNone'),
+    overflow: true,
+  },
+  { key: 'export', label: t('carpool.carpoolTripList.exportCsv'), icon: Download, run: () => emit('export'), overflow: true },
+])
 const { showBox, press, onPointerdown, onRowClick } = useSelectableRow<any>({
   enabled: computed(() => vehicleStore.canEdit),
   selecting: computed(() => props.selectedTripIds.length > 0),
@@ -48,33 +99,12 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
       v-if="vehicleStore.canEdit"
       :count="selectedTripIds.length"
       noun="carpool"
+      :actions="actions"
       @clear="emit('clear')"
-    >
-      <button
-        v-if="recalculable.length"
-        type="button"
-        @click="emit('batch-recalculate')"
-        :disabled="recalculating"
-        class="btn btn-primary"
-        :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf2')"
-      >
-        <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': recalculating }" />
-        <span>{{ $t('carpool.carpoolTripList.recalculateActualCosts', { length: recalculable.length }) }}</span>
-      </button>
-
-      <button
-        type="button"
-        @click="emit('export')"
-        class="btn btn-secondary"
-        :title="$t('carpool.carpoolTripList.exportTheSelectionAsCsv')"
-      >
-        <Download class="w-3.5 h-3.5 text-slate-300" />
-        <span>{{ $t('carpool.carpoolTripList.exportCsv') }}</span>
-      </button>
-    </BulkSelectionBar>
+    />
 
     <!-- Header row: Select all checkbox & Total info -->
-    <div v-if="vehicleStore.canEdit" class="flex items-center justify-between text-xs text-slate-400 px-2">
+    <div v-if="vehicleStore.canEdit" class="flex items-center justify-between text-xs text-slate-400 px-2 max-sm:hidden">
       <SelectAllToggle
         :checked="isAllSelected"
         :indeterminate="selectedTripIds.length > 0 && !isAllSelected"
@@ -100,10 +130,11 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         @contextmenu="press.onContextmenu"
       />
       <!-- Select Checkbox -->
+      <RowLeading :icon="Users" :selected="selectedTripIds.includes(trip.id)" />
       <label
         v-if="showBox"
         :for="'carpool-select-' + trip.id"
-        class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer"
+        class="relative z-10 tap mt-0.5 -ml-1 p-1 shrink-0 flex items-center cursor-pointer max-sm:sr-only max-sm:pointer-events-none"
         :title="$t('carpool.carpoolTripList.selectThisCarpool')"
       >
         <span class="sr-only">{{ $t('carpool.carpoolTripList.selectThisCarpool') }}</span>
@@ -119,7 +150,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
       <div class="min-w-0 flex-1">
         <!-- What matters: which carpool, and what is left to the driver -->
         <div class="flex items-start justify-between gap-3">
-          <h3 class="text-sm font-semibold text-white truncate min-w-0" :title="trip.title">{{ trip.title }}</h3>
+          <h3 class="text-sm font-semibold text-white max-sm:line-clamp-2 sm:truncate min-w-0" :title="trip.title">{{ trip.title }}</h3>
           <div class="shrink-0 text-right">
             <div v-if="trip.net_cost > 0" class="text-sm font-extrabold text-white">{{ fmt(trip.net_cost) }}</div>
             <div v-else class="text-sm font-extrabold text-success-400">+{{ fmt(Math.abs(trip.net_cost)) }}</div>

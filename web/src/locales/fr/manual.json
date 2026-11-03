@@ -63,6 +63,7 @@
     "deleteTitle": "Supprimer le plein",
     "deleteMessage": "Supprimer le plein du {date} ({amount}) ?",
     "deleteFailed": "Suppression impossible.",
+    "deleteManyMessage": "Supprimer ces {count} pleins ?",
     "saving": "Enregistrement…",
     "noFillUpHint": "Saisissez la date, le kilométrage et le montant de chaque plein : le coût au {unit} est calculé à partir de ces relevés."
   },
@@ -87,6 +88,7 @@
     "validOdometer": "Veuillez saisir un kilométrage d'odomètre valide",
     "deleteTitle": "Supprimer le relevé kilométrique",
     "deleteMessage": "Supprimer le relevé de {km} {unit} du {date} ?",
+    "deleteManyMessage": "Supprimer ces {count} relevés ?",
     "edit": "Modifier le relevé",
     "update": "Mettre à jour",
     "onDate": "le {date}",
