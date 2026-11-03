@@ -21,6 +21,8 @@ import { api } from '@/services/api'
 import { useStaleWrite } from '@/composables/useStaleWrite'
 import { distanceUnit, formatDistance, formatDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
+import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { canRefuel } from '@/utils/vehicles'
 import { mergeOdometerHistory } from '@/utils/odometerHistory'
 
@@ -136,21 +138,27 @@ async function saveAction() {
 }
 const save = () => runOnce(saveAction)
 
-async function remove(r: any) {
-  const ok = await showConfirm({
-    title: t('manual.odometerReadingsPanel.deleteTitle'),
-    message: t('manual.odometerReadingsPanel.deleteMessage', { unit: distanceUnit(), km: formatDistanceValue(r.odometer), date: new Date(r.date).toLocaleDateString(intlLocale()) }),
-    confirmText: t('common.delete'),
-    type: 'danger',
+// A single reading goes at once and comes back with Undo, the server is asked when that time is over
+function remove(r: any) {
+  const index = readings.value.findIndex((x) => x.id === r.id)
+  deleteWithUndo({
+    message: t('manual.odometerReadingsPanel.readingDeleted'),
+    hide: () => {
+      readings.value = readings.value.filter((x) => x.id !== r.id)
+    },
+    restore: () => {
+      if (readings.value.some((x) => x.id === r.id)) return
+      const next = [...readings.value]
+      next.splice(Math.min(Math.max(index, 0), next.length), 0, r)
+      readings.value = next
+    },
+    commit: () => api.deleteOdometerCheckpoint(props.vehicle.id, r.id),
+    committed: () => {
+      void load(true)
+      vehicleStore.lastSyncTimestamp = Date.now()
+    },
+    onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
   })
-  if (!ok) return
-  try {
-    await api.deleteOdometerCheckpoint(props.vehicle.id, r.id)
-    await load()
-    vehicleStore.lastSyncTimestamp = Date.now()
-  } catch (err: any) {
-    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
 }
 
 async function removeMany(items: any[]) {
@@ -272,9 +280,8 @@ useRefreshHandler(() => load(true))
       <div v-else class="space-y-2">
         <BulkSelectionBar v-if="canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
         <SelectionHint v-if="canEdit && manualReadings.length > 0" />
+        <SwipeToDelete v-for="r in history" :key="r.key" :disabled="!canEdit || !isManualReading(r) || selectedIds.length > 0" @delete="remove(r)">
         <div
-          v-for="r in history"
-          :key="r.key"
           class="relative bg-slate-950/70 border border-slate-800/80 hover:border-slate-700/90 rounded-xl p-3.5 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
           :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(r) }"
         >
@@ -316,6 +323,7 @@ useRefreshHandler(() => load(true))
             </button>
           </RowMenu>
         </div>
+        </SwipeToDelete>
       </div>
     </div>
   </div>
