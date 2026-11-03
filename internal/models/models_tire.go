@@ -48,6 +48,8 @@ type Tire struct {
 	EstimatedLifespanKm   int          `json:"estimated_lifespan_km"`
 	CreatedAt             time.Time    `json:"created_at"`
 	UpdatedAt             time.Time    `json:"updated_at"`
+	Version               int64        `json:"version"`
+	ExpectedVersion       *int64       `json:"-"`
 }
 
 // TireMountSession logs a specific period where a tire was mounted on a vehicle wheel.
@@ -64,17 +66,21 @@ type TireMountSession struct {
 	Notes              *string      `json:"notes,omitempty"`
 	CreatedAt          time.Time    `json:"created_at"`
 	UpdatedAt          time.Time    `json:"updated_at"`
+	Version            int64        `json:"version"`
+	ExpectedVersion    *int64       `json:"-"`
 }
 
 // TireLog records a tread depth measurement.
 type TireLog struct {
-	ID        string    `json:"id"`
-	TireID    string    `json:"tire_id"`
-	Date      time.Time `json:"date"`
-	Odometer  float64   `json:"odometer"`
-	DepthMm   float64   `json:"depth_mm"`
-	Notes     *string   `json:"notes,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID              string    `json:"id"`
+	TireID          string    `json:"tire_id"`
+	Date            time.Time `json:"date"`
+	Odometer        float64   `json:"odometer"`
+	DepthMm         float64   `json:"depth_mm"`
+	Notes           *string   `json:"notes,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	Version         int64     `json:"version"`
+	ExpectedVersion *int64    `json:"-"`
 }
 
 // TireRotation stores wheel swap events across the vehicle.

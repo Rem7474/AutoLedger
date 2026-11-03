@@ -3,6 +3,7 @@ import NumberInput from '@/components/NumberInput.vue'
 import LoadError from '@/components/LoadError.vue'
 import ComparisonEmptyState from '@/components/comparison/ComparisonEmptyState.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { Scale as PageIcon } from 'lucide-vue-next'
 import { t, te } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
@@ -47,6 +48,7 @@ const view = ref<'list' | 'edit' | 'result' | 'compare'>('list')
 const step = ref(1)
 const editingId = ref<string | null>(null)
 const currentScenario = ref<any | null>(null)
+const { explainStaleWrite } = useStaleWrite()
 const resultSide = computed(() => scenarioSide(currentScenario.value, vehicleStore.vehicles))
 const result = ref<any | null>(null)
 const formError = ref('')
@@ -168,10 +170,15 @@ async function saveAdjusted(adjusted: ComparisonForm, asNew: boolean) {
   resultSaveError.value = ''
   try {
     const payload = buildComparisonPayload(adjusted, vehicleStore.activeVehicle?.id)
-    const saved = asNew ? await api.createComparisonScenario(payload) : await api.updateComparisonScenario(id, payload)
+    const saved = asNew ? await api.createComparisonScenario(payload) : await api.updateComparisonScenario(id, { ...payload, expected_version: currentScenario.value?.version })
     await loadScenarios()
     await openResult(saved)
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      await loadScenarios()
+      view.value = 'list'
+      return
+    }
     resultSaveError.value = err?.message || t('comparison.errors.saveFailed')
   } finally {
     resultSaving.value = false
@@ -200,11 +207,16 @@ async function saveAndCompute() {
   try {
     const payload = buildComparisonPayload(form, vehicleStore.activeVehicle?.id)
     const saved = editingId.value
-      ? await api.updateComparisonScenario(editingId.value, payload)
+      ? await api.updateComparisonScenario(editingId.value, { ...payload, expected_version: scenarios.value.find((s: any) => s.id === editingId.value)?.version })
       : await api.createComparisonScenario(payload)
     await loadScenarios()
     await openResult(saved)
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      await loadScenarios()
+      view.value = 'list'
+      return
+    }
     formError.value = err?.message || t('comparison.errors.saveFailed')
   } finally {
     saving.value = false

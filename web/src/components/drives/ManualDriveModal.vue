@@ -3,6 +3,7 @@ import NumberInput from '@/components/NumberInput.vue'
 import { ref, watch } from 'vue'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
+import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { distanceUnit } from '@/units'
@@ -22,6 +23,7 @@ const emit = defineEmits<{
   (e: 'update:open', val: boolean): void
   (e: 'saved', drive: any): void
 }>()
+const { explainStaleWrite } = useStaleWrite()
 
 const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
@@ -104,7 +106,7 @@ async function handleSubmit() {
 
     let saved: any
     if (props.drive) {
-      saved = await api.updateDrive(targetVehicleId, props.drive.id, payload)
+      saved = await api.updateDrive(targetVehicleId, props.drive.id, { ...payload, expected_version: props.drive.version })
     } else {
       saved = await api.createDrive(targetVehicleId, payload)
     }
@@ -112,6 +114,11 @@ async function handleSubmit() {
     emit('saved', saved)
     close()
   } catch (err: any) {
+    if (await explainStaleWrite(err)) {
+      emit('saved', props.drive)
+      close()
+      return
+    }
     error.value = err.message || t('common.error')
   } finally {
     loading.value = false

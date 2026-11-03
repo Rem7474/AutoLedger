@@ -34,6 +34,7 @@ func NewVehicleHandler(repo *database.Repository, encryptor *crypto.Encryptor, s
 }
 
 type SaveVehicleRequest struct {
+	ExpectedVersion      *int64          `json:"expected_version"` // The version the client read; absent: not checked
 	Name                 string          `json:"name"`
 	Vin                  *string         `json:"vin"`
 	TeslaMateCarID       *int            `json:"teslamate_car_id"`
@@ -424,8 +425,9 @@ func (h *VehicleHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	existing.TollDetection = tollDetection
 
+	existing.ExpectedVersion = req.ExpectedVersion
 	if err := h.repo.UpdateVehicle(r.Context(), existing); err != nil {
-		writeAPIError(w, http.StatusInternalServerError, apierror.New("internal", "Failed to update vehicle"))
+		writeRepoError(w, r, err, "Failed to update vehicle")
 		return
 	}
 	existing.TollDetectionActive, _ = h.repo.TollDetectionActive(r.Context(), existing.ID)

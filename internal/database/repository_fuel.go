@@ -11,12 +11,12 @@ import (
 
 // Fuel fill-ups of combustion vehicles (manual entries).
 
-const fuelColumns = `id, vehicle_id, date, odometer, amount, liters, price_per_liter, fuel_type, is_full_tank, notes, created_at, updated_at`
+const fuelColumns = `id, vehicle_id, date, odometer, amount, liters, price_per_liter, fuel_type, is_full_tank, notes, created_at, updated_at, version`
 
 func scanFuelLog(row pgx.Row) (*models.FuelLog, error) {
 	var f models.FuelLog
 	if err := row.Scan(&f.ID, &f.VehicleID, &f.Date, &f.Odometer, &f.Amount, &f.Liters, &f.PricePerLiter,
-		&f.FuelType, &f.IsFullTank, &f.Notes, &f.CreatedAt, &f.UpdatedAt); err != nil {
+		&f.FuelType, &f.IsFullTank, &f.Notes, &f.CreatedAt, &f.UpdatedAt, &f.Version); err != nil {
 		return nil, err
 	}
 	return &f, nil
@@ -92,9 +92,9 @@ func (r *Repository) CreateFuelLog(ctx context.Context, f *models.FuelLog) error
 	if err := tx.QueryRow(ctx, `
 		INSERT INTO fuel_logs (vehicle_id, date, odometer, amount, liters, price_per_liter, fuel_type, is_full_tank, notes, source_batch_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		RETURNING id, created_at, updated_at;
+		RETURNING id, created_at, updated_at, version;
 	`, f.VehicleID, f.Date, f.Odometer, f.Amount, f.Liters, f.PricePerLiter, f.FuelType, f.IsFullTank, f.Notes, f.SourceBatchID,
-	).Scan(&f.ID, &f.CreatedAt, &f.UpdatedAt); err != nil {
+	).Scan(&f.ID, &f.CreatedAt, &f.UpdatedAt, &f.Version); err != nil {
 		return err
 	}
 	if err := syncOdometerFromManualPoints(ctx, tx, f.VehicleID); err != nil {
@@ -114,13 +114,13 @@ func (r *Repository) UpdateFuelLog(ctx context.Context, f *models.FuelLog) error
 	err = tx.QueryRow(ctx, `
 		UPDATE fuel_logs
 		SET date = $3, odometer = $4, amount = $5, liters = $6, price_per_liter = $7,
-		    fuel_type = $8, is_full_tank = $9, notes = $10, updated_at = NOW()
-		WHERE id::text = $1 AND vehicle_id = $2
-		RETURNING created_at, updated_at;
-	`, f.ID, f.VehicleID, f.Date, f.Odometer, f.Amount, f.Liters, f.PricePerLiter, f.FuelType, f.IsFullTank, f.Notes,
-	).Scan(&f.CreatedAt, &f.UpdatedAt)
+		    fuel_type = $8, is_full_tank = $9, notes = $10, updated_at = NOW(), version = version + 1
+		WHERE id::text = $1 AND vehicle_id = $2 AND ($11::bigint IS NULL OR version = $11::bigint)
+		RETURNING created_at, updated_at, version;
+	`, f.ID, f.VehicleID, f.Date, f.Odometer, f.Amount, f.Liters, f.PricePerLiter, f.FuelType, f.IsFullTank, f.Notes, f.ExpectedVersion,
+	).Scan(&f.CreatedAt, &f.UpdatedAt, &f.Version)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrNotFound
+		return staleOrNotFound(ctx, tx, "fuel_logs", f.ID, f.VehicleID, f.ExpectedVersion)
 	}
 	if err != nil {
 		return err
