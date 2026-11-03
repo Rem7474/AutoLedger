@@ -104,7 +104,7 @@ func ChargeCostToReviewSQL(alias string) string {
 func (r *Repository) SetChargeCostReviewed(ctx context.Context, chargeID, vehicleID string, reviewed bool) error {
 	tag, err := r.pool.Exec(ctx, `
 		UPDATE charge_logs
-		SET cost_reviewed_at = CASE WHEN $1 THEN NOW() ELSE NULL END
+		SET cost_reviewed_at = CASE WHEN $1 THEN NOW() ELSE NULL END, version = version + 1
 		WHERE id::text = $2 AND vehicle_id = $3 AND deleted_upstream_at IS NULL;
 	`, reviewed, chargeID, vehicleID)
 	if err != nil {

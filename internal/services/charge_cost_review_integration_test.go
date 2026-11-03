@@ -81,8 +81,25 @@ func TestIntegrationChargeCostReview(t *testing.T) {
 	if err := repo.SetChargeCostReviewed(ctx, zeroID, other.ID, true); !errors.Is(err, database.ErrNotFound) {
 		t.Fatalf("another vehicle's charge cannot be reviewed: %v", err)
 	}
+	versionOf := func() int64 {
+		l, _, err := repo.ListCharges(ctx, v.ID, false, 50, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, c := range l {
+			if c.ID == zeroID {
+				return c.Version
+			}
+		}
+		t.Fatal("charge not found")
+		return 0
+	}
+	before := versionOf()
 	if err := repo.SetChargeCostReviewed(ctx, zeroID, v.ID, true); err != nil {
 		t.Fatal(err)
+	}
+	if after := versionOf(); after != before+1 {
+		t.Fatalf("confirming the cost advances the version so an open editor is refused: %d -> %d", before, after)
 	}
 	if got := toReview(); len(got) != 1 || !got[2] {
 		t.Fatalf("a confirmed 0 leaves the queue: %v", got)
