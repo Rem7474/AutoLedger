@@ -59,7 +59,7 @@ func newWhoAmIFixture(t *testing.T) *whoAmIFixture {
 		t.Fatal(err)
 	}
 
-	h := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithVersion("1.2.3")
+	h := NewIntegrationReadHandler(repo, services.NewTCOService(repo.Pool(), "UTC")).WithEnergy(services.NewEnergyStatsService(repo.Pool(), "UTC")).WithVersion("1.2.3")
 	router := chi.NewRouter()
 	router.Get("/whoami", h.GetWhoAmI)
 	router.Get("/reminders", h.GetFleetReminders)
