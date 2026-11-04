@@ -79,12 +79,12 @@ onMounted(load)
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
       <div>
         <h2 id="account-tariffs" class="flex items-center gap-2 text-sm font-bold text-white">
-          <Zap class="h-4 w-4 text-warning-400" aria-hidden="true" />
+          <Zap class="h-4 w-4 text-slate-400" aria-hidden="true" />
           {{ $t('tariffs.editor.title') }}
         </h2>
         <p class="text-xs text-slate-400 mt-0.5">{{ $t('tariffs.editor.subtitle') }}</p>
       </div>
-      <button type="button" class="btn btn-primary" @click="openModal(null, null)">
+      <button type="button" class="btn btn-secondary" @click="openModal(null, null)">
         <Plus class="h-3.5 w-3.5" />
         {{ $t('tariffs.editor.create') }}
       </button>

@@ -186,18 +186,18 @@ useRefreshHandler(() => load(true))
         <UserRound class="h-4 w-4 text-slate-400" aria-hidden="true" />
         {{ $t('account.accountView.identity') }}
       </h2>
-      <dl class="space-y-1 text-sm">
-        <div class="flex flex-wrap items-center gap-x-2">
-          <dt class="text-slate-400">{{ $t('account.language') }}</dt>
+      <dl class="divide-y divide-slate-800">
+        <div class="settings-row">
+          <dt class="settings-row-label">{{ $t('account.language') }}</dt>
           <dd><LanguageSwitcher /></dd>
         </div>
-        <div class="flex flex-wrap gap-x-2">
-          <dt class="text-slate-400">{{ $t('account.accountView.emailAddress') }}</dt>
-          <dd class="break-all font-medium text-white">{{ authStore.user?.email }}</dd>
+        <div class="settings-row">
+          <dt class="settings-row-label">{{ $t('account.accountView.emailAddress') }}</dt>
+          <dd class="min-w-0 break-all text-right text-slate-300">{{ authStore.user?.email }}</dd>
         </div>
-        <div class="flex flex-wrap gap-x-2">
-          <dt class="text-slate-400">{{ $t('account.accountView.signIn') }}</dt>
-          <dd class="text-slate-200">{{ hasPassword ? $t('account.localPassword') : $t('account.ssoProvider') }}</dd>
+        <div class="settings-row">
+          <dt class="settings-row-label">{{ $t('account.accountView.signIn') }}</dt>
+          <dd class="text-right text-slate-300">{{ hasPassword ? $t('account.localPassword') : $t('account.ssoProvider') }}</dd>
         </div>
       </dl>
       <p
@@ -221,26 +221,28 @@ useRefreshHandler(() => load(true))
         <SlidersHorizontal class="h-4 w-4 text-slate-400" aria-hidden="true" />
         {{ $t('account.accountView.preferences') }}
       </h2>
-      <label class="flex cursor-pointer items-start justify-between gap-4">
-        <span>
-          <span class="block text-sm font-medium text-white">{{ $t('account.accountView.proPersoTitle') }}</span>
-          <span class="block text-xs text-slate-400">{{ $t('account.accountView.proPersoHelp') }}</span>
-        </span>
-        <input
-          type="checkbox"
-          role="switch"
-          class="mt-1 h-5 w-9 shrink-0 cursor-pointer appearance-none rounded-full bg-slate-700 transition-colors checked:bg-rose-500 relative before:absolute before:left-0.5 before:top-0.5 before:h-4 before:w-4 before:rounded-full before:bg-white before:transition-transform checked:before:translate-x-4"
-          :checked="prefs.proPersoEnabled"
-          @change="prefs.setProPersoEnabled(($event.target as HTMLInputElement).checked)"
-        />
-      </label>
-      <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-4">
-        <span class="text-sm font-medium text-white">{{ $t('account.distanceUnit') }}</span>
-        <DistanceUnitSwitcher />
-      </div>
-      <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-4">
-        <span class="text-sm font-medium text-white">{{ $t('account.volumeUnit') }}</span>
-        <VolumeUnitSwitcher />
+      <div class="divide-y divide-slate-800">
+        <label class="settings-row cursor-pointer !items-start">
+          <span class="settings-row-label">
+            <span class="block">{{ $t('account.accountView.proPersoTitle') }}</span>
+            <span class="block text-xs font-normal text-slate-400">{{ $t('account.accountView.proPersoHelp') }}</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            class="mt-1 h-5 w-9 shrink-0 cursor-pointer appearance-none rounded-full bg-slate-700 transition-colors checked:bg-rose-500 relative before:absolute before:left-0.5 before:top-0.5 before:h-4 before:w-4 before:rounded-full before:bg-white before:transition-transform checked:before:translate-x-4"
+            :checked="prefs.proPersoEnabled"
+            @change="prefs.setProPersoEnabled(($event.target as HTMLInputElement).checked)"
+          />
+        </label>
+        <div class="settings-row">
+          <span class="settings-row-label">{{ $t('account.distanceUnit') }}</span>
+          <DistanceUnitSwitcher />
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">{{ $t('account.volumeUnit') }}</span>
+          <VolumeUnitSwitcher />
+        </div>
       </div>
       <p class="mt-3 text-xs text-slate-400">{{ $t('account.currencyPerVehicle') }}</p>
     </section>
