@@ -6,7 +6,7 @@ import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 import SheetGrabber from '@/components/SheetGrabber.vue'
 
-const { isOpen, options, onConfirm, onCancel } = useConfirm()
+const { isOpen, options, onConfirm, onAlternative, onCancel } = useConfirm()
 const confirmBtnRef = ref<HTMLButtonElement | null>(null)
 const cancelBtnRef = ref<HTMLButtonElement | null>(null)
 
@@ -118,6 +118,14 @@ watch(isOpen, async (open) => {
                 class="btn btn-lg btn-secondary max-sm:justify-center"
               >
                 {{ options.cancelText || $t('common.cancel') }}
+              </button>
+              <button
+                v-if="options.alternativeText"
+                type="button"
+                @click="onAlternative"
+                class="btn btn-lg btn-secondary max-sm:justify-center"
+              >
+                {{ options.alternativeText }}
               </button>
               <button
                 ref="confirmBtnRef"

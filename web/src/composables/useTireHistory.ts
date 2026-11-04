@@ -20,10 +20,12 @@ export function useTireHistory(options: {
   tires: Ref<any[]>
   loadTires: () => Promise<void>
   selectedTireIds: Ref<string[]>
+  // Opens the scrap form of the selected tire
+  openDispose: () => void
 }) {
-  const { tires, loadTires, selectedTireIds } = options
+  const { tires, loadTires, selectedTireIds, openDispose } = options
   const vehicleStore = useVehicleStore()
-  const { showConfirm, showAlert } = useConfirm()
+  const { showConfirm, showChoice, showAlert } = useConfirm()
 
   const showHistoryModal = ref(false)
   const showSessionModal = ref(false)
@@ -107,13 +109,19 @@ export function useTireHistory(options: {
 
   async function handleDeleteTire(tire: any) {
     if (!vehicleStore.activeVehicle) return
-    const ok = await showConfirm({
+    // Deleting erases the tire and its cost; scrapping keeps both in the history and the TCO
+    const choice = await showChoice({
       title: t('tires.tiresView.deleteTireTitle'),
       message: t('tires.tiresView.deleteTireMessage', { brand: tire.brand, model: tire.model, dimension: tire.dimension }),
       confirmText: t('tires.tiresView.deleteTireConfirm'),
+      alternativeText: t('tires.tiresView.deleteTireScrapInstead'),
       type: 'danger',
     })
-    if (!ok) return
+    if (choice === 'alternative') {
+      openDispose()
+      return
+    }
+    if (choice !== 'confirm') return
 
     try {
       await api.deleteTire(vehicleStore.activeVehicle.id, tire.id)

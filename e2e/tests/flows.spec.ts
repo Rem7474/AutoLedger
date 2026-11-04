@@ -210,6 +210,37 @@ test.describe('a modal with edits does not close on a backdrop click', () => {
   })
 })
 
+test('deleting a tire asks whether to delete it or scrap it', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Tire dialog reference', powertrain: 'EV', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  try {
+    const tire = await request.post(`/api/vehicles/${vehicle.id}/tires`, { headers, data: {
+      brand: 'Zeta', model: 'Grip', dimension: '205/55R16', season: 'SUMMER', purchase_date: '2026-01-01', purchase_price: 9000,
+      current_position: 'STORAGE', initial_depth_mm: 8, min_legal_depth_mm: 1.6, estimated_lifespan_km: 40000,
+    } })
+    expect(tire.ok()).toBeTruthy()
+    await page.setViewportSize({ width: 390, height: 844 })
+    await useVehicle(page, vehicle.id, '/tires')
+    await page.getByRole('tab', { name: /Catalogue and garage stock/ }).click()
+    await page.getByRole('button', { name: 'Open Zeta Grip' }).click()
+    await page.getByRole('button', { name: 'Delete (entry error)' }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Delete or scrap this tire?' })
+    await expect(dialog.getByRole('button', { name: 'Delete permanently' })).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Scrap it instead' }).click()
+
+    // Scrapping opens the scrap form and keeps the tire
+    await expect(page.getByRole('dialog', { name: /Scrap/ })).toBeVisible()
+    const still = await request.get(`/api/vehicles/${vehicle.id}/tires`, { headers })
+    expect(JSON.stringify(await still.json())).toContain('Zeta')
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})
+
 test('the dashboard follow-up zone is closed on a phone and opens on demand', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await useVehicle(page, ev.id, '/')
