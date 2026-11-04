@@ -117,7 +117,7 @@ onMounted(() => {
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
       <div>
         <h2 id="account-api-tokens" class="flex items-center gap-2 text-sm font-bold text-white">
-          <Key class="h-4 w-4 text-rose-400" aria-hidden="true" />
+          <Key class="h-4 w-4 text-slate-400" aria-hidden="true" />
           {{ t('account.tokens.title') }}
         </h2>
         <p class="text-xs text-slate-400 mt-0.5">
@@ -127,7 +127,7 @@ onMounted(() => {
       <button
         type="button"
         @click="showCreateModal = true"
-        class="btn btn-primary"
+        class="btn btn-secondary"
       >
         <Plus class="h-3.5 w-3.5" />
         {{ t('account.tokens.create') }}
@@ -170,46 +170,47 @@ onMounted(() => {
         :key="tok.id"
         class="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
       >
-        <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-white truncate">{{ tok.name }}</span>
-            <span v-if="!tok.oauth" class="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              {{ tok.token_prefix }}...
-            </span>
-            <span v-else class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              {{ t('account.tokens.oauthBadge') }}
-            </span>
-            <span class="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              {{ t(`account.tokens.scopeBadge.${tok.scope}`) }}
-            </span>
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold text-white" :title="tok.name">{{ tok.name }}</p>
+            <div class="mt-1 flex flex-wrap items-center gap-1.5">
+              <span v-if="!tok.oauth" class="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 font-mono text-xs text-slate-300">
+                {{ tok.token_prefix }}...
+              </span>
+              <span v-else class="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-xs text-slate-300">
+                {{ t('account.tokens.oauthBadge') }}
+              </span>
+              <span class="whitespace-nowrap rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-xs text-slate-300">
+                {{ t(`account.tokens.scopeBadge.${tok.scope}`) }}
+              </span>
+            </div>
+            <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+              <span>{{ t('account.tokens.created', { date: describeRelativeTime(tok.created_at) }) }}</span>
+              <span v-if="tok.last_used_at">
+                {{ t('account.tokens.lastUsed', { date: describeRelativeTime(tok.last_used_at) }) }}
+              </span>
+              <span v-else>{{ t('account.tokens.neverUsed') }}</span>
+              <span v-if="tok.expires_at" class="text-warning-400/80" :title="tok.oauth ? t('account.tokens.oauthHelp') : undefined">
+                {{ t('account.tokens.expires', { date: describeRelativeTime(tok.expires_at) }) }}
+              </span>
+            </div>
+            <p v-if="limitedTo(tok)" class="mt-1 line-clamp-2 break-words text-xs text-slate-400" :title="limitedTo(tok)!.names">
+              {{ t('account.tokens.vehiclesLimited', { names: limitedTo(tok)!.names || '—' }) }}
+              <span v-if="limitedTo(tok)!.missing" class="text-warning-400/80">
+                ({{ t('account.tokens.vehiclesMissing', { count: limitedTo(tok)!.missing }) }})
+              </span>
+            </p>
           </div>
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mt-1">
-            <span>{{ t('account.tokens.created', { date: describeRelativeTime(tok.created_at) }) }}</span>
-            <span v-if="tok.last_used_at">
-              {{ t('account.tokens.lastUsed', { date: describeRelativeTime(tok.last_used_at) }) }}
-            </span>
-            <span v-else class="text-slate-400">{{ t('account.tokens.neverUsed') }}</span>
-            <span v-if="tok.expires_at" class="text-warning-400/80" :title="tok.oauth ? t('account.tokens.oauthHelp') : undefined">
-              {{ t('account.tokens.expires', { date: describeRelativeTime(tok.expires_at) }) }}
-            </span>
-          </div>
-          <p v-if="limitedTo(tok)" class="text-xs text-slate-400 mt-1 line-clamp-2 break-words" :title="limitedTo(tok)!.names">
-            {{ t('account.tokens.vehiclesLimited', { names: limitedTo(tok)!.names || '—' }) }}
-            <span v-if="limitedTo(tok)!.missing" class="text-warning-400/80">
-              ({{ t('account.tokens.vehiclesMissing', { count: limitedTo(tok)!.missing }) }})
-            </span>
-          </p>
-        </div>
 
-        <button
-          type="button"
-          @click="revokeToken(tok)"
-          class="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-          :title="t('account.tokens.revoke')" :aria-label="t('account.tokens.revoke')"
-        >
-          <Trash2 class="h-4 w-4" />
-        </button>
+          <button
+            type="button"
+            class="tap row-action row-action-danger shrink-0"
+            :title="t('account.tokens.revoke')"
+            :aria-label="t('account.tokens.revoke')"
+            @click="revokeToken(tok)"
+          >
+            <Trash2 class="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
         <TokenCallLog v-if="tok.scope !== 'ingest'" :token-id="tok.id" />
       </li>
