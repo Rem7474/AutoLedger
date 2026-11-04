@@ -2,7 +2,7 @@
 import { intlLocale, t } from '@/i18n'
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { Fuel, Gauge, Plus, Trash2 } from 'lucide-vue-next'
+import { Fuel, Gauge, Lock, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/components/ModalShell.vue'
 import OdometerReadingForm from '@/components/manual/OdometerReadingForm.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
@@ -11,6 +11,7 @@ import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import RowSelectBox from '@/components/RowSelectBox.vue'
+import RowLeading from '@/components/RowLeading.vue'
 import SelectionHint from '@/components/SelectionHint.vue'
 import { useRowSelection } from '@/composables/useRowSelection'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
@@ -282,7 +283,7 @@ useRefreshHandler(() => load(true))
         <SelectionHint v-if="canEdit && manualReadings.length > 0" />
         <SwipeToDelete v-for="r in history" :key="r.key" :disabled="!canEdit || !isManualReading(r) || selectedIds.length > 0" @delete="remove(r)">
         <div
-          class="relative bg-slate-950/70 border border-slate-800/80 hover:border-slate-700/90 rounded-xl p-3.5 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+          class="relative hover:border-slate-700/90 card p-3 sm:p-4 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
           :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(r) }"
         >
           <CardOpenButton
@@ -295,23 +296,27 @@ useRefreshHandler(() => load(true))
             @pointercancel="press.onPointercancel"
             @contextmenu="press.onContextmenu"
           />
+          <RowLeading :icon="r.kind === 'FUEL' ? Fuel : Gauge" :selected="isSelected(r)" />
           <RowSelectBox v-if="showBox && isManualReading(r)" :id="r.key" :checked="isSelected(r)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(r)" />
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="p-2 bg-slate-800/80 rounded-lg shrink-0" :class="r.kind === 'FUEL' ? 'text-slate-400' : 'text-sky-400'">
-              <Fuel v-if="r.kind === 'FUEL'" class="w-4 h-4" />
-              <Gauge v-else class="w-4 h-4" />
+          <!-- A reading that cannot be selected (a fill-up, one sent by Home Assistant) shows a lock in the column of the checkbox -->
+          <span
+            v-else-if="showBox"
+            class="grid w-8 shrink-0 place-items-center text-slate-500 max-sm:hidden"
+            :title="r.kind === 'FUEL' ? $t('manual.odometerReadingsPanel.fromFillUpHint') : r.source === 'HA' ? $t('manual.odometerReadingsPanel.fromHomeAssistantHint') : undefined"
+            aria-hidden="true"
+          >
+            <Lock class="size-3.5" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
+              <span class="tabular-nums">{{ formatDistance(r.odometer) }}</span>
+              <span v-if="r.kind === 'FUEL'" class="text-xs px-2 py-0.5 rounded-full border border-slate-600 text-slate-400 font-normal" :title="$t('manual.odometerReadingsPanel.fromFillUpHint')">{{ $t('manual.odometerReadingsPanel.fromFillUp') }}</span>
+              <span v-else-if="r.source === 'HA'" class="text-xs px-2 py-0.5 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-300 font-normal" :title="$t('manual.odometerReadingsPanel.fromHomeAssistantHint')">{{ $t('manual.odometerReadingsPanel.fromHomeAssistant') }}</span>
             </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-bold text-white font-mono">{{ formatDistance(r.odometer) }}</span>
-                <span v-if="r.kind === 'FUEL'" class="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700" :title="$t('manual.odometerReadingsPanel.fromFillUpHint')">{{ $t('manual.odometerReadingsPanel.fromFillUp') }}</span>
-                <span v-else-if="r.source === 'HA'" class="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30" :title="$t('manual.odometerReadingsPanel.fromHomeAssistantHint')">{{ $t('manual.odometerReadingsPanel.fromHomeAssistant') }}</span>
-                <span class="text-xs text-slate-400">
-                  {{ $t('manual.odometerReadingsPanel.onDate', { date: new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }) }}
-                </span>
-              </div>
-              <p v-if="r.notes" class="text-xs text-slate-400 truncate mt-0.5">{{ r.notes }}</p>
+            <div class="text-xs text-slate-400 mt-0.5">
+              {{ new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }}
             </div>
+            <p v-if="r.notes" class="text-xs text-slate-400 truncate mt-0.5">{{ r.notes }}</p>
           </div>
 
           <router-link v-if="r.kind === 'FUEL'" to="/energy?tab=FUEL" class="relative z-10 tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">

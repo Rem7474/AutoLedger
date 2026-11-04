@@ -383,7 +383,7 @@ test('an odometer reading dragged to the left is deleted with an Undo', async ({
 
   try {
     await useVehicle(page, ev.id, '/odometer')
-    const rowOf = () => page.locator('div.rounded-xl', { hasText: notes }).last()
+    const rowOf = () => page.locator('div.rounded-2xl', { hasText: notes }).last()
     await rowOf().scrollIntoViewIfNeeded()
     const box = (await rowOf().boundingBox())!
     const y = box.y + box.height / 2

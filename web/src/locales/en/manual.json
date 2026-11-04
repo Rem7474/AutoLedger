@@ -90,7 +90,6 @@
     "readingDeleted": "Reading deleted",
     "edit": "Edit the reading",
     "update": "Update",
-    "onDate": "on {date}",
     "pointS": "{length} point(s)",
     "fromFillUp": "Fill-up",
     "fromFillUpHint": "Mileage typed on a fill-up. It is edited from the fill-ups list.",
