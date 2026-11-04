@@ -50,7 +50,7 @@ const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text
     :class="[
       aligned ? 'row-span-3 grid grid-rows-subgrid gap-y-0' : 'flex flex-col',
       compact ? 'rounded-xl border p-3' : 'rounded-2xl border p-4 shadow-sm transition-colors hover:border-slate-600',
-      tintClass ?? (compact ? 'border-slate-800 bg-slate-950/60' : 'card'),
+      tintClass ?? (compact ? 'border-transparent bg-slate-800' : 'card'),
     ]"
   >
     <div class="flex items-start justify-between gap-2" :class="compact ? '' : 'mb-2 min-h-8'">

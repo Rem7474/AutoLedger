@@ -16,6 +16,20 @@ function handWrittenCards(source: string): number {
   return count
 }
 
+// What sits inside a card and is not content (an inset row, a recap block) is slate-800. A translucent slate-950 well
+// with a slate outline is the older way to write it and gives every panel a slightly different depth.
+function outlinedWells(source: string): number {
+  let count = 0
+  for (const [, classes] of source.matchAll(/(?<![:\w-])class="([^"{]*)"/g)) {
+    const tokens = classes.split(/\s+/)
+    const well = tokens.some((t) => /^bg-slate-950\/(40|50|60|70)$/.test(t))
+    const outlined = tokens.some((t) => /^border-slate-800(\/\d+)?$/.test(t))
+    // A tappable row keeps its well: it lightens under the finger
+    if (well && outlined && !tokens.some((t) => t.startsWith('hover:border'))) count++
+  }
+  return count
+}
+
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name)
@@ -25,6 +39,12 @@ function sources(dir: string): string[] {
 }
 
 describe('surface rules', () => {
+  it('writes an inset as slate-800, not as an outlined translucent slate-950 well', () => {
+    const root = join(__dirname, '..')
+    const found = sources(root).filter((file) => outlinedWells(readFileSync(file, 'utf8')) > 0).map((file) => relative(root, file))
+    expect(found).toEqual([])
+  })
+
   it('writes a card as .card, not as its three utilities', () => {
     const root = join(__dirname, '..')
     const found = sources(root).filter((file) => handWrittenCards(readFileSync(file, 'utf8')) > 0).map((file) => relative(root, file))

@@ -305,8 +305,8 @@ useRefreshHandler(() => load(true))
         <li
           v-for="s in listedSessions"
           :key="s.id"
-          class="flex items-center justify-between gap-3 rounded-xl border bg-slate-950/60 p-3"
-          :class="s.current ? 'border-success-500/30' : 'border-slate-800'"
+          class="flex items-center justify-between gap-3 rounded-xl border bg-slate-800 p-3"
+          :class="s.current ? 'border-success-500/30' : 'border-transparent'"
         >
           <div class="flex min-w-0 items-start gap-3">
             <component :is="isMobile(s.user_agent) ? Smartphone : Laptop" class="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />

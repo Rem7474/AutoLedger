@@ -65,7 +65,7 @@ const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 text-center text-xs">
+    <div class="grid grid-cols-2 gap-2 bg-slate-800 p-2.5 rounded-xl text-center text-xs">
       <div>
         <div class="text-xs text-slate-400">{{ $t('tires.tireStorageCard.totalDriven') }}</div>
         <div class="font-bold text-white">{{ formatDistance(t.total_distance_km) }}</div>

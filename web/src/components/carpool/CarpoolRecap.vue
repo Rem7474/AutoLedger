@@ -22,7 +22,7 @@ const covered = computed(() => fig.value.total > 0 && fig.value.left <= 0)
 </script>
 
 <template>
-  <section :class="compact ? '' : 'rounded-2xl border border-slate-800 bg-slate-950/60 p-4'" :aria-label="$t('carpool.editor.recap')">
+  <section :class="compact ? '' : 'rounded-2xl bg-slate-800 p-4'" :aria-label="$t('carpool.editor.recap')">
     <button
       v-if="compact"
       type="button"

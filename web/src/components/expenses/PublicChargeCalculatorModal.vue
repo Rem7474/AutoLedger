@@ -166,7 +166,7 @@ onMounted(() => {
         </div>
 
         <!-- Session Consumption Inputs -->
-        <div class="grid grid-cols-3 gap-3 p-3 bg-slate-950/60 border border-slate-800 rounded-xl">
+        <div class="grid grid-cols-3 gap-3 p-3 bg-slate-800 rounded-xl">
           <div>
             <label for="public-charge-kwh" class="block text-slate-400 mb-1 font-medium">{{ t('tariffs.publicModal.energyKwh') }}</label>
             <NumberInput text

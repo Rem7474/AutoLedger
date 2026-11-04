@@ -18,7 +18,7 @@ const each = (leg: number) => euros(props.live.legDetails[leg]?.perPerson || 0)
 </script>
 
 <template>
-  <div class="space-y-1.5 rounded-xl border border-slate-800 bg-slate-950/50 p-3" role="group" :aria-label="$t('carpool.editor.overview')">
+  <div class="space-y-1.5 rounded-xl bg-slate-800 p-3" role="group" :aria-label="$t('carpool.editor.overview')">
     <div class="grid gap-y-1.5" :style="columns">
       <div class="col-span-full flex h-7 items-center gap-1.5 rounded-full bg-slate-700 px-2.5 text-xs font-semibold text-slate-200" style="grid-column: 1 / -1">
         <Car class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />

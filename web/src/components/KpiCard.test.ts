@@ -49,7 +49,7 @@ describe('KpiCard', () => {
 
   it('has a dense variant for the panels inside a disclosure', async () => {
     const html = await render({ label: 'Consumption', value: '15,2', unit: ' kWh/100 km', compact: true })
-    expect(html).toContain('bg-slate-950/60')
+    expect(html).toContain('bg-slate-800')
     expect(html).toContain('text-xl')
     expect(html).toContain('font-medium')
   })
@@ -64,7 +64,7 @@ describe('KpiCard', () => {
     const good = await render({ label: 'Saving', value: '5 €', tone: 'success', tinted: true, compact: true })
     expect(good).toContain('border-success-500/30')
     expect(good).toContain('bg-success-500/5')
-    expect(good).not.toContain('bg-slate-950/60')
+    expect(good).not.toContain('bg-slate-800')
     const worse = await render({ label: 'Extra', value: '5 €', tone: 'warning', tinted: true })
     expect(worse).toContain('border-warning-500/30')
     // A tone alone colours the value without tinting the tile

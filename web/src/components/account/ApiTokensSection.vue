@@ -168,7 +168,7 @@ onMounted(() => {
       <li
         v-for="tok in tokens"
         :key="tok.id"
-        class="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
+        class="rounded-xl bg-slate-800 p-3"
       >
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">

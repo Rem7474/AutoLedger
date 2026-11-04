@@ -280,7 +280,7 @@ async function handleExecute() {
     </div>
 
     <div v-else class="space-y-4">
-      <details class="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">
+      <details class="rounded-xl bg-slate-800 px-3 py-2 text-xs text-slate-300">
         <summary class="cursor-pointer font-semibold text-slate-200">{{ $t('import.helpTitle') }}</summary>
         <p class="mt-2 text-slate-400">{{ $t('import.helpIntro') }}</p>
         <div v-for="type in templateTypes" :key="type" class="mt-3 space-y-1">
@@ -295,7 +295,7 @@ async function handleExecute() {
         </div>
       </details>
 
-      <details v-if="batches.length" class="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">
+      <details v-if="batches.length" class="rounded-xl bg-slate-800 px-3 py-2 text-xs text-slate-300">
         <summary class="cursor-pointer font-semibold text-slate-200">{{ $t('import.historyTitle') }}</summary>
         <ul class="mt-2 space-y-2">
           <li v-for="batch in batches" :key="batch.id" class="flex items-center justify-between gap-2">
@@ -390,7 +390,7 @@ async function handleExecute() {
         </div>
 
         <!-- Column mapping -->
-        <details class="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">
+        <details class="rounded-xl bg-slate-800 px-3 py-2 text-xs text-slate-300">
           <summary class="cursor-pointer font-semibold text-slate-200">{{ $t('import.mappingTitle') }}</summary>
           <p class="mt-2 text-slate-400">{{ $t('import.mappingHint') }}</p>
           <div v-if="profilesForType.length" class="mt-3">

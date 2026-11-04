@@ -23,7 +23,7 @@ const pillClass = computed(() => {
 </script>
 
 <template>
-  <div v-if="comparison" class="mt-2.5 space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs" data-testid="tire-wear-comparison">
+  <div v-if="comparison" class="mt-2.5 space-y-2.5 rounded-xl bg-slate-800 p-3 text-xs" data-testid="tire-wear-comparison">
     <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
       <p class="min-w-0 font-semibold text-slate-200">{{ $t('tires.wearComparison.title') }}</p>
       <span class="shrink-0 rounded-full border px-2 py-0.5 font-semibold" :class="pillClass">

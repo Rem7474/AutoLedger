@@ -257,7 +257,7 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
     </div>
 
     <!-- Pricing & Lifespan -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-800 p-3.5 rounded-2xl">
       <div>
         <label for="tire-add-tire-price" class="block text-xs font-semibold text-slate-400 mb-1">
           {{ isTotalPrice ? $t('tires.tireAddModal.totalPrice', { cur: currencySymbol(vehicleStore.currency) }) : $t('tires.tireAddModal.pricePerTire', { cur: currencySymbol(vehicleStore.currency) }) }}

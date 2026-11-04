@@ -172,7 +172,7 @@ async function handleRemoveMember(m: any) {
     <!-- Add Member Section (Owners only) -->
     <div
       v-if="membersVehicle?.role === 'OWNER'"
-      class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3"
+      class="bg-slate-800 rounded-xl p-4 space-y-3"
     >
       <div class="flex items-center gap-2">
         <UserPlus class="w-4 h-4 text-sky-400" />
@@ -247,7 +247,7 @@ async function handleRemoveMember(m: any) {
         {{ $t('vehicles.vehicleMembersModal.loadingTheAccess') }}
       </div>
 
-      <div v-else-if="members.length === 0" class="py-6 text-center text-xs text-slate-400 bg-slate-950/40 rounded-xl border border-slate-800">
+      <div v-else-if="members.length === 0" class="py-6 text-center text-xs text-slate-400 bg-slate-800 rounded-xl">
         {{ $t('vehicles.vehicleMembersModal.noMemberFound') }}
       </div>
 
@@ -255,7 +255,7 @@ async function handleRemoveMember(m: any) {
         <div
           v-for="m in members"
           :key="m.user_id"
-          class="bg-slate-950/60 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-3"
+          class="bg-slate-800 rounded-xl p-3 flex items-center justify-between gap-3"
         >
           <div class="flex items-center gap-3 min-w-0">
             <div
@@ -342,7 +342,7 @@ async function handleRemoveMember(m: any) {
         <div
           v-for="p in people"
           :key="p.id"
-          class="bg-slate-950/60 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-3 flex-wrap"
+          class="bg-slate-800 rounded-xl p-3 flex items-center justify-between gap-3 flex-wrap"
         >
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">

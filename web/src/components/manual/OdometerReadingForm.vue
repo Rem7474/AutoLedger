@@ -12,7 +12,7 @@ const notes = defineModel<string>('notes', { required: true })
 </script>
 
 <template>
-<form class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-4 max-sm:border-0 max-sm:bg-transparent max-sm:p-0" @submit.prevent="emit('submit')">
+<form class="bg-slate-800 rounded-xl p-4 space-y-4 max-sm:bg-transparent max-sm:p-0" @submit.prevent="emit('submit')">
   <div v-if="!inSheet" class="flex items-center justify-between">
     <span class="text-xs font-bold text-sky-400">
       {{ editing ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new') }}

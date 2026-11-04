@@ -56,7 +56,7 @@ const leaseContract = computed(() => buildLeaseSummary(props.tco))
       :class="leaseContract.hasMileageAllowance ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'"
     >
       <!-- Bar 1: Contract Duration Progress -->
-      <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3.5 space-y-2.5">
+      <div class="bg-slate-800 rounded-xl p-3.5 space-y-2.5">
         <div class="flex items-center justify-between text-xs">
           <span class="font-semibold text-slate-300 flex items-center gap-1.5">
             <Calendar class="w-3.5 h-3.5 text-sky-400 shrink-0" />
@@ -91,7 +91,7 @@ const leaseContract = computed(() => buildLeaseSummary(props.tco))
       </div>
 
       <!-- Bar 2: Mileage Allowance Progress (if configured) -->
-      <div v-if="leaseContract.hasMileageAllowance" class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3.5 space-y-2.5">
+      <div v-if="leaseContract.hasMileageAllowance" class="bg-slate-800 rounded-xl p-3.5 space-y-2.5">
         <div class="flex items-center justify-between text-xs">
           <span class="font-semibold text-slate-300 flex items-center gap-1.5">
             <Gauge class="w-3.5 h-3.5 text-success-400 shrink-0" />

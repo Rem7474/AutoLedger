@@ -69,7 +69,7 @@ function applyExactAmount() {
       </h4>
     </div>
 
-    <div v-if="!legs.length" class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-xs text-slate-400" role="status">
+    <div v-if="!legs.length" class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-800 p-3 text-xs text-slate-400" role="status">
       <span>{{ $t('carpool.editor.noLegs') }}</span>
       <button type="button" class="btn btn-secondary" @click="emit('to-drives')">{{ $t('carpool.editor.toDrives') }}</button>
     </div>
@@ -95,7 +95,7 @@ function applyExactAmount() {
       </button>
     </div>
 
-    <div v-if="p && legs.length" class="space-y-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+    <div v-if="p && legs.length" class="space-y-4 rounded-xl bg-slate-800 p-3">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
         <div>
           <label :for="`passenger-name-${index}`" class="block text-xs text-slate-400 mb-0.5">{{ $t('carpool.carpoolTripModal.name') }}</label>
