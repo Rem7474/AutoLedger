@@ -282,7 +282,7 @@ useRefreshHandler(() => load(true))
         <SelectionHint v-if="canEdit && manualReadings.length > 0" />
         <SwipeToDelete v-for="r in history" :key="r.key" :disabled="!canEdit || !isManualReading(r) || selectedIds.length > 0" @delete="remove(r)">
         <div
-          class="relative bg-slate-950/70 border border-slate-800/80 hover:border-slate-700/90 rounded-xl p-3.5 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+          class="relative bg-slate-950/70 border border-slate-800/80 hover:border-slate-700/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
           :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(r) }"
         >
           <CardOpenButton
