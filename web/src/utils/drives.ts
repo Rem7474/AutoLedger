@@ -134,20 +134,6 @@ export function formatMonthLabel(yearMonth: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-/** Page buttons to show: every page when there are few, otherwise the ends and a window around the current one. */
-export function paginationPages(current: number, totalPages: number): (number | string)[] {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1)
-  }
-  if (current <= 4) {
-    return [1, 2, 3, 4, 5, '...', totalPages]
-  }
-  if (current >= totalPages - 3) {
-    return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
-  }
-  return [1, '...', current - 1, current, current + 1, '...', totalPages]
-}
-
 // ----- Selection and tags -----
 
 /** Tags after toggling one: Pro and Perso exclude each other. */

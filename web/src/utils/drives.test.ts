@@ -14,7 +14,6 @@ import {
   formatTripDates,
   monthRange,
   needsTollQualification,
-  paginationPages,
   sumDriveCosts,
   selectionSummary,
   shiftMonth,
@@ -100,21 +99,6 @@ describe('month helpers', () => {
   it('capitalizes the month label', () => {
     expect(formatMonthLabel('2026-05')).toBe('Mai 2026')
     expect(formatMonthLabel('')).toBe('')
-  })
-})
-
-describe('paginationPages', () => {
-  it('lists every page when there are seven or fewer', () => {
-    expect(paginationPages(1, 1)).toEqual([1])
-    expect(paginationPages(3, 7)).toEqual([1, 2, 3, 4, 5, 6, 7])
-  })
-
-  it('collapses the middle for many pages', () => {
-    expect(paginationPages(1, 20)).toEqual([1, 2, 3, 4, 5, '...', 20])
-    expect(paginationPages(4, 20)).toEqual([1, 2, 3, 4, 5, '...', 20])
-    expect(paginationPages(10, 20)).toEqual([1, '...', 9, 10, 11, '...', 20])
-    expect(paginationPages(17, 20)).toEqual([1, '...', 16, 17, 18, 19, 20])
-    expect(paginationPages(20, 20)).toEqual([1, '...', 16, 17, 18, 19, 20])
   })
 })
 

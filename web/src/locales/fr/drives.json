@@ -1,6 +1,5 @@
 {
   "drivesView": {
-    "pageOf": "Page {page} sur {totalPages}",
     "resetTheFilters": "Réinitialiser les filtres",
     "noDriveFoundForThis": "Aucun trajet trouvé pour cette sélection ou période",
     "personal": "Perso",
@@ -23,8 +22,8 @@
     "deleteDriveTitle": "Supprimer le trajet",
     "deleteDriveMessage": "Êtes-vous sûr de vouloir supprimer ce trajet manuel ?",
     "setUpTheLink": "Configurer la liaison",
-    "deselectPage": "Désélectionner la page",
-    "selectPage": "Sélectionner la page",
+    "deselectPage": "Désélectionner les trajets affichés",
+    "selectPage": "Sélectionner les trajets affichés",
     "quickFilters": "Filtres rapides",
     "tagsUpdated": "Tags mis à jour pour {count} trajet(s).",
     "driverUpdated": "Conducteur mis à jour pour {count} trajet(s).",
@@ -51,7 +50,11 @@
     "carpooledDrivesTitle": "Trajets partagés dans un covoiturage",
     "notCarpooled": "Non covoiturés",
     "notCarpooledTitle": "Trajets jamais partagés dans un covoiturage",
-    "deleteDrivesMessage": "Supprimer ces {count} trajets manuels ?"
+    "deleteDrivesMessage": "Supprimer ces {count} trajets manuels ?",
+    "shownOf": "{count} trajets sur {total}",
+    "loadMore": "Afficher plus de trajets",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier"
   },
   "addToTripModal": {
     "add": "Ajouter",
@@ -230,18 +233,6 @@
     "nameRequired": "Veuillez donner un nom au groupe de trajets (ex: Voyage Paris-Lyon)",
     "requiredField": "Champ requis",
     "created": "Groupe de trajets créé avec succès !"
-  },
-  "drivesPagination": {
-    "go": "Aller",
-    "page": "Page",
-    "lastPage": "Dernière page",
-    "nextPage": "Page suivante",
-    "previousPage": "Page précédente",
-    "firstPage": "Première page",
-    "perPage": "Par page :",
-    "drives": "trajets",
-    "of": "sur",
-    "display": "Affichage"
   },
   "drivesToolbar": {
     "showResults": "Voir {count} résultats",
