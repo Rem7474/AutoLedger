@@ -2,7 +2,7 @@
 import { intlLocale, t } from '@/i18n'
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { Fuel, Gauge, Plus, Trash2 } from 'lucide-vue-next'
+import { Fuel, Gauge, Lock, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/components/ModalShell.vue'
 import OdometerReadingForm from '@/components/manual/OdometerReadingForm.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
@@ -298,8 +298,15 @@ useRefreshHandler(() => load(true))
           />
           <RowLeading :icon="r.kind === 'FUEL' ? Fuel : Gauge" :selected="isSelected(r)" />
           <RowSelectBox v-if="showBox && isManualReading(r)" :id="r.key" :checked="isSelected(r)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(r)" />
-          <!-- A reading that cannot be selected (a fill-up, one sent by Home Assistant) keeps the column of the checkbox -->
-          <span v-else-if="showBox" class="w-8 shrink-0 max-sm:hidden" aria-hidden="true"></span>
+          <!-- A reading that cannot be selected (a fill-up, one sent by Home Assistant) shows a lock in the column of the checkbox -->
+          <span
+            v-else-if="showBox"
+            class="grid w-8 shrink-0 place-items-center text-slate-500 max-sm:hidden"
+            :title="r.kind === 'FUEL' ? $t('manual.odometerReadingsPanel.fromFillUpHint') : r.source === 'HA' ? $t('manual.odometerReadingsPanel.fromHomeAssistantHint') : undefined"
+            aria-hidden="true"
+          >
+            <Lock class="size-3.5" />
+          </span>
           <div class="min-w-0 flex-1">
             <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
               <span class="tabular-nums">{{ formatDistance(r.odometer) }}</span>
