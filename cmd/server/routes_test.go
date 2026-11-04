@@ -199,6 +199,24 @@ func TestReadTokenCannotPushEvents(t *testing.T) {
 	}
 }
 
+// TestHomeAssistantTokenWorksBothWays: the homeassistant scope pushes events and reads the Home Assistant views and
+// the read API, which is what lets one grant serve both directions of the integration.
+func TestHomeAssistantTokenWorksBothWays(t *testing.T) {
+	apiToken := auth.TokenPrefix + "route-table-test"
+	const scopeRefusal = "does not have the scope"
+	r := newRouteTableFor(t, auth.ScopeHomeAssistant)
+	for _, route := range []struct{ method, path string }{
+		{http.MethodPost, "/api/integrations/homeassistant/event"},
+		{http.MethodGet, "/api/integrations/homeassistant/vehicles"},
+		{http.MethodGet, "/api/integrations/v1/vehicles"},
+		{http.MethodGet, "/api/integrations/v1/fleet"},
+	} {
+		if body := probe(r, route.method, route.path, apiToken); strings.Contains(body, scopeRefusal) {
+			t.Errorf("a homeassistant token must reach %s %s, got %q", route.method, route.path, body)
+		}
+	}
+}
+
 // TestEveryIntegrationRouteChecksTheTokenScope fails for an integration route that forgot RequireTokenScope: a token
 // whose scope the route does not list must be refused on every one of them.
 func TestEveryIntegrationRouteChecksTheTokenScope(t *testing.T) {

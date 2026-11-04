@@ -18,6 +18,7 @@ A token has a scope, chosen when it is created and never changed afterwards (gen
 |---|---|
 | Send and read (`ingest`) | Push events (`POST /api/integrations/homeassistant/event`) and read the vehicles and their metrics. This is what Home Assistant needs. The read API is refused. |
 | Read only (`read`) | Read the vehicles and their metrics, and the [read API](#read-api). A push is refused with `403`. |
+| Home Assistant (`homeassistant`) | Both of the above: push events and read the vehicles, their metrics and the read API. One token then serves the two directions of the Home Assistant integration. Also the scope of a Home Assistant [OAuth connection](oauth.md). |
 
 Use a read-only token for anything that only looks at the figures (a dashboard, a script, an assistant): a leaked or misused token cannot write to the account.
 
@@ -91,7 +92,7 @@ Use a stable `event_id` (a session id, a timestamp-based key) whenever the sourc
 
 ## Read API
 
-A read-only token (`read`) also opens a narrow read API under `/api/integrations/v1`, meant for assistants and reports. A token with the `ingest` scope is refused on it: a token that can push events cannot also read the costs.
+A read-only token (`read`) or a Home Assistant token (`homeassistant`) also opens a narrow read API under `/api/integrations/v1`, meant for assistants and reports. A token with the `ingest` scope is refused on it: a token that can push events cannot also read the costs.
 
 | Route | Returns |
 |---|---|

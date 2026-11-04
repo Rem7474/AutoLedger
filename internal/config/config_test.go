@@ -168,3 +168,19 @@ func TestGeocodingIsOffByDefault(t *testing.T) {
 		t.Fatalf("got %+v", cfg)
 	}
 }
+
+func TestOAuthIsServedWithMCPOrOnItsOwn(t *testing.T) {
+	for _, tc := range []struct {
+		cfg  config.Config
+		want bool
+	}{
+		{config.Config{}, false},
+		{config.Config{MCPEnabled: true}, true},
+		{config.Config{OAuthEnabled: true}, true},
+		{config.Config{MCPEnabled: true, OAuthEnabled: true}, true},
+	} {
+		if got := tc.cfg.OAuthServed(); got != tc.want {
+			t.Errorf("%+v: OAuthServed() = %v, want %v", tc.cfg, got, tc.want)
+		}
+	}
+}

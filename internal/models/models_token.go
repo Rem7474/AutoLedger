@@ -8,7 +8,7 @@ type APIToken struct {
 	UserID      string `json:"user_id"`
 	Name        string `json:"name"`
 	TokenPrefix string `json:"token_prefix"`
-	Scope       string `json:"scope"` // "ingest" or "read", fixed at creation
+	Scope       string `json:"scope"` // "ingest", "read" or "homeassistant" (an assistant's grant can be "write"), fixed at creation
 	// OAuth is true for a grant an assistant obtained through the authorization server; ExpiresAt is then when the
 	// grant lapses unless the application renews it.
 	OAuth bool `json:"oauth"`

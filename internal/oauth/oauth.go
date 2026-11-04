@@ -37,18 +37,23 @@ const (
 	MaxClientNameLength = 100
 )
 
-// Scopes are what a grant may do: read the figures, or also record carpools (write includes read).
-var Scopes = []string{auth.ScopeRead, auth.ScopeWrite}
+// Scopes are what a grant may do: read the figures, or also record carpools (write includes read), or take part in
+// the Home Assistant integration (push charging events and read; homeassistant includes read).
+var Scopes = []string{auth.ScopeRead, auth.ScopeWrite, auth.ScopeHomeAssistant}
 
-// NormalizeScope returns the scope a request asks for: read when none is given, write when write is among them (it
-// includes read), and false for anything else.
+// NormalizeScope returns the scope a request asks for: read when none is given, write or homeassistant when it is
+// among them (each includes read), and false for anything else, including a request for both of them: they are
+// meant for different applications.
 func NormalizeScope(raw string) (string, bool) {
 	scope := auth.ScopeRead
 	for _, f := range strings.Fields(raw) {
 		switch f {
 		case auth.ScopeRead:
-		case auth.ScopeWrite:
-			scope = auth.ScopeWrite
+		case auth.ScopeWrite, auth.ScopeHomeAssistant:
+			if scope != auth.ScopeRead && scope != f {
+				return "", false
+			}
+			scope = f
 		default:
 			return "", false
 		}

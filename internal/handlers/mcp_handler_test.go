@@ -141,6 +141,12 @@ func TestMCPEndpointOnlyOpensToAReadTokenAndSaysWhereToAuthorize(t *testing.T) {
 		t.Errorf("a token that can push events must not read through MCP: status %d, want 401", resp.StatusCode)
 	}
 
+	resp = f.post(f.newToken(t, f.owner.ID, auth.ScopeHomeAssistant))
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("a Home Assistant grant was approved for that integration, not for an assistant: status %d, want 401", resp.StatusCode)
+	}
+
 	resp = f.post(f.readTok)
 	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {

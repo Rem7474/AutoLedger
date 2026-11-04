@@ -63,7 +63,7 @@ func (h *TokenHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !auth.ValidScope(req.Scope) {
-		writeAPIError(w, http.StatusBadRequest, apierror.New("token.scope_invalid", "Choose what the token may do: read data or push events"))
+		writeAPIError(w, http.StatusBadRequest, apierror.New("token.scope_invalid", "Choose what the token may do: read data, push events, or both for Home Assistant"))
 		return
 	}
 

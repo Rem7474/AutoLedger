@@ -12,3 +12,10 @@ The [AutoLedger module](https://github.com/Rem7474/autoledger-homeassistant) rea
 | OBD-II ([Torque Pro, WiCAN](https://community.home-assistant.io/t/updated-torque-obd-ii-integration-send-your-cars-data-to-home-assistant/1018554)) | Any brand with an OBD-II port | Yes | Depends on the vehicle | Local hardware or phone app, no manufacturer cloud. |
 
 These integrations are maintained by their own authors and are not affiliated with AutoLedger. The entities that appear depend on the model, the model year and the region: check the documentation of the integration for your vehicle.
+
+## Connecting Home Assistant to AutoLedger
+
+The AutoLedger module needs an access to your instance, in one of two ways:
+
+- **OAuth connection.** The instance enables it with `AUTOLEDGER_OAUTH_ENABLED=true` (or `AUTOLEDGER_MCP_ENABLED=true`, which includes it) and `AUTOLEDGER_BASE_URL` set to its public address. Home Assistant sends you to an authorization page where you choose the vehicles it sees and tick the box that lets it record charging sessions, odometer readings and trips. Deleting the access in the API tokens list of the account page ends it. See [OAuth](oauth.md).
+- **API token.** Create a token from the account page with the `homeassistant` scope: it pushes events and reads the figures, so one token serves both directions. An `ingest` token only pushes and reads the vehicle metrics, a `read` token only reads. See the [ingestion API](ingestion-api.md#scope).
