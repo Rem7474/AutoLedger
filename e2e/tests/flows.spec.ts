@@ -284,7 +284,7 @@ test('the dashboard follow-up zone is open on a wide screen', async ({ page }) =
 test('the odometer page lists the mileage typed on fill-ups, read-only', async ({ page }) => {
   await useVehicle(page, ice.id, '/odometer')
   await expect(page.getByText('Fill-up', { exact: true }).first()).toBeVisible()
-  const row = page.locator('div.rounded-xl', { has: page.getByText('Fill-up', { exact: true }) }).first()
+  const row = page.locator('div.rounded-2xl', { has: page.getByText('Fill-up', { exact: true }) }).first()
   await expect(row.getByRole('button')).toHaveCount(0)
   await expect(row.getByRole('link', { name: 'See the fill-ups' })).toHaveAttribute('href', /\/energy\?tab=FUEL/)
 })
@@ -306,7 +306,7 @@ test('a selectable odometer reading keeps its mileage next to the checkbox on a 
   const { id } = await created.json()
   try {
     await useVehicle(page, ev.id, '/odometer')
-    const row = page.locator('div.rounded-xl', { hasText: notes }).last()
+    const row = page.locator('div.rounded-2xl', { hasText: notes }).last()
     await row.scrollIntoViewIfNeeded()
     const check = (await row.getByRole('checkbox').boundingBox())!
     const text = (await row.getByText(notes).boundingBox())!
