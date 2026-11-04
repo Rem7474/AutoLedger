@@ -11,12 +11,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/services"
 )
 
 type whoAmIFixture struct {
+	repo         *database.Repository
 	owner, other *models.User
 	daily, van   *models.Vehicle
 	theirs       *models.Vehicle
@@ -27,7 +29,7 @@ func newWhoAmIFixture(t *testing.T) *whoAmIFixture {
 	t.Helper()
 	repo := authTestRepo(t)
 	ctx := context.Background()
-	f := &whoAmIFixture{}
+	f := &whoAmIFixture{repo: repo}
 	var err error
 	if f.owner, err = repo.CreateUser(ctx, "whoami-owner@example.com", "hash"); err != nil {
 		t.Fatal(err)
@@ -61,6 +63,7 @@ func newWhoAmIFixture(t *testing.T) *whoAmIFixture {
 	router := chi.NewRouter()
 	router.Get("/whoami", h.GetWhoAmI)
 	router.Get("/reminders", h.GetFleetReminders)
+	router.Get("/summary", h.GetSummary)
 	f.get = func(path, scope string, vehicles []string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		reqCtx := context.WithValue(req.Context(), middleware.UserIDKey, f.owner.ID)

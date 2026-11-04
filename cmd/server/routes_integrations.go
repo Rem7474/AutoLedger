@@ -23,6 +23,7 @@ func (h *apiHandlers) registerIntegrationRoutes(r chi.Router) {
 		r.Use(appMiddleware.RequireTokenScope(auth.ScopeRead, auth.ScopeWrite, auth.ScopeHomeAssistant))
 		r.Get("/api/integrations/v1/whoami", h.integrationRead.GetWhoAmI)
 		r.Get("/api/integrations/v1/reminders", h.integrationRead.GetFleetReminders)
+		r.Get("/api/integrations/v1/summary", h.integrationRead.GetSummary)
 		r.Get("/api/integrations/v1/vehicles", h.integrationRead.ListVehicles)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}", h.integrationRead.GetVehicle)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/costs", h.integrationRead.GetCosts)
