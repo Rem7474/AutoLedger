@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { intlLocale } from '@/i18n'
 import { t } from '@/i18n'
-import { canCharge } from '@/utils/vehicles'
+import { canCharge, connectedVehiclesExcept, connectionFormFrom, connectionPayload, type ConnectionForm } from '@/utils/vehicles'
 import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { Database, RefreshCw, Link2, CheckCircle2, AlertCircle, Pencil } from 'lucide-vue-next'
 import ModalShell from '@/components/ModalShell.vue'
+import TeslaMateConnectionFields from '@/components/vehicles/TeslaMateConnectionFields.vue'
+import { useConfirm } from '@/composables/useConfirm'
+import { useStaleWrite } from '@/composables/useStaleWrite'
+import { useSubmit } from '@/composables/useSubmit'
+import { useVehicleStore } from '@/stores/vehicle'
 
-// Where a vehicle's data comes from: the TeslaMate connection and what each origin has written so far.
+// Where a vehicle's data comes from: the TeslaMate connection (shown and edited here) and what each origin has written so far.
 const props = defineProps<{ vehicle: any | null }>()
-const emit = defineEmits<{ edit: [vehicle: any] }>()
+const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
+const { showConfirm, showAlert } = useConfirm()
+const { explainStaleWrite } = useStaleWrite()
+const vehicleStore = useVehicleStore()
 
 const ORIGINS = ['TESLAMATE', 'WEBHOOK', 'CSV', 'MANUAL'] as const
 
@@ -18,6 +26,9 @@ const loading = ref(false)
 const error = ref('')
 const summary = ref<{ teslamate_configured: boolean; activity: any[] } | null>(null)
 const test = ref<{ loading: boolean; success?: boolean; error?: string } | null>(null)
+// The connection form replaces the summary while it is open
+const editing = ref(false)
+const connection = ref<ConnectionForm | null>(null)
 
 const isOwner = computed(() => props.vehicle?.role === 'OWNER')
 const rows = computed(() =>
@@ -25,8 +36,8 @@ const rows = computed(() =>
     .filter((r: any) => r.origin !== 'TESLAMATE' || summary.value?.teslamate_configured || r.drives || r.charges)
 )
 
-watch(open, async (isOpen) => {
-  if (!isOpen || !props.vehicle) return
+async function loadSummary() {
+  if (!props.vehicle) return
   summary.value = null
   test.value = null
   error.value = ''
@@ -38,7 +49,51 @@ watch(open, async (isOpen) => {
   } finally {
     loading.value = false
   }
+}
+
+watch(open, (isOpen) => {
+  if (!isOpen) return
+  editing.value = false
+  void loadSummary()
 })
+
+const copySources = computed(() => connectedVehiclesExcept(vehicleStore.vehicles, props.vehicle?.id))
+
+function editConnection() {
+  if (!props.vehicle) return
+  connection.value = connectionFormFrom(props.vehicle, vehicleStore.vehicles)
+  editing.value = true
+}
+
+// The save replaces the whole vehicle: `connectionPayload` carries everything else as it is
+async function saveConnection(next: ConnectionForm | null) {
+  if (!props.vehicle) return
+  try {
+    await api.updateVehicle(props.vehicle.id, connectionPayload(props.vehicle, next))
+  } catch (err: any) {
+    // A vehicle changed elsewhere is explained and reloaded; any other refusal stays on the form
+    if (!(await explainStaleWrite(err))) {
+      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+      return
+    }
+  }
+  editing.value = false
+  emit('saved')
+  await loadSummary()
+}
+
+const { pending: saving, run: runOnce } = useSubmit()
+const handleSave = () => runOnce(() => saveConnection(connection.value))
+
+async function disconnect() {
+  const ok = await showConfirm({
+    title: t('vehicles.teslamateConnection.disconnectTitle'),
+    message: t('vehicles.teslamateConnection.disconnectMessage'),
+    confirmText: t('vehicles.teslamateConnection.disconnect'),
+    type: 'danger',
+  })
+  if (ok) await runOnce(() => saveConnection(null))
+}
 
 async function testConnection() {
   if (!props.vehicle) return
@@ -68,7 +123,20 @@ function formatLast(iso?: string) {
         </div>
     </template>
 
-      <div v-if="loading" class="flex justify-center py-6"><RefreshCw class="w-5 h-5 animate-spin text-slate-400" /></div>
+      <form v-if="editing && connection" id="teslamate-connection-form" class="space-y-4" @submit.prevent="handleSave">
+        <h4 class="text-sm font-bold text-white">{{ $t('vehicles.vehicleDataSourcesModal.teslamate') }}</h4>
+        <TeslaMateConnectionFields v-model="connection" :configured="!!vehicle?.teslamate_api_url" :copy-sources="copySources" />
+        <button
+          v-if="vehicle?.teslamate_api_url"
+          type="button"
+          :disabled="saving"
+          class="btn text-danger-400 hover:bg-danger-500/10"
+          @click="disconnect"
+        >
+          {{ $t('vehicles.teslamateConnection.disconnect') }}
+        </button>
+      </form>
+      <div v-else-if="loading" class="flex justify-center py-6"><RefreshCw class="w-5 h-5 animate-spin text-slate-400" /></div>
       <p v-else-if="error" class="text-danger-400">{{ error }}</p>
       <template v-else-if="summary">
         <div v-if="canCharge(vehicle?.powertrain)" class="bg-slate-800 rounded-xl p-4 space-y-3">
@@ -91,7 +159,7 @@ function formatLast(iso?: string) {
               {{ $t('vehicles.vehicleCard.testApi') }}
             </button>
             <button
-              @click="emit('edit', vehicle); open = false"
+              @click="editConnection"
               class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg flex items-center gap-1.5 border border-slate-700"
             >
               <Pencil class="w-3.5 h-3.5" />
@@ -121,5 +189,12 @@ function formatLast(iso?: string) {
           <p v-if="!summary.activity.length" class="text-slate-400 mt-2">{{ $t('vehicles.vehicleDataSourcesModal.empty') }}</p>
         </div>
       </template>
+
+    <template v-if="editing" #footer>
+      <button type="button" class="btn btn-lg btn-secondary" @click="editing = false">{{ $t('common.cancel') }}</button>
+      <button type="submit" form="teslamate-connection-form" :disabled="saving" class="btn btn-lg btn-primary">
+        {{ $t('vehicles.teslamateConnection.save') }}
+      </button>
+    </template>
   </ModalShell>
 </template>

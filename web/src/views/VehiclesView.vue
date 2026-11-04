@@ -86,6 +86,8 @@ function openEditModal(v: any) {
 async function onVehicleSaved() {
   await vehicleStore.fetchVehicles()
   await loadOwnerships()
+  // The open Data sources modal keeps working on the saved vehicle, with its new version
+  if (dataSourcesVehicle.value) dataSourcesVehicle.value = vehicleStore.vehicles.find((v) => v.id === dataSourcesVehicle.value.id) ?? null
 }
 
 async function handleDelete(id: string) {
@@ -165,7 +167,7 @@ function openMembersModal(v: any) {
       />
     </div>
 
-    <VehicleFormModal v-model:open="showModal" :editing="editingVehicle" :vehicles="vehicleStore.vehicles" @saved="onVehicleSaved" />
+    <VehicleFormModal v-model:open="showModal" :editing="editingVehicle" @saved="onVehicleSaved" />
 
     <OwnershipWizardModal
       v-model:open="showOwnershipModal"
@@ -177,6 +179,6 @@ function openMembersModal(v: any) {
 
     <VehicleMembersModal v-model:open="showMembersModal" :vehicle="membersVehicle" />
 
-    <VehicleDataSourcesModal v-model:open="showDataSourcesModal" :vehicle="dataSourcesVehicle" @edit="openEditModal" />
+    <VehicleDataSourcesModal v-model:open="showDataSourcesModal" :vehicle="dataSourcesVehicle" @saved="onVehicleSaved" />
   </div>
 </template>
