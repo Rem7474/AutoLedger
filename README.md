@@ -51,7 +51,7 @@ Pick whichever fits each vehicle; they can be mixed in the same account.
 | **CSV import and export** | Charges, drives, fill-ups, odometer; saved column profiles; round-trip export; OBD2 logger recipe | [docs/csv-import.md](docs/csv-import.md) |
 | **Home Assistant** | Wallbox or energy-meter charging sessions sent automatically | [HACS integration](https://github.com/Rem7474/autoledger-homeassistant) |
 | **Ingestion API** | Any script, Node-RED or n8n pushing charges, drives, fill-ups and odometer readings with a token | [docs/ingestion-api.md](docs/ingestion-api.md) |
-| **TeslaMate sync** (optional) | Continuous import of the odometer, charge and drive history of a Tesla already logged by [TeslaMate](https://github.com/teslamate-org/teslamate) | per vehicle, in the vehicle settings |
+| **TeslaMate sync** (optional) | Continuous import of the odometer, charge and drive history of a Tesla already logged by [TeslaMate](https://github.com/teslamate-org/teslamate) | per vehicle, in its Data sources |
 
 ```mermaid
 flowchart LR

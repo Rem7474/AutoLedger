@@ -633,3 +633,43 @@ test('a carpool is started from the selected drives without leaving the drives p
   await expect(page.locator('input.select-box:checked')).toHaveCount(1)
   await expect(bulkCarpool).toBeVisible()
 })
+
+test('the TeslaMate connection is set, edited and removed from Data sources', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Connection reference', powertrain: 'EV', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  try {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await useVehicle(page, vehicle.id, '/vehicles')
+    const card = page.locator('div.card', { has: page.getByRole('heading', { name: vehicle.name }) })
+
+    // The vehicle form is only its identity
+    await card.getByRole('button', { name: 'More actions' }).click()
+    await page.getByRole('menuitem', { name: 'Edit' }).click()
+    await expect(page.locator('#vehicle-teslamate-api-url')).toHaveCount(0)
+    await page.keyboard.press('Escape')
+
+    await card.getByRole('button', { name: 'More actions' }).click()
+    await page.getByRole('menuitem', { name: 'Data sources' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Data sources' })
+    await dialog.getByRole('button', { name: 'Connect TeslaMate' }).click()
+    await dialog.locator('#vehicle-teslamate-api-url').fill('http://127.0.0.1:9')
+    await dialog.getByRole('button', { name: 'Save the connection' }).click()
+    await expect(dialog.getByRole('button', { name: 'Edit connection' })).toBeVisible()
+    const saved = await (await request.get(`/api/vehicles/${vehicle.id}`, { headers })).json()
+    expect(saved.teslamate_api_url).toBe('http://127.0.0.1:9')
+    expect(saved.name).toBe(vehicle.name)
+
+    // A second save works on the new version, then the connection is removed after a confirmation
+    await dialog.getByRole('button', { name: 'Edit connection' }).click()
+    await expect(dialog.locator('#vehicle-teslamate-api-url')).toHaveValue('http://127.0.0.1:9')
+    await dialog.getByRole('button', { name: 'Disconnect' }).click()
+    await page.getByRole('dialog', { name: 'Disconnect TeslaMate?' }).getByRole('button', { name: 'Disconnect' }).click()
+    await expect(dialog.getByRole('button', { name: 'Connect TeslaMate' })).toBeVisible()
+    const after = await (await request.get(`/api/vehicles/${vehicle.id}`, { headers })).json()
+    expect(after.teslamate_api_url ?? '').toBe('')
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})

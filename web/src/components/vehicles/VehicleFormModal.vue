@@ -7,76 +7,31 @@ import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useConfirm } from '@/composables/useConfirm'
-import {
-  RefreshCw,
-  CheckCircle2,
-  AlertCircle,
-  Link2,
-  ChevronDown,
-  ChevronRight,
-  Zap,
-  Flame,
-  Copy,
-  Sliders,
-} from 'lucide-vue-next'
-import { canLinkTeslaMate, emptyVehicleForm, vehicleFormFrom } from '@/utils/vehicles'
+import { ChevronDown, ChevronRight, Zap, Flame, Sliders } from 'lucide-vue-next'
+import { canLinkTeslaMate, emptyVehicleForm, vehicleFormFrom, vehicleSavePayload } from '@/utils/vehicles'
 import { CURRENCIES } from '@/utils/expenses'
-import { distanceUnit, formatDistanceValue, formatPerDistanceValue } from '@/units'
-import { useVehicleStore } from '@/stores/vehicle'
+import { distanceUnit, formatPerDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
 
-// Adds a vehicle, or edits \`editing\`.
-const props = withDefaults(
-  defineProps<{
-    editing?: any | null
-    vehicles?: any[]
-  }>(),
-  {
-    editing: null,
-    vehicles: undefined,
-  }
-)
+// Adds a vehicle, or edits \`editing\`: its identity, tariffs and tolls. The TeslaMate connection is set in Data sources.
+const props = withDefaults(defineProps<{ editing?: any | null }>(), { editing: null })
 const emit = defineEmits<{ saved: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
 const { explainStaleWrite } = useStaleWrite()
-const vehicleStore = useVehicleStore()
-const existingVehicles = computed(() => props.vehicles ?? vehicleStore.vehicles)
 
 const isEditing = computed(() => !!props.editing)
 const editingId = computed(() => props.editing?.id ?? null)
-const modalTestLoading = ref(false)
-const modalTestResult = ref<{ success: boolean; status?: any; error?: string } | null>(null)
-const form = ref(emptyVehicleForm(existingVehicles.value))
+const form = ref(emptyVehicleForm())
 const showAdvanced = ref(false)
-// Shows the TeslaMate fields; without a teslamateapi URL the server tracks the vehicle as manual
-const connectTeslaMate = ref(false)
 
 const tariffPlans = ref<any[]>([])
-
-// Existing vehicles that already have a telemetry API URL configured
-const existingConnectedVehicles = computed(() => {
-  return existingVehicles.value.filter(
-    (v: any) => v.teslamate_api_url && (!props.editing || v.id !== props.editing.id)
-  )
-})
-
-function copyConnectionFrom(source: any) {
-  form.value.teslamate_api_url = source.teslamate_api_url || ''
-  form.value.teslamate_grafana_url = source.teslamate_grafana_url || ''
-  form.value.teslamate_url = source.teslamate_url || ''
-  form.value.teslamate_auth_type = source.teslamate_auth_type || 'NONE'
-  form.value.teslamate_basic_user = source.teslamate_basic_user || ''
-}
 
 const powertrainChoices = ['EV', 'PHEV', 'REEV', 'ICE'] as const
 
 function setPowertrain(p: (typeof powertrainChoices)[number]) {
   if (isEditing.value) return
   form.value.powertrain = p
-  if (p === 'ICE') {
-    connectTeslaMate.value = false
-  }
 }
 
 async function loadTariffPlans() {
@@ -90,10 +45,8 @@ async function loadTariffPlans() {
 
 watch(open, (isOpen) => {
   if (!isOpen) return
-  modalTestResult.value = null
   showAdvanced.value = false
-  form.value = props.editing ? vehicleFormFrom(props.editing) : emptyVehicleForm(existingVehicles.value)
-  connectTeslaMate.value = !!form.value.teslamate_api_url
+  form.value = props.editing ? vehicleFormFrom(props.editing) : emptyVehicleForm()
   loadTariffPlans()
 })
 
@@ -101,30 +54,7 @@ const { pending: submitting, run: runOnce } = useSubmit()
 
 async function handleSaveAction() {
   try {
-    const payload: Record<string, any> = { ...form.value }
-    if (!canLinkTeslaMate(payload.powertrain)) {
-      payload.teslamate_car_id = null
-      payload.teslamate_api_url = ''
-      payload.teslamate_grafana_url = ''
-      payload.teslamate_url = ''
-      payload.teslamate_api_key = ''
-      payload.teslamate_basic_user = ''
-      payload.teslamate_basic_pass = ''
-      payload.tariff_plan_id = null
-      payload.is_home_charger_default = false
-      payload.estimated_kwh_100km = null
-      payload.estimated_price_per_kwh = null
-    } else if (!connectTeslaMate.value) {
-      payload.teslamate_car_id = null
-      payload.teslamate_api_url = ''
-      payload.teslamate_grafana_url = ''
-      payload.teslamate_url = ''
-      payload.teslamate_api_key = ''
-      payload.teslamate_basic_user = ''
-      payload.teslamate_basic_pass = ''
-    } else {
-      payload.teslamate_car_id = payload.teslamate_car_id || null
-    }
+    const payload = vehicleSavePayload(form.value)
 
     if (isEditing.value && editingId.value) {
       await api.updateVehicle(editingId.value, { ...payload, expected_version: props.editing?.version })
@@ -143,23 +73,6 @@ async function handleSaveAction() {
   }
 }
 const handleSave = () => runOnce(handleSaveAction)
-
-async function testModalConnection() {
-  if (!form.value.teslamate_api_url) {
-    modalTestResult.value = { success: false, error: t('vehicles.vehicleFormModal.urlFirst') }
-    return
-  }
-  modalTestLoading.value = true
-  modalTestResult.value = null
-  try {
-    const res = await api.testTeslaMateRaw(form.value)
-    modalTestResult.value = { success: true, status: res.status }
-  } catch (err: any) {
-    modalTestResult.value = { success: false, error: err.message }
-  } finally {
-    modalTestLoading.value = false
-  }
-}
 </script>
 
 <template>
@@ -231,7 +144,7 @@ async function testModalConnection() {
             id="vehicle-current-odometer"
             v-model="form.current_odometer"
             step="1"
-            :disabled="!!form.teslamate_api_url && connectTeslaMate"
+            :disabled="!!form.teslamate_api_url"
             class="field"
           />
           <p class="mt-1 text-xs text-slate-400">{{ $t('vehicles.vehicleFormModal.currentMileageHelp') }}</p>
@@ -261,175 +174,12 @@ async function testModalConnection() {
         />
       </div>
 
-      <!-- 2. TeslaMate synchronization (electric vehicles); the tracking mode follows from it on the server -->
-      <div v-if="canLinkTeslaMate(form.powertrain)" class="pt-3 border-t border-slate-800">
-        <label
-          for="vehicle-connect-teslamate"
-          class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all"
-          :class="connectTeslaMate
-            ? 'bg-rose-500/10 border-rose-500/50 shadow-sm ring-1 ring-rose-500/20'
-            : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800'"
-        >
-          <input id="vehicle-connect-teslamate" v-model="connectTeslaMate" type="checkbox" class="select-box mt-0.5" />
-          <div>
-            <span class="text-xs font-semibold text-white block">{{ $t('vehicles.vehicleFormModal.teslamateSync') }}</span>
-            <span class="text-xs text-slate-400 block mt-0.5">{{ $t('vehicles.vehicleFormModal.teslamateSyncDesc') }}</span>
-          </div>
-        </label>
-      </div>
+      <!-- 2. The connection to TeslaMate is set once the vehicle exists, in Data sources -->
+      <p v-if="!isEditing && canLinkTeslaMate(form.powertrain)" class="pt-3 border-t border-slate-800 text-xs text-slate-400">
+        {{ $t('vehicles.vehicleFormModal.teslamateLater') }}
+      </p>
 
-      <!-- 3. TeslaMate connection settings (shown only once sync is ticked) -->
-      <div v-if="canLinkTeslaMate(form.powertrain) && connectTeslaMate" class="pt-3 border-t border-slate-800 space-y-3">
-        <div class="flex items-center justify-between">
-          <h4 class="text-xs font-bold text-white">{{ $t('vehicles.vehicleFormModal.telemetrySettings') }}</h4>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">TeslaMate</span>
-        </div>
-
-        <!-- Reuse the connection of another connected vehicle -->
-        <div v-if="existingConnectedVehicles.length > 0 && !isEditing" class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-wrap items-center gap-2 text-xs">
-          <span class="text-slate-400 text-xs">{{ $t('vehicles.vehicleFormModal.copyFromExisting', { name: '' }) }}:</span>
-          <button
-            v-for="ev in existingConnectedVehicles"
-            :key="ev.id"
-            type="button"
-            @click="copyConnectionFrom(ev)"
-            class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
-          >
-            <Copy class="w-3 h-3 text-slate-400" aria-hidden="true" />
-            {{ ev.name || ev.model || $t('vehicles.vehicleFormModal.copyFallbackName') }}
-          </button>
-        </div>
-
-        <div>
-          <label for="vehicle-teslamate-api-url" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.teslamateapiBaseUrl') }}</label>
-          <input
-            id="vehicle-teslamate-api-url"
-            v-model="form.teslamate_api_url"
-            :placeholder="$t('vehicles.vehicleFormModal.eGHttp1921682')"
-            class="field"
-          />
-        </div>
-
-        <div>
-          <label for="vehicle-teslamate-grafana-url" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.teslamateGrafanaUrlOptional') }}</label>
-          <input
-            id="vehicle-teslamate-grafana-url"
-            v-model="form.teslamate_grafana_url"
-            type="url"
-            :placeholder="$t('vehicles.vehicleFormModal.eGHttp192168')"
-            class="field"
-          />
-          <p class="text-xs text-slate-400 mt-1">{{ $t('vehicles.vehicleFormModal.addsAnOpenInTeslamate') }}</p>
-        </div>
-
-        <div>
-          <label for="vehicle-teslamate-url" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.teslamateUrlOptional') }}</label>
-          <input
-            id="vehicle-teslamate-url"
-            v-model="form.teslamate_url"
-            type="url"
-            :placeholder="$t('vehicles.vehicleFormModal.eGHttp192168')"
-            class="field"
-          />
-          <p class="text-xs text-slate-400 mt-1">{{ $t('vehicles.vehicleFormModal.addsASetTheCost') }}</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="vehicle-teslamate-car-id" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.carIdInTeslamate') }}</label>
-            <input
-              id="vehicle-teslamate-car-id"
-              v-model.number="form.teslamate_car_id"
-              type="number"
-              inputmode="numeric"
-              min="1"
-              class="field"
-            />
-          </div>
-          <div>
-            <label for="vehicle-teslamate-auth-type" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.authenticationMode') }}</label>
-            <select
-              id="vehicle-teslamate-auth-type"
-              v-model="form.teslamate_auth_type"
-              class="field"
-            >
-              <option value="NONE">{{ $t('vehicles.vehicleFormModal.noneLan') }}</option>
-              <option value="BEARER">{{ $t('vehicles.vehicleFormModal.bearerTokenApiToken') }}</option>
-              <option value="BASIC">{{ $t('vehicles.vehicleFormModal.httpBasicAuth') }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div v-if="form.teslamate_auth_type === 'BEARER'">
-          <label for="vehicle-teslamate-api-key" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.teslamateApiKeyToken') }}</label>
-          <input
-            id="vehicle-teslamate-api-key"
-            v-model="form.teslamate_api_key"
-            type="password"
-            placeholder="••••••••"
-            class="field"
-          />
-        </div>
-
-        <div v-if="form.teslamate_auth_type === 'BASIC'" class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="vehicle-teslamate-basic-user" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.basicAuthUser') }}</label>
-            <input
-              id="vehicle-teslamate-basic-user"
-              v-model="form.teslamate_basic_user"
-              placeholder="admin"
-              class="field"
-            />
-          </div>
-          <div>
-            <label for="vehicle-teslamate-basic-pass" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.basicAuthPassword') }}</label>
-            <input
-              id="vehicle-teslamate-basic-pass"
-              v-model="form.teslamate_basic_pass"
-              type="password"
-              placeholder="••••••••"
-              class="field"
-            />
-          </div>
-        </div>
-
-        <!-- Connection test -->
-        <div v-if="form.teslamate_api_url" class="pt-2">
-          <button
-            type="button"
-            @click="testModalConnection"
-            :disabled="modalTestLoading"
-            class="btn btn-secondary w-full"
-          >
-            <RefreshCw v-if="modalTestLoading" class="w-3.5 h-3.5 animate-spin text-slate-400" />
-            <Link2 v-else class="w-3.5 h-3.5 text-slate-400" />
-            <span>{{ modalTestLoading ? $t('vehicles.vehicleFormModal.testing') : $t('vehicles.vehicleFormModal.testConnection') }}</span>
-          </button>
-
-          <div
-            v-if="modalTestResult"
-            class="mt-2.5 p-3 rounded-xl text-xs flex items-start gap-2"
-            :class="modalTestResult.success ? 'bg-success-500/10 text-success-300 border border-success-500/20' : 'bg-danger-500/10 text-danger-300 border border-danger-500/20'"
-          >
-            <CheckCircle2 v-if="modalTestResult.success" class="w-4 h-4 shrink-0 text-success-400 mt-0.5" />
-            <AlertCircle v-else class="w-4 h-4 shrink-0 text-danger-400 mt-0.5" />
-            <div class="flex-1">
-              <div v-if="modalTestResult.success">
-                <strong class="font-semibold">{{ $t('vehicles.vehicleFormModal.connectionSuccessful') }}</strong>
-                <p class="text-xs text-success-200/80 mt-0.5">
-                  {{ $t('vehicles.vehicleFormModal.testStatus', { unit: distanceUnit(), state: modalTestResult.status?.state || $t('vehicles.vehicleCard.online'), odometer: formatDistanceValue(modalTestResult.status?.odometer || 0) }) }}
-                </p>
-              </div>
-              <div v-else>
-                <strong class="font-semibold">{{ $t('vehicles.vehicleFormModal.connectionFailed') }}</strong>
-                <p class="text-xs text-danger-200/90 mt-0.5">{{ modalTestResult.error }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. Additional options, folded so they do not crowd the creation form -->
+      <!-- 3. Additional options, folded so they do not crowd the creation form -->
       <div v-if="canLinkTeslaMate(form.powertrain)" class="pt-3 border-t border-slate-800">
         <button
           type="button"
@@ -487,7 +237,7 @@ async function testModalConnection() {
         </div>
       </div>
 
-      <!-- 5. Tolls: automatic detection relies on a French dataset -->
+      <!-- 4. Tolls: automatic detection relies on a French dataset -->
       <div class="pt-3 border-t border-slate-800">
         <label for="vehicle-toll-detection" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.tollDetection') }}</label>
         <select id="vehicle-toll-detection" v-model="form.toll_detection" class="field">

@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { formatAmount } from '@/currency'
 import {
   canCharge,
+  connectedVehiclesExcept,
+  connectionFormFrom,
+  connectionPayload,
+  copiedConnection,
   canLinkTeslaMate,
   canRefuel,
   isElectricOnly,
@@ -23,6 +27,7 @@ import {
   ownershipSummary,
   toDateInput,
   vehicleFormFrom,
+  vehicleSavePayload,
   defaultDriver,
 } from './vehicles'
 
@@ -282,5 +287,58 @@ describe('hasEnergyEstimate', () => {
     expect(hasEnergyEstimate({ estimated_kwh_100km: null, estimated_price_per_kwh: 0.2 })).toBe(false)
     expect(hasEnergyEstimate({ estimated_kwh_100km: 0, estimated_price_per_kwh: 0.2 })).toBe(false)
     expect(hasEnergyEstimate(null)).toBe(false)
+  })
+})
+
+describe('TeslaMate connection', () => {
+  const connected = {
+    id: 'v1', name: 'M3', powertrain: 'EV', version: 4, currency: 'EUR', tariff_plan_id: 'p1', estimated_kwh_100km: 15,
+    teslamate_api_url: 'http://tm:8080', teslamate_url: 'http://tm:4000', teslamate_car_id: 2, teslamate_auth_type: 'BASIC', teslamate_basic_user: 'me',
+  }
+
+  it('reads the connection of a vehicle, proposing the next free car id when it has none', () => {
+    const c = connectionFormFrom(connected)
+    expect(c).toMatchObject({ teslamate_api_url: 'http://tm:8080', teslamate_car_id: 2, teslamate_basic_user: 'me', teslamate_api_key: '' })
+    expect(Object.keys(c)).not.toContain('name')
+
+    const blank = connectionFormFrom({ id: 'v2', name: 'Y', powertrain: 'EV' }, [connected, { id: 'v2', teslamate_car_id: 9 }])
+    expect(blank.teslamate_car_id).toBe(3)
+    expect(connectionFormFrom({ id: 'v2', name: 'Y' }).teslamate_car_id).toBe(1)
+  })
+
+  it('lists the other connected vehicles', () => {
+    const list = [connected, { id: 'v2', teslamate_api_url: '' }, { id: 'v3', teslamate_api_url: 'http://x' }]
+    expect(connectedVehiclesExcept(list, 'v3').map((v) => v.id)).toEqual(['v1'])
+    expect(connectedVehiclesExcept(list).map((v) => v.id)).toEqual(['v1', 'v3'])
+    expect(connectedVehiclesExcept(undefined)).toEqual([])
+  })
+
+  it('copies the settings of another vehicle without its secrets', () => {
+    expect(copiedConnection(connected)).toEqual({
+      teslamate_api_url: 'http://tm:8080', teslamate_grafana_url: '', teslamate_url: 'http://tm:4000', teslamate_auth_type: 'BASIC', teslamate_basic_user: 'me',
+    })
+    expect(copiedConnection({}).teslamate_auth_type).toBe('NONE')
+  })
+
+  it('saves a connection with the rest of the vehicle untouched and its version', () => {
+    const p = connectionPayload({ ...connected, teslamate_api_url: '' }, { ...connectionFormFrom(connected), teslamate_api_key: 'secret' })
+    expect(p).toMatchObject({ name: 'M3', tariff_plan_id: 'p1', estimated_kwh_100km: 15, teslamate_api_url: 'http://tm:8080', teslamate_api_key: 'secret', teslamate_car_id: 2, expected_version: 4 })
+  })
+
+  it('disconnects by sending no connection field', () => {
+    const p = connectionPayload(connected, null)
+    expect(p).toMatchObject({ teslamate_api_url: '', teslamate_url: '', teslamate_car_id: null, teslamate_basic_user: '', teslamate_api_key: '', expected_version: 4 })
+    expect(p.tariff_plan_id).toBe('p1')
+  })
+
+  it('sends a vehicle without a URL as tracked by hand, and a car id of 0 as none', () => {
+    expect(vehicleSavePayload({ ...vehicleFormFrom(connected), teslamate_api_url: '' })).toMatchObject({ teslamate_car_id: null, teslamate_url: '' })
+    expect(vehicleSavePayload({ ...vehicleFormFrom(connected), teslamate_car_id: 0 }).teslamate_car_id).toBeNull()
+    expect(vehicleSavePayload(vehicleFormFrom(connected)).teslamate_car_id).toBe(2)
+  })
+
+  it('drops the electric settings of a vehicle that cannot plug in', () => {
+    const p = vehicleSavePayload({ ...vehicleFormFrom({ ...connected, powertrain: 'ICE', is_home_charger_default: true }) })
+    expect(p).toMatchObject({ tariff_plan_id: null, is_home_charger_default: false, estimated_kwh_100km: null, teslamate_api_url: '' })
   })
 })

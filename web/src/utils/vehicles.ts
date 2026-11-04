@@ -149,6 +149,80 @@ export function vehicleFormFrom(v: any): VehicleForm {
   }
 }
 
+const CONNECTION_KEYS = [
+  'teslamate_car_id',
+  'teslamate_api_url',
+  'teslamate_grafana_url',
+  'teslamate_url',
+  'teslamate_auth_type',
+  'teslamate_api_key',
+  'teslamate_basic_user',
+  'teslamate_basic_pass',
+] as const
+
+/** The fields of a vehicle that describe its TeslaMate connection. */
+export type ConnectionForm = Pick<VehicleForm, (typeof CONNECTION_KEYS)[number]>
+
+/**
+ * Connection form of a vehicle. One that is not connected yet proposes the next free car id, since vehicles of the same
+ * TeslaMate instance have each their own.
+ */
+export function connectionFormFrom(v: any, vehicles?: { id?: string; teslamate_car_id?: number | null }[] | null): ConnectionForm {
+  const form = vehicleFormFrom(v)
+  const connection = Object.fromEntries(CONNECTION_KEYS.map((k) => [k, form[k]])) as ConnectionForm
+  if (!v.teslamate_api_url) connection.teslamate_car_id = nextTeslaMateCarId((vehicles ?? []).filter((o) => o.id !== v.id))
+  return connection
+}
+
+/** Vehicles other than `vehicleId` that already have a connection, whose settings can be reused. */
+export function connectedVehiclesExcept<T extends { id?: string; teslamate_api_url?: string | null }>(vehicles: T[] | null | undefined, vehicleId?: string): T[] {
+  return (vehicles ?? []).filter((v) => !!v.teslamate_api_url && v.id !== vehicleId)
+}
+
+/** The settings of another vehicle's connection; secrets are never sent by the API, so they have to be typed again. */
+export function copiedConnection(source: any): Partial<ConnectionForm> {
+  return {
+    teslamate_api_url: source.teslamate_api_url || '',
+    teslamate_grafana_url: source.teslamate_grafana_url || '',
+    teslamate_url: source.teslamate_url || '',
+    teslamate_auth_type: source.teslamate_auth_type || 'NONE',
+    teslamate_basic_user: source.teslamate_basic_user || '',
+  }
+}
+
+/**
+ * What a vehicle save sends. The update replaces the whole vehicle, so it carries the connection fields too: a vehicle
+ * without a teslamateapi URL is tracked by hand and sends none, and a powertrain that cannot plug in sends no electric
+ * settings at all.
+ */
+export function vehicleSavePayload(form: VehicleForm): Record<string, any> {
+  const payload: Record<string, any> = { ...form }
+  if (!canLinkTeslaMate(payload.powertrain)) {
+    payload.tariff_plan_id = null
+    payload.is_home_charger_default = false
+    payload.estimated_kwh_100km = null
+    payload.estimated_price_per_kwh = null
+  }
+  if (!canLinkTeslaMate(payload.powertrain) || !payload.teslamate_api_url) {
+    payload.teslamate_car_id = null
+    payload.teslamate_api_url = ''
+    payload.teslamate_grafana_url = ''
+    payload.teslamate_url = ''
+    payload.teslamate_api_key = ''
+    payload.teslamate_basic_user = ''
+    payload.teslamate_basic_pass = ''
+  } else {
+    payload.teslamate_car_id = payload.teslamate_car_id || null
+  }
+  return payload
+}
+
+/** Saves a vehicle with this connection and everything else as it is; `null` disconnects it. */
+export function connectionPayload(v: any, connection: ConnectionForm | null): Record<string, any> {
+  const form = { ...vehicleFormFrom(v), ...(connection ?? { teslamate_api_url: '' }) }
+  return { ...vehicleSavePayload(form), expected_version: v.version }
+}
+
 // Empty numeric inputs are sent as null, never as ""
 /** A vehicle has an energy estimate when both figures are set; a price of 0 is a valid (free) supply. */
 export function hasEnergyEstimate(v: { estimated_kwh_100km?: number | null; estimated_price_per_kwh?: number | null } | null | undefined): boolean {

@@ -51,7 +51,7 @@ Choisissez la source qui convient à chaque véhicule ; elles se combinent dans 
 | **Import et export CSV** | Recharges, trajets, pleins, odomètre ; profils de colonnes enregistrés ; export réimportable ; recette pour un enregistreur OBD2 | [docs/csv-import.fr.md](docs/csv-import.fr.md) |
 | **Home Assistant** | Sessions de recharge d'une wallbox ou d'un compteur d'énergie envoyées automatiquement | [intégration HACS](https://github.com/Rem7474/autoledger-homeassistant) |
 | **API d'ingestion** | N'importe quel script, Node-RED ou n8n qui envoie recharges, trajets, pleins et relevés d'odomètre avec un jeton | [docs/ingestion-api.fr.md](docs/ingestion-api.fr.md) |
-| **Synchronisation TeslaMate** (facultative) | Import continu de l'odomètre, de l'historique de recharges et de trajets d'une Tesla déjà suivie par [TeslaMate](https://github.com/teslamate-org/teslamate) | par véhicule, dans les réglages du véhicule |
+| **Synchronisation TeslaMate** (facultative) | Import continu de l'odomètre, de l'historique de recharges et de trajets d'une Tesla déjà suivie par [TeslaMate](https://github.com/teslamate-org/teslamate) | par véhicule, dans ses Sources de données |
 
 ```mermaid
 flowchart LR
