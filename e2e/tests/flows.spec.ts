@@ -385,8 +385,12 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
 
   await page.locator('div.rounded-2xl', { hasText: 'E2E carpool' }).getByRole('button', { name: 'More actions' }).first().click()
   await page.getByRole('menuitem', { name: 'Delete', exact: true }).click()
-  await page.getByRole('dialog').last().getByRole('button', { name: 'Delete', exact: true }).click()
+  // No confirmation: the carpool leaves the list and a snackbar offers to take it back until the server is asked
   await expect(page.getByText('E2E carpool')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
+  const listed = async () => ((await (await request.get(`/api/vehicles/${ev.id}/carpools`, { headers })).json()).trips ?? []).filter((c: { title: string }) => c.title === 'E2E carpool').length
+  expect(await listed()).toBe(1)
+  await expect.poll(listed, { timeout: 12_000 }).toBe(0)
 })
 
 test('a charges CSV is previewed, imported, then undone from the import history', async ({ page, request }) => {

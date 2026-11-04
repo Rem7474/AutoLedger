@@ -44,7 +44,8 @@ test('a date field inside a form is the native one on a phone, 16px so the page 
   await expect(first).toHaveValue(withTime ? '2026-02-03T08:30' : '2026-02-03')
 })
 
-test('a carpool is built in three steps on a phone: legs, passengers, then the recap', async ({ page }) => {
+test('a carpool is built in three steps on a phone: legs, passengers, then the recap', async ({ page, request }) => {
+  const headers = await authHeaders(request)
   // The title is unique to the run, so a carpool left by an interrupted run does not get in the way
   const title = `E2E phone carpool ${Date.now()}`
   await useVehicle(page, ev.id, '/carpools')
@@ -84,8 +85,11 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect(page.locator('[data-selection-bar]')).toBeVisible()
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   await page.locator('[data-selection-bar]').getByRole('button', { name: 'Delete' }).click()
-  await page.getByRole('dialog').last().getByRole('button', { name: 'Delete', exact: true }).click()
+  // A single carpool is deleted without a question and the snackbar offers to take it back; wait for the server to be asked
   await expect(page.getByText(title)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
+  const left = async () => (((await (await request.get(`/api/vehicles/${ev.id}/carpools`, { headers })).json()).trips ?? []) as { title: string }[]).filter((c) => c.title === title).length
+  await expect.poll(left, { timeout: 12_000 }).toBe(0)
 })
 
 test('a cost deleted on a phone goes at once, comes back with Undo, and is only deleted once the time to undo is over', async ({ page, request }) => {
@@ -485,4 +489,42 @@ test('the drives come under a header per day and the next ones load while scroll
   // A day is named once even when it runs over two pages
   const names = await headers.allTextContents()
   expect(new Set(names).size).toBe(names.length)
+})
+
+test('a carpool dragged to the left is deleted with an Undo', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const title = `Swipe carpool ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/carpools`, {
+    headers,
+    data: {
+      title,
+      date: new Date().toISOString(),
+      costs_frozen: true,
+      legs: [{ start_address: 'A', end_address: 'B', distance_km: 10, electricity_cost: 2, tolls_cost: 0, overrides: {} }],
+      passengers: [{ name: 'Probe', seats: 1, amount_paid: 1 }],
+    },
+  })
+  expect(created.ok(), await created.text()).toBeTruthy()
+  const listed = async () => (((await (await request.get(`/api/vehicles/${ev.id}/carpools`, { headers })).json()).trips ?? []) as { id: string; title: string }[]).filter((c) => c.title === title)
+  const count = async () => (await listed()).length
+
+  try {
+    await useVehicle(page, ev.id, '/carpools')
+    const rowOf = () => page.locator('div.rounded-2xl', { hasText: title }).last()
+    await rowOf().scrollIntoViewIfNeeded()
+    const box = (await rowOf().boundingBox())!
+    const y = box.y + box.height / 2
+
+    await drag(page, 340, y, -200, 4)
+    await expect(page.getByText(title)).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(await count()).toBe(1)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(page.getByText(title)).toBeVisible()
+
+    await drag(page, 340, (await rowOf().boundingBox())!.y + box.height / 2, -200, 4)
+    await expect.poll(count, { timeout: 12_000 }).toBe(0)
+  } finally {
+    for (const c of await listed()) await request.delete(`/api/vehicles/${ev.id}/carpools/${c.id}`, { headers })
+  }
 })
