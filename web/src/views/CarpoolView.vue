@@ -20,6 +20,7 @@ import { carpoolCsvHeaders, carpoolCsvRows, driveCostGapCents, recentPassengerNa
 import { formatAmount } from '@/currency'
 import { Users, Plus } from 'lucide-vue-next'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
+import { deleteWithUndo } from '@/composables/useUndoableDelete'
 import EmptyState from '@/components/EmptyState.vue'
 
 // The page loads the trips and owns the selection and which trip the modal edits; the summary, the list and the
@@ -166,22 +167,26 @@ function openEditModal(trip: any) {
   showModal.value = true
 }
 
-async function handleDelete(trip: any) {
-  if (!vehicleStore.activeVehicle) return
-  const ok = await showConfirm({
-    title: t('carpool.carpoolView.deleteTitle'),
-    message: t('carpool.carpoolView.deleteMessage', { title: trip.title }),
-    confirmText: t('common.delete'),
-    type: 'danger',
+// A single carpool goes at once and comes back with Undo, the server is asked when that time is over
+function handleDelete(trip: any) {
+  const vehicle = vehicleStore.activeVehicle
+  if (!vehicle) return
+  const index = trips.value.findIndex((x) => x.id === trip.id)
+  deleteWithUndo({
+    message: t('carpool.carpoolView.carpoolDeleted'),
+    hide: () => {
+      trips.value = trips.value.filter((x) => x.id !== trip.id)
+    },
+    restore: () => {
+      if (trips.value.some((x) => x.id === trip.id)) return
+      const next = [...trips.value]
+      next.splice(Math.min(Math.max(index, 0), next.length), 0, trip)
+      trips.value = next
+    },
+    commit: () => api.deleteCarpool(vehicle.id, trip.id),
+    committed: () => void loadData(true),
+    onError: (err: any) => void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger'),
   })
-  if (!ok) return
-
-  try {
-    await api.deleteCarpool(vehicleStore.activeVehicle.id, trip.id)
-    await loadData()
-  } catch (err: any) {
-    void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
 }
 
 // The delete of the contextual bar: one confirmation for the whole selection

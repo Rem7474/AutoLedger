@@ -9,6 +9,7 @@ import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import { Users, Trash2, Pencil, Navigation, RotateCw, Download, Link2, Lock, ListChecks } from 'lucide-vue-next'
 import RowLeading from '@/components/RowLeading.vue'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { formatDate, hasLinkedLegs, splitByFreeze } from '@/utils/carpool'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import { t } from '@/i18n'
@@ -114,9 +115,8 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
       <span>{{ $t('carpool.carpoolTripList.carpoolSInTotal', { length: trips.length }) }}</span>
     </div>
 
+    <SwipeToDelete v-for="trip in trips" :key="trip.id" :disabled="!vehicleStore.canEdit || selectedTripIds.length > 0" @delete="emit('delete', trip)">
     <div
-      v-for="trip in trips"
-      :key="trip.id"
       class="relative bg-slate-900 border rounded-2xl p-3 sm:p-4 transition-all flex items-start gap-3 max-sm:select-none max-sm:[-webkit-touch-callout:none]"
       :class="selectedTripIds.includes(trip.id) ? 'border-rose-500/50 bg-rose-500/[0.02]' : 'border-slate-800 hover:border-slate-700'"
     >
@@ -196,5 +196,6 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         </button>
       </RowMenu>
     </div>
+    </SwipeToDelete>
   </div>
 </template>
