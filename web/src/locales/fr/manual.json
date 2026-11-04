@@ -90,7 +90,6 @@
     "readingDeleted": "Relevé supprimé",
     "edit": "Modifier le relevé",
     "update": "Mettre à jour",
-    "onDate": "le {date}",
     "pointS": "{length} point(s)",
     "fromFillUp": "Plein",
     "fromFillUpHint": "Kilométrage saisi sur un plein. Il se modifie depuis la liste des pleins.",

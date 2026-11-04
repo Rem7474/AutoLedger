@@ -317,6 +317,30 @@ test('a selectable odometer reading keeps its mileage next to the checkbox on a 
   }
 })
 
+test('the readings of the odometer list line up whether or not they can be selected', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const notes = `Alignment reading ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ice.id}/odometer-checkpoints`, {
+    headers,
+    data: { date: new Date().toISOString().slice(0, 10), odometer: 876543, notes },
+  })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  try {
+    await useVehicle(page, ice.id, '/odometer')
+    const manual = page.locator('div.rounded-2xl', { hasText: notes }).last()
+    const fillUp = page.locator('div.rounded-2xl', { has: page.getByText('Fill-up', { exact: true }) }).last()
+    await fillUp.scrollIntoViewIfNeeded()
+    const fillUpText = (await fillUp.locator('.tabular-nums').first().boundingBox())!
+    await manual.scrollIntoViewIfNeeded()
+    const manualText = (await manual.locator('.tabular-nums').first().boundingBox())!
+    // A fill-up has no checkbox but keeps its column, so the mileages start at the same place
+    expect(Math.abs(fillUpText.x - manualText.x)).toBeLessThanOrEqual(1)
+  } finally {
+    await request.delete(`/api/vehicles/${ice.id}/odometer-checkpoints/${id}`, { headers })
+  }
+})
+
 test('the drive filters sit in a sheet on a phone and in the bar on a wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await useVehicle(page, ev.id, '/drives')
