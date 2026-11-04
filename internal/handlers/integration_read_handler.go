@@ -40,6 +40,7 @@ type IntegrationReadHandler struct {
 	carpool    *services.CarpoolService     // optional: without it the carpool view shows the amounts as stored
 	mileage    *services.MileageService     // optional: without it the mileage view is unavailable
 	tariffs    *services.TariffService      // optional: without it the charge estimate is unavailable
+	version    string                       // version of the server, reported by whoami
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {
