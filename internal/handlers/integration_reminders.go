@@ -163,3 +163,52 @@ func (h *IntegrationReadHandler) GetReminders(w http.ResponseWriter, r *http.Req
 	}
 	writeJSON(w, http.StatusOK, out)
 }
+
+// IntegrationFleetReminders is the maintenance reminders of every vehicle the token sees, for a client that
+// refreshes them all in one call.
+type IntegrationFleetReminders struct {
+	Overdue  int                    `json:"overdue" jsonschema:"number of reminders, over every vehicle, whose limit is passed"`
+	DueSoon  int                    `json:"due_soon" jsonschema:"number of reminders, over every vehicle, inside their warning window"`
+	Total    int                    `json:"total" jsonschema:"number of reminders the vehicles have, whatever the filter"`
+	Vehicles []IntegrationReminders `json:"vehicles" jsonschema:"the reminders of each vehicle, in the order of the vehicle list"`
+}
+
+// FleetReminders lists the reminders of every vehicle the token can see. status is overdue, due_soon, ok, or empty.
+func (h *IntegrationReadHandler) FleetReminders(ctx context.Context, userID, status string) (*IntegrationFleetReminders, error) {
+	if _, ok := integrationReminderStatuses[strings.ToLower(status)]; status != "" && !ok {
+		return nil, apierror.New("request.invalid_status", "Status must be overdue, due_soon or ok")
+	}
+	vehicles, err := h.repo.ListVehiclesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	out := &IntegrationFleetReminders{Vehicles: []IntegrationReminders{}}
+	for i := range vehicles {
+		if !middleware.VehicleAllowed(ctx, vehicles[i].ID) {
+			continue
+		}
+		one, err := h.Reminders(ctx, userID, vehicles[i].ID, status)
+		if err != nil {
+			return nil, err
+		}
+		out.Overdue += one.Overdue
+		out.DueSoon += one.DueSoon
+		out.Total += one.Total
+		out.Vehicles = append(out.Vehicles, *one)
+	}
+	return out, nil
+}
+
+// GetFleetReminders serves FleetReminders.
+func (h *IntegrationReadHandler) GetFleetReminders(w http.ResponseWriter, r *http.Request) {
+	out, err := h.FleetReminders(r.Context(), middleware.GetUserID(r.Context()), r.URL.Query().Get("status"))
+	if err != nil {
+		if apiErr, ok := apierror.As(err); ok {
+			writeAPIError(w, http.StatusBadRequest, apiErr)
+			return
+		}
+		writeIntegrationError(w, r, err, "Failed to list the reminders")
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}

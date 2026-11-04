@@ -96,6 +96,8 @@ Un jeton en lecture seule (`read`) ou Home Assistant (`homeassistant`) ouvre aus
 
 | Route | Renvoie |
 |---|---|
+| `GET /api/integrations/v1/whoami` | Ce qu'est le jeton et à qui il appartient, pour vérifier une connexion : `scope` (`ingest`, `read`, `homeassistant` ou `write`), `name` (le nom affiché, ou l'adresse e-mail), `vehicles_limited`, `server_version`, `pending_charges` (sessions de charge envoyées qu'aucun véhicule n'a réclamées) et les unités, la langue, le fuseau de référence du compte et la devise de chaque véhicule. |
+| `GET /api/integrations/v1/reminders` | Les rappels d'entretien de tous les véhicules que le jeton voit, en un seul appel : les totaux (`overdue`, `due_soon`, `total`) et, par véhicule, ce que renvoie `…/reminders` ci-dessous. Paramètre : `status` (`overdue`, `due_soon` ou `ok`) filtre les rappels, pas les compteurs. |
 | `GET /api/integrations/v1/vehicles` | Les véhicules du compte : `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`, `role`, `tracking_mode` et, quand l'acquisition est saisie, `acquisition_type` et `owned_since`. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}` | Un véhicule, mêmes champs. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | Ce que le véhicule a coûté sur ses 12 derniers mois (`last_12_months`) et depuis son achat (`since_purchase`), par catégorie, avec le coût au km et un résumé `completeness` (score, `warnings` en phrases anglaises et `warning_details` : les mêmes entrées avec un `code` stable et les chiffres dans `params`, sur lesquels s'appuyer plutôt que sur la phrase). |

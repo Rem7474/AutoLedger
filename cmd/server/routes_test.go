@@ -128,6 +128,8 @@ func TestRouteTableAuthTiers(t *testing.T) {
 		"GET /api/integrations/homeassistant/vehicles/{vehicleId}",
 		"GET /api/integrations/homeassistant/vehicles/{vehicleId}/metrics",
 		"POST /api/integrations/homeassistant/event",
+		"GET /api/integrations/v1/whoami",
+		"GET /api/integrations/v1/reminders",
 		"GET /api/integrations/v1/vehicles",
 		"GET /api/integrations/v1/vehicles/{vehicleId}",
 		"GET /api/integrations/v1/vehicles/{vehicleId}/costs",

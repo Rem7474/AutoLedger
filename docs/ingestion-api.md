@@ -96,6 +96,8 @@ A read-only token (`read`) or a Home Assistant token (`homeassistant`) also open
 
 | Route | Returns |
 |---|---|
+| `GET /api/integrations/v1/whoami` | What the token is and who it belongs to, to check a connection: `scope` (`ingest`, `read`, `homeassistant` or `write`), `name` (the display name, or the email address), `vehicles_limited`, `server_version`, `pending_charges` (pushed charging sessions no vehicle claimed yet), and the account's units, language, reporting timezone and each vehicle's currency. |
+| `GET /api/integrations/v1/reminders` | The maintenance reminders of every vehicle the token sees, in one call: the totals (`overdue`, `due_soon`, `total`) and, per vehicle, what `…/reminders` below returns. Query: `status` (`overdue`, `due_soon` or `ok`) filters the reminders, not the counters. |
 | `GET /api/integrations/v1/vehicles` | The account's vehicles: `id`, `name`, `make`, `model`, `powertrain`, `currency`, `odometer`, `role`, `tracking_mode` and, when the acquisition is entered, `acquisition_type` and `owned_since`. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}` | One vehicle, same fields. |
 | `GET /api/integrations/v1/vehicles/{vehicleId}/costs` | What the vehicle cost over its last 12 months (`last_12_months`) and since it was bought (`since_purchase`), by category, with the cost per km and a `completeness` summary (score, `warnings` as English sentences and `warning_details`: the same entries with a stable `code` and the numbers in `params`, to branch on instead of the sentence). |
