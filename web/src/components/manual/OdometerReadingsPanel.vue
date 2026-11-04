@@ -296,7 +296,7 @@ useRefreshHandler(() => load(true))
             @contextmenu="press.onContextmenu"
           />
           <RowSelectBox v-if="showBox && isManualReading(r)" :id="r.key" :checked="isSelected(r)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(r)" />
-          <div class="flex items-center gap-3 min-w-0">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
             <div class="p-2 bg-slate-800/80 rounded-lg shrink-0" :class="r.kind === 'FUEL' ? 'text-slate-400' : 'text-sky-400'">
               <Fuel v-if="r.kind === 'FUEL'" class="w-4 h-4" />
               <Gauge v-else class="w-4 h-4" />

@@ -295,6 +295,28 @@ test('an electric vehicle lists no fill-up on the odometer page', async ({ page 
   await expect(page.getByText('Fill-up', { exact: true })).toHaveCount(0)
 })
 
+test('a selectable odometer reading keeps its mileage next to the checkbox on a wide screen', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const notes = `Layout reading ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/odometer-checkpoints`, {
+    headers,
+    data: { date: new Date().toISOString().slice(0, 10), odometer: 876543, notes },
+  })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  try {
+    await useVehicle(page, ev.id, '/odometer')
+    const row = page.locator('div.rounded-xl', { hasText: notes }).last()
+    await row.scrollIntoViewIfNeeded()
+    const check = (await row.getByRole('checkbox').boundingBox())!
+    const text = (await row.getByText(notes).boundingBox())!
+    // The content follows the checkbox: it is not pushed to the middle of the row by the space between the two
+    expect(text.x - (check.x + check.width)).toBeLessThan(80)
+  } finally {
+    await request.delete(`/api/vehicles/${ev.id}/odometer-checkpoints/${id}`, { headers })
+  }
+})
+
 test('the drive filters sit in a sheet on a phone and in the bar on a wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await useVehicle(page, ev.id, '/drives')
