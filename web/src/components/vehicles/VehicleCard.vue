@@ -7,8 +7,8 @@ import { useVehicleStore } from '@/stores/vehicle'
 import RowMenu from '@/components/RowMenu.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import { api } from '@/services/api'
-import { Car, Plus, Trash2, Edit2, RefreshCw, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database, Check } from 'lucide-vue-next'
-import { canCharge, canRefuel, hasEnergyEstimate, isElectricOnly, ownershipSummary, roleLabel } from '@/utils/vehicles'
+import { Car, Plus, Trash2, Edit2, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database, Check } from 'lucide-vue-next'
+import { canCharge, hasEnergyEstimate, isElectricOnly, ownershipSummary, roleLabel } from '@/utils/vehicles'
 
 // One vehicle of the list, with its contract summary and a TeslaMate connection test of its own
 const props = defineProps<{ v: any; ownership: any | null }>()
@@ -39,236 +39,169 @@ function clearCardTestResult() {
 </script>
 
 <template>
+  <!-- The whole card selects the vehicle; setting it up is behind the menu, so the card does not repeat a row of buttons -->
   <div
-    class="p-4 sm:p-5 card relative transition-all"
+    class="card relative flex h-full flex-col p-4 transition-colors sm:p-5"
     :class="{ 'border-rose-500/40 shadow-lg shadow-rose-500/5': vehicleStore.activeVehicleId === v.id }"
   >
-    <!-- On a phone the card itself selects the vehicle; the other actions are in its menu -->
     <CardOpenButton
       v-if="vehicleStore.activeVehicleId !== v.id"
-      class="sm:hidden"
       :label="$t('vehicles.vehicleCard.selectNamed', { name: v.name })"
       @click="vehicleStore.setActiveVehicle(v.id)"
     />
     <div class="flex items-start justify-between gap-2">
       <div class="flex min-w-0 items-center gap-3">
-        <div class="shrink-0 p-2.5 sm:p-3 bg-slate-800 rounded-xl text-rose-400">
-          <Car class="w-6 h-6" />
+        <div
+          class="shrink-0 rounded-xl bg-slate-800 p-2.5 sm:p-3"
+          :class="vehicleStore.activeVehicleId === v.id ? 'text-rose-400' : 'text-slate-300'"
+        >
+          <Car class="h-6 w-6" aria-hidden="true" />
         </div>
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h3 class="text-base font-bold text-white">{{ v.name }}</h3>
             <span
               v-if="v.role"
-              class="px-2 py-0.5 text-xs font-semibold rounded-full"
+              class="rounded-full border px-2 py-0.5 text-xs font-semibold"
               :class="{
-                'bg-slate-700/60 text-slate-200 border border-slate-600/40': v.role === 'OWNER',
-                'bg-info-500/10 text-info-400 border border-info-500/20': v.role === 'EDITOR',
-                'bg-slate-700/50 text-slate-400 border border-slate-600/30': v.role === 'VIEWER',
+                'border-slate-600/40 bg-slate-700/60 text-slate-200': v.role === 'OWNER',
+                'border-slate-600/30 bg-slate-800 text-slate-300': v.role === 'EDITOR',
+                'border-slate-700/40 bg-slate-800/60 text-slate-400': v.role === 'VIEWER',
               }"
             >
               {{ roleLabel(v.role) }}
             </span>
             <span
               v-if="vehicleStore.activeVehicleId === v.id"
-              class="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-300 sm:hidden"
+              class="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-300"
             >
               <Check class="h-3 w-3" aria-hidden="true" />{{ $t('vehicles.vehicleCard.active') }}
             </span>
           </div>
-          <p v-if="v.vin" class="break-all text-xs text-slate-400 font-mono">{{ v.vin }}</p>
+          <p v-if="v.vin" class="break-all font-mono text-xs text-slate-400">{{ v.vin }}</p>
         </div>
       </div>
 
-      <div class="shrink-0 sm:hidden">
+      <div class="flex shrink-0 items-center gap-1">
+        <button
+          v-if="v.role === 'OWNER'"
+          type="button"
+          class="row-action relative z-10 max-sm:hidden"
+          :title="$t('common.edit')"
+          :aria-label="$t('common.edit')"
+          @click="emit('edit', v)"
+        >
+          <Edit2 class="h-4 w-4" aria-hidden="true" />
+        </button>
         <RowMenu phone :label="$t('common.moreActions')" :heading="v.name">
-          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item" @click="emit('edit', v)">
-            <Edit2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.edit') }}
-          </button>
-          <button type="button" role="menuitem" class="menu-item" @click="emit('members', v)">
-            <Users class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.sharingAndAccess') }}
+          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item sm:hidden" @click="emit('edit', v)">
+            <Edit2 class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('common.edit') }}
           </button>
           <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item" @click="emit('ownership', v)">
-            <FileText class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.acquisitionAndFinancing') }}
+            <FileText class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('vehicles.vehicleCard.acquisitionAndFinancing') }}
           </button>
           <button type="button" role="menuitem" class="menu-item" @click="emit('dataSources', v)">
-            <Database class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.dataSources') }}
+            <Database class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('vehicles.vehicleCard.dataSources') }}
+          </button>
+          <button type="button" role="menuitem" class="menu-item" @click="emit('members', v)">
+            <Users class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('vehicles.vehicleCard.sharingAndAccess') }}
           </button>
           <router-link to="/odometer" role="menuitem" class="menu-item" @click="vehicleStore.setActiveVehicle(v.id)">
-            <Gauge class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.manualTracking') }}
+            <Gauge class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('shell.nav.odometer') }}
           </router-link>
           <button v-if="v.role === 'OWNER' && v.teslamate_api_url" type="button" role="menuitem" class="menu-item" :disabled="cardTest?.loading" @click="testCardConnection()">
-            <Link2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('vehicles.vehicleCard.testApi') }}
+            <Link2 class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ cardTest?.loading ? $t('vehicles.vehicleCard.testing') : $t('vehicles.vehicleCard.testApi') }}
           </button>
-          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', v.id)">
-            <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
+          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item hover:!text-danger-400" @click="emit('delete', v.id)">
+            <Trash2 class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('common.delete') }}
           </button>
         </RowMenu>
       </div>
-
-      <div v-if="v.role === 'OWNER'" class="flex shrink-0 items-center gap-1 max-sm:hidden">
-        <button
-          @click="emit('edit', v)"
-          class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
-          :title="$t('common.edit')" :aria-label="$t('common.edit')"
-        >
-          <Edit2 class="w-4 h-4" />
-        </button>
-        <button
-          @click="emit('delete', v.id)"
-          class="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800"
-          :title="$t('common.delete')" :aria-label="$t('common.delete')"
-        >
-          <Trash2 class="w-4 h-4" />
-        </button>
-      </div>
     </div>
 
-    <!-- Telemetry & Stats -->
-    <div class="grid grid-cols-2 gap-x-4 gap-y-3 mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-slate-800 text-xs">
+    <!-- The same facts in the same places on every card: what the vehicle is, then how it is fed -->
+    <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-800 pt-3 text-xs sm:mt-4 sm:pt-4">
       <div>
-        <span class="text-slate-400">{{ $t('vehicles.vehicleCard.currentOdometer') }}</span>
-        <p class="text-sm font-bold text-slate-200 flex items-center gap-1.5 mt-0.5">
-          <Gauge class="w-3.5 h-3.5 text-rose-400" />
+        <dt class="text-slate-400">{{ $t('vehicles.vehicleCard.currentOdometer') }}</dt>
+        <dd class="mt-0.5 flex items-center gap-1.5 text-sm font-bold text-slate-200">
+          <Gauge class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
           {{ formatDistance(v.current_odometer) }}
-        </p>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-slate-400">{{ $t('vehicles.vehicleCard.powertrain') }}</dt>
+        <dd class="mt-0.5 text-sm font-semibold text-slate-200">{{ $t(`vehicles.powertrains.${v.powertrain}`) }}</dd>
       </div>
 
-      <div v-if="v.role === 'OWNER'" class="max-sm:order-last max-sm:col-span-2">
-        <span class="text-slate-400 block mb-1 max-sm:sr-only">{{ $t('vehicles.vehicleCard.acquisitionAndContract') }}</span>
-        <button
-          type="button"
-          @click="emit('ownership', v)"
-          class="group relative z-10 text-left inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border"
-          :class="
-            ownership
-              ? 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border-sky-500/30'
-              : 'bg-warning-500/10 hover:bg-warning-500/20 text-warning-300 border-warning-500/30'
-          "
-          :title="ownership ? $t('vehicles.vehicleCard.editContract') : $t('vehicles.vehicleCard.setUpContract')"
-        >
-          <FileText v-if="ownership" class="w-3.5 h-3.5 text-sky-400 shrink-0" />
-          <Plus v-else class="w-3.5 h-3.5 text-warning-400 shrink-0" />
-          <span>{{ ownership ? ownershipSummary(ownership, v.currency) : $t('vehicles.vehicleCard.enterContract') }}</span>
-          <Pencil v-if="ownership" class="w-3 h-3 text-sky-400 opacity-60 group-hover:opacity-100 shrink-0 ml-0.5" />
-        </button>
-      </div>
-      <div v-else>
-        <span class="text-slate-400">{{ $t('vehicles.vehicleCard.vehicleAccess') }}</span>
-        <p class="text-xs font-semibold text-slate-300 mt-1">
-          {{ v.role === 'EDITOR' ? $t('vehicles.vehicleCard.editorRole') : $t('vehicles.vehicleCard.readOnly') }}
-        </p>
-      </div>
-
-      <div v-if="canRefuel(v.powertrain)">
-        <span class="text-slate-400">{{ $t('vehicles.vehicleCard.powertrain') }}</span>
-        <p class="text-sm font-semibold mt-0.5 text-slate-200">{{ canCharge(v.powertrain) ? $t(`vehicles.powertrains.${v.powertrain}`) : $t('vehicles.vehicleCard.combustionFillUpsEnteredBy') }}</p>
-      </div>
       <div v-if="canCharge(v.powertrain)">
-        <span class="text-slate-400">{{ $t('vehicles.vehicleCard.teslamateConnection') }}</span>
-        <p
-          class="text-sm font-semibold mt-0.5"
-          :class="
-            cardTest?.success
-              ? 'text-success-400'
-              : cardTest?.error
-              ? 'text-rose-400'
-              : v.teslamate_api_url
-              ? 'text-success-400/80'
-              : 'text-slate-400'
-          "
-        >
-          {{
-            v.role === 'OWNER'
-              ? (cardTest?.success
+        <dt class="text-slate-400">{{ $t('vehicles.vehicleCard.teslamateConnection') }}</dt>
+        <dd class="mt-0.5 text-sm font-semibold">
+          <span v-if="v.role !== 'OWNER'" class="text-slate-400">{{ $t('vehicles.vehicleCard.managedByAdmin') }}</span>
+          <!-- Where the connection is set up: the state is the way in -->
+          <button
+            v-else
+            type="button"
+            class="relative z-10 -mx-1 rounded-lg px-1 text-left hover:bg-slate-800"
+            :class="cardTest?.error ? 'text-danger-400' : cardTest?.success || v.teslamate_api_url ? 'text-success-400' : 'text-sky-400'"
+            @click="emit('dataSources', v)"
+          >
+            {{
+              cardTest?.success
                 ? $t('vehicles.vehicleCard.online')
                 : cardTest?.error
                 ? $t('vehicles.vehicleCard.connectionError')
                 : v.teslamate_api_url
                 ? $t('vehicles.vehicleCard.configured')
-                : $t('vehicles.vehicleCard.notConfigured'))
-              : $t('vehicles.vehicleCard.managedByAdmin')
-          }}
-        </p>
+                : $t('vehicles.vehicleCard.notConfigured')
+            }}
+          </button>
+        </dd>
       </div>
 
       <div v-if="isElectricOnly(v.powertrain)">
-        <span class="text-slate-400">{{ $t('vehicles.vehicleCard.estimatedEnergy') }}</span>
-        <p v-if="hasEnergyEstimate(v)" class="text-xs font-semibold text-info-400 flex items-center gap-1 mt-1">
-          <Zap class="w-3.5 h-3.5 text-info-400" />
+        <dt class="text-slate-400">{{ $t('vehicles.vehicleCard.estimatedEnergy') }}</dt>
+        <dd v-if="hasEnergyEstimate(v)" class="mt-0.5 flex items-center gap-1 text-xs font-semibold text-slate-200">
+          <Zap class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
           {{ $t('vehicles.vehicleCard.kwh100kmKwh', { unit: distanceUnit(), estimated_kwh_100km: formatPerDistanceValue(Number(v.estimated_kwh_100km)), price: `${formatAmount(v.estimated_price_per_kwh, v.currency, 3)}/kWh` }) }}
-        </p>
-        <p v-else class="text-xs text-slate-400 mt-1">{{ $t('vehicles.vehicleCard.notConfigured') }}</p>
+        </dd>
+        <dd v-else class="mt-0.5 text-xs text-slate-400">{{ $t('vehicles.vehicleCard.notConfigured') }}</dd>
       </div>
-    </div>
 
-    <!-- Actions -->
-    <!-- A grid of two on a phone: wrapped flex rows left one button alone and misaligned -->
-    <div class="mt-4 pt-3 grid grid-cols-2 gap-2 max-sm:hidden sm:flex sm:flex-wrap sm:items-center sm:justify-between">
-      <button
-        @click="emit('members', v)"
-        class="btn btn-secondary"
-        :title="$t('vehicles.vehicleCard.manageAccessAndCoDrivers')"
-      >
-        <Users class="w-3.5 h-3.5" />
-        <span>{{ $t('vehicles.vehicleCard.sharingAndAccess') }}</span>
-      </button>
-      <button
-        v-if="v.role === 'OWNER'"
-        @click="emit('ownership', v)"
-        class="btn btn-secondary"
-      >
-        <FileText class="w-3.5 h-3.5" />
-        <span>{{ $t('vehicles.vehicleCard.acquisitionAndFinancing') }}</span>
-      </button>
-      <button
-        @click="emit('dataSources', v)"
-        class="btn btn-secondary"
-      >
-        <Database class="w-3.5 h-3.5" />
-        <span>{{ $t('vehicles.vehicleCard.dataSources') }}</span>
-      </button>
-      <router-link
-        to="/odometer"
-        @click="vehicleStore.setActiveVehicle(v.id)"
-        class="btn btn-secondary tap-text"
-        :title="$t('vehicles.vehicleCard.odometerReadingsAndManualEntries')"
-      >
-        <Gauge class="w-3.5 h-3.5" />
-        <span>{{ $t('vehicles.vehicleCard.manualTracking') }}</span>
-      </router-link>
-      <button
-        v-if="v.role === 'OWNER' && v.teslamate_api_url"
-        @click="testCardConnection()"
-        :disabled="cardTest?.loading"
-        class="btn btn-secondary"
-      >
-        <RefreshCw v-if="cardTest?.loading" class="w-3.5 h-3.5 animate-spin text-rose-400" />
-        <Link2 v-else class="w-3.5 h-3.5" />
-        <span>{{ cardTest?.loading ? $t('vehicles.vehicleCard.testing') : $t('vehicles.vehicleCard.testApi') }}</span>
-      </button>
-
-      <button
-        v-if="vehicleStore.activeVehicleId !== v.id"
-        @click="vehicleStore.setActiveVehicle(v.id)"
-        class="col-span-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-rose-400 font-semibold rounded-lg sm:col-span-1 sm:ml-auto"
-      >
-        {{ $t('vehicles.vehicleCard.select') }}
-      </button>
-      <span v-else class="col-span-2 text-center text-xs font-semibold text-rose-400 px-3 py-1.5 bg-rose-500/10 rounded-lg sm:col-span-1 sm:ml-auto">
-        {{ $t('vehicles.vehicleCard.activeVehicle') }}
-      </span>
-    </div>
+      <div class="col-span-2">
+        <dt class="mb-1 text-slate-400">{{ v.role === 'OWNER' ? $t('vehicles.vehicleCard.acquisitionAndContract') : $t('vehicles.vehicleCard.vehicleAccess') }}</dt>
+        <dd v-if="v.role === 'OWNER'">
+          <button
+            type="button"
+            class="group relative z-10 inline-flex max-w-full items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-left text-xs font-semibold transition-colors"
+            :class="
+              ownership
+                ? 'border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20'
+                : 'border-warning-500/30 bg-warning-500/10 text-warning-300 hover:bg-warning-500/20'
+            "
+            :title="ownership ? $t('vehicles.vehicleCard.editContract') : $t('vehicles.vehicleCard.setUpContract')"
+            @click="emit('ownership', v)"
+          >
+            <FileText v-if="ownership" class="h-3.5 w-3.5 shrink-0 text-sky-400" aria-hidden="true" />
+            <Plus v-else class="h-3.5 w-3.5 shrink-0 text-warning-400" aria-hidden="true" />
+            <span class="min-w-0">{{ ownership ? ownershipSummary(ownership, v.currency) : $t('vehicles.vehicleCard.enterContract') }}</span>
+            <Pencil v-if="ownership" class="ml-0.5 h-3 w-3 shrink-0 text-sky-400 opacity-60 group-hover:opacity-100" aria-hidden="true" />
+          </button>
+        </dd>
+        <dd v-else class="text-xs font-semibold text-slate-300">
+          {{ v.role === 'EDITOR' ? $t('vehicles.vehicleCard.editorRole') : $t('vehicles.vehicleCard.readOnly') }}
+        </dd>
+      </div>
+    </dl>
 
     <!-- Test feedback per card -->
     <div
       v-if="cardTest && !cardTest.loading"
-      class="mt-3 p-3 rounded-xl text-xs flex items-start justify-between gap-2"
-      :class="cardTest.success ? 'bg-success-500/10 text-success-300 border border-success-500/20' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'"
+      class="relative z-10 mt-3 flex items-start justify-between gap-2 rounded-xl border p-3 text-xs"
+      :class="cardTest.success ? 'border-success-500/20 bg-success-500/10 text-success-300' : 'border-danger-500/20 bg-danger-500/10 text-danger-300'"
     >
       <div class="flex items-start gap-2">
-        <CheckCircle2 v-if="cardTest.success" class="w-4 h-4 shrink-0 text-success-400 mt-0.5" />
-        <AlertCircle v-else class="w-4 h-4 shrink-0 text-danger-400 mt-0.5" />
+        <CheckCircle2 v-if="cardTest.success" class="mt-0.5 h-4 w-4 shrink-0 text-success-400" aria-hidden="true" />
+        <AlertCircle v-else class="mt-0.5 h-4 w-4 shrink-0 text-danger-400" aria-hidden="true" />
         <div>
           <span v-if="cardTest.success">
             {{ $t('vehicles.testSuccess', { unit: distanceUnit(), state: cardTest.status?.state || $t('vehicles.vehicleCard.online'), odometer: formatDistanceValue(cardTest.status?.odometer || 0) }) }}
@@ -276,8 +209,8 @@ function clearCardTestResult() {
           <span v-else>{{ cardTest.error }}</span>
         </div>
       </div>
-      <button @click="clearCardTestResult()" class="text-slate-400 hover:text-white p-0.5">
-        <X class="w-3.5 h-3.5" />
+      <button type="button" class="tap p-0.5 text-slate-400 hover:text-white" :aria-label="$t('common.close')" @click="clearCardTestResult()">
+        <X class="h-3.5 w-3.5" aria-hidden="true" />
       </button>
     </div>
   </div>

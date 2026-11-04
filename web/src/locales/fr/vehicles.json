@@ -1,17 +1,11 @@
 {
   "vehicleCard": {
-    "activeVehicle": "Véhicule actif",
-    "select": "Sélectionner",
-    "manualTracking": "Suivi manuel",
-    "odometerReadingsAndManualEntries": "Relevés kilométriques et saisies manuelles de ce véhicule",
     "acquisitionAndFinancing": "Acquisition & financement",
     "sharingAndAccess": "Partage & Accès",
-    "manageAccessAndCoDrivers": "Gérer les accès et co-conducteurs",
     "notConfigured": "Non configurée",
     "kwh100kmKwh": "{estimated_kwh_100km} kWh/100 {unit} • {price}",
     "estimatedEnergy": "Énergie estimée",
     "teslamateConnection": "Connexion TeslaMate",
-    "combustionFillUpsEnteredBy": "Thermique · pleins saisis à la main",
     "powertrain": "Motorisation",
     "vehicleAccess": "Accès véhicule",
     "acquisitionAndContract": "Acquisition & Contrat",
@@ -59,6 +53,8 @@
     "powertrain": "Motorisation",
     "currency": "Devise",
     "currencyFixed": "Fixée à la création : les coûts sont enregistrés dans cette devise pour toute la vie du véhicule.",
+    "copyFallbackName": "Véhicule",
+    "powertrainFixed": "La motorisation est choisie à la création du véhicule.",
     "eGMyCar": "Nom du véhicule",
     "vehicleName": "Nom du véhicule",
     "edit": "Modifier le véhicule",
@@ -76,10 +72,10 @@
     "advancedOptions": "Options complémentaires (Tarifs & Énergie)",
     "advancedOptionsDesc": "Plan tarifaire, borne domicile par défaut et consommations estimées",
     "tollDetection": "Détection des péages (France)",
-    "tollDetectionAuto": "Automatique : affichée quand ce véhicule roule en France",
+    "tollDetectionAuto": "Automatique",
     "tollDetectionOn": "Toujours activée",
     "tollDetectionOff": "Désactivée",
-    "tollDetectionHint": "Détecte les péages d’un trajet à partir de sa trace GPS et liste les trajets autoroutiers restant à qualifier. Les données de référence ne couvrent que les autoroutes françaises. Les péages saisis à la main restent toujours disponibles."
+    "tollDetectionHint": "Automatique l’active là où ce véhicule roule en France. Elle détecte les péages d’un trajet à partir de sa trace GPS et liste les trajets autoroutiers restant à qualifier. Les données de référence ne couvrent que les autoroutes françaises. Les péages saisis à la main restent toujours disponibles."
   },
   "vehicleMembersModal": {
     "leave": "Quitter",
@@ -132,7 +128,7 @@
     "deleteTitle": "Supprimer le véhicule",
     "deleteMessage": "Supprimer ce véhicule et tout son historique ? Cette action est irréversible.",
     "addAVehicle": "Ajouter un véhicule",
-    "setUpYourVehiclesAnd": "Configurez vos véhicules et la synchronisation avec TeslaMateApi"
+    "setUpYourVehiclesAnd": "Configurez vos véhicules, leurs contrats et leurs sources de données"
   },
   "ownershipWizardModal": {
     "leaseStart": "Début du contrat de location",

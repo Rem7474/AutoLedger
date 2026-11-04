@@ -241,6 +241,29 @@ test('deleting a tire asks whether to delete it or scrap it', async ({ page, req
   }
 })
 
+test('a vehicle card selects its vehicle and keeps the setup in its menu', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await useVehicle(page, ev.id, '/vehicles')
+  const card = page.locator('div.card', { has: page.getByRole('heading', { name: ice.name }) })
+  await expect(card.getByRole('button', { name: 'Acquisition and financing' })).toHaveCount(0)
+  await card.getByRole('button', { name: `Select ${ice.name}` }).click()
+  await expect(card.getByText('Active', { exact: true })).toBeVisible()
+
+  await card.getByRole('button', { name: 'More actions' }).click()
+  await card.getByRole('menuitem', { name: 'Data sources' }).click()
+  await expect(page.getByRole('dialog', { name: 'Data sources' })).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  // The disclosure of the form tells assistive technology whether it is open
+  await useVehicle(page, ev.id, '/vehicles')
+  const evCard = page.locator('div.card', { has: page.getByRole('heading', { name: ev.name }) })
+  await evCard.getByRole('button', { name: 'Edit', exact: true }).click()
+  const options = page.getByRole('button', { name: /^Additional options/ })
+  await expect(options).toHaveAttribute('aria-expanded', 'false')
+  await options.click()
+  await expect(options).toHaveAttribute('aria-expanded', 'true')
+})
+
 test('the dashboard follow-up zone is closed on a phone and opens on demand', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await useVehicle(page, ev.id, '/')

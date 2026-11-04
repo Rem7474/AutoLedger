@@ -18,7 +18,7 @@ const render = (v: Record<string, unknown>) =>
 
 beforeEach(() => setLocale('en'))
 
-describe('VehicleCard on a phone', () => {
+describe('VehicleCard selection', () => {
   it('lets the whole card select a vehicle that is not the active one', async () => {
     const html = await render(vehicle({ id: 'b' }))
     expect(html).toContain('aria-label="Select Daily"')
@@ -29,5 +29,33 @@ describe('VehicleCard on a phone', () => {
     const html = await render(vehicle())
     expect(html).not.toContain('aria-label="Select Daily"')
     expect(html).toContain('Active')
+  })
+})
+
+describe('VehicleCard actions', () => {
+  it('keeps the setup actions in the menu instead of repeating a row of buttons', async () => {
+    const html = await render(vehicle())
+    expect(html).toContain('aria-haspopup="menu"')
+    expect(html).not.toContain('btn-secondary')
+  })
+
+  it('shows the same facts on an electric and a combustion vehicle', async () => {
+    const ev = await render(vehicle())
+    const ice = await render(vehicle({ powertrain: 'ICE' }))
+    expect(ev).toContain('Electric')
+    expect(ice).toContain('Combustion')
+    expect(ev).toContain('TeslaMate connection')
+    expect(ice).not.toContain('TeslaMate connection')
+  })
+
+  it('lets the owner open the data sources from the connection state', async () => {
+    expect(await render(vehicle())).toContain('Not configured')
+    expect(await render(vehicle({ role: 'EDITOR' }))).toContain('Managed by the administrator')
+  })
+
+  it('gives a co-driver no contract to edit', async () => {
+    const html = await render(vehicle({ role: 'VIEWER' }))
+    expect(html).toContain('Read-only')
+    expect(html).not.toContain('Enter the contract')
   })
 })

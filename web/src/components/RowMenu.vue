@@ -42,7 +42,7 @@ onUnmounted(() => {
         </div>
       </ModalShell>
     </Teleport>
-    <div v-else-if="open" role="menu" class="absolute right-0 top-full z-40 mt-1 w-44 space-y-0.5 rounded-xl border border-slate-700 bg-slate-800 p-1.5 shadow-2xl" @click="open = false">
+    <div v-else-if="open" role="menu" class="absolute right-0 top-full z-40 mt-1 w-56 space-y-0.5 rounded-xl border border-slate-700 bg-slate-800 p-1.5 shadow-2xl" @click="open = false">
       <slot />
     </div>
   </div>
