@@ -18,7 +18,7 @@ import { formatAmount } from '@/currency'
 // The carpool trips as compact cards (the legs, passengers and costs are in the detail, opened by a click), and the
 // selection actions (edit, delete, freeze or resync the amounts of the carpools made from drives, recalculate, export). On a phone the checkboxes are hidden at rest: a long press selects a carpool and
 // starts the selection, where the boxes show and a tap toggles the row instead of opening it.
-const props = defineProps<{ trips: any[]; selectedTripIds: string[]; recalculating: boolean }>()
+const props = defineProps<{ trips: any[]; selectedTripIds: string[]; recalculating: boolean; /** How many carpools the vehicle has, when only some pages are loaded. */ total?: number }>()
 const emit = defineEmits<{
   clear: []
   open: [trip: any]
@@ -112,7 +112,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         :label="isAllSelected ? $t('common.deselectAll') : $t('common.selectAll')"
         @toggle="emit('toggle-all')"
       />
-      <span>{{ $t('carpool.carpoolTripList.carpoolSInTotal', { length: trips.length }) }}</span>
+      <span>{{ $t('carpool.carpoolTripList.carpoolSInTotal', { length: total ?? trips.length }) }}</span>
     </div>
 
     <SwipeToDelete v-for="trip in trips" :key="trip.id" :disabled="!vehicleStore.canEdit || selectedTripIds.length > 0" @delete="emit('delete', trip)">

@@ -20,7 +20,7 @@ describe('useCarpoolEditor', () => {
     expect(e.showCarpoolEditor.value).toBe(true)
     expect(e.carpoolCreateOptions.value).toEqual({ driveIds: ['d1'] })
     expect(e.carpoolOpenToken.value).toBe(1)
-    expect(api.getCarpools).toHaveBeenCalledWith('v1')
+    expect(api.getCarpools).toHaveBeenCalledWith('v1', { limit: 30 })
     expect(e.recentCarpoolNames.value).toEqual(['Alice'])
     await e.openCarpoolEditor({ tripGroupId: 'g1' })
     expect(e.carpoolOpenToken.value).toBe(2)

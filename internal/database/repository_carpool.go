@@ -247,29 +247,116 @@ func scanCarpoolTrip(row pgx.Row, t *models.CarpoolTripWithPassengers) error {
 	)
 }
 
-// ListCarpoolTrips returns the carpool trips of a vehicle with their legs and passengers.
+// CarpoolFilter narrows the carpools of a vehicle; the zero value keeps them all.
+type CarpoolFilter struct {
+	// TripGroupID keeps the carpools made from that journey
+	TripGroupID string
+}
+
+// ListCarpoolTrips returns every carpool trip of a vehicle with its legs and passengers.
 func (r *Repository) ListCarpoolTrips(ctx context.Context, vehicleID string) ([]models.CarpoolTripWithPassengers, error) {
-	rows, err := r.pool.Query(ctx, `SELECT `+carpoolTripColumns+` FROM carpool_trips WHERE vehicle_id = $1 ORDER BY date DESC, created_at DESC;`, vehicleID)
+	trips, _, err := r.ListCarpoolTripsPage(ctx, vehicleID, CarpoolFilter{}, 0, 0)
+	return trips, err
+}
+
+// ListCarpoolTripsPage returns one page of the carpool trips of a vehicle, the latest first, with their legs and
+// passengers, and how many trips match in all. A limit of 0 returns every match.
+func (r *Repository) ListCarpoolTripsPage(ctx context.Context, vehicleID string, filter CarpoolFilter, limit, offset int) ([]models.CarpoolTripWithPassengers, int, error) {
+	where := `vehicle_id = $1`
+	args := []any{vehicleID}
+	if filter.TripGroupID != "" {
+		args = append(args, filter.TripGroupID)
+		where += fmt.Sprintf(` AND trip_group_id::text = $%d`, len(args))
+	}
+	var total int
+	if err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM carpool_trips WHERE `+where, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count carpool trips: %w", err)
+	}
+	query := `SELECT ` + carpoolTripColumns + ` FROM carpool_trips WHERE ` + where + ` ORDER BY date DESC, created_at DESC, id`
+	if limit > 0 {
+		args = append(args, limit, offset)
+		query += fmt.Sprintf(` LIMIT $%d OFFSET $%d`, len(args)-1, len(args))
+	}
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list carpool trips: %w", err)
+		return nil, 0, fmt.Errorf("failed to list carpool trips: %w", err)
 	}
 	trips := []models.CarpoolTripWithPassengers{}
 	for rows.Next() {
 		var t models.CarpoolTripWithPassengers
 		if err := scanCarpoolTrip(rows, &t); err != nil {
 			rows.Close()
-			return nil, err
+			return nil, 0, err
 		}
 		trips = append(trips, t)
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if err := r.loadCarpoolDetails(ctx, trips); err != nil {
+		return nil, 0, err
+	}
+	return trips, total, nil
+}
+
+// CarpoolShareInputs returns, for every carpool of a vehicle, only what the split of its costs needs: the stored amounts of
+// its legs and the stops its passengers ride between. Nothing is refreshed from the drives.
+func (r *Repository) CarpoolShareInputs(ctx context.Context, vehicleID string) ([]models.CarpoolTripWithPassengers, error) {
+	trips := []models.CarpoolTripWithPassengers{}
+	index := map[string]int{}
+	legRows, err := r.pool.Query(ctx, `
+		SELECT l.carpool_trip_id::text, l.electricity_cost, l.tolls_cost, l.tires_cost, l.maintenance_cost, l.insurance_cost, l.other_cost
+		FROM carpool_legs l
+		JOIN carpool_trips t ON t.id = l.carpool_trip_id
+		WHERE t.vehicle_id = $1
+		ORDER BY l.carpool_trip_id, l.order_index;
+	`, vehicleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load the carpool legs: %w", err)
+	}
+	for legRows.Next() {
+		var tripID string
+		var l models.CarpoolLeg
+		if err := legRows.Scan(&tripID, &l.ElectricityCost, &l.TollsCost, &l.TiresCost, &l.MaintenanceCost, &l.InsuranceCost, &l.OtherCost); err != nil {
+			legRows.Close()
+			return nil, err
+		}
+		i, ok := index[tripID]
+		if !ok {
+			i = len(trips)
+			index[tripID] = i
+			trips = append(trips, models.CarpoolTripWithPassengers{})
+			trips[i].ID = tripID
+		}
+		trips[i].Legs = append(trips[i].Legs, l)
+	}
+	legRows.Close()
+	if err := legRows.Err(); err != nil {
 		return nil, err
 	}
-	return trips, nil
+
+	pRows, err := r.pool.Query(ctx, `
+		SELECT p.carpool_trip_id::text, p.seats, p.board_stop_index, p.alight_stop_index
+		FROM carpool_passengers p
+		JOIN carpool_trips t ON t.id = p.carpool_trip_id
+		WHERE t.vehicle_id = $1;
+	`, vehicleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load the carpool passengers: %w", err)
+	}
+	defer pRows.Close()
+	for pRows.Next() {
+		var tripID string
+		var p models.CarpoolPassenger
+		if err := pRows.Scan(&tripID, &p.Seats, &p.BoardStopIndex, &p.AlightStopIndex); err != nil {
+			return nil, err
+		}
+		if i, ok := index[tripID]; ok {
+			trips[i].Passengers = append(trips[i].Passengers, p)
+		}
+	}
+	return trips, pRows.Err()
 }
 
 func (r *Repository) GetCarpoolTrip(ctx context.Context, id, vehicleID string) (*models.CarpoolTripWithPassengers, error) {

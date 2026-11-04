@@ -65,8 +65,9 @@ func TestCarpoolLegsFollowTheirDrive(t *testing.T) {
 	if tollOf(legOf(got, 0)) != 10.5 || got["total_cost"].(float64) != 10.5 {
 		t.Fatalf("the leg follows a toll added to its drive: %v", got)
 	}
-	list := a.expect(http.StatusOK, "GET", "/carpools", "")
-	if sum := list["summary"].(map[string]any); sum["total_real_cost"].(float64) != 10.5 {
+	// Reading the page stores the refresh, the summary then sums it
+	a.expect(http.StatusOK, "GET", "/carpools", "")
+	if sum := a.expect(http.StatusOK, "GET", "/carpools/summary", ""); sum["total_real_cost"].(float64) != 10.5 {
 		t.Fatalf("the summary sums the refreshed amounts: %v", sum)
 	}
 	if stored, err := a.repo.GetCarpoolTrip(context.Background(), id, a.vid); err != nil || stored.TotalCost != 1050 {

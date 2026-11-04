@@ -447,6 +447,46 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
   await expect.poll(listed, { timeout: 12_000 }).toBe(0)
 })
 
+test('carpools are listed 30 at a time and the totals cover all of them', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const mine = async () => {
+    const res = await (await request.get(`/api/vehicles/${ev.id}/carpools?limit=100`, { headers })).json()
+    return (res.trips ?? []).filter((c: { title: string }) => c.title.startsWith('E2E paged '))
+  }
+  // Left over by an interrupted run
+  for (const trip of await mine()) await request.delete(`/api/vehicles/${ev.id}/carpools/${trip.id}`, { headers })
+
+  const summaryBefore = await (await request.get(`/api/vehicles/${ev.id}/carpools/summary`, { headers })).json()
+  // 35 carpools dated far ahead, so they are the latest ones whatever the demo holds
+  const count = 35
+  for (let i = 0; i < count; i++) {
+    const day = String(28 - Math.floor(i / 2)).padStart(2, '0')
+    const res = await request.post(`/api/vehicles/${ev.id}/carpools`, {
+      headers,
+      data: { title: `E2E paged ${String(i).padStart(2, '0')}`, date: `2098-01-${day}`, legs: [{ distance_km: 10, electricity_cost: 1 }], passengers: [{ passenger_name: 'Paged', seats: 1, amount_paid: 0.5 }] },
+    })
+    expect(res.ok()).toBeTruthy()
+  }
+  try {
+    const summaryAfter = await (await request.get(`/api/vehicles/${ev.id}/carpools/summary`, { headers })).json()
+    expect(summaryAfter.total_trips - summaryBefore.total_trips).toBe(count)
+
+    await useVehicle(page, ev.id, '/carpools')
+    const rows = page.getByText(/^E2E paged \d\d$/)
+    await expect(rows).toHaveCount(30)
+    await expect(page.getByText('E2E paged 34')).toHaveCount(0)
+
+    // The sentinel asks for the next page by itself when it nears the screen; its button does the same
+    const more = page.getByRole('button', { name: 'Show more carpools' })
+    await more.scrollIntoViewIfNeeded()
+    await expect(page.getByText('E2E paged 34')).toBeVisible()
+    await expect(rows).toHaveCount(count)
+    await expectNoHorizontalScroll(page)
+  } finally {
+    for (const trip of await mine()) await request.delete(`/api/vehicles/${ev.id}/carpools/${trip.id}`, { headers })
+  }
+})
+
 test('a charges CSV is previewed, imported, then undone from the import history', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const undoLeftovers = async () => {

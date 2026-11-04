@@ -397,6 +397,8 @@ describe('endpoint contract', () => {
     ['previewComparison', () => api.previewComparison({ s: 1 }), 'POST', '/comparison-scenarios/preview', { s: 1 }],
     ['getComparisonResult', () => api.getComparisonResult('s1'), 'GET', '/comparison-scenarios/s1/result'],
     ['getCarpools', () => api.getCarpools('v1'), 'GET', '/vehicles/v1/carpools'],
+    ['getCarpools page', () => api.getCarpools('v1', { page: 2, limit: 30, tripGroupId: 'g1' }), 'GET', '/vehicles/v1/carpools?page=2&limit=30&trip_group_id=g1'],
+    ['getCarpoolSummary', () => api.getCarpoolSummary('v1'), 'GET', '/vehicles/v1/carpools/summary'],
     ['getCarpool', () => api.getCarpool('v1', 'c1'), 'GET', '/vehicles/v1/carpools/c1'],
     ['createCarpool', () => api.createCarpool('v1', { c: 1 }), 'POST', '/vehicles/v1/carpools', { c: 1 }],
     ['updateCarpool', () => api.updateCarpool('v1', 'c1', { c: 2 }), 'PUT', '/vehicles/v1/carpools/c1', { c: 2 }],

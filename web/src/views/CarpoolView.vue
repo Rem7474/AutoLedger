@@ -22,18 +22,30 @@ import { Users, Plus } from 'lucide-vue-next'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { deleteWithUndo } from '@/composables/useUndoableDelete'
 import EmptyState from '@/components/EmptyState.vue'
+import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
+import { useInfiniteList } from '@/composables/useInfiniteList'
 
-// The page loads the trips and owns the selection and which trip the modal edits; the summary, the list and the
-// form are components. Other pages open it with a drive, drives or a trip group in the query string.
+// The page reads the trips page by page (the latest first) and the totals apart, and owns the selection and which trip
+// the modal edits; the summary, the list and the form are components. Other pages open it with a drive, drives or a trip group in the query string.
 const vehicleStore = useVehicleStore()
 const { showConfirm, showAlert } = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
 
-const loading = ref(true)
-const loadError = ref<string | null>(null)
-const trips = ref<any[]>([])
+const PAGE_SIZE = 30
+const {
+  items: trips,
+  total,
+  loading,
+  error: loadError,
+  loadingMore,
+  moreError,
+  hasMore,
+  load: loadTrips,
+  loadMore: loadMoreTrips,
+} = useInfiniteList<any>(readTripsPage)
+loading.value = true
 const summary = ref<any>({
   total_trips: 0,
   total_passengers: 0,
@@ -51,8 +63,10 @@ const summary = ref<any>({
 const showModal = ref(false)
 const showDetail = ref(false)
 const detailTripId = ref<string | null>(null)
+// A carpool opened by a link can belong to a page that is not loaded: it is read on its own
+const linkedTrip = ref<any | null>(null)
 // Read from the list so the detail follows a recalculation or an edit
-const detailTrip = computed(() => trips.value.find((t) => t.id === detailTripId.value) ?? null)
+const detailTrip = computed(() => trips.value.find((t) => t.id === detailTripId.value) ?? (linkedTrip.value?.id === detailTripId.value ? linkedTrip.value : null))
 
 const recentNames = computed(() => recentPassengerNames(trips.value))
 
@@ -101,20 +115,28 @@ function exportSelectedCarpools() {
 
 useRefreshHandler(() => loadData(true))
 
-async function loadData(silent = false) {
+async function readTripsPage(page: number) {
+  if (!vehicleStore.activeVehicle) return { items: [], total: 0 }
+  const res = await api.getCarpools(vehicleStore.activeVehicle.id, { page, limit: PAGE_SIZE })
+  return { items: (res.trips || []) as any[], total: res.total as number }
+}
+
+// The totals cover every carpool, not only the pages shown; a failed read keeps the figures already there
+async function loadSummary() {
   if (!vehicleStore.activeVehicle) return
-  if (!silent) loading.value = true
-  loadError.value = null
   try {
-    const res = await api.getCarpools(vehicleStore.activeVehicle.id)
-    trips.value = res.trips || []
-    summary.value = res.summary || summary.value
+    summary.value = (await api.getCarpoolSummary(vehicleStore.activeVehicle.id)) || summary.value
   } catch (err) {
-    console.error('Failed to load carpool trips', err)
-    loadError.value = (err as Error)?.message ?? ''
-  } finally {
-    loading.value = false
+    console.error('Failed to load carpool summary', err)
   }
+}
+
+async function loadData(silent = false) {
+  if (!vehicleStore.activeVehicle) {
+    loading.value = false
+    return
+  }
+  await Promise.all([loadTrips(silent), loadSummary()])
 }
 
 // A leg of a carpool opens the cost detail of its drive in place of the carpool detail, with an arrow back to it (like the
@@ -207,7 +229,7 @@ async function handleDeleteMany(list: any[]) {
     void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
   clearTripSelection()
-  await loadData()
+  await loadData(true)
 }
 
 async function handleRecalculateSingle(trip: any) {
@@ -216,7 +238,7 @@ async function handleRecalculateSingle(trip: any) {
   try {
     await api.recalculateCarpools(vehicleStore.activeVehicle.id, [trip.id])
     void showAlert(t('carpool.carpoolView.recalcDone', { title: trip.title }), t('carpool.carpoolView.recalcDoneTitle'), 'success')
-    await loadData()
+    await loadData(true)
   } catch (err: any) {
     void showAlert(t('carpool.carpoolView.recalcError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
@@ -229,7 +251,7 @@ async function handleFreeze(trip: any) {
   recalculating.value = true
   try {
     await api.freezeCarpool(vehicleStore.activeVehicle.id, trip.id)
-    await loadData()
+    await loadData(true)
   } catch (err: any) {
     void showAlert(t('carpool.linked.error', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
@@ -253,7 +275,7 @@ async function handleUnfreeze(trip: any) {
   recalculating.value = true
   try {
     await api.unfreezeCarpool(vehicleStore.activeVehicle.id, trip.id)
-    await loadData()
+    await loadData(true)
   } catch (err: any) {
     void showAlert(t('carpool.linked.error', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
@@ -277,7 +299,7 @@ async function applyFreezeToMany(list: any[], call: (vehicleId: string, id: stri
     }
     if (firstError) void showAlert(t('carpool.linked.error', { message: firstError }), t('shell.confirm.error'), 'danger')
     clearTripSelection()
-    await loadData()
+    await loadData(true)
   } finally {
     recalculating.value = false
   }
@@ -309,7 +331,7 @@ async function handleBatchRecalculate() {
     const res = await api.recalculateCarpools(vehicleStore.activeVehicle.id, selectedTripIds.value)
     void showAlert(t('carpool.carpoolView.recalcSelectedDone', { count: res.updated_count || count }), t('carpool.carpoolView.recalcDoneTitle'), 'success')
     clearTripSelection()
-    await loadData()
+    await loadData(true)
   } catch (err: any) {
     void showAlert(t('carpool.carpoolView.recalcError', { message: err.message }), t('shell.confirm.error'), 'danger')
   } finally {
@@ -331,8 +353,11 @@ watch(
 async function openCarpoolFromRoute() {
   const id = typeof route.query.open === 'string' ? route.query.open : ''
   if (!id) return
-  if (!trips.value.some((t) => t.id === id)) await loadData()
-  const trip = trips.value.find((t) => t.id === id)
+  let trip = trips.value.find((t) => t.id === id)
+  if (!trip && vehicleId.value) {
+    trip = await api.getCarpool(vehicleId.value, id).catch(() => null)
+    linkedTrip.value = trip
+  }
   if (trip) openDetail(trip)
   const { open: _open, ...rest } = route.query
   router.replace({ path: route.path, query: rest })
@@ -417,6 +442,7 @@ onMounted(async () => {
     <CarpoolTripList
       v-else
       :trips="trips"
+      :total="total"
       :selected-trip-ids="selectedTripIds"
       :recalculating="recalculating"
       @clear="clearTripSelection"
@@ -431,6 +457,14 @@ onMounted(async () => {
       @delete-many="handleDeleteMany"
       @batch-freeze="handleFreezeMany"
       @batch-resync="handleUnfreezeMany"
+    />
+
+    <InfiniteSentinel
+      v-if="hasMore"
+      :loading="loadingMore"
+      :error="moreError"
+      :label="$t('carpool.carpoolView.loadMore')"
+      @more="loadMoreTrips"
     />
 
     <CarpoolDetailModal
@@ -465,7 +499,7 @@ onMounted(async () => {
       :create-options="createOptions"
       :open-token="openToken"
       :recent-names="recentNames"
-      @saved="loadData()"
+      @saved="loadData(true)"
     />
   </div>
 </template>
