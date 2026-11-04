@@ -590,3 +590,48 @@ func TestOAuthGrantLimitedToChosenVehiclesKeepsTheLimitThroughRenewals(t *testin
 		t.Fatalf("without a list every vehicle is granted: %+v %v", grant, err)
 	}
 }
+
+// Home Assistant registers itself with the redirect address of its OAuth helper and then asks for its own scope:
+// the whole flow works for that address, a query string included.
+func TestOAuthHomeAssistantRegistersWithItsRedirectAddress(t *testing.T) {
+	const redirect = "https://my.home-assistant.io/redirect/oauth"
+	f := newOAuthFixture(t)
+	clientID := f.register("Home Assistant", redirect)
+
+	query := "client_id=" + clientID + "&redirect_uri=" + url.QueryEscape(redirect) + "&response_type=code&code_challenge=" + pkceChallenge +
+		"&code_challenge_method=S256&scope=homeassistant&state=abc"
+	preview := f.do(http.MethodGet, "/api/oauth/authorize?"+query, "", "")
+	if preview.Code != http.StatusOK {
+		t.Fatalf("preview: %d %s", preview.Code, preview.Body.String())
+	}
+	if got := decode[map[string]any](t, preview); got["redirect_host"] != "my.home-assistant.io" || got["scope"] != "homeassistant" {
+		t.Errorf("the page names where the user goes back to: %v", got)
+	}
+
+	body, _ := json.Marshal(map[string]any{
+		"client_id": clientID, "redirect_uri": redirect, "response_type": "code", "code_challenge": pkceChallenge,
+		"code_challenge_method": "S256", "decision": "approve", "scope": "homeassistant", "state": "abc", "allow_record": true,
+	})
+	rec := f.do(http.MethodPost, "/api/oauth/authorize", "application/json", string(body))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("approve: %d %s", rec.Code, rec.Body.String())
+	}
+	target, _ := url.Parse(decode[struct {
+		RedirectURL string `json:"redirect_url"`
+	}](t, rec).RedirectURL)
+	if !strings.HasPrefix(target.String(), redirect+"?") || target.Query().Get("state") != "abc" || target.Query().Get("code") == "" {
+		t.Fatalf("Home Assistant gets its code and state at its own address: %s", target)
+	}
+	tok := decode[tokens](t, f.form("/oauth/token", url.Values{
+		"grant_type": {"authorization_code"}, "code": {target.Query().Get("code")}, "client_id": {clientID},
+		"redirect_uri": {redirect}, "code_verifier": {pkceVerifier},
+	}))
+	if scope, err := f.validate(tok.AccessToken); err != nil || scope != auth.ScopeHomeAssistant {
+		t.Errorf("the grant holds the homeassistant scope: %q %v", scope, err)
+	}
+
+	other := f.do(http.MethodGet, "/api/oauth/authorize?"+strings.Replace(query, url.QueryEscape(redirect), url.QueryEscape("https://my.home-assistant.io/redirect/other"), 1), "", "")
+	if other.Code != http.StatusBadRequest {
+		t.Errorf("another path of the same host is not the registered address: %d", other.Code)
+	}
+}
