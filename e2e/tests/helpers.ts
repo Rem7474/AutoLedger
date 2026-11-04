@@ -9,20 +9,25 @@ export interface Vehicle {
   powertrain: 'EV' | 'ICE' | 'PHEV' | 'REEV'
 }
 
-export async function vehicles(request: APIRequestContext): Promise<Vehicle[]> {
-  const login = await request.post('/api/auth/login', { data: { email, password } })
-  expect(login.ok()).toBeTruthy()
-  const { token, access_token: accessToken } = await login.json()
-  const res = await request.get('/api/vehicles', { headers: { Authorization: `Bearer ${token ?? accessToken}` } })
-  const body = await res.json()
-  return Array.isArray(body) ? body : body.vehicles
-}
+// The login route answers 10 requests a minute per address, and the suite asks for a token in most of its tests: one
+// login per worker, kept for less than the life of the token, so that a burst of tests cannot be refused.
+const TOKEN_REUSE_MS = 10 * 60 * 1000
+let cachedHeaders: { headers: { Authorization: string }; at: number } | null = null
 
 export async function authHeaders(request: APIRequestContext): Promise<{ Authorization: string }> {
+  if (cachedHeaders && Date.now() - cachedHeaders.at < TOKEN_REUSE_MS) return cachedHeaders.headers
   const login = await request.post('/api/auth/login', { data: { email, password } })
   expect(login.ok()).toBeTruthy()
   const { token, access_token: accessToken } = await login.json()
-  return { Authorization: `Bearer ${token ?? accessToken}` }
+  const headers = { Authorization: `Bearer ${token ?? accessToken}` }
+  cachedHeaders = { headers, at: Date.now() }
+  return headers
+}
+
+export async function vehicles(request: APIRequestContext): Promise<Vehicle[]> {
+  const res = await request.get('/api/vehicles', { headers: await authHeaders(request) })
+  const body = await res.json()
+  return Array.isArray(body) ? body : body.vehicles
 }
 
 export const authFile = '.auth/state.json'
