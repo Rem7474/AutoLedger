@@ -1,17 +1,11 @@
 {
   "vehicleCard": {
-    "activeVehicle": "Active vehicle",
-    "select": "Select",
-    "manualTracking": "Manual tracking",
-    "odometerReadingsAndManualEntries": "Odometer readings and manual entries of this vehicle",
     "acquisitionAndFinancing": "Acquisition and financing",
     "sharingAndAccess": "Sharing and access",
-    "manageAccessAndCoDrivers": "Manage access and co-drivers",
     "notConfigured": "Not configured",
     "kwh100kmKwh": "{estimated_kwh_100km} kWh/100 {unit} • {price}",
     "estimatedEnergy": "Estimated energy",
     "teslamateConnection": "TeslaMate connection",
-    "combustionFillUpsEnteredBy": "Combustion · fill-ups entered by hand",
     "powertrain": "Powertrain",
     "vehicleAccess": "Vehicle access",
     "acquisitionAndContract": "Acquisition and contract",
@@ -59,6 +53,8 @@
     "powertrain": "Powertrain",
     "currency": "Currency",
     "currencyFixed": "Fixed at creation: costs are recorded in this currency for the vehicle's whole life.",
+    "copyFallbackName": "Vehicle",
+    "powertrainFixed": "The powertrain is set when the vehicle is created.",
     "eGMyCar": "Vehicle name",
     "vehicleName": "Vehicle name",
     "edit": "Edit the vehicle",
@@ -76,10 +72,10 @@
     "advancedOptions": "Additional options (Tariffs & Energy)",
     "advancedOptionsDesc": "Tariff plan, default home charger and estimated consumption",
     "tollDetection": "Toll detection (France)",
-    "tollDetectionAuto": "Automatic: shown where this vehicle drives in France",
+    "tollDetectionAuto": "Automatic",
     "tollDetectionOn": "Always on",
     "tollDetectionOff": "Off",
-    "tollDetectionHint": "Detects the motorway tolls of a drive from its GPS trace, and lists the motorway drives still to qualify. The reference data covers French motorways only. Tolls entered by hand are always available."
+    "tollDetectionHint": "Automatic turns it on where this vehicle drives in France. It detects the motorway tolls of a drive from its GPS trace and lists the motorway drives still to qualify. The reference data covers French motorways only. Tolls entered by hand are always available."
   },
   "vehicleMembersModal": {
     "leave": "Leave",
@@ -132,7 +128,7 @@
     "deleteTitle": "Delete the vehicle",
     "deleteMessage": "Delete this vehicle and all its history? This cannot be undone.",
     "addAVehicle": "Add a vehicle",
-    "setUpYourVehiclesAnd": "Set up your vehicles and the synchronization with TeslaMateApi"
+    "setUpYourVehiclesAnd": "Set up your vehicles, their contracts and their data sources"
   },
   "ownershipWizardModal": {
     "leaseStart": "Lease start",
