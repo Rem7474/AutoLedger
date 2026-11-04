@@ -4,7 +4,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import TabBar, { type TabItem } from '@/components/TabBar.vue'
 import { Navigation as PageIcon } from 'lucide-vue-next'
-import { t } from '@/i18n'
+import { t, intlLocale } from '@/i18n'
 import { distanceUnit } from '@/units'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -20,7 +20,7 @@ import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import DrivesToolbar from '@/components/drives/DrivesToolbar.vue'
 import DriveBulkActions from '@/components/drives/DriveBulkActions.vue'
 import DriveCard from '@/components/drives/DriveCard.vue'
-import DrivesPagination from '@/components/drives/DrivesPagination.vue'
+import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
 import AddressBackfillNotice from '@/components/drives/AddressBackfillNotice.vue'
 import TripGroupsPanel from '@/components/drives/TripGroupsPanel.vue'
 import TripSuggestions from '@/components/drives/TripSuggestions.vue'
@@ -37,6 +37,9 @@ import CSVImportModal from '@/components/CSVImportModal.vue'
 import EmptySourceHints from '@/components/EmptySourceHints.vue'
 import { Layers, List, RotateCcw, Plus, UploadCloud } from 'lucide-vue-next'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
+import { useInfiniteList } from '@/composables/useInfiniteList'
+import { groupByDay, dayLabel } from '@/utils/dayGroups'
+import { toLocalDay } from '@/utils/dates'
 import { deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import {
@@ -56,22 +59,26 @@ const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
 const { showConfirm, showAlert } = useConfirm()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
-const drives = ref<any[]>([])
-const total = ref(0)
-const page = ref(1)
-
-// Page limit with persistent storage
-const savedLimit = Number(localStorage.getItem('drives_limit'))
-const limit = ref(savedLimit === 20 || savedLimit === 50 || savedLimit === 100 ? savedLimit : 20)
-const totalPages = computed(() => Math.ceil(total.value / limit.value) || 1)
+// The list grows as it is scrolled: older drives are found with the filters, not by paging
+const PAGE_SIZE = 30
 const selectedTag = ref('')
 const unqualifiedOnly = ref(false)
 const hasTollOnly = ref(false)
 const tollSource = ref('')
 const carpoolFilter = ref<'' | 'yes' | 'no'>('')
 const unqualifiedCount = ref(0)
-const loading = ref(true)
-const loadError = ref<string | null>(null)
+const {
+  items: drives,
+  total,
+  loading,
+  error: loadError,
+  loadingMore,
+  moreError,
+  hasMore,
+  load: loadList,
+  loadMore: loadMoreDrives,
+} = useInfiniteList<any>(readDrivesPage)
+loading.value = true
 
 // Manual drive and CSV import modals
 const showManualDriveModal = ref(false)
@@ -88,11 +95,11 @@ function openCSVImportModal() {
 }
 
 function onDriveSaved() {
-  loadDrives()
+  loadDrives(true)
 }
 
 function onCSVImported() {
-  loadDrives()
+  loadDrives(true)
 }
 
 // A single drive goes at once and comes back with Undo, the server is asked when that time is over
@@ -137,7 +144,7 @@ async function handleDeleteManualDrives(list: any[]) {
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
   clearSelection()
-  await loadDrives()
+  await loadDrives(true)
 }
 
 // Period / month and address filters (edited in the toolbar)
@@ -160,30 +167,7 @@ const hasFilters = computed(() => periodMode.value !== 'ALL' || !!searchQuery.va
 
 function onFiltersChange() {
   if (viewMode.value === 'TRIPS') return
-  page.value = 1
   loadDrives()
-}
-
-// Page sizing & navigation
-function setLimit(newLimit: number) {
-  limit.value = newLimit
-  localStorage.setItem('drives_limit', newLimit.toString())
-  page.value = 1
-  loadDrives()
-}
-
-function goToPage(targetPage: number) {
-  const p = Math.max(1, Math.min(totalPages.value, targetPage))
-  if (p !== page.value) {
-    page.value = p
-    loadDrives()
-    const scrollContainer = document.querySelector('main')?.parentElement
-    if (scrollContainer) {
-      scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
 }
 
 function resetAllFilters() {
@@ -196,7 +180,6 @@ function resetAllFilters() {
   periodMode.value = 'ALL'
   customFrom.value = ''
   customTo.value = ''
-  page.value = 1
   loadDrives()
 }
 
@@ -220,37 +203,38 @@ const selectedSummaryMetrics = computed(() =>
 
 useRefreshHandler(() => loadDrives(true))
 
-async function loadDrives(silent = false) {
-  if (!vehicleStore.activeVehicle) {
-    loading.value = false
-    return
-  }
-  if (!silent) loading.value = true
-  loadError.value = null
-  try {
-    const { from: fromStr, to: toStr } = periodBounds({ mode: periodMode.value, anchor: anchorDay.value, month: selectedMonth.value, from: customFrom.value, to: customTo.value })
+// The drives under a header per day, the newest first as the server sends them
+const driveGroups = computed(() => {
+  const today = toLocalDay()
+  const labels = { today: t('drives.drivesView.today'), yesterday: t('drives.drivesView.yesterday') }
+  const format = (date: Date, withYear: boolean) =>
+    date.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
+  return groupByDay(drives.value, (d) => d.start_time).map((g) => ({ ...g, label: dayLabel(g.day, today, labels, format) }))
+})
 
-    const res = await api.getDrives(vehicleStore.activeVehicle.id, {
-      tag: selectedTag.value,
-      page: page.value,
-      limit: limit.value,
-      unqualified: unqualifiedOnly.value,
-      hasToll: hasTollOnly.value,
-      tollSource: hasTollOnly.value ? tollSource.value : '',
-      carpool: carpoolFilter.value,
-      from: fromStr,
-      to: toStr,
-      q: searchQuery.value.trim() || undefined,
-    })
-    drives.value = res.drives
-    total.value = res.total
-    unqualifiedCount.value = res.unqualified_count || 0
-  } catch (err) {
-    console.error('Failed to load drives', err)
-    loadError.value = (err as Error)?.message ?? ''
-  } finally {
-    loading.value = false
-  }
+// One page of the list for the current filters
+async function readDrivesPage(page: number) {
+  if (!vehicleStore.activeVehicle) return { items: [], total: 0 }
+  const { from: fromStr, to: toStr } = periodBounds({ mode: periodMode.value, anchor: anchorDay.value, month: selectedMonth.value, from: customFrom.value, to: customTo.value })
+  const res = await api.getDrives(vehicleStore.activeVehicle.id, {
+    tag: selectedTag.value,
+    page,
+    limit: PAGE_SIZE,
+    unqualified: unqualifiedOnly.value,
+    hasToll: hasTollOnly.value,
+    tollSource: hasTollOnly.value ? tollSource.value : '',
+    carpool: carpoolFilter.value,
+    from: fromStr,
+    to: toStr,
+    q: searchQuery.value.trim() || undefined,
+  })
+  unqualifiedCount.value = res.unqualified_count || 0
+  return { items: res.drives as any[], total: res.total as number }
+}
+
+// `silent` reads again every page that is shown, behind the list, instead of starting over from the first one
+function loadDrives(silent = false) {
+  return loadList(silent)
 }
 
 // View mode: drives list or trip groups ("voyages")
@@ -321,7 +305,6 @@ const {
 watch(
   () => [vehicleStore.activeVehicle?.id, selectedTag.value, unqualifiedOnly.value, hasTollOnly.value, tollSource.value, carpoolFilter.value],
   () => {
-    page.value = 1
     loadDrives()
     if (viewMode.value === 'TRIPS') loadTripGroups()
   }
@@ -407,7 +390,7 @@ function editTripFromCostModal(virtual: any) {
 async function onTripSaved() {
   expandedTripId.value = null
   await loadTripGroups()
-  loadDrives()
+  loadDrives(true)
 }
 
 function openTripEdit(tg: any) {
@@ -423,12 +406,12 @@ async function openAddToTrip() {
 async function onAddedToTrip() {
   clearSelection()
   await loadTripGroups()
-  loadDrives()
+  loadDrives(true)
 }
 
 function onGroupCreated() {
   clearSelection()
-  loadDrives()
+  loadDrives(true)
 }
 
 async function toggleDriveTag(drive: any, tagToToggle: string) {
@@ -577,31 +560,33 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
           @toggle="selectAll"
         />
         <span v-else></span>
-        <span>{{ $t('drives.drivesView.pageOf', { page, totalPages }) }}</span>
+        <span>{{ $t('drives.drivesView.shownOf', { count: drives.length, total }) }}</span>
       </div>
 
-      <SwipeToDelete v-for="d in drives" :key="d.id" :disabled="!d.is_manual || selectedDriveIds.length > 0" @delete="handleDeleteManualDrive(d)">
-      <DriveCard
-        :d="d"
-        :selected="selectedDriveIds.includes(d.id)"
-        :selecting="selectedDriveIds.length > 0"
-        @open="openCostModal"
-        @toggle="toggleSelectDrive"
-        @toll-entry="openTollEntry"
-        @no-toll="markNoToll"
-        @edit="openManualDriveModal"
-        @delete="handleDeleteManualDrive"
-        @carpool="(drive) => openCarpoolEditor({ driveIds: [drive.id] })"
-      />
-      </SwipeToDelete>
+      <section v-for="group in driveGroups" :key="group.day + group.items[0].id" class="space-y-3">
+        <h2 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h2>
+        <SwipeToDelete v-for="d in group.items" :key="d.id" :disabled="!d.is_manual || selectedDriveIds.length > 0" @delete="handleDeleteManualDrive(d)">
+        <DriveCard
+          :d="d"
+          :selected="selectedDriveIds.includes(d.id)"
+          :selecting="selectedDriveIds.length > 0"
+          @open="openCostModal"
+          @toggle="toggleSelectDrive"
+          @toll-entry="openTollEntry"
+          @no-toll="markNoToll"
+          @edit="openManualDriveModal"
+          @delete="handleDeleteManualDrive"
+          @carpool="(drive) => openCarpoolEditor({ driveIds: [drive.id] })"
+        />
+        </SwipeToDelete>
+      </section>
 
-      <DrivesPagination
-        :page="page"
-        :limit="limit"
-        :total="total"
-        :total-pages="totalPages"
-        @go-to-page="goToPage"
-        @set-limit="setLimit"
+      <InfiniteSentinel
+        v-if="hasMore"
+        :loading="loadingMore"
+        :error="moreError"
+        :label="$t('drives.drivesView.loadMore')"
+        @more="loadMoreDrives"
       />
     </div>
     </template>

@@ -467,3 +467,22 @@ test('a fill-up dragged to the left is deleted with an Undo', async ({ page, req
     for (const l of await logs()) await request.delete(`/api/vehicles/${ice.id}/fuel-logs/${l.id}`, { headers })
   }
 })
+
+test('the drives come under a header per day and the next ones load while scrolling, without pages', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const headers = page.locator('main section > h2')
+  await expect(headers.first()).toBeVisible()
+  // The days are named, not numbered pages
+  await expect(page.getByText(/^Page \d+ of \d+$/)).toHaveCount(0)
+  const firstDays = await headers.count()
+  expect(firstDays).toBeGreaterThan(1)
+
+  const next = page.waitForRequest((req) => /\/api\/vehicles\/[^/]+\/drives\?/.test(req.url()) && new URL(req.url()).searchParams.get('page') === '2')
+  await page.locator('.app-scroll').evaluate((el) => el.scrollTo({ top: el.scrollHeight }))
+  await next
+  await expect.poll(() => headers.count()).toBeGreaterThan(firstDays)
+
+  // A day is named once even when it runs over two pages
+  const names = await headers.allTextContents()
+  expect(new Set(names).size).toBe(names.length)
+})
