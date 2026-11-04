@@ -68,7 +68,7 @@ function restore(leg: LegForm, key: CostKey) {
         </button>
       </div>
     </div>
-    <label v-if="linked" class="flex items-start gap-2 text-xs text-slate-300 bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 cursor-pointer">
+    <label v-if="linked" class="flex items-start gap-2 text-xs text-slate-300 bg-slate-800 rounded-xl px-3 py-2 cursor-pointer">
       <input
         type="checkbox"
         class="mt-0.5"
@@ -91,7 +91,7 @@ function restore(leg: LegForm, key: CostKey) {
     </div>
     <p v-if="!legs.length" role="status" :class="['text-xs', submitted ? 'text-danger-400' : 'text-slate-400']">{{ $t('carpool.carpoolTripModal.selectAtLeastOneDrive') }}</p>
 
-    <div v-for="(leg, i) in legs" :key="i" class="bg-slate-950/50 border border-slate-800 rounded-xl">
+    <div v-for="(leg, i) in legs" :key="i" class="bg-slate-800 rounded-xl">
       <button
         type="button"
         class="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl px-3 py-2.5 text-left text-xs"

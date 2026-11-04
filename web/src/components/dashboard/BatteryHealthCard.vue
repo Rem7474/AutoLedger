@@ -111,7 +111,7 @@ const sourceLabel = computed(() => (health.value?.source ? t(`dashboard.batteryH
       </p>
     </div>
 
-    <details class="group rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2">
+    <details class="group rounded-xl bg-slate-800 px-3 py-2">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-2 font-semibold text-slate-300">
         {{ $t('dashboard.batteryHealth.manageReadings', { count: health?.readings.length ?? 0 }) }}
         <ChevronDown class="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />

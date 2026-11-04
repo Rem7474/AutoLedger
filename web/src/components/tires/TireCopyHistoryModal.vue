@@ -88,7 +88,7 @@ async function handleCopyHistorySubmit() {
     footer-class="items-center justify-end gap-2"
   >
     <!-- Source selection -->
-    <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2">
+    <div class="bg-slate-800 p-3 rounded-xl space-y-2">
       <label for="copy-history-source-select" class="text-xs text-sky-400 font-semibold block">{{ $t('tires.tireCopyHistoryModal.sourceTireToClone') }}</label>
       <select
         id="copy-history-source-select"
@@ -103,7 +103,7 @@ async function handleCopyHistorySubmit() {
     </div>
 
     <!-- Options -->
-    <div class="space-y-2 bg-slate-950/40 p-3 rounded-xl border border-slate-800/80">
+    <div class="space-y-2 bg-slate-800 p-3 rounded-xl">
       <div class="font-semibold text-slate-300">{{ $t('tires.tireCopyHistoryModal.dataToReplicate') }}</div>
       <label class="flex items-start gap-2.5 cursor-pointer text-slate-200">
         <input
@@ -166,7 +166,7 @@ async function handleCopyHistorySubmit() {
         </div>
       </div>
 
-      <div class="space-y-1.5 max-h-48 overflow-y-auto p-1 bg-slate-950/40 rounded-xl border border-slate-800/60">
+      <div class="space-y-1.5 max-h-48 overflow-y-auto p-1 bg-slate-800 rounded-xl">
         <label
           v-for="t in tires.filter(x => x.tire.id !== copyHistorySourceTire?.id)"
           :key="t.tire.id"

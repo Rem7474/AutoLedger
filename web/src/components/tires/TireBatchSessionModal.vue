@@ -158,7 +158,7 @@ async function handleSaveBatchSession() {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 bg-slate-950/60 rounded-xl border border-slate-800/80">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 bg-slate-800 rounded-xl">
         <label
           v-for="t in storageTires"
           :key="t.tire.id"

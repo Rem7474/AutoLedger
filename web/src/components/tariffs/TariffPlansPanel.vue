@@ -94,7 +94,7 @@ onMounted(load)
     <LoadError v-else-if="loadError !== null" :message="loadError" @retry="load" />
     <p v-else-if="!groups.length" class="text-center py-6 text-xs text-slate-400">{{ $t('tariffs.editor.empty') }}</p>
     <ul v-else class="space-y-3">
-      <li v-for="g in groups" :key="g.name" class="rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+      <li v-for="g in groups" :key="g.name" class="rounded-xl bg-slate-800 p-3 space-y-2">
         <h3 class="text-sm font-semibold text-white">{{ g.name }}</h3>
         <ul class="divide-y divide-slate-800">
           <li v-for="p in g.versions" :key="p.id" class="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">

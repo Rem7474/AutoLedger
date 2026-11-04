@@ -94,7 +94,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
       <span class="text-xs text-slate-400">{{ fmtKm(timeline.minKm) }} → {{ fmtKm(timeline.maxKm) }}</span>
     </div>
 
-    <div v-if="!hasData" class="p-6 text-center text-xs text-slate-400 bg-slate-950/40 rounded-2xl">
+    <div v-if="!hasData" class="p-6 text-center text-xs text-slate-400 bg-slate-800 rounded-2xl">
       {{ $t('tires.tireOdometerTimeline.noFittingSessionWithMileage') }}
     </div>
 

@@ -82,7 +82,7 @@ async function handleBatchDisposeSubmit() {
     </p>
 
     <!-- Selected tires summary -->
-    <div class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-950/50 rounded-xl border border-slate-800">
+    <div class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-800 rounded-xl">
       <div
         v-for="t in tires.filter(x => selectedTireIds.includes(x.tire.id))"
         :key="t.tire.id"

@@ -129,7 +129,7 @@ const actions = computed<SelectionAction[]>(() => {
         </RowMenu>
       </div>
       <!-- Expanded drives drawer -->
-      <div v-if="expandedTripId === tg.id" class="space-y-1.5 bg-slate-950/40 border border-slate-800/80 rounded-2xl p-3 -mt-1 ml-4 mr-4">
+      <div v-if="expandedTripId === tg.id" class="space-y-1.5 bg-slate-800 rounded-2xl p-3 -mt-1 ml-4 mr-4">
         <div v-for="d in tripDrives" :key="d.id" class="flex items-center justify-between gap-3 text-xs text-slate-300 bg-slate-800/40 rounded-lg px-2.5 py-1.5 min-w-0">
           <span class="truncate min-w-0 flex-1">
             {{ formatDate(d.start_time) }}{{ $t('drives.tripGroupsPanel.dateSeparator') }}{{ (d.start_address || $t('drives.driveCostModal.start')).split(',')[0] }} → {{ (d.end_address || $t('drives.driveCostModal.end')).split(',')[0] }}

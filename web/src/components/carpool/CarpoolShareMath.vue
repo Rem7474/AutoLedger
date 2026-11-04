@@ -10,7 +10,7 @@ const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
 </script>
 
 <template>
-  <div class="space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+  <div class="space-y-2.5 rounded-xl bg-slate-800 p-3">
     <div class="flex items-center justify-between text-xs">
       <span class="font-bold text-slate-200 flex items-center gap-1.5">
         <Calculator class="w-3.5 h-3.5 text-sky-400" />

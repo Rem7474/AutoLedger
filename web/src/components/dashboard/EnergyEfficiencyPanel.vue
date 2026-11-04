@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
     <div v-if="placeRows.length > 0">
       <h4 class="mb-2 text-xs font-bold text-slate-200">{{ $t('dashboard.energyEfficiencyPanel.byPlace') }}</h4>
       <div class="grid grid-cols-1 items-center gap-4 md:grid-cols-5">
-        <div v-if="placeRows.length > 1" class="flex flex-col items-center justify-center rounded-xl border border-slate-800 bg-slate-950/60 p-3 md:col-span-2">
+        <div v-if="placeRows.length > 1" class="flex flex-col items-center justify-center rounded-xl bg-slate-800 p-3 md:col-span-2">
           <div class="relative h-40 w-full">
             <CostDonut
               :items="placeDonutItems"
@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
         <ul :class="placeRows.length > 1 ? 'md:col-span-3' : 'md:col-span-5'" class="space-y-1.5 text-xs">
-          <li v-for="r in placeRows" :key="r.category || 'unclassified'" class="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2">
+          <li v-for="r in placeRows" :key="r.category || 'unclassified'" class="rounded-xl bg-slate-800 px-3 py-2">
             <div class="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-3">
               <span class="flex items-center gap-2 font-semibold text-white">
                 <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: categoryColor(r.category) }" aria-hidden="true"></span>
@@ -357,7 +357,7 @@ onBeforeUnmount(() => {
     <div v-if="!summary && acDc.classes.length > 0">
       <h4 class="mb-2 text-xs font-bold text-slate-200">{{ $t('dashboard.energyEfficiencyPanel.howTheCarIsCharged') }}</h4>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
-        <div v-if="acDc.classes.length > 1" class="md:col-span-2 bg-slate-950/60 border border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center">
+        <div v-if="acDc.classes.length > 1" class="md:col-span-2 bg-slate-800 rounded-xl p-3 flex flex-col items-center justify-center">
           <div class="w-full h-40 relative">
             <CostDonut
               :items="donutItems"
@@ -369,7 +369,7 @@ onBeforeUnmount(() => {
         </div>
 
         <ul :class="acDc.classes.length > 1 ? 'md:col-span-3' : 'md:col-span-5'" class="space-y-2">
-          <li v-for="c in acDc.classes" :key="c.class" class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+          <li v-for="c in acDc.classes" :key="c.class" class="rounded-xl bg-slate-800 p-3">
             <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <span class="text-sm font-semibold text-white flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: CLASS_COLOR[c.class as 'AC' | 'DC'] }"></span>

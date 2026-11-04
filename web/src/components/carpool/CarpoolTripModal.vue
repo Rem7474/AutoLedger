@@ -463,7 +463,7 @@ async function handleModalRecalculate() {
       <div :class="showRecapColumn ? 'grid grid-cols-[minmax(0,1fr)_20rem] items-start gap-6' : ''">
         <div class="min-w-0 space-y-5">
           <!-- The drives chosen, with the way back to the picker -->
-          <div v-if="main && !isMobile && sourceMode === 'DRIVES'" class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-xs">
+          <div v-if="main && !isMobile && sourceMode === 'DRIVES'" class="flex items-center justify-between gap-3 rounded-xl bg-slate-800 px-3 py-2 text-xs">
             <span class="min-w-0 truncate text-slate-300">
               {{ $t('carpool.editor.drivesSummary', { count: selectedDriveIds.length, distance: formatDistance(liveDistance, 1) }) }}
               <span class="text-slate-400">· {{ stops[0] }} → {{ stops[stops.length - 1] }}</span>

@@ -8,7 +8,7 @@ defineProps<{ icon?: Component; title?: string; compact?: boolean }>()
 </script>
 
 <template>
-  <div class="rounded-2xl border border-slate-800 text-center" :class="compact ? 'bg-slate-950/40 px-4 py-6' : 'bg-slate-900 p-8'">
+  <div class="rounded-2xl text-center" :class="compact ? 'bg-slate-800 px-4 py-6' : 'border border-slate-800 bg-slate-900 p-8'">
     <div v-if="icon && !compact" class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800 text-slate-400">
       <component :is="icon" class="h-6 w-6" />
     </div>

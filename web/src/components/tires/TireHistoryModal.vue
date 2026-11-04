@@ -78,7 +78,7 @@ const open = defineModel<boolean>('open', { required: true })
     </template>
 
     <!-- Life KPI Card -->
-    <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl space-y-3">
+    <div class="bg-slate-800 p-4 rounded-2xl space-y-3">
       <div class="flex items-center justify-between text-xs">
         <span class="text-slate-400">{{ $t('tires.tireHistoryModal.totalLifetimeMileage') }}</span>
         <span class="text-base font-bold text-white">
@@ -177,7 +177,7 @@ const open = defineModel<boolean>('open', { required: true })
         </div>
       </div>
 
-      <div v-if="tireSessions.length === 0" class="p-6 text-center bg-slate-950/40 rounded-2xl text-xs text-slate-400">
+      <div v-if="tireSessions.length === 0" class="p-6 text-center bg-slate-800 rounded-2xl text-xs text-slate-400">
         {{ $t('tires.tireHistoryModal.noSessionRecordedForThis') }}
       </div>
 
@@ -274,7 +274,7 @@ const open = defineModel<boolean>('open', { required: true })
         <div
           v-for="l in tireLogs"
           :key="l.id"
-          class="bg-slate-950/60 border border-slate-800 p-2.5 rounded-xl text-xs space-y-0.5"
+          class="bg-slate-800 p-2.5 rounded-xl text-xs space-y-0.5"
         >
           <div class="flex items-center justify-between">
             <span class="font-bold text-success-400">{{ l.depth_mm }} mm</span>

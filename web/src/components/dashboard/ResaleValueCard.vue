@@ -118,7 +118,7 @@ const marker = computed(() => {
       </div>
 
       <!-- Leased: what the vehicle should be worth against the price of the purchase option -->
-      <div v-if="isLease && optionMargin !== null && residual.purchase_option !== undefined" class="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+      <div v-if="isLease && optionMargin !== null && residual.purchase_option !== undefined" class="rounded-xl bg-slate-800 p-3">
         <p class="flex justify-between gap-2 text-slate-400">
           <span>{{ $t('dashboard.resale.purchaseOption') }}</span>
           <strong class="text-slate-200">{{ formatAmount(residual.purchase_option, cur) }}</strong>
@@ -136,7 +136,7 @@ const marker = computed(() => {
         <line v-if="marker" :x1="marker.x" :x2="marker.x" y1="0" y2="40" stroke="#34d399" stroke-width="1.5" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" />
       </svg>
 
-      <details class="group rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2">
+      <details class="group rounded-xl bg-slate-800 px-3 py-2">
         <summary class="flex cursor-pointer list-none items-center justify-between gap-2 font-semibold text-slate-300">
           {{ $t('dashboard.resale.assumptions') }}
           <ChevronDown class="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />

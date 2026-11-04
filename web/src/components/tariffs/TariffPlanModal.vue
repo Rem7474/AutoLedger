@@ -139,7 +139,7 @@ async function save() {
                 <option v-for="n in namedBands.slice(1)" :key="n" :value="n">{{ n }}</option>
               </select>
             </div>
-            <div v-for="(rule, i) in form.rules" :key="i" class="rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+            <div v-for="(rule, i) in form.rules" :key="i" class="rounded-xl bg-slate-800 p-3 space-y-2">
               <div class="flex flex-wrap items-end gap-2">
                 <div>
                   <label :for="`tp-rule-start-${i}`" class="field-label">{{ $t('tariffs.editor.from') }}</label>

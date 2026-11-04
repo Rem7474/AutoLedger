@@ -181,7 +181,7 @@ const handleSaveSession = () => runOnce(handleSaveSessionAction)
       </label>
     </div>
 
-    <div v-if="sessionForm.is_dismounted" class="grid grid-cols-2 gap-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+    <div v-if="sessionForm.is_dismounted" class="grid grid-cols-2 gap-2 bg-slate-800 p-3 rounded-xl">
       <div>
         <label for="tire-session-dismounted-date" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tireSessionModal.removalDate') }}</label>
         <AppDatePicker
