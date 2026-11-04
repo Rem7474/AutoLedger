@@ -9,7 +9,7 @@ vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => ({ activeVehicle: { 
 vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => ({ showConfirm: vi.fn(), showAlert: vi.fn() }) }))
 
 function history() {
-  return useTireHistory({ tires: ref([]), loadTires: async () => {}, selectedTireIds: ref([]) })
+  return useTireHistory({ tires: ref([]), loadTires: async () => {}, selectedTireIds: ref([]), openDispose: () => {} })
 }
 
 function response(id: string) {

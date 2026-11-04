@@ -13,20 +13,22 @@ vi.mock('@/i18n', () => ({ t: (k: string) => k, intlLocale: () => 'en' }))
 vi.mock('@/stores/vehicle', () => ({
   useVehicleStore: () => ({ activeVehicle: { id: 'v1', current_odometer: 1234.6 } }),
 }))
-const confirm = vi.hoisted(() => ({ showConfirm: vi.fn(), showAlert: vi.fn() }))
+const confirm = vi.hoisted(() => ({ showConfirm: vi.fn(), showChoice: vi.fn(), showAlert: vi.fn() }))
 vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => confirm }))
 
 function setup() {
   const tires = ref<any[]>([{ tire: { id: 't1' } }])
   const loadTires = vi.fn().mockResolvedValue(undefined)
   const selectedTireIds = ref<string[]>(['t1', 't2'])
-  return { tires, loadTires, selectedTireIds, h: useTireHistory({ tires, loadTires, selectedTireIds }) }
+  const openDispose = vi.fn()
+  return { tires, loadTires, selectedTireIds, openDispose, h: useTireHistory({ tires, loadTires, selectedTireIds, openDispose }) }
 }
 
 describe('useTireHistory', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     confirm.showConfirm.mockResolvedValue(true)
+    confirm.showChoice.mockResolvedValue('confirm')
     api.getTireHistory.mockResolvedValue({ tire: { id: 't1' }, stats: { s: 1 }, sessions: [{ id: 's1' }], logs: null })
   })
 
@@ -75,13 +77,22 @@ describe('useTireHistory', () => {
 
   it('does nothing when the deletion is declined, and alerts when it fails', async () => {
     const { h } = setup()
-    confirm.showConfirm.mockResolvedValue(false)
+    confirm.showChoice.mockResolvedValue('cancel')
     await h.handleDeleteTire({ id: 't1' })
     expect(api.deleteTire).not.toHaveBeenCalled()
-    confirm.showConfirm.mockResolvedValue(true)
+    confirm.showChoice.mockResolvedValue('confirm')
     api.deleteTire.mockRejectedValue(new Error('x'))
     await h.handleDeleteTire({ id: 't1' })
     expect(confirm.showAlert).toHaveBeenCalled()
+  })
+
+  it('opens the scrap form instead of deleting when scrapping is chosen', async () => {
+    const { h, openDispose, loadTires } = setup()
+    confirm.showChoice.mockResolvedValue('alternative')
+    await h.handleDeleteTire({ id: 't1' })
+    expect(openDispose).toHaveBeenCalledTimes(1)
+    expect(api.deleteTire).not.toHaveBeenCalled()
+    expect(loadTires).not.toHaveBeenCalled()
   })
 
   it('deletes sessions and readings of the selected tire and reloads', async () => {

@@ -6,7 +6,7 @@ import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 import SheetGrabber from '@/components/SheetGrabber.vue'
 
-const { isOpen, options, onConfirm, onCancel } = useConfirm()
+const { isOpen, options, onConfirm, onAlternative, onCancel } = useConfirm()
 const confirmBtnRef = ref<HTMLButtonElement | null>(null)
 const cancelBtnRef = ref<HTMLButtonElement | null>(null)
 
@@ -123,15 +123,28 @@ watch(isOpen, async (open) => {
                 ref="confirmBtnRef"
                 type="button"
                 @click="onConfirm"
-                class="px-5 py-2.5 rounded-xl text-xs font-semibold text-white transition-all shadow-lg max-sm:py-3 max-sm:text-sm"
-                :class="{
-                  'bg-danger-600 hover:bg-danger-500 shadow-danger-600/30': options.type === 'danger',
-                  'bg-warning-600 hover:bg-warning-500 shadow-warning-600/30': options.type === 'warning',
-                  'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30': options.type === 'info',
-                  'bg-success-600 hover:bg-success-500 shadow-success-600/30': options.type === 'success',
-                }"
+                class="px-5 py-2.5 rounded-xl text-xs font-semibold transition-all max-sm:py-3 max-sm:text-sm"
+                :class="
+                  options.alternativeText
+                    ? 'text-danger-400 hover:bg-danger-500/10 active:bg-danger-500/20'
+                    : {
+                        'text-white shadow-lg bg-danger-600 hover:bg-danger-500 shadow-danger-600/30': options.type === 'danger',
+                        'text-white shadow-lg bg-warning-600 hover:bg-warning-500 shadow-warning-600/30': options.type === 'warning',
+                        'text-white shadow-lg bg-rose-600 hover:bg-rose-500 shadow-rose-600/30': options.type === 'info',
+                        'text-white shadow-lg bg-success-600 hover:bg-success-500 shadow-success-600/30': options.type === 'success',
+                      }
+                "
               >
                 {{ options.confirmText || $t('common.confirm') }}
+              </button>
+              <!-- The recommended way forward when two are offered: the prominent button, the confirm one stays quiet -->
+              <button
+                v-if="options.alternativeText"
+                type="button"
+                @click="onAlternative"
+                class="btn btn-lg btn-primary px-5 max-sm:justify-center max-sm:py-3 max-sm:text-sm"
+              >
+                {{ options.alternativeText }}
               </button>
             </div>
           </div>
