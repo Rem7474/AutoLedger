@@ -8,6 +8,7 @@ import (
 func (h *apiHandlers) registerCostRoutes(r chi.Router) {
 	// Carpooling
 	r.Get("/{vehicleId}/carpools", h.carpool.List)
+	r.Get("/{vehicleId}/carpools/summary", h.carpool.Summary)
 	r.Post("/{vehicleId}/carpools", h.carpool.Create)
 	r.Post("/{vehicleId}/carpools/recalculate", h.carpool.Recalculate)
 	r.Get("/{vehicleId}/carpools/estimate", h.carpool.Estimate)

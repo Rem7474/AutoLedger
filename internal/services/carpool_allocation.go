@@ -44,3 +44,13 @@ func AllocateCarpoolCosts(legs []models.CarpoolLeg, passengers []models.CarpoolP
 	}
 	return driverShare, passengersShare
 }
+
+// CarpoolShareTotals sums, over several carpools, the share of the driver and the share of the passengers.
+func CarpoolShareTotals(trips []models.CarpoolTripWithPassengers) (driverShare, passengersShare money.Cents) {
+	for i := range trips {
+		driver, passengers := AllocateCarpoolCosts(trips[i].Legs, trips[i].Passengers)
+		driverShare += driver
+		passengersShare += passengers
+	}
+	return driverShare, passengersShare
+}

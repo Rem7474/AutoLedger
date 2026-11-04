@@ -1,6 +1,7 @@
 {
   "carpoolView": {
     "backToTheCarpool": "Retour au covoiturage",
+    "loadMore": "Afficher plus de covoiturages",
     "createMyFirstCarpool": "Créer mon premier covoiturage",
     "selectTheLegsOfYour": "Sélectionnez les étapes de votre trajet, indiquez où chaque passager monte et descend : {APP_NAME} calcule la part réelle de chacun.",
     "noCarpooledTripYet": "Aucun trajet covoituré pour le moment",

@@ -48,6 +48,7 @@ func newCarpoolAPI(t *testing.T, tag string) *carpoolAPI {
 	h := NewCarpoolHandler(repo, services.NewCarpoolService(repo.Pool(), repo))
 	r := chi.NewRouter()
 	r.Get("/vehicles/{vehicleId}/carpools", h.List)
+	r.Get("/vehicles/{vehicleId}/carpools/summary", h.Summary)
 	r.Post("/vehicles/{vehicleId}/carpools", h.Create)
 	r.Post("/vehicles/{vehicleId}/carpools/recalculate", h.Recalculate)
 	r.Get("/vehicles/{vehicleId}/carpools/estimate", h.Estimate)
@@ -140,8 +141,11 @@ func TestCarpoolLifecycle(t *testing.T) {
 	}
 
 	list := a.as(a.viewerID, http.StatusOK, "GET", "/carpools", "")
-	if len(list["trips"].([]any)) != 2 || list["summary"] == nil {
+	if len(list["trips"].([]any)) != 2 || list["total"].(float64) != 2 {
 		t.Fatalf("list: %v", list)
+	}
+	if sum := a.as(a.viewerID, http.StatusOK, "GET", "/carpools/summary", ""); sum["total_trips"].(float64) != 2 {
+		t.Fatalf("summary: %v", sum)
 	}
 	got := a.as(a.viewerID, http.StatusOK, "GET", "/carpools/"+id, "")
 	if got["title"] != "Weekend" {
@@ -171,6 +175,7 @@ func TestCarpoolAccessControl(t *testing.T) {
 
 	stranger := newCarpoolAPI(t, "stranger")
 	a.as(stranger.userID, http.StatusNotFound, "GET", "/carpools", "")
+	a.as(stranger.userID, http.StatusNotFound, "GET", "/carpools/summary", "")
 	a.as(stranger.userID, http.StatusNotFound, "GET", "/carpools/estimate", "")
 }
 

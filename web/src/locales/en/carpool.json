@@ -1,6 +1,7 @@
 {
   "carpoolView": {
     "backToTheCarpool": "Back to the carpool",
+    "loadMore": "Show more carpools",
     "createMyFirstCarpool": "Create my first carpool",
     "selectTheLegsOfYour": "Select the legs of your trip and indicate where each passenger gets on and off: {APP_NAME} calculates everyone's actual share.",
     "noCarpooledTripYet": "No carpooled trip yet",

@@ -62,8 +62,8 @@ async function loadTripCarpools(tripId: string) {
   tripCarpools.value = []
   if (!props.vehicleId) return
   try {
-    const res = await api.getCarpools(props.vehicleId)
-    tripCarpools.value = (res.trips || []).filter((c: any) => c.trip_group_id === tripId)
+    const res = await api.getCarpools(props.vehicleId, { tripGroupId: tripId, limit: 100 })
+    tripCarpools.value = res.trips || []
   } catch {
     tripCarpools.value = []
   }

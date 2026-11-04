@@ -234,6 +234,13 @@ func allocate(t *models.CarpoolTripWithPassengers) {
 	t.DriverCostShare, t.PassengersCostShare = services.AllocateCarpoolCosts(t.Legs, t.Passengers)
 }
 
+const (
+	carpoolPageDefault = 30
+	carpoolPageMax     = 100
+)
+
+// List returns one page of the vehicle's carpools, the latest first. `page` and `limit` (30, at most 100) pick the page and
+// `trip_group_id` keeps the carpools of one journey. The totals come from Summary.
 func (h *CarpoolHandler) List(w http.ResponseWriter, r *http.Request) {
 	vehicleID := chi.URLParam(r, "vehicleId")
 
@@ -241,32 +248,61 @@ func (h *CarpoolHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	trips, err := h.repo.ListCarpoolTrips(r.Context(), vehicleID)
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	if page <= 0 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit <= 0 {
+		limit = carpoolPageDefault
+	}
+	limit = min(limit, carpoolPageMax)
+	filter := database.CarpoolFilter{TripGroupID: r.URL.Query().Get("trip_group_id")}
+
+	trips, total, err := h.repo.ListCarpoolTripsPage(r.Context(), vehicleID, filter, limit, (page-1)*limit)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to list carpool trips")
 		return
 	}
 
-	// Refreshed before the summary is read, which sums the stored amounts
+	// Only the trips of this page are brought up to date with their drives: the others follow when they are read
 	if err := h.carpoolService.RefreshLinkedCosts(r.Context(), vehicleID, trips); err != nil {
 		writeRepoError(w, r, err, "Failed to refresh the carpool costs")
 		return
 	}
+	for i := range trips {
+		allocate(&trips[i])
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"trips": trips,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	})
+}
+
+// Summary returns the totals over all the vehicle's carpools, as they are stored.
+func (h *CarpoolHandler) Summary(w http.ResponseWriter, r *http.Request) {
+	vehicleID := chi.URLParam(r, "vehicleId")
+
+	if v := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleViewer); v == nil {
+		return
+	}
+
 	summary, err := h.repo.GetCarpoolSummary(r.Context(), vehicleID)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to summarize carpool trips")
 		return
 	}
-	for i := range trips {
-		allocate(&trips[i])
-		summary.TotalDriverShare += trips[i].DriverCostShare
-		summary.TotalPassengersShare += trips[i].PassengersCostShare
+	inputs, err := h.repo.CarpoolShareInputs(r.Context(), vehicleID)
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to summarize carpool trips")
+		return
 	}
+	summary.TotalDriverShare, summary.TotalPassengersShare = services.CarpoolShareTotals(inputs)
 
-	writeJSON(w, http.StatusOK, map[string]any{
-		"trips":   trips,
-		"summary": summary,
-	})
+	writeJSON(w, http.StatusOK, summary)
 }
 
 func (h *CarpoolHandler) Get(w http.ResponseWriter, r *http.Request) {

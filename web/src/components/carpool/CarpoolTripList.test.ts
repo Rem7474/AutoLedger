@@ -20,14 +20,19 @@ vi.mock('@/components/BulkSelectionBar.vue', async () => {
 })
 
 const trip = { id: 't1', title: 'Lyon to Nice', date: '2026-10-10T08:00:00Z', distance_km: 470, legs: [{}, {}], passengers: [{}], total_cost: 100, total_revenue: 60, net_cost: 40, notes: '' }
-const render = (trips: any[] = [trip], selectedTripIds: string[] = []) =>
-  renderToString(createSSRApp({ render: () => h(CarpoolTripList as any, { trips, selectedTripIds, recalculating: false }) }).use(i18n))
+const render = (trips: any[] = [trip], selectedTripIds: string[] = [], total?: number) =>
+  renderToString(createSSRApp({ render: () => h(CarpoolTripList as any, { trips, selectedTripIds, recalculating: false, total }) }).use(i18n))
 
 afterEach(() => {
   vehicleStore.canEdit = true
 })
 
 describe('CarpoolTripList', () => {
+  it('counts the carpools of the vehicle, not only the pages loaded', async () => {
+    expect(await render([trip])).toContain('1 covoiturage(s) au total')
+    expect(await render([trip], [], 500)).toContain('500 covoiturage(s) au total')
+  })
+
   it('opens a carpool from the whole row, with the other actions in a menu and no icon row', async () => {
     const html = await render()
     expect(html).toContain('inset-0')
