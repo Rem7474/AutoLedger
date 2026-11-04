@@ -125,8 +125,10 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		ha:              handlers.NewHomeAssistantHandler(repo, tariffService),
 		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco).WithEnergy(svc.energyStats).WithFleet(services.NewFleetService(repo, svc.tco)).WithResidual(services.NewResidualService(repo, svc.energyStats)).WithTires(svc.tireWear).WithComparison(svc.comparison).WithCarpool(svc.carpool).WithMileage(mileageService, cfg.ReportingTimezone).WithTariffs(tariffService),
 	}
-	if cfg.MCPEnabled {
+	if cfg.OAuthServed() {
 		h.oauth = handlers.NewOAuthHandler(repo, cfg.AppBaseURL)
+	}
+	if cfg.MCPEnabled {
 		h.mcp = handlers.NewMCPHandler(h.integrationRead, repo, cfg.AppBaseURL, AppVersion)
 	}
 	h.ha.SetTimezone(cfg.ReportingTimezone)

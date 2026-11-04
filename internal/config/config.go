@@ -32,7 +32,8 @@ type Config struct {
 	CookieSecure               bool
 	DisableRegistration        bool
 	Demo                       bool   // Read-only public demo: every write is refused
-	MCPEnabled                 bool   // Serves the MCP endpoint and the OAuth authorization server its clients use to get a read-only token
+	MCPEnabled                 bool   // Serves the MCP endpoint, and with it the OAuth authorization server its clients use
+	OAuthEnabled               bool   // Serves the OAuth authorization server alone (Home Assistant connects through it), without the MCP endpoint
 	DemoEmail                  string // Optional demo account shown on the sign-in page
 	DemoPassword               string
 	InitialAdminEmail          string
@@ -201,6 +202,7 @@ func Load() *Config {
 		ReportingTimezone:          reportingTimezone,
 		StorageDir:                 storageDir,
 		MCPEnabled:                 getEnvBool("AUTOLEDGER_MCP_ENABLED", false),
+		OAuthEnabled:               getEnvBool("AUTOLEDGER_OAUTH_ENABLED", false),
 		GeocodingEnabled:           getEnvBool("GEOCODING_ENABLED", false),
 		GeocodingURL:               strings.TrimSpace(getEnv("GEOCODING_URL", "")),
 		GeocodingUserAgent:         strings.TrimSpace(getEnv("GEOCODING_USER_AGENT", "")),
@@ -409,3 +411,7 @@ func readSecretFile(path string) string {
 	}
 	return strings.TrimSpace(string(raw))
 }
+
+// OAuthServed reports whether the instance serves the OAuth authorization server: when OAuth is enabled on its own,
+// or because the MCP endpoint, whose clients use it, is.
+func (c *Config) OAuthServed() bool { return c.OAuthEnabled || c.MCPEnabled }

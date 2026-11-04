@@ -118,3 +118,18 @@ func TestNewUUID(t *testing.T) {
 		t.Fatalf("UUID collision detected: %s == %s", u1, u2)
 	}
 }
+
+func TestTokenScopes(t *testing.T) {
+	for scope, want := range map[string]struct{ read, creatable bool }{
+		ScopeIngest:        {false, true},
+		ScopeRead:          {true, true},
+		ScopeHomeAssistant: {true, true},
+		ScopeWrite:         {true, false}, // only an assistant's grant
+		"admin":            {false, false},
+		"":                 {false, false},
+	} {
+		if CanRead(scope) != want.read || ValidScope(scope) != want.creatable {
+			t.Errorf("scope %q: CanRead %v ValidScope %v, want %v", scope, CanRead(scope), ValidScope(scope), want)
+		}
+	}
+}

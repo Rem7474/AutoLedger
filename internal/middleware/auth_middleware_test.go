@@ -122,7 +122,8 @@ func TestRequireTokenScope(t *testing.T) {
 	secret := "test-secret"
 	ingest := auth.TokenPrefix + "ingest-token-0123456789abcdef0123456789abcdef"
 	read := auth.TokenPrefix + "read-token-0123456789abcdef0123456789abcdef0123"
-	validator := scopedTokenValidator{auth.HashAPIToken(ingest): auth.ScopeIngest, auth.HashAPIToken(read): auth.ScopeRead}
+	homeAssistant := auth.TokenPrefix + "ha-token-0123456789abcdef0123456789abcdef0123456"
+	validator := scopedTokenValidator{auth.HashAPIToken(ingest): auth.ScopeIngest, auth.HashAPIToken(read): auth.ScopeRead, auth.HashAPIToken(homeAssistant): auth.ScopeHomeAssistant}
 	session, err := auth.GenerateAccessToken("user-2", "user2@example.com", secret, 15)
 	if err != nil {
 		t.Fatal(err)
@@ -151,6 +152,8 @@ func TestRequireTokenScope(t *testing.T) {
 		{"an ingest token reads what it always read", []string{auth.ScopeIngest, auth.ScopeRead}, ingest, http.StatusOK},
 		{"an ingest token cannot reach a read-only route", []string{auth.ScopeRead}, ingest, http.StatusForbidden},
 		{"a session is not scoped", []string{auth.ScopeIngest}, session, http.StatusOK},
+		{"a homeassistant token pushes when the route lists it", []string{auth.ScopeIngest, auth.ScopeHomeAssistant}, homeAssistant, http.StatusOK},
+		{"a homeassistant token is refused where it is not listed", []string{auth.ScopeIngest}, homeAssistant, http.StatusForbidden},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

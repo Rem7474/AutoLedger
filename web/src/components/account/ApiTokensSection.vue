@@ -253,7 +253,11 @@ onMounted(() => {
               <input v-model="tokenScope" type="radio" name="token-scope" value="read" class="mt-1" />
               <span>{{ t('account.tokens.scopeRead') }}</span>
             </label>
-            <p class="mt-1 text-xs text-slate-400">{{ tokenScope === 'read' ? t('account.tokens.scopeReadHelp') : t('account.tokens.scopeIngestHelp') }}</p>
+            <label class="flex items-start gap-2 text-sm text-slate-200 py-1">
+              <input v-model="tokenScope" type="radio" name="token-scope" value="homeassistant" class="mt-1" />
+              <span>{{ t('account.tokens.scopeHomeAssistant') }}</span>
+            </label>
+            <p class="mt-1 text-xs text-slate-400">{{ t(`account.tokens.scopeHelp.${tokenScope}`) }}</p>
           </fieldset>
 
           <div>

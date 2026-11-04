@@ -91,12 +91,12 @@
     "scopeLabel": "Accès",
     "scopeIngest": "Envoyer et lire (Home Assistant, scripts)",
     "scopeRead": "Lecture seule",
-    "scopeIngestHelp": "Peut envoyer des sessions de charge et lire les véhicules et leurs indicateurs.",
-    "scopeReadHelp": "Peut seulement lire. Il ne peut pas envoyer d'événements. L'accès ne se modifie pas ensuite : générez un autre jeton pour en changer.",
+    "scopeHomeAssistant": "Home Assistant (envoyer et tout lire)",
     "scopeBadge": {
       "ingest": "Envoi et lecture",
       "read": "Lecture seule",
-      "write": "Lecture, saisie et modification de covoiturages"
+      "write": "Lecture, saisie et modification de covoiturages",
+      "homeassistant": "Home Assistant"
     },
     "oauthBadge": "Application connectée",
     "oauthHelp": "Connectée par OAuth. L'accès se renouvelle tant que l'application est utilisée ; voici quand il expire sinon.",
@@ -107,7 +107,12 @@
     "activityHelp": "Les 50 derniers appels faits avec cet accès : quel outil, quand, et si cela a fonctionné. Ce qui a été demandé et répondu n'est pas conservé.",
     "activityEmpty": "Aucun appel pour l'instant.",
     "activityOk": "Servi",
-    "activityError": "Refusé ou échoué"
+    "activityError": "Refusé ou échoué",
+    "scopeHelp": {
+      "ingest": "Peut envoyer des sessions de charge et lire les véhicules et leurs indicateurs.",
+      "read": "Peut seulement lire. Il ne peut pas envoyer d'événements. L'accès ne se modifie pas ensuite : générez un autre jeton pour en changer.",
+      "homeassistant": "Prévu pour l'intégration Home Assistant : il peut envoyer des sessions de charge, des relevés de compteur et des trajets, et lire les chiffres des véhicules (coûts, rappels, énergie). L'accès ne se modifie pas ensuite : générez un autre jeton pour en changer."
+    }
   },
   "sso": {
     "link": "Lier {provider}",

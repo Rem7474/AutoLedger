@@ -130,3 +130,60 @@ func TestHomeAssistantChargingSessions(t *testing.T) {
 		t.Errorf("pending charges: %+v, want one without location", pending)
 	}
 }
+
+// A grant limited to some vehicles must not route a session without a vehicle to one outside it, nor answer that a
+// session is a duplicate of a charge recorded on one outside it.
+func TestHomeAssistantChargingSessionStaysWithinTheVehiclesOfALimitedGrant(t *testing.T) {
+	repo := authTestRepo(t)
+	ctx := context.Background()
+	owner, err := repo.CreateUser(ctx, "ha-limited@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	newEV := func(name string) *models.Vehicle {
+		v := &models.Vehicle{Currency: "EUR", UserID: owner.ID, Name: name, Powertrain: models.PowertrainEV, TeslaMateAuthType: models.AuthModeNone}
+		if err := repo.CreateVehicle(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+		return v
+	}
+	granted, other := newEV("Granted"), newEV("Not granted")
+	h := NewHomeAssistantHandler(repo, services.NewTariffService())
+	post := func(vehicles []string, body string) (int, map[string]any) {
+		req := httptest.NewRequest(http.MethodPost, "/api/integrations/homeassistant/event", bytes.NewBufferString(body))
+		reqCtx := context.WithValue(req.Context(), middleware.UserIDKey, owner.ID)
+		reqCtx = middleware.WithVehicleScope(reqCtx, vehicles)
+		rec := httptest.NewRecorder()
+		h.HandleEvent(rec, req.WithContext(reqCtx))
+		var out map[string]any
+		_ = json.Unmarshal(rec.Body.Bytes(), &out)
+		return rec.Code, out
+	}
+	session := `{"event_id":"wallbox:limited","event_type":"charging_session_end","data":{"start_time":"2026-10-01T01:00:00Z","end_time":"2026-10-01T04:00:00Z","energy_added_kwh":21.5}}`
+
+	// Two electric vehicles and no vehicle named: the account alone cannot tell, so the session waits; a grant limited
+	// to one of them can, and records it there
+	if status, resp := post(nil, session); status != http.StatusCreated || resp["pending_id"] == nil {
+		t.Fatalf("unlimited, two electric vehicles: %d %v, want the session pending", status, resp)
+	}
+	pending, err := repo.ListPendingCharges(ctx, owner.ID)
+	if err != nil || len(pending) != 1 {
+		t.Fatalf("pending charges: %v %v", pending, err)
+	}
+	if err := repo.DeletePendingCharge(ctx, pending[0].ID, owner.ID); err != nil {
+		t.Fatal(err)
+	}
+	status, resp := post([]string{granted.ID}, session)
+	if status != http.StatusCreated || resp["vehicle_id"] != granted.ID {
+		t.Fatalf("limited to one vehicle: %d %v, want it recorded on %s", status, resp, granted.ID)
+	}
+
+	// The same session sent by a grant that only sees the other vehicle is not reported as a duplicate of a charge it
+	// cannot see
+	if status, resp := post([]string{other.ID}, session); status != http.StatusCreated || resp["vehicle_id"] != other.ID {
+		t.Fatalf("limited to the other vehicle: %d %v, want a new charge on %s", status, resp, other.ID)
+	}
+	if status, _ := post([]string{other.ID}, `{"vehicle_id":"`+granted.ID+`","event_id":"x","event_type":"charging_session_end","data":{"start_time":"2026-10-02T01:00:00Z","end_time":"2026-10-02T04:00:00Z","energy_added_kwh":10}}`); status != http.StatusNotFound {
+		t.Errorf("naming a vehicle outside the grant: %d, want 404", status)
+	}
+}

@@ -55,7 +55,7 @@ func newRouter(cfg *config.Config, trustedProxies []netip.Prefix) *chi.Mux {
 	if cfg.Demo {
 		r.Use(appMiddleware.DemoReadOnly)
 	}
-	if cfg.MCPEnabled {
+	if cfg.OAuthServed() {
 		r.Use(appMiddleware.OpenEndpoints(appMiddleware.OpenEndpointPaths()...))
 	}
 	r.Use(appMiddleware.OriginCheck(append([]string{cfg.AppBaseURL}, cfg.AllowedOrigins...)))

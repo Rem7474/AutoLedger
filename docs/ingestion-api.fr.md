@@ -18,6 +18,7 @@ Un jeton a un accès, choisi à sa création et jamais modifié ensuite (génér
 |---|---|
 | Envoi et lecture (`ingest`) | Envoyer des événements (`POST /api/integrations/homeassistant/event`) et lire les véhicules et leurs indicateurs. C'est ce dont Home Assistant a besoin. L'API de lecture est refusée. |
 | Lecture seule (`read`) | Lire les véhicules et leurs indicateurs, et l'[API de lecture](#api-de-lecture). Un envoi est refusé avec `403`. |
+| Home Assistant (`homeassistant`) | Les deux à la fois : envoyer des événements et lire les véhicules, leurs indicateurs et l'API de lecture. Un seul jeton sert alors les deux sens de l'intégration Home Assistant. C'est aussi l'accès d'une [connexion OAuth](oauth.fr.md) de Home Assistant. |
 
 Utilisez un jeton en lecture seule pour tout ce qui ne fait que consulter les chiffres (un tableau de bord, un script, un assistant) : un jeton perdu ou détourné ne peut rien écrire dans le compte.
 
@@ -91,7 +92,7 @@ Utilisez un `event_id` stable (identifiant de session, clé construite sur l'hor
 
 ## API de lecture
 
-Un jeton en lecture seule (`read`) ouvre aussi une API de lecture restreinte sous `/api/integrations/v1`, pensée pour les assistants et les rapports. Un jeton `ingest` y est refusé : un jeton qui peut envoyer des événements ne peut pas aussi lire les coûts.
+Un jeton en lecture seule (`read`) ou Home Assistant (`homeassistant`) ouvre aussi une API de lecture restreinte sous `/api/integrations/v1`, pensée pour les assistants et les rapports. Un jeton `ingest` y est refusé : un jeton qui peut envoyer des événements ne peut pas aussi lire les coûts.
 
 | Route | Renvoie |
 |---|---|

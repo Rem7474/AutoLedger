@@ -568,8 +568,8 @@ export const api = {
     request<APITokenCreatedResponse>('/auth/tokens', { method: 'POST', body: JSON.stringify(data) }),
   previewOAuthAuthorization: (params: OAuthAuthorizeParams) =>
     request<OAuthAuthorizePreview>(`/oauth/authorize?${new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => typeof e[1] === 'string'))}`),
-  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny', vehicleIds: string[] | null = null, allowWrite = false) =>
-    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision, vehicle_ids: vehicleIds, allow_write: allowWrite }) }),
+  decideOAuthAuthorization: (params: OAuthAuthorizeParams, decision: 'approve' | 'deny', vehicleIds: string[] | null = null, allowWrite = false, allowRecord = false) =>
+    request<{ redirect_url: string }>('/oauth/authorize', { method: 'POST', body: JSON.stringify({ ...params, decision, vehicle_ids: vehicleIds, allow_write: allowWrite, allow_record: allowRecord }) }),
   revokeAPIToken: (tokenId: string) =>
     request<{ success: boolean }>(`/auth/tokens/${tokenId}`, { method: 'DELETE' }),
 
@@ -658,8 +658,8 @@ export interface VehicleWebhook {
 }
 
 // API Tokens
-/** What a token may do: push events and read the Home Assistant views, or only read. */
-export type APITokenScope = 'ingest' | 'read'
+/** What a token may do: push events and read the Home Assistant views, only read, or both ways for Home Assistant (push, and read the figures). */
+export type APITokenScope = 'ingest' | 'read' | 'homeassistant'
 
 /** What an assistant sends the user to the consent page with (RFC 6749 §4.1.1 and PKCE). */
 export interface OAuthAuthorizeParams {
@@ -686,7 +686,7 @@ export interface APITokenInfo {
   id: string
   name: string
   token_prefix: string
-  /** An assistant's grant can also be 'write'; a token created from the account page is 'ingest' or 'read'. */
+  /** An assistant's grant can also be 'write'; a token created from the account page is 'ingest', 'read' or 'homeassistant'. */
   scope: APITokenScope | 'write'
   /** True for a grant an assistant obtained by OAuth; expires_at is then when it lapses unless renewed. */
   oauth: boolean

@@ -189,6 +189,9 @@ type authorizeRequest struct {
 	// AllowWrite grants the write scope when the application asked for it (POST only); left out, an application that
 	// asked to write gets a read-only grant.
 	AllowWrite bool `json:"allow_write"`
+	// AllowRecord does the same for the homeassistant scope: ticked, the application may also push charging events,
+	// odometer readings and trips; left out, it gets a read-only grant.
+	AllowRecord bool `json:"allow_record"`
 }
 
 func authorizeRequestFromQuery(q url.Values) authorizeRequest {
@@ -315,7 +318,7 @@ func (h *OAuthHandler) DecideAuthorization(w http.ResponseWriter, r *http.Reques
 			writeAPIError(w, http.StatusBadRequest, apiErr)
 			return
 		}
-		if !p.AllowWrite {
+		if scope == auth.ScopeWrite && !p.AllowWrite || scope == auth.ScopeHomeAssistant && !p.AllowRecord {
 			scope = auth.ScopeRead
 		}
 		stored := models.OAuthCode{ClientID: client.ID, UserID: middleware.GetUserID(r.Context()), RedirectURI: p.RedirectURI, CodeChallenge: p.CodeChallenge, Scope: scope, VehicleIDs: vehicleIDs}

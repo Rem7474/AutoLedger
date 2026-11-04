@@ -104,8 +104,9 @@ func (h *MCPHandler) verifyToken(ctx context.Context, token string, _ *http.Requ
 	if err != nil {
 		return nil, auth.ErrInvalidToken
 	}
-	if !appAuth.CanRead(grant.Scope) {
-		// A token that can push events must not read, and the challenge no longer names a required scope
+	if !appAuth.CanRead(grant.Scope) || grant.Scope == appAuth.ScopeHomeAssistant {
+		// A token that can push events must not read, and the challenge no longer names a required scope. A Home
+		// Assistant grant was approved for that integration, not for an assistant.
 		return nil, auth.ErrInvalidToken
 	}
 	info := &auth.TokenInfo{UserID: grant.UserID, Scopes: []string{grant.Scope}, Extra: map[string]any{mcpTokenIDExtra: grant.TokenID}}

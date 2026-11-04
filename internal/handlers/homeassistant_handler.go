@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -173,6 +174,8 @@ func (h *HomeAssistantHandler) recordChargingSession(w http.ResponseWriter, r *h
 		writeRepoError(w, r, err, "Failed to inspect user vehicles")
 		return
 	}
+	// A grant limited to some vehicles neither routes a session to the others nor learns that one of them has it
+	vehicles = slices.DeleteFunc(vehicles, func(v models.Vehicle) bool { return !middleware.VehicleAllowed(r.Context(), v.ID) })
 	var target *models.Vehicle
 	if requested := optionalText(req.VehicleID); requested != nil {
 		if target = requireVehicleAccess(w, r, h.repo, *requested, models.RoleEditor); target == nil {

@@ -410,7 +410,7 @@ func TestOAuthMetadataAdvertisesOnlyWhatIsSupported(t *testing.T) {
 			t.Errorf("%s = %v, want only %q", key, got[key], want)
 		}
 	}
-	if scopes, _ := got["scopes_supported"].([]any); len(scopes) != 2 || scopes[0] != "read" || scopes[1] != "write" {
+	if scopes, _ := got["scopes_supported"].([]any); len(scopes) != 3 || scopes[0] != "read" || scopes[1] != "write" || scopes[2] != "homeassistant" {
 		t.Errorf("scopes_supported = %v", got["scopes_supported"])
 	}
 	if h.Resource() != "https://ledger.example/mcp" {
@@ -457,6 +457,60 @@ func TestOAuthWriteScopeIsGrantedOnlyWhenTheUserAllowsIt(t *testing.T) {
 		"&response_type=code&code_challenge="+pkceChallenge+"&code_challenge_method=S256&scope=read+write", "", "")
 	if got := decode[map[string]any](t, preview); got["scope"] != "write" {
 		t.Errorf("the consent page learns that writing is asked: %v", got)
+	}
+}
+
+// The homeassistant scope works like write: it can push events, so approving alone gives read, and the box of the
+// consent page widens the grant to what the application asked.
+func TestOAuthHomeAssistantScopeIsGrantedOnlyWhenTheUserAllowsRecording(t *testing.T) {
+	f := newOAuthFixture(t)
+	clientID := f.register("Home Assistant", callbackURI)
+	grant := func(asked string, allowRecord, allowWrite bool) string {
+		t.Helper()
+		body := map[string]any{
+			"client_id": clientID, "redirect_uri": callbackURI, "response_type": "code", "code_challenge": pkceChallenge,
+			"code_challenge_method": "S256", "decision": "approve", "scope": asked, "allow_record": allowRecord, "allow_write": allowWrite,
+		}
+		raw, _ := json.Marshal(body)
+		rec := f.do(http.MethodPost, "/api/oauth/authorize", "application/json", string(raw))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("approve: %d %s", rec.Code, rec.Body.String())
+		}
+		target, _ := url.Parse(decode[struct {
+			RedirectURL string `json:"redirect_url"`
+		}](t, rec).RedirectURL)
+		tok := decode[tokens](t, f.exchange(clientID, target.Query().Get("code"), pkceVerifier))
+		scope, err := f.validate(tok.AccessToken)
+		if err != nil || scope != tok.Scope {
+			t.Fatalf("the token response and the stored grant agree: %q %q %v", scope, tok.Scope, err)
+		}
+		return scope
+	}
+	if got := grant("homeassistant", false, false); got != auth.ScopeRead {
+		t.Errorf("homeassistant asked, recording not allowed: %q", got)
+	}
+	if got := grant("homeassistant", true, false); got != auth.ScopeHomeAssistant {
+		t.Errorf("homeassistant asked and allowed: %q", got)
+	}
+	if got := grant("homeassistant", false, true); got != auth.ScopeRead {
+		t.Errorf("the write box does not open the recording of Home Assistant: %q", got)
+	}
+	if got := grant("read", true, true); got != auth.ScopeRead {
+		t.Errorf("allowing cannot widen what the application asked: %q", got)
+	}
+	if got := grant("read write", true, false); got != auth.ScopeRead {
+		t.Errorf("the recording box does not open the writing of carpools: %q", got)
+	}
+
+	preview := f.do(http.MethodGet, "/api/oauth/authorize?client_id="+clientID+"&redirect_uri="+url.QueryEscape(callbackURI)+
+		"&response_type=code&code_challenge="+pkceChallenge+"&code_challenge_method=S256&scope=homeassistant", "", "")
+	if got := decode[map[string]any](t, preview); got["scope"] != "homeassistant" {
+		t.Errorf("the consent page learns that Home Assistant is asked: %v", got)
+	}
+	both := f.do(http.MethodGet, "/api/oauth/authorize?client_id="+clientID+"&redirect_uri="+url.QueryEscape(callbackURI)+
+		"&response_type=code&code_challenge="+pkceChallenge+"&code_challenge_method=S256&scope=write+homeassistant", "", "")
+	if both.Code != http.StatusBadRequest {
+		t.Errorf("an application cannot ask for both: %d", both.Code)
 	}
 }
 

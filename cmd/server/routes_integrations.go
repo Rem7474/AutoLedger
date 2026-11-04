@@ -8,18 +8,19 @@ import (
 )
 
 // registerIntegrationRoutes registers the only routes an API token opens (Home Assistant, scripts, assistants). A
-// token has a scope: pushing an event needs "ingest", the Home Assistant views are open to both scopes, and the
-// read API under /api/integrations/v1 is for "read" tokens only, so a token that can push cannot also read the costs.
+// token has a scope: pushing an event needs "ingest" (or "homeassistant", which also reads), the Home Assistant views
+// are open to every scope that reads or pushes, and the read API under /api/integrations/v1 is for the scopes that
+// read ("read", "homeassistant", an assistant's "write"), so a token that can only push cannot read the costs.
 func (h *apiHandlers) registerIntegrationRoutes(r chi.Router) {
-	r.With(appMiddleware.RequireTokenScope(auth.ScopeIngest)).Post("/api/integrations/homeassistant/event", h.ha.HandleEvent)
+	r.With(appMiddleware.RequireTokenScope(auth.ScopeIngest, auth.ScopeHomeAssistant)).Post("/api/integrations/homeassistant/event", h.ha.HandleEvent)
 	r.Group(func(r chi.Router) {
-		r.Use(appMiddleware.RequireTokenScope(auth.ScopeIngest, auth.ScopeRead))
+		r.Use(appMiddleware.RequireTokenScope(auth.ScopeIngest, auth.ScopeRead, auth.ScopeHomeAssistant))
 		r.Get("/api/integrations/homeassistant/vehicles", h.ha.ListVehicles)
 		r.Get("/api/integrations/homeassistant/vehicles/{vehicleId}", h.ha.GetVehicle)
 		r.Get("/api/integrations/homeassistant/vehicles/{vehicleId}/metrics", h.ha.GetVehicleMetrics)
 	})
 	r.Group(func(r chi.Router) {
-		r.Use(appMiddleware.RequireTokenScope(auth.ScopeRead, auth.ScopeWrite))
+		r.Use(appMiddleware.RequireTokenScope(auth.ScopeRead, auth.ScopeWrite, auth.ScopeHomeAssistant))
 		r.Get("/api/integrations/v1/vehicles", h.integrationRead.ListVehicles)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}", h.integrationRead.GetVehicle)
 		r.Get("/api/integrations/v1/vehicles/{vehicleId}/costs", h.integrationRead.GetCosts)

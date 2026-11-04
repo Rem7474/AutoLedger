@@ -333,6 +333,7 @@ To restore the pre-upgrade state, stop the stack, empty the data volume, and ext
 | `AUTOLEDGER_DEMO` | - | Read-only public demo: every write except sign-in is refused, registration is closed | `false` |
 | `AUTOLEDGER_DEMO_EMAIL` / `AUTOLEDGER_DEMO_PASSWORD` | - | Demo account offered by the "Try the demo" button on the sign-in page (public by design) | - |
 | `AUTOLEDGER_MCP_ENABLED` | - | Lets an assistant ask for read-only access to the account through an authorization page ([OAuth](docs/oauth.md)) and serves the [MCP endpoint](docs/mcp.md) `/mcp`. Off by default | `false` |
+| `AUTOLEDGER_OAUTH_ENABLED` | - | Serves the [OAuth](docs/oauth.md) authorization pages alone, so Home Assistant can connect with a grant instead of a pasted token, without the MCP endpoint. Implied by `AUTOLEDGER_MCP_ENABLED`. Off by default | `false` |
 | `INITIAL_ADMIN_EMAIL` | - | Pre-configured admin user email | *Optional* |
 | `INITIAL_ADMIN_PASSWORD` | - | Pre-configured admin user password | *Optional* |
 | `CORS_ALLOWED_ORIGINS` | - | Comma-separated origins allowed to call the API from a browser, besides the public base URL | Derived from `AUTOLEDGER_BASE_URL` |
