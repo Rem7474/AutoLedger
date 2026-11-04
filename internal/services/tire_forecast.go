@@ -122,8 +122,9 @@ func averageMonthlyKm(anchors []OdometerAnchor, now time.Time) float64 {
 	if now.Sub(from) < tireForecastMinWindow {
 		return 0
 	}
-	end, _, okEnd := EstimateOdometerAt(anchors, now)
-	start, _, okStart := EstimateOdometerAt(anchors, from)
+	curve := NewOdometerCurve(anchors)
+	end, _, okEnd := curve.At(now)
+	start, _, okStart := curve.At(from)
 	if !okEnd || !okStart || end <= start {
 		return 0
 	}
@@ -140,6 +141,7 @@ func monthlyKmProfile(anchors []OdometerAnchor, now time.Time) (km [12]float64, 
 			first = a.Date
 		}
 	}
+	curve := NewOdometerCurve(anchors)
 	var sum [12]float64
 	var n [12]int
 	thisMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
@@ -148,8 +150,8 @@ func monthlyKmProfile(anchors []OdometerAnchor, now time.Time) (km [12]float64, 
 		if start.Before(first) {
 			break
 		}
-		a, _, okA := EstimateOdometerAt(anchors, start)
-		b, _, okB := EstimateOdometerAt(anchors, start.AddDate(0, 1, 0))
+		a, _, okA := curve.At(start)
+		b, _, okB := curve.At(start.AddDate(0, 1, 0))
 		if !okA || !okB || b < a {
 			continue
 		}

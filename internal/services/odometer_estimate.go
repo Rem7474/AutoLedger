@@ -21,12 +21,15 @@ const (
 	OdometerEstimateBounded      = "bounded"
 )
 
-// EstimateOdometerAt estimates the odometer at a date the way the monthly mileage smoothing spreads the
-// distance between two readings: linearly in time between the readings on either side. Before the first
-// reading it spreads from the origin of the vehicle when there is one, else keeps that reading; after the
-// last one it keeps that reading. A reading lower than an earlier one is ignored.
-// ok is false when there is no usable reading.
-func EstimateOdometerAt(anchors []OdometerAnchor, at time.Time) (km float64, source string, ok bool) {
+// OdometerCurve is the usable readings of a vehicle, cleaned and sorted once so that many dates can be estimated
+// without reading the history again: a reading lower than an earlier one is dropped, and so is an origin that shares
+// its date with a real reading (it would shadow it).
+type OdometerCurve struct {
+	pts []OdometerAnchor
+}
+
+// NewOdometerCurve cleans and sorts the readings. The slice it is given is left as it is.
+func NewOdometerCurve(anchors []OdometerAnchor) OdometerCurve {
 	pts := make([]OdometerAnchor, 0, len(anchors))
 	for _, a := range anchors {
 		if a.Km > 0 || a.Origin {
@@ -46,12 +49,27 @@ func EstimateOdometerAt(anchors []OdometerAnchor, at time.Time) (km float64, sou
 		}
 		clean = append(clean, p)
 	}
-	if len(clean) == 0 {
-		return 0, "", false
-	}
-	// An origin sharing its date with a real reading is redundant and would shadow it.
 	if len(clean) > 1 && clean[0].Origin && clean[0].Date.Equal(clean[1].Date) {
 		clean = clean[1:]
+	}
+	return OdometerCurve{pts: clean}
+}
+
+// Until is the curve of the readings dated at or before t: the readings of a past date, so that a reading entered
+// later does not move what was estimated then. It shares the readings of the curve it comes from.
+func (c OdometerCurve) Until(t time.Time) OdometerCurve {
+	n := sort.Search(len(c.pts), func(i int) bool { return c.pts[i].Date.After(t) })
+	return OdometerCurve{pts: c.pts[:n]}
+}
+
+// At estimates the odometer at a date the way the monthly mileage smoothing spreads the distance between two
+// readings: linearly in time between the readings on either side. Before the first reading it spreads from the
+// origin of the vehicle when there is one, else keeps that reading; after the last one it keeps that reading.
+// ok is false when there is no usable reading.
+func (c OdometerCurve) At(at time.Time) (km float64, source string, ok bool) {
+	clean := c.pts
+	if len(clean) == 0 {
+		return 0, "", false
 	}
 	if !at.After(clean[0].Date) {
 		return clean[0].Km, boundedOrExact(clean[0].Date, at), true
@@ -67,6 +85,12 @@ func EstimateOdometerAt(anchors []OdometerAnchor, at time.Time) (km float64, sou
 	}
 	ratio := at.Sub(prev.Date).Seconds() / next.Date.Sub(prev.Date).Seconds()
 	return prev.Km + ratio*(next.Km-prev.Km), OdometerEstimateInterpolated, true
+}
+
+// EstimateOdometerAt estimates the odometer at one date from the readings. To estimate several dates, build the
+// curve once with NewOdometerCurve.
+func EstimateOdometerAt(anchors []OdometerAnchor, at time.Time) (km float64, source string, ok bool) {
+	return NewOdometerCurve(anchors).At(at)
 }
 
 func boundedOrExact(anchor, at time.Time) string {
