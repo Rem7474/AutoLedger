@@ -210,6 +210,25 @@ describe('buildMonthBreakdown', () => {
     expect(eco.items.reduce((s, i) => s + i.sharePct, 0)).toBeCloseTo(100)
   })
 
+  it('subtracts what the passengers paid in the net figures and leaves the costs gross', () => {
+    const eco = buildMonthBreakdown({ ...month, carpool_revenue: 100 }, 'economic')
+    expect(eco.carpoolRevenue).toBe(100)
+    expect(eco.netTotal).toBe(eco.economicTotal - 100)
+    expect(eco.netCostPerKm).toBeCloseTo((eco.economicTotal - 100) / 1000, 6)
+    // The donut and the shares are of what was spent: the credit is not an item
+    expect(eco.items.some((i) => i.displayAmount < 0)).toBe(false)
+    expect(eco.items.reduce((s, i) => s + i.sharePct, 0)).toBeCloseTo(100)
+    expect(buildMonthBreakdown({ ...month, carpool_revenue: 100 }, 'cash').netTotal).toBe(725)
+  })
+
+  it('has no net cost per km without carpool revenue or without distance', () => {
+    const none = buildMonthBreakdown(month, 'economic')
+    expect(none.carpoolRevenue).toBe(0)
+    expect(none.netTotal).toBe(none.activeTotal)
+    expect(none.netCostPerKm).toBeNull()
+    expect(buildMonthBreakdown({ ...month, distance_km: 0, carpool_revenue: 10 }, 'economic').netCostPerKm).toBeNull()
+  })
+
   it('explains estimates, cash outlays and smoothing in the item notes', () => {
     const eco = buildMonthBreakdown(month, 'economic', 'EUR')
     expect(eco.items.find((i) => i.key === 'energy')!.note).toContain(`${formatAmount(5, 'EUR')} estimés`)

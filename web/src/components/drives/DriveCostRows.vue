@@ -17,6 +17,7 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
     :amount="drive.costs?.electricity_cost || 0"
     :share-pct="breakdown.byKey.energy.sharePct"
     :cost-per-km="breakdown.byKey.energy.costPerKm"
+    :color="breakdown.byKey.energy.color"
     :currency="currency"
   >
     <template #badge>
@@ -33,6 +34,7 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
     :amount="drive.costs?.tires_cost || 0"
     :share-pct="breakdown.byKey.tires.sharePct"
     :cost-per-km="breakdown.byKey.tires.costPerKm"
+    :color="breakdown.byKey.tires.color"
     :currency="currency"
   >
     <template #badge>
@@ -49,6 +51,7 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
     :amount="drive.costs?.maintenance_cost || 0"
     :share-pct="breakdown.byKey.maintenance.sharePct"
     :cost-per-km="breakdown.byKey.maintenance.costPerKm"
+    :color="breakdown.byKey.maintenance.color"
     :currency="currency"
   >
     <template #badge>
@@ -65,6 +68,7 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
     :amount="drive.costs?.insurance_cost || 0"
     :share-pct="breakdown.byKey.insurance.sharePct"
     :cost-per-km="breakdown.byKey.insurance.costPerKm"
+    :color="breakdown.byKey.insurance.color"
     :currency="currency"
   >
     <template #badge>

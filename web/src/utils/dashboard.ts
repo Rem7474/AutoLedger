@@ -459,6 +459,11 @@ export function buildMonthBreakdown(m: any, mode: MonthDetailMode, currency = ''
   const cashTotal = typeof m.total === 'number' ? m.total : items.reduce((sum, it) => sum + it.cashAmount, 0)
   const activeTotal = mode === 'economic' ? economicTotal : cashTotal
 
+  // What passengers paid for the carpools of the month: a credit, never a cost, so it stays out of the items (the
+  // donut and the shares are of what was spent) and only the net figures subtract it.
+  const carpoolRevenue = Number(m.carpool_revenue) || 0
+  const netTotal = activeTotal - carpoolRevenue
+
   const itemsWithStats = items.map((it) => {
     const displayAmount = mode === 'economic' ? it.amount : it.cashAmount
     const costPerKm = dist > 0 ? displayAmount / dist : 0
@@ -480,6 +485,9 @@ export function buildMonthBreakdown(m: any, mode: MonthDetailMode, currency = ''
     economicTotal,
     cashTotal,
     activeTotal,
+    carpoolRevenue,
+    netTotal,
+    netCostPerKm: carpoolRevenue > 0 && dist > 0 ? netTotal / dist : null,
     items: itemsWithStats,
     fixedVar: computeMonthFixedVariable(m, mode),
   }

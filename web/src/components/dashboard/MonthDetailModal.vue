@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import KpiCard from '@/components/KpiCard.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
-import { formatNumber, formatPercent } from '@/utils/numbers'
+import CostItemRow from '@/components/costs/CostItemRow.vue'
+import { formatPercent } from '@/utils/numbers'
 import { intlLocale, t } from '@/i18n'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { Coins, Zap, Receipt, Disc, Wrench, Briefcase, ArrowRight, Activity, Shield, ChevronLeft, ChevronRight, PieChart, Info, SlidersHorizontal } from 'lucide-vue-next'
+import { Coins, Zap, Receipt, Disc, Wrench, Briefcase, ArrowRight, Activity, Shield, Users, ChevronLeft, ChevronRight, PieChart, Info, SlidersHorizontal } from 'lucide-vue-next'
 import { buildMonthBreakdown, formatMonthName, type MonthDetailMode } from '@/utils/dashboard'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import { currencySymbol, formatAmount } from '@/currency'
@@ -269,63 +270,54 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             </span>
           </h4>
 
-          <div class="space-y-1.5 max-h-72 sm:max-h-80 overflow-y-auto pr-1">
+          <div class="space-y-1.5">
             <div v-for="item in selectedMonthBreakdown.items" :key="item.key">
-            <div
-              class="p-2.5 bg-slate-800/50 border border-slate-700/40 rounded-xl flex items-center justify-between gap-3 text-xs hover:border-slate-600 transition-colors"
-            >
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span
-                  class="w-2.5 h-2.5 rounded-full shrink-0"
-                  :style="{ backgroundColor: item.color }"
-                ></span>
-                <component :is="item.icon" class="w-4 h-4 shrink-0 text-slate-400" />
-                <div class="min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <span class="font-semibold text-white truncate">{{ item.label }}</span>
-                    <span v-if="item.subLabel" class="text-xs px-1.5 py-0.2 bg-slate-700 text-slate-300 rounded font-normal">
-                      {{ item.subLabel }}
-                    </span>
-                  </div>
-                  <p v-if="item.note" class="text-xs text-slate-400 truncate">
-                    {{ item.note }}
-                  </p>
-                </div>
-              </div>
-
-              <div class="text-right shrink-0">
-                <div class="flex items-baseline justify-end gap-2">
-                  <span class="font-bold text-white text-xs sm:text-sm">
-                    {{ formatAmount(item.displayAmount, currency) }}
-                  </span>
-                  <span class="text-xs text-slate-400 font-medium">
-                    ({{ formatPercent(item.sharePct) }})
-                  </span>
-                </div>
-                <div class="text-xs text-success-400 font-medium">
-                  {{ formatAmount(perDistance(item.costPerKm), currency, 3) }}/{{ distanceUnit() }}
-                </div>
-                <button
-                  v-if="contributionCategory(item.key) && item.displayAmount !== 0"
-                  type="button"
-                  class="text-xs text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline"
-                  :aria-expanded="expandedKey === item.key"
-                  :aria-controls="`month-contrib-${item.key}`"
-                  @click="toggleContributions(item.key)"
-                >
-                  {{ expandedKey === item.key ? $t('dashboard.monthDetailModal.contributions.hide') : $t('dashboard.monthDetailModal.contributions.show') }}
-                </button>
-              </div>
-            </div>
-            <div v-if="expandedKey === item.key && contributionCategory(item.key) && vehicleStore.activeVehicle" :id="`month-contrib-${item.key}`">
-              <MonthContributions
-                :vehicle-id="vehicleStore.activeVehicle.id"
-                :month="selectedMonthBreakdown.month"
-                :category="contributionCategory(item.key)!"
+              <CostItemRow
+                :icon="item.icon"
+                :label="item.label"
+                :sub="item.note || undefined"
+                :amount="item.displayAmount"
+                :share-pct="item.sharePct"
+                :cost-per-km="item.costPerKm"
+                :color="item.color"
                 :currency="currency"
-              />
+              >
+                <template v-if="item.subLabel" #badge>
+                  <span class="text-xs px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded font-normal">{{ item.subLabel }}</span>
+                </template>
+                <template v-if="contributionCategory(item.key) && item.displayAmount !== 0" #aside>
+                  <button
+                    type="button"
+                    class="text-xs text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline"
+                    :aria-expanded="expandedKey === item.key"
+                    :aria-controls="`month-contrib-${item.key}`"
+                    @click="toggleContributions(item.key)"
+                  >
+                    {{ expandedKey === item.key ? $t('dashboard.monthDetailModal.contributions.hide') : $t('dashboard.monthDetailModal.contributions.show') }}
+                  </button>
+                </template>
+              </CostItemRow>
+              <div v-if="expandedKey === item.key && contributionCategory(item.key) && vehicleStore.activeVehicle" :id="`month-contrib-${item.key}`">
+                <MonthContributions
+                  :vehicle-id="vehicleStore.activeVehicle.id"
+                  :month="selectedMonthBreakdown.month"
+                  :category="contributionCategory(item.key)!"
+                  :currency="currency"
+                />
+              </div>
             </div>
-            </div>
+            <!-- What the passengers paid: a credit against the month, listed apart from the costs it reduces -->
+            <CostItemRow
+              v-if="selectedMonthBreakdown.carpoolRevenue > 0"
+              :icon="Users"
+              :label="$t('dashboard.monthDetailModal.carpoolRevenue')"
+              :sub="$t('dashboard.monthDetailModal.carpoolRevenueSub')"
+              :amount="-selectedMonthBreakdown.carpoolRevenue"
+              :currency="currency"
+              color="#34d399"
+              credit
+              data-testid="month-carpool-credit"
+            />
           </div>
 
           <!-- Total Row -->
@@ -335,7 +327,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             :total="formatAmount(selectedMonthBreakdown.activeTotal, currency)"
             :per-distance-label="$t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() })"
             :per-distance="`${formatAmount(perDistance(selectedMonthBreakdown.distanceKm > 0 ? selectedMonthBreakdown.activeTotal / selectedMonthBreakdown.distanceKm : 0), currency, 3)}/${distanceUnit()}`"
-          />
+          >
+            <div v-if="selectedMonthBreakdown.carpoolRevenue > 0" class="flex items-center justify-between gap-3 pt-3 border-t border-slate-700 text-success-400" data-testid="month-net-total">
+              <div>
+                <span class="text-xs font-semibold">{{ $t('dashboard.monthDetailModal.netOfCarpooling') }}</span>
+                <div class="text-lg font-black tabular-nums">{{ formatAmount(selectedMonthBreakdown.netTotal, currency) }}</div>
+              </div>
+              <div v-if="selectedMonthBreakdown.netCostPerKm !== null" class="text-right">
+                <span class="text-xs font-semibold">{{ $t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() }) }}</span>
+                <div class="text-base font-extrabold tabular-nums">{{ formatAmount(perDistance(selectedMonthBreakdown.netCostPerKm), currency, 3) }}/{{ distanceUnit() }}</div>
+              </div>
+            </div>
+          </CostTotalBar>
         </div>
       </div>
 

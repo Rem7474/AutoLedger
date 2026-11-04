@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import NumberInput from '@/components/NumberInput.vue'
+import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { Receipt, Radar, Plus, Pencil, Trash2, Save, X, ChevronDown } from 'lucide-vue-next'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
@@ -9,9 +10,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { mergeExpensesByDrive, tollApplyStatusLabel } from '@/utils/drives'
 import { currencySymbol, formatAmount } from '@/currency'
-import { formatPercent } from '@/utils/numbers'
 import { sharedTollSegments } from '@/utils/tolls'
-import { distanceUnit, perDistance } from '@/units'
 
 // The tolls and road costs of a drive or of a trip: the expenses attached to it (edit, delete, add one), the GPS toll
 // detection and its estimate. It loads what it shows when it appears and again when another drive replaces the one
@@ -258,46 +257,39 @@ watch(
 </script>
 
 <template>
-  <div class="bg-slate-800/40 border border-slate-800 p-3 rounded-xl space-y-2">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-slate-800 text-slate-300 rounded-lg">
-          <Receipt class="w-4 h-4" />
-        </div>
-        <div>
-          <div class="text-xs font-semibold text-white">{{ $t('drives.driveCostModal.tollsAndRoadCosts') }}</div>
-          <div class="text-xs text-slate-400">
-            {{ $t('drives.driveCostModal.costSAssigned', { length: driveExpenses.length }) }}
-          </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="text-right">
-          <div class="text-sm font-bold tabular-nums text-white">{{ formatAmount(selectedCostDrive.costs?.tolls_cost || 0, vehicleCurrency) }}</div>
-          <div class="text-xs text-slate-400 font-normal font-sans">({{ formatPercent(breakdown.byKey.tolls.sharePct) }}) · <span>{{ formatAmount(perDistance(breakdown.byKey.tolls.costPerKm), vehicleCurrency, 3) }}/{{ distanceUnit() }}</span></div>
-        </div>
-        <button
-          v-if="canDetectTolls"
-          type="button"
-          @click="handleDetectTolls"
-          :disabled="tollDetectionLoading"
-          class="tap p-1 bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 rounded-lg text-xs disabled:opacity-50"
-          :title="tollDetectionLoading ? $t('drives.driveCostModal.detecting') : tollDetection ? $t('drives.driveCostModal.redetect') : $t('drives.driveCostModal.detectTolls')"
-          :aria-label="$t('drives.driveCostModal.detectTolls')"
-        >
-          <Radar class="w-3.5 h-3.5" :class="{ 'animate-pulse': tollDetectionLoading }" />
-        </button>
-        <button
-          v-if="!selectedCostDrive.is_suggestion"
-          @click="showAddTollInline = !showAddTollInline"
-          class="tap p-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs"
-          :title="$t('drives.driveCostModal.addATollOrParking')" :aria-label="$t('drives.driveCostModal.addATollOrParking')"
-        >
-          <Plus class="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
+  <CostItemRow
+    :icon="Receipt"
+    :label="$t('drives.driveCostModal.tollsAndRoadCosts')"
+    :sub="$t('drives.driveCostModal.costSAssigned', { length: driveExpenses.length })"
+    :amount="selectedCostDrive.costs?.tolls_cost || 0"
+    :share-pct="breakdown.byKey.tolls.sharePct"
+    :cost-per-km="breakdown.byKey.tolls.costPerKm"
+    :color="breakdown.byKey.tolls.color"
+    :currency="vehicleCurrency"
+  >
+    <template #actions>
+      <button
+        v-if="canDetectTolls"
+        type="button"
+        @click="handleDetectTolls"
+        :disabled="tollDetectionLoading"
+        class="tap p-1 bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 rounded-lg text-xs disabled:opacity-50"
+        :title="tollDetectionLoading ? $t('drives.driveCostModal.detecting') : tollDetection ? $t('drives.driveCostModal.redetect') : $t('drives.driveCostModal.detectTolls')"
+        :aria-label="$t('drives.driveCostModal.detectTolls')"
+      >
+        <Radar class="w-3.5 h-3.5" :class="{ 'animate-pulse': tollDetectionLoading }" />
+      </button>
+      <button
+        v-if="!selectedCostDrive.is_suggestion"
+        @click="showAddTollInline = !showAddTollInline"
+        class="tap p-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs"
+        :title="$t('drives.driveCostModal.addATollOrParking')" :aria-label="$t('drives.driveCostModal.addATollOrParking')"
+      >
+        <Plus class="w-3.5 h-3.5" />
+      </button>
+    </template>
 
+    <template #below>
     <!-- List of attached expenses -->
     <div v-if="driveExpenses.length" class="space-y-1 pt-1 border-t border-slate-700/50">
       <div v-for="exp in driveExpenses" :key="exp.id" class="text-xs text-slate-300 pl-9">
@@ -438,5 +430,6 @@ watch(
         </button>
       </div>
     </div>
-  </div>
+    </template>
+  </CostItemRow>
 </template>
