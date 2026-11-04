@@ -156,6 +156,7 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
                 :amount="item.amount"
                 :share-pct="item.sharePct"
                 :cost-per-km="item.costPerKm"
+                :color="item.color"
                 :currency="vehicleStore.currency"
               />
             </template>
