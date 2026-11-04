@@ -112,15 +112,16 @@ func (s *CarpoolService) GetVehicleUnitRatesAtMany(ctx context.Context, vehicleI
 	}
 	// The drives only count the trips the vehicle was fed, so a cost accumulated over the years is spread over the
 	// distance the odometer shows when that is larger.
-	anchors := s.odometerAnchors(ctx, vehicleID)
-	anchorsAt := func(i int) []OdometerAnchor {
+	curve := NewOdometerCurve(s.odometerAnchors(ctx, vehicleID))
+	// The rates of a past date are read with the readings of that date only, so a reading entered later does not move them
+	curveAt := func(i int) OdometerCurve {
 		if historical[i] {
-			return anchorsUpTo(anchors, refs[i])
+			return curve.Until(refs[i])
 		}
-		return anchors
+		return curve
 	}
 	for i, ref := range refs {
-		in[i].totalDistance = coveredDistanceKm(odometer.between(nil, ref), anchorsAt(i), time.Time{}, ref)
+		in[i].totalDistance = coveredDistanceKm(odometer.between(nil, ref), curveAt(i), time.Time{}, ref)
 	}
 
 	// 1. Electricity rate (vehicle currency/kWh): try the last 2 priced charges prior to or at ref. A confirmed free charge is a
@@ -241,7 +242,7 @@ func (s *CarpoolService) GetVehicleUnitRatesAtMany(ctx context.Context, vehicleI
 		}
 		in[idx-1].windowStart, in[idx-1].insuranceCost = start, cost
 		if start != nil {
-			in[idx-1].windowKm = coveredDistanceKm(odometer.between(start, refs[idx-1]), anchorsAt(int(idx-1)), *start, refs[idx-1])
+			in[idx-1].windowKm = coveredDistanceKm(odometer.between(start, refs[idx-1]), curveAt(int(idx-1)), *start, refs[idx-1])
 		}
 		return nil
 	}); err != nil {

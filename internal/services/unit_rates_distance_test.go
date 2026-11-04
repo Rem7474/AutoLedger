@@ -13,16 +13,16 @@ func TestOdometerDistanceKm(t *testing.T) {
 	day := func(d int) time.Time { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, d) }
 	anchors := []OdometerAnchor{{Date: day(0), Km: 1000}, {Date: day(100), Km: 11000}}
 
-	if got := odometerDistanceKm(anchors, day(50), day(100)); got != 5000 {
+	if got := odometerDistanceKm(NewOdometerCurve(anchors), day(50), day(100)); got != 5000 {
 		t.Fatalf("interpolated distance = %v, want 5000", got)
 	}
-	if got := odometerDistanceKm(anchors, time.Time{}, day(100)); got != 10000 {
+	if got := odometerDistanceKm(NewOdometerCurve(anchors), time.Time{}, day(100)); got != 10000 {
 		t.Fatalf("distance from the first reading = %v, want 10000", got)
 	}
-	if got := odometerDistanceKm(nil, day(0), day(10)); got != 0 {
+	if got := odometerDistanceKm(NewOdometerCurve(nil), day(0), day(10)); got != 0 {
 		t.Fatalf("no reading must give 0, got %v", got)
 	}
-	if got := odometerDistanceKm(anchors, day(100), day(100)); got != 0 {
+	if got := odometerDistanceKm(NewOdometerCurve(anchors), day(100), day(100)); got != 0 {
 		t.Fatalf("an empty period must give 0, got %v", got)
 	}
 }
@@ -31,13 +31,13 @@ func TestCoveredDistanceKm(t *testing.T) {
 	day := func(d int) time.Time { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, d) }
 	anchors := []OdometerAnchor{{Date: day(0), Km: 0, Origin: true}, {Date: day(100), Km: 10000}}
 
-	if got := coveredDistanceKm(900, anchors, day(0), day(100)); got != 10000 {
+	if got := coveredDistanceKm(900, NewOdometerCurve(anchors), day(0), day(100)); got != 10000 {
 		t.Fatalf("drives covering a fraction of the odometer must not be the denominator, got %v", got)
 	}
-	if got := coveredDistanceKm(12000, anchors, day(0), day(100)); got != 12000 {
+	if got := coveredDistanceKm(12000, NewOdometerCurve(anchors), day(0), day(100)); got != 12000 {
 		t.Fatalf("drives above the odometer estimate must be kept, got %v", got)
 	}
-	if got := coveredDistanceKm(900, nil, day(0), day(100)); got != 900 {
+	if got := coveredDistanceKm(900, NewOdometerCurve(nil), day(0), day(100)); got != 900 {
 		t.Fatalf("without readings the drives are the only distance, got %v", got)
 	}
 }
