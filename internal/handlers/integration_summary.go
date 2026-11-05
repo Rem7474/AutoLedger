@@ -34,6 +34,11 @@ type IntegrationSummaryVehicle struct {
 	// MonthCosts is the split of MonthCost: its seven categories add up to the same total.
 	MonthCosts IntegrationCostBreakdown `json:"month_costs" jsonschema:"the month in progress by category, cash spent plus the instalments that fall due later in it; the total is month_cost"`
 
+	MonthDistance       IntegrationDistance `json:"month_distance" jsonschema:"distance driven in the month in progress, tracked plus estimated for the untracked part; 0 before the first drive of the month"`
+	CarpoolRevenueMonth IntegrationAmount   `json:"carpool_revenue_month" jsonschema:"what the passengers paid for the carpools dated this month; 0 without any"`
+	MonthNet            IntegrationAmount   `json:"month_net" jsonschema:"month_cost minus carpool_revenue_month: what the month costs once the passengers have paid their share; equal to month_cost without carpooling"`
+	Last12MonthsCost    IntegrationAmount   `json:"last_12_months_cost" jsonschema:"cash total of the last twelve months, the figure behind cost_per_km; smaller than a year of cost while the history is shorter than twelve months"`
+
 	CompletenessPct *int `json:"completeness_pct" jsonschema:"0 to 100, how much of the figures rests on recorded data; null when no score is available"`
 	DataGaps        int  `json:"data_gaps" jsonschema:"number of things known to be missing from the records that make the figures less reliable; the data-gaps route lists them"`
 }
@@ -44,6 +49,7 @@ type IntegrationLastCharge struct {
 	Cost            *IntegrationAmount `json:"cost" jsonschema:"what the session cost; null while its cost is not recorded, never zero for an unknown cost"`
 	EnergyKwh       float64            `json:"energy_kwh" jsonschema:"energy added to the battery, in kWh"`
 	DurationMinutes *int               `json:"duration_minutes" jsonschema:"length of the session; null when its end is not recorded"`
+	PricePerKwh     *IntegrationAmount `json:"price_per_kwh" jsonschema:"what the session cost per kWh added; null when its cost or its energy is not recorded"`
 }
 
 // IntegrationSummary is the summary of every vehicle the token sees.
@@ -60,6 +66,10 @@ func summaryLastCharge(charge *models.ChargeLog, currency string) *IntegrationLa
 	if charge.Cost != nil {
 		cost := amountOf(*charge.Cost, currency)
 		out.Cost = &cost
+		if charge.KwhAdded > 0 {
+			price := charge.Cost.Float() / charge.KwhAdded
+			out.PricePerKwh = decimalAmount(&price, currency, 4)
+		}
 	}
 	if charge.EndDate != nil {
 		minutes := max(int(charge.EndDate.Sub(charge.Date).Minutes()), 0)
@@ -89,13 +99,18 @@ func buildIntegrationSummaryVehicle(vehicle *models.Vehicle, sum *services.TCOSu
 	out := IntegrationSummaryVehicle{
 		VehicleID: vehicle.ID, Name: vehicle.Name, Powertrain: vehicle.Powertrain, Currency: vehicle.Currency,
 		Month: sum.CurrentMonth, MonthCost: amountOf(0, vehicle.Currency), CostPerKm: costs.Last12Months.CostPerKm,
-		MonthCosts:      breakdown(vehicle.Currency, 0, 0, 0, 0, 0, 0, 0, 0),
-		LastCharge:      summaryLastCharge(lastCharge, vehicle.Currency),
-		CompletenessPct: costs.Completeness.ScorePct, DataGaps: len(costs.Completeness.WarningDetails),
+		MonthCosts:    breakdown(vehicle.Currency, 0, 0, 0, 0, 0, 0, 0, 0),
+		MonthDistance: kilometres(0), CarpoolRevenueMonth: amountOf(0, vehicle.Currency), MonthNet: amountOf(0, vehicle.Currency),
+		Last12MonthsCost: costs.Last12Months.Costs.Total,
+		LastCharge:       summaryLastCharge(lastCharge, vehicle.Currency),
+		CompletenessPct:  costs.Completeness.ScorePct, DataGaps: len(costs.Completeness.WarningDetails),
 	}
 	for _, m := range sum.MonthlyCosts {
 		if m.Month == sum.CurrentMonth {
 			out.MonthCost = amountOf(m.Total, vehicle.Currency)
+			out.MonthDistance = kilometres(m.DistanceKm)
+			out.CarpoolRevenueMonth = amountOf(m.CarpoolRevenue, vehicle.Currency)
+			out.MonthNet = amountOf(m.NetTotal, vehicle.Currency)
 			out.MonthCosts = breakdown(vehicle.Currency, m.Energy, m.Tolls, m.Maintenance, m.Insurance, m.Financing, m.Tires, m.Other, m.Total)
 		}
 	}
