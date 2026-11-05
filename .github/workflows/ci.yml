@@ -254,17 +254,6 @@ jobs:
       push: false
       platforms: linux/amd64
 
-  docker-publish:
-    name: Publish latest images
-    if: github.event_name == 'push'
-    needs: [backend, frontend, govulncheck, backup]
-    uses: ./.github/workflows/docker-publish.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
-      push: true
-
   sonar:
     name: SonarCloud Scan
     needs: [changes, backend, frontend]
@@ -307,7 +296,7 @@ jobs:
   ci-gate:
     name: CI gate
     if: always()
-    needs: [backup, backend, govulncheck, frontend, e2e, docker-build, docker-publish]
+    needs: [backup, backend, govulncheck, frontend, e2e, docker-build]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a required job failed or was cancelled
