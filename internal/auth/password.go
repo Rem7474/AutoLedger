@@ -12,6 +12,10 @@ var (
 	ErrPasswordTooShort = errors.New("password must be at least 8 characters")
 )
 
+// passwordCost is the bcrypt work factor of every hash this process generates. Hashes carry their own cost, so a
+// lower one (see cost_fast.go) never prevents the check of an existing hash.
+var passwordCost = 12
+
 // HashPassword generates a bcrypt hash of the password with cost 12.
 func HashPassword(password string) (string, error) {
 	if len(password) < 8 {
@@ -20,7 +24,7 @@ func HashPassword(password string) (string, error) {
 	if len(password) > MaxPasswordBytes {
 		return "", ErrPasswordTooLong
 	}
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), passwordCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to hash password: %w", err)
 	}
@@ -48,7 +52,7 @@ var dummyHash = func() []byte {
 	if _, err := rand.Read(secret); err != nil {
 		panic(err)
 	}
-	h, err := bcrypt.GenerateFromPassword(secret, 12)
+	h, err := bcrypt.GenerateFromPassword(secret, passwordCost)
 	if err != nil {
 		panic(err)
 	}
