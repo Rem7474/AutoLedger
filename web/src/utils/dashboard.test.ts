@@ -519,8 +519,22 @@ describe('monthlyCostSeries', () => {
     expect(totals).toEqual([1200, 90])
   })
 
+  it('gives the net of carpooling only for a month with revenue, in the view in use', () => {
+    const withRevenue = [
+      { month: '2026-08', distance_km: 500, total: 1200, tires: 800, tires_amortized: 100, energy: 400, carpool_revenue: 50 },
+      { month: '2026-09', distance_km: 300, total: 90, energy: 90 },
+    ]
+    const cash = monthlyCostSeries(withRevenue, 'cash')
+    expect(cash.nets).toEqual([1150, null])
+    expect(cash.netPerKm).toEqual([1150 / 500, null])
+    // The economic total is spread (500), so the net is too: the cash figure is not reused
+    expect(monthlyCostSeries(withRevenue, 'economic').nets).toEqual([450, null])
+    // The bars themselves stay gross
+    expect(cash.totals).toEqual([1200, 90])
+  })
+
   it('is empty without months', () => {
-    expect(monthlyCostSeries([], 'cash')).toEqual({ series: [], totals: [] })
+    expect(monthlyCostSeries([], 'cash')).toEqual({ series: [], totals: [], nets: [], netPerKm: [] })
   })
 })
 

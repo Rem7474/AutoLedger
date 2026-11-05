@@ -513,5 +513,8 @@ export function monthlyCostSeries(months: any[], mode: MonthDetailMode) {
       data: rows.map((r) => r.items[i].displayAmount),
     })),
     totals: rows.map((r) => r.activeTotal),
+    // What the month cost once the passengers of the carpools paid, null for a month without any: the bars stay gross
+    nets: rows.map((r) => (r.carpoolRevenue > 0 ? r.netTotal : null)),
+    netPerKm: rows.map((r) => r.netCostPerKm),
   }
 }

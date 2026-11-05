@@ -6,6 +6,7 @@ import { Chart, registerables } from 'chart.js'
 import { computeMonthFixedVariable, filterMonthsByRange, monthlyCostSeries, type MonthDetailMode } from '@/utils/dashboard'
 import { usePreferencesStore } from '@/stores/preferences'
 import { currencySymbol, formatAmount, formatAxisAmount } from '@/currency'
+import { distanceUnit, perDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import ChartTable from '@/components/charts/ChartTable.vue'
 
@@ -38,13 +39,21 @@ const seriesLabel = (key: string) =>
   })[key] ?? key
 // The same figures as a table for screen readers: one column per cost item, the month total last
 const tableData = computed(() => {
-  const { series, totals } = monthlyCostSeries(filteredMonthlyCosts.value, mode.value)
+  const { series, totals, nets } = monthlyCostSeries(filteredMonthlyCosts.value, mode.value)
+  // The net column appears only when a month of the range has carpool revenue, so the table is unchanged otherwise
+  const hasNet = nets.some((n) => n !== null)
   return {
-    headers: [t('dashboard.monthlyCostChart.month'), ...series.map((s) => seriesLabel(s.key)), t('dashboard.monthlyCostChart.total')],
+    headers: [
+      t('dashboard.monthlyCostChart.month'),
+      ...series.map((s) => seriesLabel(s.key)),
+      t('dashboard.monthlyCostChart.total'),
+      ...(hasNet ? [t('dashboard.monthlyCostChart.netColumn')] : []),
+    ],
     rows: filteredMonthlyCosts.value.map((m: any, i: number) => [
       formatMonthLabel(m.month),
       ...series.map((s) => formatAmount(s.data[i], currency.value)),
       formatAmount(totals[i], currency.value),
+      ...(hasNet ? [nets[i] === null ? '' : formatAmount(nets[i] as number, currency.value)] : []),
     ]),
   }
 })
@@ -55,7 +64,7 @@ function renderChart() {
 
   const filteredList = filteredMonthlyCosts.value
   const filteredLabels = filteredList.map((m: any) => formatMonthLabel(m.month))
-  const { series, totals } = monthlyCostSeries(filteredList, mode.value)
+  const { series, totals, nets, netPerKm } = monthlyCostSeries(filteredList, mode.value)
 
   monthlyChartInstance = new Chart(monthlyChartRef.value, {
     type: 'bar',
@@ -128,6 +137,20 @@ function renderChart() {
                 const fv = computeMonthFixedVariable(monthItem, mode.value)
                 if (fv.totalAmount > 0) {
                   lines.push(t('dashboard.monthlyCostChart.fixedVariableTooltip', { fixedPct: fv.fixedPct, variablePct: fv.variablePct }))
+                }
+                // A month with carpool revenue: what the passengers paid brings the total down, the bars stay gross
+                const net = nets[dataIndex]
+                if (net !== null) {
+                  lines.push(t('dashboard.monthlyCostChart.netOfCarpooling', { total: formatAmount(net, currency.value) }))
+                  const perKm = netPerKm[dataIndex]
+                  if (perKm !== null) {
+                    lines.push(
+                      t('dashboard.monthlyCostChart.netCostPerKm', {
+                        unit: distanceUnit(),
+                        cost: formatAmount(perDistance(perKm), currency.value, 3),
+                      }),
+                    )
+                  }
                 }
               }
               return lines
