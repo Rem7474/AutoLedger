@@ -93,7 +93,9 @@ jobs:
       - name: Run Backend Tests
         env:
           TEST_DATABASE_URL: postgres://teslacost:test@localhost:5432/teslacost_test?sslmode=disable
-        run: go test -v -race -coverprofile=coverage.out -coverpkg=./... ./...
+        # -tags fastbcrypt: bcrypt at the production cost takes seconds per hash under -race, and most of the handler
+        # tests sign in. The tag lowers only the cost of the hashes the tests generate (internal/auth/cost_fast.go).
+        run: go test -v -race -tags fastbcrypt -coverprofile=coverage.out -coverpkg=./... ./...
 
       - name: Build Go Server Binary
         run: go build -v -o teslacost-bin ./cmd/server
