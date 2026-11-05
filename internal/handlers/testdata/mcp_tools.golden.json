@@ -2036,6 +2036,151 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "The price of one kWh at home right now, with the band in force (peak, off-peak...) and the next moment the price changes, from the vehicle's tariff plan or the account's default plan. Answers \"is it a good time to charge?\" without pricing a charge. The next change is looked for a week ahead and is null for a flat plan. When no plan gives a price for now, priced is false and unpriced_reason says why. Use estimate_charge_cost for the cost of a whole charge.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "vehicle_id": {
+          "description": "read the price of the plan assigned to this vehicle, or of the default plan when it has none; the id of a vehicle as returned by list_vehicles, its name is accepted when no other vehicle has the same. Omit it for the default plan of the account",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "name": "get_current_tariff",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "next_change": {
+          "additionalProperties": false,
+          "description": "the next time the price per kWh changes, within a week; null for a flat plan, or when the plan stops applying before the price would change",
+          "properties": {
+            "at": {
+              "description": "when the price changes, RFC 3339 in the account's timezone",
+              "type": "string"
+            },
+            "band": {
+              "description": "name of the band in force from then on",
+              "type": "string"
+            },
+            "price_per_kwh": {
+              "additionalProperties": false,
+              "description": "price of one kWh from then on",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "at",
+            "band",
+            "price_per_kwh"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "now": {
+          "additionalProperties": false,
+          "description": "the band in force now and its price",
+          "properties": {
+            "band": {
+              "description": "name of the band in force, user text on a plan with bands; FLAT, PEAK or OFFPEAK on the others",
+              "type": "string"
+            },
+            "price_per_kwh": {
+              "additionalProperties": false,
+              "description": "price of one kWh, in the currency of the plan, up to six decimals",
+              "properties": {
+                "amount": {
+                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "band",
+            "price_per_kwh"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "plan": {
+          "additionalProperties": false,
+          "description": "the plan the price comes from; null when none applies",
+          "properties": {
+            "id": {
+              "description": "id of the plan, as listed by list_tariff_plans",
+              "type": "string"
+            },
+            "name": {
+              "description": "user text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "priced": {
+          "description": "false when no plan gives a price for now: then the other fields are null and unpriced_reason says why",
+          "type": "boolean"
+        },
+        "unpriced_reason": {
+          "description": "why there is no price; null when there is one",
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      },
+      "required": [
+        "priced",
+        "unpriced_reason",
+        "plan",
+        "now",
+        "next_change"
+      ],
+      "type": "object"
+    },
+    "title": "Current electricity price"
+  },
+  {
+    "annotations": {
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
     "description": "Where a vehicle's records come from and how fresh they are: what each origin wrote (TeslaMate, Home Assistant or a script, a CSV import, manual entries) with the date of its latest record, the state of the TeslaMate synchronization and how many pushed charging sessions still wait for a vehicle. Use it when asked why recent data is missing.",
     "inputSchema": {
       "additionalProperties": false,

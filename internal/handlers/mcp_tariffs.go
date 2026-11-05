@@ -16,6 +16,10 @@ type mcpEstimateChargeInput struct {
 	PlanID          string  `json:"plan_id,omitempty" jsonschema:"price the charge with this plan, as returned by list_tariff_plans; not together with vehicle_id. With neither, the default plan of the account prices it"`
 }
 
+type mcpCurrentTariffInput struct {
+	VehicleID string `json:"vehicle_id,omitempty" jsonschema:"read the price of the plan assigned to this vehicle, or of the default plan when it has none; the id of a vehicle as returned by list_vehicles, its name is accepted when no other vehicle has the same. Omit it for the default plan of the account"`
+}
+
 func (h *MCPHandler) addTariffTools(readOnly *mcp.ToolAnnotations) {
 	mcp.AddTool(h.server, &mcp.Tool{
 		Name:  "list_tariff_plans",
@@ -58,6 +62,29 @@ func (h *MCPHandler) addTariffTools(readOnly *mcp.ToolAnnotations) {
 		out, err := h.read.EstimateCharge(ctx, mcpUserID(req), query)
 		if err != nil {
 			return nil, IntegrationChargeEstimate{}, mcpFailure(ctx, "estimate_charge_cost", err, "Could not estimate the charge")
+		}
+		return nil, *out, nil
+	})
+
+	mcp.AddTool(h.server, &mcp.Tool{
+		Name:  "get_current_tariff",
+		Title: "Current electricity price",
+		Description: "The price of one kWh at home right now, with the band in force (peak, off-peak...) and the next moment the price changes, from the vehicle's tariff plan or the account's default plan. " +
+			"Answers \"is it a good time to charge?\" without pricing a charge. The next change is looked for a week ahead and is null for a flat plan. " +
+			"When no plan gives a price for now, priced is false and unpriced_reason says why. Use estimate_charge_cost for the cost of a whole charge.",
+		Annotations: readOnly,
+	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpCurrentTariffInput) (*mcp.CallToolResult, IntegrationCurrentTariff, error) {
+		vehicleID := ""
+		if strings.TrimSpace(in.VehicleID) != "" {
+			resolved, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
+			if err != nil {
+				return nil, IntegrationCurrentTariff{}, mcpFailure(ctx, "get_current_tariff", err, "Could not read the current tariff")
+			}
+			vehicleID = resolved
+		}
+		out, err := h.read.CurrentTariff(ctx, mcpUserID(req), vehicleID, time.Now())
+		if err != nil {
+			return nil, IntegrationCurrentTariff{}, mcpFailure(ctx, "get_current_tariff", err, "Could not read the current tariff")
 		}
 		return nil, *out, nil
 	})

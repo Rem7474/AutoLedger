@@ -124,3 +124,31 @@ func TestMCPTariffPlansAreListedAndAChargeIsPricedWithoutStoringAnything(t *test
 		}
 	}
 }
+
+func TestMCPCurrentTariffReadsThePriceInForce(t *testing.T) {
+	f := newMCPFixture(t)
+	ctx := context.Background()
+	session := f.connect(t, f.readTok)
+	otherSession := f.connect(t, f.otherTok)
+
+	none, isErr := callStructured[IntegrationCurrentTariff](t, otherSession, "get_current_tariff", nil)
+	if isErr || none.Priced || none.Now != nil || none.UnpricedReason == nil {
+		t.Fatalf("no plan, no price: %+v", none)
+	}
+
+	plan := &models.TariffPlan{UserID: f.owner.ID, Name: "Flat", PlanType: "FLAT", Currency: "GBP", FlatRateCents: ptr(money.Rate(200000)), IsDefault: true}
+	if err := f.repo.CreateTariffPlan(ctx, plan); err != nil {
+		t.Fatal(err)
+	}
+	got, isErr := callStructured[IntegrationCurrentTariff](t, session, "get_current_tariff", nil)
+	if isErr || !got.Priced || got.Plan == nil || got.Plan.ID != plan.ID || got.Now == nil || got.Now.PricePerKwh.Amount != "0.20" || got.Now.PricePerKwh.Currency != "GBP" || got.NextChange != nil {
+		t.Errorf("the default plan gives its price: %+v", got)
+	}
+	byVehicle, isErr := callStructured[IntegrationCurrentTariff](t, session, "get_current_tariff", map[string]any{"vehicle_id": f.mine.ID})
+	if isErr || !byVehicle.Priced || byVehicle.Now.PricePerKwh.Amount != "0.20" {
+		t.Errorf("a vehicle without a plan of its own uses the default plan: %+v", byVehicle)
+	}
+	if _, isErr := callStructured[IntegrationCurrentTariff](t, session, "get_current_tariff", map[string]any{"vehicle_id": f.theirs.ID}); !isErr {
+		t.Error("another account's vehicle is refused")
+	}
+}

@@ -340,6 +340,34 @@
       }
     ]
   },
+  "get_current_tariff / empty": {
+    "next_change": null,
+    "now": null,
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
+  "get_current_tariff / ev": {
+    "next_change": null,
+    "now": null,
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
+  "get_current_tariff / ice": {
+    "next_change": null,
+    "now": null,
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
+  "get_current_tariff / layout": {
+    "next_change": null,
+    "now": null,
+    "plan": null,
+    "priced": "boolean",
+    "unpriced_reason": "string"
+  },
   "get_data_sources / empty": {
     "pending_charges": "number",
     "sources": [],
