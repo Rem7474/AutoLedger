@@ -47,6 +47,7 @@ func (h *apiHandlers) registerIntegrationRoutes(r chi.Router) {
 		r.Get("/api/integrations/v1/comparisons", h.integrationRead.GetComparisons)
 		r.Get("/api/integrations/v1/fleet", h.integrationRead.GetFleetSummary)
 		r.Get("/api/integrations/v1/tariff-plans", h.integrationRead.GetTariffPlans)
+		r.Get("/api/integrations/v1/tariff-plans/current", h.integrationRead.GetCurrentTariff)
 		r.Get("/api/integrations/v1/charge-estimate", h.integrationRead.GetChargeEstimate)
 	})
 }

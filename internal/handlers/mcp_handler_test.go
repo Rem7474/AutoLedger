@@ -184,7 +184,7 @@ func TestMCPToolsAreReadOnlyExceptTheWritingOnesAndServeTheAccountsVehiclesWitho
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "create_carpool_from_drives,estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles,update_carpool" {
+	if strings.Join(names, ",") != "create_carpool_from_drives,estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_current_tariff,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles,update_carpool" {
 		t.Errorf("tools: %v", names)
 	}
 

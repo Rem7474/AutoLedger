@@ -321,3 +321,8 @@ func (s *TariffService) Grid(plan *models.TariffPlan) (bands []models.TariffBand
 	}
 	return bands, rules, defaultBand, true
 }
+
+// Location is the timezone the wall clock of the tariffs is read in.
+func (s *TariffService) Location() *time.Location {
+	return s.loc
+}
