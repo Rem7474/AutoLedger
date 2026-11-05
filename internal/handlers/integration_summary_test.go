@@ -174,6 +174,19 @@ func TestIntegrationSummaryCarriesTheLastChargeTheCostPer100kmAndTheMonthSplit(t
 	if van.MonthCosts.Total.Amount != "0.00" || van.MonthCosts.Total.Currency != "GBP" {
 		t.Errorf("a month without any cost splits into zeros of the vehicle's currency: %+v", van.MonthCosts)
 	}
+
+	if daily.LastCharge.PricePerKwh == nil || daily.LastCharge.PricePerKwh.Amount != "0.2349" {
+		t.Errorf("the price per kWh is the cost over the energy added: %+v", daily.LastCharge.PricePerKwh)
+	}
+	if daily.MonthNet.Amount != daily.MonthCost.Amount || daily.CarpoolRevenueMonth.Amount != "0.00" {
+		t.Errorf("without carpooling the net month is the month cost: %s / %s / %s", daily.MonthNet.Amount, daily.MonthCost.Amount, daily.CarpoolRevenueMonth.Amount)
+	}
+	if daily.Last12MonthsCost.Amount == "" || daily.Last12MonthsCost.Currency != "EUR" {
+		t.Errorf("the twelve-month total keeps the vehicle's currency: %+v", daily.Last12MonthsCost)
+	}
+	if daily.MonthDistance.Unit != "km" || van.MonthDistance.Value != 0 || van.Last12MonthsCost.Currency != "GBP" {
+		t.Errorf("a vehicle without any record has a zero distance and a zero total of its currency: %+v / %+v", van.MonthDistance, van.Last12MonthsCost)
+	}
 }
 
 func TestIntegrationSummaryLastChargeKeepsWhatIsUnknownUnknown(t *testing.T) {
@@ -189,6 +202,17 @@ func TestIntegrationSummaryLastChargeKeepsWhatIsUnknownUnknown(t *testing.T) {
 	free := summaryLastCharge(&models.ChargeLog{Date: started, KwhAdded: 12, Cost: &zero}, "EUR")
 	if free.Cost == nil || free.Cost.Amount != "0.00" {
 		t.Errorf("a known free session costs zero: %+v", free.Cost)
+	}
+	if free.PricePerKwh == nil || free.PricePerKwh.Amount != "0.0000" {
+		t.Errorf("a known free session costs nothing per kWh: %+v", free.PricePerKwh)
+	}
+	if open.PricePerKwh != nil {
+		t.Errorf("an unknown cost has no price per kWh: %+v", open.PricePerKwh)
+	}
+	cost := money.Cents(500)
+	noEnergy := summaryLastCharge(&models.ChargeLog{Date: started, KwhAdded: 0, Cost: &cost}, "EUR")
+	if noEnergy.PricePerKwh != nil {
+		t.Errorf("a session without energy has no price per kWh, not a division by zero: %+v", noEnergy.PricePerKwh)
 	}
 	before := started.Add(-time.Hour)
 	backwards := summaryLastCharge(&models.ChargeLog{Date: started, EndDate: &before, KwhAdded: 12}, "EUR")
