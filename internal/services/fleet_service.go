@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/teslacost/teslacost/internal/database"
@@ -60,23 +61,50 @@ func (s *FleetService) GetSummary(ctx context.Context, userID string) (*models.F
 		loc = time.UTC
 	}
 	now := time.Now().In(loc)
-	for i := range res.Vehicles {
-		res.Vehicles[i].EnergyCostPer100Km = s.energyCostPer100Km(ctx, res.Vehicles[i].VehicleID)
-	}
+	tcos := make([]*TCOSummary, len(res.Vehicles))
+	forEachVehicleConcurrently(len(res.Vehicles), func(i int) {
+		id := res.Vehicles[i].VehicleID
+		res.Vehicles[i].EnergyCostPer100Km = s.energyCostPer100Km(ctx, id)
+		sum, err := s.tco.ComputeVehicleTCO(ctx, id)
+		if err != nil {
+			slog.Warn("fleet comparison without TCO", "vehicle_id", id, "error", err)
+			return
+		}
+		tcos[i] = sum
+	})
 	sums := make(map[string]*TCOSummary, len(res.Vehicles))
 	for i := range res.Vehicles {
-		sum, err := s.tco.ComputeVehicleTCO(ctx, res.Vehicles[i].VehicleID)
-		if err != nil {
-			slog.Warn("fleet comparison without TCO", "vehicle_id", res.Vehicles[i].VehicleID, "error", err)
+		if tcos[i] == nil {
 			continue
 		}
-		sums[res.Vehicles[i].VehicleID] = sum
-		applyTCOToFleetMetric(&res.Vehicles[i], sum, now)
+		sums[res.Vehicles[i].VehicleID] = tcos[i]
+		applyTCOToFleetMetric(&res.Vehicles[i], tcos[i], now)
 	}
 	if len(sums) == len(res.Vehicles) {
 		applyTCOMonthsToFleet(res, sums, now)
 	}
 	return res, nil
+}
+
+// fleetConcurrency bounds the vehicles computed at once, so a large fleet answers faster without taking every
+// connection of the pool.
+const fleetConcurrency = 4
+
+// forEachVehicleConcurrently runs fn for every index below n, at most fleetConcurrency at a time, and returns once all
+// are done. fn must only write to the slot of its own index.
+func forEachVehicleConcurrently(n int, fn func(i int)) {
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, fleetConcurrency)
+	for i := 0; i < n; i++ {
+		slots <- struct{}{}
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-slots }()
+			fn(i)
+		}(i)
+	}
+	wg.Wait()
 }
 
 // energyCostPer100Km is the cost per 100 km of the energy statistics, nil when there is no tracked distance or no
