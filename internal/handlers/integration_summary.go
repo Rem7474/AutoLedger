@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"context"
+	"math"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
@@ -25,8 +28,22 @@ type IntegrationSummaryVehicle struct {
 	ConsumptionKwh100km *float64 `json:"consumption_kwh_100km" jsonschema:"energy used per 100 km; null for a vehicle that cannot be plugged in, or without enough data"`
 	ConsumptionL100km   *float64 `json:"consumption_l_100km" jsonschema:"fuel used per 100 km between full tanks; null for a vehicle that does not burn fuel, or without two consecutive full tanks"`
 
+	// LastCharge and CostPer100km are what the metrics route of the Home Assistant integration reports for one vehicle.
+	LastCharge   *IntegrationLastCharge `json:"last_charge" jsonschema:"the latest charging session; null for a vehicle that cannot be plugged in, or without any charge"`
+	CostPer100km *IntegrationAmount     `json:"cost_per_100km" jsonschema:"energy cost per 100 km, the figure the dashboard shows; for a vehicle that can be plugged in the estimate from its profile stands in while no distance is tracked; null when unknown"`
+	// MonthCosts is the split of MonthCost: its seven categories add up to the same total.
+	MonthCosts IntegrationCostBreakdown `json:"month_costs" jsonschema:"the month in progress by category, cash spent plus the instalments that fall due later in it; the total is month_cost"`
+
 	CompletenessPct *int `json:"completeness_pct" jsonschema:"0 to 100, how much of the figures rests on recorded data; null when no score is available"`
 	DataGaps        int  `json:"data_gaps" jsonschema:"number of things known to be missing from the records that make the figures less reliable; the data-gaps route lists them"`
+}
+
+// IntegrationLastCharge is the latest charging session of a vehicle.
+type IntegrationLastCharge struct {
+	Date            string             `json:"date" jsonschema:"when the session started, RFC 3339"`
+	Cost            *IntegrationAmount `json:"cost" jsonschema:"what the session cost; null while its cost is not recorded, never zero for an unknown cost"`
+	EnergyKwh       float64            `json:"energy_kwh" jsonschema:"energy added to the battery, in kWh"`
+	DurationMinutes *int               `json:"duration_minutes" jsonschema:"length of the session; null when its end is not recorded"`
 }
 
 // IntegrationSummary is the summary of every vehicle the token sees.
@@ -34,16 +51,52 @@ type IntegrationSummary struct {
 	Vehicles []IntegrationSummaryVehicle `json:"vehicles" jsonschema:"one entry per vehicle, in the order of the vehicle list"`
 }
 
-func buildIntegrationSummaryVehicle(vehicle *models.Vehicle, sum *services.TCOSummary, stats *services.EnergyStats) IntegrationSummaryVehicle {
+// summaryLastCharge reads the latest charge of a vehicle as the metrics route does.
+func summaryLastCharge(charge *models.ChargeLog, currency string) *IntegrationLastCharge {
+	if charge == nil {
+		return nil
+	}
+	out := &IntegrationLastCharge{Date: charge.Date.Format(time.RFC3339), EnergyKwh: charge.KwhAdded}
+	if charge.Cost != nil {
+		cost := amountOf(*charge.Cost, currency)
+		out.Cost = &cost
+	}
+	if charge.EndDate != nil {
+		minutes := max(int(charge.EndDate.Sub(charge.Date).Minutes()), 0)
+		out.DurationMinutes = &minutes
+	}
+	return out
+}
+
+// summaryCostPer100km is the energy cost per 100 km of the vehicle: the electric statistics figure, the profile
+// estimate while the statistics have no tracked distance, and the fuel figure of a vehicle that only burns fuel.
+func summaryCostPer100km(vehicle *models.Vehicle, energy IntegrationEnergyEfficiency) *IntegrationAmount {
+	if energy.Electric != nil && energy.Electric.CostPer100km != nil {
+		return energy.Electric.CostPer100km
+	}
+	if vehicle.CanCharge() && vehicle.EstimatedKwh100km != nil && vehicle.EstimatedPricePerKwh != nil {
+		estimate := math.Round(*vehicle.EstimatedKwh100km**vehicle.EstimatedPricePerKwh*100) / 100
+		return decimalAmount(&estimate, vehicle.Currency, 2)
+	}
+	if energy.Fuel != nil {
+		return energy.Fuel.CostPer100km
+	}
+	return nil
+}
+
+func buildIntegrationSummaryVehicle(vehicle *models.Vehicle, sum *services.TCOSummary, stats *services.EnergyStats, lastCharge *models.ChargeLog) IntegrationSummaryVehicle {
 	costs := buildIntegrationCosts(vehicle, sum)
 	out := IntegrationSummaryVehicle{
 		VehicleID: vehicle.ID, Name: vehicle.Name, Powertrain: vehicle.Powertrain, Currency: vehicle.Currency,
 		Month: sum.CurrentMonth, MonthCost: amountOf(0, vehicle.Currency), CostPerKm: costs.Last12Months.CostPerKm,
+		MonthCosts:      breakdown(vehicle.Currency, 0, 0, 0, 0, 0, 0, 0, 0),
+		LastCharge:      summaryLastCharge(lastCharge, vehicle.Currency),
 		CompletenessPct: costs.Completeness.ScorePct, DataGaps: len(costs.Completeness.WarningDetails),
 	}
 	for _, m := range sum.MonthlyCosts {
 		if m.Month == sum.CurrentMonth {
 			out.MonthCost = amountOf(m.Total, vehicle.Currency)
+			out.MonthCosts = breakdown(vehicle.Currency, m.Energy, m.Tolls, m.Maintenance, m.Insurance, m.Financing, m.Tires, m.Other, m.Total)
 		}
 	}
 	var fuelSum *services.TCOSummary
@@ -57,6 +110,7 @@ func buildIntegrationSummaryVehicle(vehicle *models.Vehicle, sum *services.TCOSu
 	if energy.Fuel != nil {
 		out.ConsumptionL100km = energy.Fuel.LitresPer100
 	}
+	out.CostPer100km = summaryCostPer100km(vehicle, energy)
 	return out
 }
 
@@ -66,25 +120,61 @@ func (h *IntegrationReadHandler) Summary(ctx context.Context, userID string) (*I
 	if err != nil {
 		return nil, err
 	}
-	out := &IntegrationSummary{Vehicles: []IntegrationSummaryVehicle{}}
+	allowed := make([]*models.Vehicle, 0, len(vehicles))
 	for i := range vehicles {
-		v := &vehicles[i]
-		if !middleware.VehicleAllowed(ctx, v.ID) {
-			continue
+		if middleware.VehicleAllowed(ctx, vehicles[i].ID) {
+			allowed = append(allowed, &vehicles[i])
 		}
-		sum, err := h.tcoService.ComputeVehicleTCO(ctx, v.ID)
+	}
+	// The vehicles are independent: a few are computed at once, each writing to its own slot
+	rows := make([]IntegrationSummaryVehicle, len(allowed))
+	errs := make([]error, len(allowed))
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, summaryConcurrency)
+	for i := range allowed {
+		slots <- struct{}{}
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-slots }()
+			rows[i], errs[i] = h.summaryVehicle(ctx, allowed[i])
+		}(i)
+	}
+	wg.Wait()
+	for _, err := range errs {
 		if err != nil {
 			return nil, err
 		}
-		var stats *services.EnergyStats
-		if v.CanCharge() && h.energy != nil {
+	}
+	return &IntegrationSummary{Vehicles: append([]IntegrationSummaryVehicle{}, rows...)}, nil
+}
+
+// summaryConcurrency bounds the vehicles computed at once so the summary does not take every connection of the pool.
+const summaryConcurrency = 4
+
+// summaryVehicle computes the summary entry of one vehicle.
+func (h *IntegrationReadHandler) summaryVehicle(ctx context.Context, v *models.Vehicle) (IntegrationSummaryVehicle, error) {
+	sum, err := h.tcoService.ComputeVehicleTCO(ctx, v.ID)
+	if err != nil {
+		return IntegrationSummaryVehicle{}, err
+	}
+	var stats *services.EnergyStats
+	var lastCharge *models.ChargeLog
+	if v.CanCharge() {
+		if h.energy != nil {
 			if stats, err = h.energy.Compute(ctx, v.ID); err != nil {
-				return nil, err
+				return IntegrationSummaryVehicle{}, err
 			}
 		}
-		out.Vehicles = append(out.Vehicles, buildIntegrationSummaryVehicle(v, sum, stats))
+		charges, _, err := h.repo.ListCharges(ctx, v.ID, false, 1, 0)
+		if err != nil {
+			return IntegrationSummaryVehicle{}, err
+		}
+		if len(charges) > 0 {
+			lastCharge = &charges[0]
+		}
 	}
-	return out, nil
+	return buildIntegrationSummaryVehicle(v, sum, stats, lastCharge), nil
 }
 
 // GetSummary serves Summary.
