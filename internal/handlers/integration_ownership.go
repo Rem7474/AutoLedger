@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/teslacost/teslacost/internal/apierror"
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
@@ -188,19 +187,10 @@ func (h *IntegrationReadHandler) Ownership(ctx context.Context, userID, vehicleI
 	if err != nil {
 		return nil, err
 	}
-	var residual *models.ResidualValue
-	unavailable := ""
-	if h.residual != nil {
-		residual, err = h.residual.Residual(ctx, vehicle, services.ResidualOptions{KmShare: 0.5, HealthWeight: 1})
-		if err != nil {
-			apiErr, ok := apierror.As(err)
-			if !ok {
-				return nil, err
-			}
-			residual, unavailable = nil, apiErr.Message
-		}
+	out, err := h.ownershipOf(ctx, vehicle, sum)
+	if err != nil {
+		return nil, err
 	}
-	out := buildIntegrationOwnership(vehicle, sum, residual, unavailable)
 	return &out, nil
 }
 

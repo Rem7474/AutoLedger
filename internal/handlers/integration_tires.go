@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/teslacost/teslacost/internal/apierror"
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/services"
@@ -84,21 +83,10 @@ func (h *IntegrationReadHandler) Tires(ctx context.Context, userID, vehicleID st
 	if err != nil {
 		return nil, err
 	}
-	if h.tireWear == nil {
-		return nil, apierror.New("internal", "Tires are unavailable")
-	}
-	tires, err := h.repo.ListTires(ctx, vehicle.ID)
+	stats, err := h.tireStats(ctx, vehicle)
 	if err != nil {
 		return nil, err
 	}
-	stats := []services.TireWearStats{}
-	for i := range tires {
-		s, err := h.tireWear.CalculateTireWear(ctx, &tires[i], vehicle.CurrentOdometer)
-		if err == nil && s != nil {
-			stats = append(stats, *s)
-		}
-	}
-	attachTireForecasts(ctx, h.repo, vehicle.ID, stats)
 	out := buildIntegrationTires(vehicle.ID, vehicle.Currency, stats)
 	return &out, nil
 }

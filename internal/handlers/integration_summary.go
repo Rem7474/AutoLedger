@@ -39,6 +39,13 @@ type IntegrationSummaryVehicle struct {
 	MonthNet            IntegrationAmount   `json:"month_net" jsonschema:"month_cost minus carpool_revenue_month: what the month costs once the passengers have paid their share; equal to month_cost without carpooling"`
 	Last12MonthsCost    IntegrationAmount   `json:"last_12_months_cost" jsonschema:"cash total of the last twelve months, the figure behind cost_per_km; smaller than a year of cost while the history is shorter than twelve months"`
 
+	// The sections below are present only when the request asks for them with include, and absent when they do not
+	// apply to the vehicle (no mounted tire, not an electric vehicle, no data).
+	Tires     *IntegrationSummaryTires     `json:"tires,omitempty" jsonschema:"include=tires: the wear of the mounted tires"`
+	Battery   *IntegrationBatteryHealth    `json:"battery,omitempty" jsonschema:"include=battery: the state of health of the traction battery"`
+	Ownership *IntegrationSummaryOwnership `json:"ownership,omitempty" jsonschema:"include=ownership: the cost of owning the vehicle, purchase included, and its value"`
+	Sources   *IntegrationSummarySources   `json:"sources,omitempty" jsonschema:"include=sources: how fresh the data is"`
+
 	CompletenessPct *int `json:"completeness_pct" jsonschema:"0 to 100, how much of the figures rests on recorded data; null when no score is available"`
 	DataGaps        int  `json:"data_gaps" jsonschema:"number of things known to be missing from the records that make the figures less reliable; the data-gaps route lists them"`
 }
@@ -130,7 +137,7 @@ func buildIntegrationSummaryVehicle(vehicle *models.Vehicle, sum *services.TCOSu
 }
 
 // Summary gives the figures of every vehicle the token sees, within the vehicles it is limited to.
-func (h *IntegrationReadHandler) Summary(ctx context.Context, userID string) (*IntegrationSummary, error) {
+func (h *IntegrationReadHandler) Summary(ctx context.Context, userID string, include SummaryInclude) (*IntegrationSummary, error) {
 	vehicles, err := h.repo.ListVehiclesByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -140,6 +147,14 @@ func (h *IntegrationReadHandler) Summary(ctx context.Context, userID string) (*I
 		if middleware.VehicleAllowed(ctx, vehicles[i].ID) {
 			allowed = append(allowed, &vehicles[i])
 		}
+	}
+	pending := 0
+	if include.Sources {
+		charges, err := h.repo.ListPendingCharges(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		pending = len(charges)
 	}
 	// The vehicles are independent: a few are computed at once, each writing to its own slot
 	rows := make([]IntegrationSummaryVehicle, len(allowed))
@@ -152,7 +167,7 @@ func (h *IntegrationReadHandler) Summary(ctx context.Context, userID string) (*I
 		go func(i int) {
 			defer wg.Done()
 			defer func() { <-slots }()
-			rows[i], errs[i] = h.summaryVehicle(ctx, allowed[i])
+			rows[i], errs[i] = h.summaryVehicle(ctx, allowed[i], include, pending)
 		}(i)
 	}
 	wg.Wait()
@@ -168,7 +183,7 @@ func (h *IntegrationReadHandler) Summary(ctx context.Context, userID string) (*I
 const summaryConcurrency = 4
 
 // summaryVehicle computes the summary entry of one vehicle.
-func (h *IntegrationReadHandler) summaryVehicle(ctx context.Context, v *models.Vehicle) (IntegrationSummaryVehicle, error) {
+func (h *IntegrationReadHandler) summaryVehicle(ctx context.Context, v *models.Vehicle, include SummaryInclude, pending int) (IntegrationSummaryVehicle, error) {
 	sum, err := h.tcoService.ComputeVehicleTCO(ctx, v.ID)
 	if err != nil {
 		return IntegrationSummaryVehicle{}, err
@@ -189,12 +204,20 @@ func (h *IntegrationReadHandler) summaryVehicle(ctx context.Context, v *models.V
 			lastCharge = &charges[0]
 		}
 	}
-	return buildIntegrationSummaryVehicle(v, sum, stats, lastCharge), nil
+	out := buildIntegrationSummaryVehicle(v, sum, stats, lastCharge)
+	if err := h.addSummarySections(ctx, &out, v, sum, stats, include, pending); err != nil {
+		return IntegrationSummaryVehicle{}, err
+	}
+	return out, nil
 }
 
 // GetSummary serves Summary.
 func (h *IntegrationReadHandler) GetSummary(w http.ResponseWriter, r *http.Request) {
-	out, err := h.Summary(r.Context(), middleware.GetUserID(r.Context()))
+	include, ok := summaryInclude(w, r)
+	if !ok {
+		return
+	}
+	out, err := h.Summary(r.Context(), middleware.GetUserID(r.Context()), include)
 	if err != nil {
 		writeIntegrationError(w, r, err, "Failed to compute the summary")
 		return
