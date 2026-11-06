@@ -51,7 +51,7 @@ async function removeReading(date: string) {
 
 watch(() => props.vehicleId, () => {
   health.value = null
-  loadHealth()
+  void loadHealth()
 }, { immediate: true })
 
 const healthPercent = computed(() => health.value?.health_percent)

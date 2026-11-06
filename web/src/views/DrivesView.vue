@@ -95,11 +95,11 @@ function openCSVImportModal() {
 }
 
 function onDriveSaved() {
-  loadDrives(true)
+  void loadDrives(true)
 }
 
 function onCSVImported() {
-  loadDrives(true)
+  void loadDrives(true)
 }
 
 // A single drive goes at once and comes back with Undo, the server is asked when that time is over
@@ -167,7 +167,7 @@ const hasFilters = computed(() => periodMode.value !== 'ALL' || !!searchQuery.va
 
 function onFiltersChange() {
   if (viewMode.value === 'TRIPS') return
-  loadDrives()
+  void loadDrives()
 }
 
 function resetAllFilters() {
@@ -180,7 +180,7 @@ function resetAllFilters() {
   periodMode.value = 'ALL'
   customFrom.value = ''
   customTo.value = ''
-  loadDrives()
+  void loadDrives()
 }
 
 const {
@@ -269,7 +269,7 @@ const showGroupModal = ref(false)
 const { showCarpoolEditor, carpoolCreateOptions, carpoolOpenToken, recentCarpoolNames, openCarpoolEditor } = useCarpoolEditor()
 function onCarpoolSaved() {
   clearSelection()
-  loadDrives(true)
+  void loadDrives(true)
 }
 const { bulkApplyingToll, vehiclePeople, handleBatchDriver, handleBatchTag, exportSelectedDrives, handleCarpoolSelectedDrives, handleBulkApplyToll } = useDriveBulkActions({
   drives,
@@ -305,8 +305,8 @@ const {
 watch(
   () => [vehicleStore.activeVehicle?.id, selectedTag.value, unqualifiedOnly.value, hasTollOnly.value, tollSource.value, carpoolFilter.value],
   () => {
-    loadDrives()
-    if (viewMode.value === 'TRIPS') loadTripGroups()
+    void loadDrives()
+    if (viewMode.value === 'TRIPS') void loadTripGroups()
   }
 )
 
@@ -314,8 +314,8 @@ watch(
 watch(
   () => vehicleStore.lastSyncTimestamp,
   () => {
-    loadDrives(true)
-    if (viewMode.value === 'TRIPS') loadTripGroups(true)
+    void loadDrives(true)
+    if (viewMode.value === 'TRIPS') void loadTripGroups(true)
   }
 )
 
@@ -345,7 +345,7 @@ watch(
 )
 
 onMounted(() => {
-  loadDrives()
+  void loadDrives()
 })
 
 async function markNoToll(d: any) {
@@ -375,7 +375,7 @@ const viewTabs = computed<TabItem[]>(() => [
 
 function switchView(mode: 'DRIVES' | 'TRIPS') {
   viewMode.value = mode
-  if (mode === 'TRIPS') loadTripGroups()
+  if (mode === 'TRIPS') void loadTripGroups()
 }
 
 // The edit form replaces the detail, like the edit of a carpool
@@ -390,7 +390,7 @@ function editTripFromCostModal(virtual: any) {
 async function onTripSaved() {
   expandedTripId.value = null
   await loadTripGroups()
-  loadDrives(true)
+  void loadDrives(true)
 }
 
 function openTripEdit(tg: any) {
@@ -406,12 +406,12 @@ async function openAddToTrip() {
 async function onAddedToTrip() {
   clearSelection()
   await loadTripGroups()
-  loadDrives(true)
+  void loadDrives(true)
 }
 
 function onGroupCreated() {
   clearSelection()
-  loadDrives(true)
+  void loadDrives(true)
 }
 
 async function toggleDriveTag(drive: any, tagToToggle: string) {

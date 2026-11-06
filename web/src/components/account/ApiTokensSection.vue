@@ -108,7 +108,7 @@ async function revokeToken(token: APITokenInfo) {
 }
 
 onMounted(() => {
-  loadTokens()
+  void loadTokens()
 })
 </script>
 

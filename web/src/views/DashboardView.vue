@@ -123,12 +123,12 @@ async function loadTCO(silent = false) {
 watch(
   () => [vehicleStore.activeVehicle?.id, vehicleStore.lastSyncTimestamp],
   () => {
-    loadTCO()
+    void loadTCO()
   }
 )
 
 onMounted(() => {
-  loadTCO()
+  void loadTCO()
 })
 </script>
 

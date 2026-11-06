@@ -97,10 +97,10 @@ watch(open, (isOpen) => {
   if (!isOpen) parentTrip.value = null
   if (!isOpen || !drive) return
   if (drive.is_trip_group) {
-    if (!drive.is_suggestion) loadTripCarpools(drive.id)
+    if (!drive.is_suggestion) void loadTripCarpools(drive.id)
     return
   }
-  loadVehiclePeople()
+  void loadVehiclePeople()
 })
 
 

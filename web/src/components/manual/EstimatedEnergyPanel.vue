@@ -84,11 +84,11 @@ async function clear() {
 
 watch(() => props.vehicle?.id, () => {
   syncForm()
-  loadTco()
+  void loadTco()
 })
 onMounted(() => {
   syncForm()
-  loadTco()
+  void loadTco()
 })
 </script>
 

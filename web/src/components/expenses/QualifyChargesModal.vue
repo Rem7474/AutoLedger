@@ -49,7 +49,7 @@ async function loadPendingCharges() {
 
 watch(open, (isOpen) => {
   if (isOpen) {
-    loadPendingCharges()
+    void loadPendingCharges()
   }
 })
 
@@ -91,7 +91,7 @@ async function handleDismiss(charge: PendingCharge) {
 
 onMounted(() => {
   if (open.value) {
-    loadPendingCharges()
+    void loadPendingCharges()
   }
 })
 </script>

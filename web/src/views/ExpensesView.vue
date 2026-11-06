@@ -151,7 +151,7 @@ async function onChargesAssigned() {
 const fuelReloadKey = ref(0)
 function onImported() {
   fuelReloadKey.value++
-  loadData()
+  void loadData()
 }
 
 // A new vehicle, tab or filter shows the skeleton. After an action on a row (save, delete, "Free") the list stays on
@@ -179,13 +179,13 @@ async function loadData(keepList = false) {
       charges.value = loaded
       chargesTotal.value = res.total || 0
       chargesWithoutCost.value = res.charges_without_cost || 0
-      checkPendingCharges()
+      void checkPendingCharges()
     } else if (activeTab.value === 'DOCUMENTS') {
       documents.value = await api.getDocuments(vehicleStore.activeVehicle.id)
     }
-    ensureDocumentsLoaded()
+    void ensureDocumentsLoaded()
     if (activeTab.value !== 'REMINDERS') {
-      loadReminders()
+      void loadReminders()
     }
   } catch (err) {
     console.error('Failed to load expenses', err)
@@ -200,7 +200,7 @@ const { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDelete
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value, vehicleStore.lastSyncTimestamp],
   () => {
-    loadData()
+    void loadData()
   }
 )
 
@@ -218,21 +218,21 @@ watch(
 )
 
 onMounted(() => {
-  loadData()
-  loadReminders()
+  void loadData()
+  void loadReminders()
 })
 
 // Tolls & parking
 function openAddTollModal() {
   editingToll.value = null
   showAddTollModal.value = true
-  ensureDocumentsLoaded()
+  void ensureDocumentsLoaded()
 }
 
 function openEditTollModal(e: any) {
   editingToll.value = e
   showAddTollModal.value = true
-  ensureDocumentsLoaded()
+  void ensureDocumentsLoaded()
 }
 
 // Maintenance & fixed expenses
@@ -241,13 +241,13 @@ function openAddMaintModal() {
   editingMaint.value = null
   newExpenseCategory.value = activeTab.value === 'FIXED' ? 'INSURANCE' : 'MAINTENANCE'
   showAddMaintModal.value = true
-  ensureDocumentsLoaded()
+  void ensureDocumentsLoaded()
 }
 
 function openEditMaintModal(m: any) {
   editingMaint.value = m
   showAddMaintModal.value = true
-  ensureDocumentsLoaded()
+  void ensureDocumentsLoaded()
 }
 
 // Charges: manual entry and cost completion
@@ -278,7 +278,7 @@ async function reviewChargeCost(c: any, reviewed: boolean) {
 
 function toggleMissingCostFilter() {
   missingCostOnly.value = !missingCostOnly.value
-  loadData()
+  void loadData()
 }
 
 const showCSVImportModal = ref(false)
@@ -290,13 +290,13 @@ function openCSVImportModal() {
 function openAddChargeModal() {
   editingCharge.value = null
   showChargeModal.value = true
-  ensureDocumentsLoaded()
+  void ensureDocumentsLoaded()
 }
 
 function openEditChargeModal(c: any) {
   editingCharge.value = c
   showChargeModal.value = true
-  ensureDocumentsLoaded()
+  void ensureDocumentsLoaded()
 }
 
 // Documents

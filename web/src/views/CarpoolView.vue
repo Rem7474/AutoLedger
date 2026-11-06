@@ -386,7 +386,7 @@ onMounted(async () => {
   const loaded = loadData()
   checkRouteQueryForCarpool()
   await loaded
-  openCarpoolFromRoute()
+  void openCarpoolFromRoute()
 })
 </script>
 

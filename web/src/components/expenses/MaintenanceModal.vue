@@ -152,7 +152,7 @@ watch(open, (isOpen) => {
       document_id: null,
       document_filename: null,
     }
-    checkOdometerForDate(maintForm.value.date)
+    void checkOdometerForDate(maintForm.value.date)
     nextTick(() => amountInput.value?.focus())
   } else {
     shouldClosePrevious.value = Boolean(m.closes_maintenance_id)
@@ -179,7 +179,7 @@ watch(open, (isOpen) => {
 
 watch(() => maintForm.value.date, (newDate) => {
   if (open.value && newDate) {
-    checkOdometerForDate(newDate)
+    void checkOdometerForDate(newDate)
   }
 })
 

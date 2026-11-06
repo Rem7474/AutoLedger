@@ -100,7 +100,7 @@ watch(open, (isOpen) => {
       selectedDriveIds.value = []
     }
   }
-  loadRecentDrives()
+  void loadRecentDrives()
 })
 
 async function loadRecentDrives() {

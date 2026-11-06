@@ -196,11 +196,11 @@ watch(formOpen, (open) => {
 })
 watch(() => props.vehicle?.id, () => {
   resetForm()
-  load()
+  void load()
 })
 onMounted(() => {
   resetForm()
-  load()
+  void load()
 })
 useRefreshHandler(() => load(true))
 </script>

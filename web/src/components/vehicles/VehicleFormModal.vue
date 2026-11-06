@@ -47,7 +47,7 @@ watch(open, (isOpen) => {
   if (!isOpen) return
   showAdvanced.value = false
   form.value = props.editing ? vehicleFormFrom(props.editing) : emptyVehicleForm()
-  loadTariffPlans()
+  void loadTariffPlans()
 })
 
 const { pending: submitting, run: runOnce } = useSubmit()

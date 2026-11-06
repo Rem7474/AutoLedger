@@ -59,14 +59,14 @@ async function load() {
 
 function shiftWindow(days: number) {
   pickerDate.value = shiftDay(pickerDate.value || toDateInputString(new Date()), days)
-  load()
+  void load()
 }
 
 watch(
   () => props.anchorDate,
   (date) => {
     pickerDate.value = date
-    load()
+    void load()
   },
   { immediate: true },
 )

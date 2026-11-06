@@ -59,7 +59,7 @@ async function loadPending() {
 watch(() => vehicle.value?.id, () => {
   pending.value = []
   pendingTotal.value = 0
-  loadPending()
+  void loadPending()
 }, { immediate: true })
 
 // A synchronization or a saved entry may have changed which charges lack a cost.
@@ -76,7 +76,7 @@ watch(() => quickAdd.isOpen, async (open) => {
     const available = tabs.value.map((t) => t.key)
     const fallback: QuickKind = available.includes('PENDING') ? 'PENDING' : available[0]
     activeKind.value = wanted && available.includes(wanted) ? wanted : fallback
-    loadPending()
+    void loadPending()
     await nextTick()
     trackViewport()
   } else {

@@ -202,7 +202,7 @@ function renderChart() {
 }
 
 onMounted(() => {
-  loadFleetSummary()
+  void loadFleetSummary()
 })
 
 onBeforeUnmount(() => {
