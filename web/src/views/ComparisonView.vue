@@ -160,7 +160,7 @@ function editScenario(sc: any) {
   formError.value = ''
   step.value = 1
   view.value = 'edit'
-  loadDefaults()
+  void loadDefaults()
 }
 
 // The adjusted scenario of the result page, saved over the open scenario or as another one.

@@ -235,7 +235,7 @@ function showFor(drive: any, opening: boolean) {
   editingExpenseId.value = null
   if (drive.is_trip_group) {
     showAddTollInline.value = false
-    loadTripExpenses()
+    void loadTripExpenses()
     return
   }
   showAddTollInline.value = opening ? props.startWithTollEntry : false
@@ -243,8 +243,8 @@ function showFor(drive: any, opening: boolean) {
     inlineTollAmount.value = ''
     inlineTollNotes.value = ''
   }
-  loadDriveExpenses(drive.id)
-  loadTollDetection(drive)
+  void loadDriveExpenses(drive.id)
+  void loadTollDetection(drive)
 }
 
 onMounted(() => showFor(selectedCostDrive.value, true))

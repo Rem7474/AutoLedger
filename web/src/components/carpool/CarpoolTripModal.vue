@@ -295,7 +295,7 @@ watch([open, () => props.openToken], ([isOpen]) => {
   if (!isOpen) return
   submitted.value = false
   if (props.editing) initEdit(props.editing)
-  else initCreate(props.createOptions)
+  else void initCreate(props.createOptions)
 })
 
 const submitted = ref(false)

@@ -109,7 +109,7 @@ watch(open, (isOpen) => {
       maintenance_id: r.maintenance_id ?? '',
     }
   }
-  loadMaintenanceChoices()
+  void loadMaintenanceChoices()
 })
 
 // A fixed-date reminder is settled by a service date close to its occurrence, so a new one starts without a last service date.

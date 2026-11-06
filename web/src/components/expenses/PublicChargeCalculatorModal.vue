@@ -66,11 +66,11 @@ watch(selectedPresetId, (presetId) => {
   costPerMinute.value = preset.price_per_minute ?? ''
   idleFeePerMinute.value = preset.idle_fee_per_minute ?? ''
   idleGraceMinutes.value = preset.idle_grace_minutes ?? ''
-  calculate()
+  void calculate()
 })
 
 watch([kwh, chargingMinutes, idleMinutes, connectionFee, costPerKwh, costPerMinute, idleFeePerMinute, idleGraceMinutes], () => {
-  calculate()
+  void calculate()
 })
 
 watch(open, (isOpen) => {
@@ -78,8 +78,8 @@ watch(open, (isOpen) => {
     if (props.initialKwh && !kwh.value) {
       kwh.value = props.initialKwh
     }
-    loadPresets()
-    calculate()
+    void loadPresets()
+    void calculate()
   }
 })
 
@@ -132,7 +132,7 @@ function applyToCharge() {
 }
 
 onMounted(() => {
-  loadPresets()
+  void loadPresets()
 })
 </script>
 

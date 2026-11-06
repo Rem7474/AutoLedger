@@ -141,7 +141,7 @@ watch(
 watch(
   () => [vehicleStore.activeVehicle?.id, vehicleStore.lastSyncTimestamp],
   () => {
-    loadTires()
+    void loadTires()
   }
 )
 
@@ -162,8 +162,8 @@ async function loadStartOdometer() {
 watch(() => vehicleStore.activeVehicle?.id, loadStartOdometer)
 
 onMounted(() => {
-  loadTires()
-  loadStartOdometer()
+  void loadTires()
+  void loadStartOdometer()
 })
 useRefreshHandler(() => loadTires(true))
 

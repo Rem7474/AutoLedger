@@ -169,8 +169,8 @@ async function changePassword() {
 }
 
 onMounted(() => {
-  load()
-  loadSsoConfig()
+  void load()
+  void loadSsoConfig()
 })
 useRefreshHandler(() => load(true))
 </script>
