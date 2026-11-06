@@ -166,7 +166,7 @@ async function loadData(keepList = false) {
     } else if (activeTab.value === 'MAINTENANCE' || activeTab.value === 'FIXED') {
       maintenanceExpenses.value = await api.getMaintenance(vehicleStore.activeVehicle.id)
     } else if (activeTab.value === 'REMINDERS') {
-      await loadReminders()
+      await loadReminders(keepList)
     } else if (activeTab.value === 'CHARGES' && vehicleStore.canCharge) {
       const pages = keepList ? chargesPage.value : 1
       const loaded: any[] = []
@@ -185,7 +185,7 @@ async function loadData(keepList = false) {
     }
     void ensureDocumentsLoaded()
     if (activeTab.value !== 'REMINDERS') {
-      void loadReminders()
+      void loadReminders(true)
     }
   } catch (err) {
     console.error('Failed to load expenses', err)
@@ -197,10 +197,11 @@ async function loadData(keepList = false) {
 
 const { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, refreshData, { tolls: driveExpenses, maintenance: maintenanceExpenses, charges })
 
+// A synchronisation behind the screen refreshes the list in place; a new vehicle or tab shows the skeleton.
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value, vehicleStore.lastSyncTimestamp],
-  () => {
-    void loadData()
+  ([vehicle, tab], [prevVehicle, prevTab]) => {
+    void loadData(vehicle === prevVehicle && tab === prevTab)
   }
 )
 
@@ -378,7 +379,7 @@ function openUploadDocumentModal() {
       @edit="openEditReminderModal"
       @complete="openCompleteReminder"
       @delete="handleDeleteReminder"
-      @reload="loadReminders"
+      @reload="loadReminders(true)"
     />
 
     <div
@@ -514,7 +515,7 @@ function openUploadDocumentModal() {
       :editing="editingReminder"
       :preset="reminderPreset"
       :current-odometer="currentOdometer"
-      @saved="loadReminders"
+      @saved="loadReminders(true)"
     />
 
     <CompleteReminderModal

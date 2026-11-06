@@ -34,9 +34,11 @@ export function useReminders(options: UseRemindersOptions) {
   const unscheduledReminders = computed(() => reminders.value.filter((r) => !hasReminderSchedule(r)))
   const urgentRemindersCount = computed(() => overdueReminders.value.length + dueSoonReminders.value.length)
 
-  async function loadReminders() {
+  // `keepList` reloads behind the reminders already shown (after an action on a row) instead of swapping them for the
+  // skeleton. Compared strictly: the function is also bound as an event handler, which passes the event.
+  async function loadReminders(keepList?: boolean) {
     if (!vehicleStore.activeVehicle) return
-    loadingReminders.value = true
+    if (keepList !== true) loadingReminders.value = true
     try {
       reminders.value = await api.getReminders(vehicleStore.activeVehicle.id)
     } catch (err: any) {
@@ -71,7 +73,7 @@ export function useReminders(options: UseRemindersOptions) {
     try {
       await api.deleteReminder(vehicleStore.activeVehicle.id, r.id)
       void showAlert(t('expenses.expensesView.reminderDeleted'), t('common.success'), 'success')
-      await loadReminders()
+      await loadReminders(true)
     } catch (err: any) {
       void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
@@ -83,7 +85,7 @@ export function useReminders(options: UseRemindersOptions) {
   }
 
   async function onReminderCompleted(expenseLogged: boolean) {
-    await loadReminders()
+    await loadReminders(true)
     if (expenseLogged && vehicleStore.activeVehicle) await options.onExpenseLogged()
   }
 
