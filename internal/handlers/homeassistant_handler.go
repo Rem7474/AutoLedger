@@ -166,7 +166,11 @@ func (h *HomeAssistantHandler) recordChargingSession(w http.ResponseWriter, r *h
 		return
 	}
 
+	// A session sent without a place is placed at the charger that served it
 	location := optionalText(req.Data.Location)
+	if location == nil {
+		location = optionalText(req.Data.ChargerName)
+	}
 	eventID := optionalText(req.EventID)
 
 	vehicles, err := h.repo.ListVehiclesByUserID(r.Context(), userID)

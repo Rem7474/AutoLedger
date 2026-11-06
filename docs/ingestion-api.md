@@ -37,7 +37,7 @@ Use a read-only token for anything that only looks at the figures (a dashboard, 
 
 ### `charging_session_end`
 
-`data`: `start_time`, `end_time`, `energy_kwh` (or `energy_added_kwh`; above 0, at most 500), `cost` (currency units) or `cost_cents`, `location`, `charger_name`, `odometer_km`, `soc_start`, `soc_end`.
+`data`: `start_time`, `end_time`, `energy_kwh` (or `energy_added_kwh`; above 0, at most 500), `cost` (currency units) or `cost_cents`, `location`, `charger_name`, `odometer_km`, `soc_start`, `soc_end`. A session sent without `location` is placed at its `charger_name`.
 
 Without a cost, the vehicle's tariff plan is applied when there is one, otherwise the cost is left to complete. Electric vehicles only.
 

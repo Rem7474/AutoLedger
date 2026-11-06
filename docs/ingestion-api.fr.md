@@ -37,7 +37,7 @@ Utilisez un jeton en lecture seule pour tout ce qui ne fait que consulter les ch
 
 ### `charging_session_end`
 
-`data` : `start_time`, `end_time`, `energy_kwh` (ou `energy_added_kwh` ; supérieur à 0, 500 au plus), `cost` (unités monétaires) ou `cost_cents`, `location`, `charger_name`, `odometer_km`, `soc_start`, `soc_end`.
+`data` : `start_time`, `end_time`, `energy_kwh` (ou `energy_added_kwh` ; supérieur à 0, 500 au plus), `cost` (unités monétaires) ou `cost_cents`, `location`, `charger_name`, `odometer_km`, `soc_start`, `soc_end`. Une session envoyée sans `location` est placée au `charger_name` de son chargeur.
 
 Sans coût, le plan tarifaire du véhicule s'applique s'il existe, sinon le coût reste à compléter. Véhicules électriques uniquement.
 
