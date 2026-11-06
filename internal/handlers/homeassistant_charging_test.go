@@ -99,6 +99,34 @@ func TestHomeAssistantChargingSessions(t *testing.T) {
 		t.Errorf("charges after the resends: %d, want 1", n)
 	}
 
+	// A session without a place is placed at its charger; a place that was sent wins, a blank one counts as none
+	placed := func(eventID, extra string) *string {
+		body := `{"event_id":"` + eventID + `","vehicle_id":"` + ev.ID + `","data":{"start_time":"2026-10-05T01:00:00Z","end_time":"2026-10-05T02:00:00Z","energy_kwh":8,` + extra + `}}`
+		status, resp := post(owner, body)
+		if status != http.StatusCreated {
+			t.Fatalf("%s: got %d %+v, want 201", eventID, status, resp)
+		}
+		var address *string
+		if err := repo.Pool().QueryRow(ctx, `SELECT address FROM charge_logs WHERE id = $1`, resp.ChargeID).Scan(&address); err != nil {
+			t.Fatal(err)
+		}
+		return address
+	}
+	for _, c := range []struct{ name, event, extra, want string }{
+		{"charger only", "place:1", `"charger_name":"Garage wallbox"`, "Garage wallbox"},
+		{"place and charger", "place:2", `"location":"Office","charger_name":"Garage wallbox"`, "Office"},
+		{"blank place and charger", "place:3", `"location":"  ","charger_name":" Garage wallbox "`, "Garage wallbox"},
+		{"neither", "place:4", `"odometer_km":1000`, ""},
+	} {
+		got := placed(c.event, c.extra)
+		switch {
+		case c.want == "" && got != nil:
+			t.Errorf("%s: address %q, want none", c.name, *got)
+		case c.want != "" && (got == nil || *got != c.want):
+			t.Errorf("%s: address %v, want %q", c.name, got, c.want)
+		}
+	}
+
 	for _, c := range []struct{ name, body, code string }{
 		{"no energy", `{"data":{"start_time":"2026-10-02T01:00:00Z","end_time":"2026-10-02T02:00:00Z","energy_kwh":0}}`, "charge.invalid_energy"},
 		{"cumulative meter value", `{"data":{"start_time":"2026-10-02T01:00:00Z","end_time":"2026-10-02T02:00:00Z","energy_kwh":5123}}`, "charge.invalid_energy"},
