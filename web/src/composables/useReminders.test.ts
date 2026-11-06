@@ -88,6 +88,29 @@ describe('useReminders', () => {
     expect(r.reminderPreset.value).toBeNull()
   })
 
+  it('shows the skeleton on a first load but keeps the list on screen after an action', async () => {
+    let release: (v: any) => void = () => {}
+    vi.mocked(api.getReminders).mockImplementation(() => new Promise((resolve) => (release = resolve)))
+    const { r } = setup()
+
+    const first = r.loadReminders()
+    expect(r.loadingReminders.value).toBe(true)
+    release([])
+    await first
+    expect(r.loadingReminders.value).toBe(false)
+
+    const afterAction = r.loadReminders(true)
+    expect(r.loadingReminders.value).toBe(false)
+    release([])
+    await afterAction
+
+    // Bound as an event handler, the function receives the event: that is not a request to keep the list
+    const asHandler = r.loadReminders({} as any)
+    expect(r.loadingReminders.value).toBe(true)
+    release([])
+    await asHandler
+  })
+
   it('deletes a reminder after confirmation and reloads the list', async () => {
     showConfirm.mockResolvedValue(true)
     vi.mocked(api.deleteReminder).mockResolvedValue(undefined as any)

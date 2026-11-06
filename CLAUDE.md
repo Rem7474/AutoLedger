@@ -37,7 +37,7 @@ docker rm -f tc-pg
 
 End-to-end suite (`e2e/`, Playwright against the built SPA and a real server): start the server on a fresh database (`ENVIRONMENT=development DATABASE_URL=... AUTOLEDGER_PORT=8080 AUTOLEDGER_BASE_URL=http://127.0.0.1:8080 AUTOLEDGER_MCP_ENABLED=true ./server`), seed it with `DEMO_PASSWORD=... go run ./cmd/demoseed -url http://127.0.0.1:8080`, then `cd e2e && npm ci --ignore-scripts && ./node_modules/.bin/playwright install chromium && BASE_URL=http://127.0.0.1:8080 DEMO_PASSWORD=... ./node_modules/.bin/playwright test`. It mocks nothing; the `End-to-end tests` CI job runs it and uploads traces on failure. Add a test there only for a flow unit tests cannot cover (a form, a redirect, a layout check).
 
-The full run takes several minutes (`internal/services` ~5 min). A `go test` that hangs on pgxpool acquire means the database was not really up: recreate the container. CI runs `go test -race` on postgres:14, `govulncheck`, `npm audit --audit-level=high`, and SonarCloud.
+The full run takes several minutes (`internal/services` ~5 min). A `go test` that hangs on pgxpool acquire means the database was not really up: recreate the container. Each handler test drops and migrates its schema (about 4 s on a default container, 1.3 s with `ALTER SYSTEM SET fsync=off, synchronous_commit=off, full_page_writes=off` on the throwaway test container), and sign-ins hash passwords: run with `-tags fastbcrypt` as CI does, or `internal/handlers` outlasts a 10-minute timeout. CI runs `go test -race` on postgres:14, `govulncheck`, `npm audit --audit-level=high`, and SonarCloud.
 
 ## Domain notes
 

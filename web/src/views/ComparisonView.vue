@@ -255,7 +255,7 @@ async function removeScenario(sc: any) {
   if (!ok) return
   try {
     await api.deleteComparisonScenario(sc.id)
-    await loadScenarios()
+    await loadScenarios(true)
   } catch (err: any) {
     await showAlert(err?.message || t('comparison.errors.deleteFailed'), t('comparison.comparisonView.deletion'), 'danger')
   }
