@@ -31,7 +31,7 @@ const series = computed(() => {
   for (const s of props.stats.battery_health) {
     if (s.current_capacity_kwh !== undefined) teslamate.set(s.date.slice(0, 7), s.current_capacity_kwh)
   }
-  const months = [...new Set([...estimated.keys(), ...teslamate.keys()])].sort()
+  const months = [...new Set([...estimated.keys(), ...teslamate.keys()])].sort((a, b) => a.localeCompare(b))
   return {
     months,
     estimated: months.map((m) => estimated.get(m) ?? null),
