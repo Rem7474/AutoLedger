@@ -72,6 +72,8 @@ const primaryItems = computed(() =>
   primaryNames.value.map((name) => navItems.value.find((item) => item.name === name)).filter((item) => !!item),
 )
 const secondaryItems = computed(() => navItems.value.filter((item) => !primaryNames.value.includes(item.name)))
+// The "More" sheet groups the pages under the same headings as the sidebar
+const moreSections = computed(() => groupNavItems(secondaryItems.value))
 const leftItems = computed(() => primaryItems.value.slice(0, 2))
 const rightItems = computed(() => primaryItems.value.slice(2))
 const moreActive = computed(() => secondaryItems.value.some((item) => item.name === currentRouteName.value))
@@ -187,9 +189,8 @@ function handleLogout() {
         <NavBarItem :to="item.path" :icon="item.icon" :label="$t(item.mobileLabelKey ?? item.labelKey)" :active="currentRouteName === item.name" />
       </li>
 
-      <li class="flex flex-1 items-center justify-center">
+      <li v-if="canQuickAdd" class="flex flex-1 items-center justify-center">
         <button
-          v-if="canQuickAdd"
           type="button"
           class="-mt-5 flex h-14 w-14 items-center justify-center rounded-full bg-rose-600 text-white shadow-lg shadow-rose-600/40 ring-4 ring-slate-950 transition-colors hover:bg-rose-500 active:bg-rose-700"
           :aria-label="$t('shell.navigation.quickAdd')"
@@ -230,26 +231,36 @@ function handleLogout() {
           <X class="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
-      <ul class="space-y-1">
-        <li v-for="item in secondaryItems" :key="item.name">
-          <router-link
-            :to="item.path"
-            class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-base font-medium"
-            :class="currentRouteName === item.name ? 'bg-rose-500/10 text-rose-300' : 'text-slate-200 hover:bg-slate-800'"
-            :aria-current="currentRouteName === item.name ? 'page' : undefined"
-          >
-            <component :is="item.icon" class="h-5 w-5" aria-hidden="true" />
-            {{ $t(item.labelKey) }}
-          </router-link>
-        </li>
-        <li>
-          <button type="button" class="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-base font-medium text-slate-300 hover:bg-slate-800" @click="handleLogout">
-            <LogOut class="h-5 w-5" aria-hidden="true" />
-            {{ $t('shell.navigation.signOut') }}
-          </button>
-        </li>
-      </ul>
-      <p class="mt-3 text-center font-mono text-xs text-slate-400">{{ APP_NAME }} {{ APP_VERSION }}</p>
+      <div
+        v-for="(section, index) in moreSections"
+        :key="section.headingKey ?? index"
+        role="group"
+        :aria-labelledby="section.headingKey ? 'more-section-' + index : undefined"
+      >
+        <p v-if="section.headingKey" :id="'more-section-' + index" class="px-3 pb-1 pt-3 text-xs font-semibold text-slate-400">
+          {{ $t(section.headingKey) }}
+        </p>
+        <ul class="space-y-1">
+          <li v-for="item in section.items" :key="item.name">
+            <router-link
+              :to="item.path"
+              class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-base font-medium"
+              :class="currentRouteName === item.name ? 'bg-rose-500/10 text-rose-300' : 'text-slate-200 hover:bg-slate-800'"
+              :aria-current="currentRouteName === item.name ? 'page' : undefined"
+            >
+              <component :is="item.icon" class="h-5 w-5" aria-hidden="true" />
+              {{ $t(item.labelKey) }}
+            </router-link>
+          </li>
+        </ul>
+      </div>
+      <div class="mt-2 border-t border-slate-800 pt-2">
+        <button type="button" class="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-base font-medium text-danger-300 hover:bg-danger-500/10" @click="handleLogout">
+          <LogOut class="h-5 w-5" aria-hidden="true" />
+          {{ $t('shell.navigation.signOut') }}
+        </button>
+      </div>
+      <p v-if="APP_VERSION !== 'dev'" class="mt-3 text-center font-mono text-xs text-slate-400">{{ APP_NAME }} {{ APP_VERSION }}</p>
     </div>
   </div>
 </template>

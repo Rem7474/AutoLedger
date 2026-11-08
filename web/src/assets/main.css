@@ -534,6 +534,25 @@ select option:disabled {
   }
 }
 
+/* The controls of the interface are not text to select: a long press on a tab, a button or a chip does not start a text
+   selection or show the link preview of iOS. What the user reads (values, names, notes) stays selectable. */
+@layer base {
+  nav,
+  button,
+  [role='tab'],
+  .btn,
+  .chip,
+  .choice,
+  .nav-item {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  nav a {
+    -webkit-touch-callout: none;
+  }
+}
+
 /* The crossfade between two pages of a phone (installViewTransitions) is a short fade, like any other transition */
 ::view-transition-old(root),
 ::view-transition-new(root) {

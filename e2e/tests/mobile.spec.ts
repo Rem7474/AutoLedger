@@ -528,3 +528,39 @@ test('a carpool dragged to the left is deleted with an Undo', async ({ page, req
     for (const c of await listed()) await request.delete(`/api/vehicles/${ev.id}/carpools/${c.id}`, { headers })
   }
 })
+
+test('touching the tab of the page already shown brings it back to the top', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const scroller = page.locator('.app-scroll')
+  await scroller.evaluate((el) => el.scrollTo({ top: 600 }))
+  await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBeGreaterThan(300)
+  await page.getByRole('navigation', { name: 'Main navigation' }).last().getByRole('link', { name: 'Drives' }).click()
+  await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(0)
+})
+
+test('the "More" sheet groups the pages, with sign out last and set apart', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  await page.getByRole('button', { name: 'More' }).click()
+  const sheet = page.getByRole('dialog', { name: 'Other pages' })
+  await expect(sheet.getByRole('group')).not.toHaveCount(0)
+  const signOut = sheet.getByRole('button', { name: 'Sign out' })
+  // Last control of the sheet, below every page link
+  const lastY = await sheet.getByRole('link').last().boundingBox()
+  const outY = await signOut.boundingBox()
+  expect(outY!.y).toBeGreaterThan(lastY!.y + lastY!.height)
+  // Never the raw development marker
+  await expect(sheet.getByText(/\bdev$/)).toHaveCount(0)
+})
+
+test('controls of the interface are not selectable text, values are', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  const bar = page.getByRole('navigation', { name: 'Main navigation' }).last()
+  expect(await bar.evaluate((el) => getComputedStyle(el).userSelect)).toBe('none')
+  expect(await page.locator('main').evaluate((el) => getComputedStyle(el).userSelect)).not.toBe('none')
+})
+
+test('the home header has no "+ Expense" button on a phone: the "+" of the bar does that', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  await expect(page.getByRole('heading', { name: 'Dashboard' }).first()).toBeVisible()
+  await expect(page.getByRole('main').getByRole('link', { name: 'Expense', exact: true })).toBeHidden()
+})
