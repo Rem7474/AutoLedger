@@ -137,11 +137,11 @@ onMounted(() => {
     <!-- Header Summary -->
     <PageHeader :title="$t('shell.nav.dashboard')" :icon="PageIcon">
       {{ $t('dashboard.dashboardView.subtitle', { unit: distanceUnit(), name: vehicleStore.activeVehicle?.name || $t('dashboard.dashboardView.yourVehicle') }) }}
-      <!-- The quick-add button and the bottom bar already cover this on a phone -->
+      <!-- The quick-add button and the bottom bar already cover this on a phone. Not .tap-text: its unlayered display beats max-sm:hidden -->
       <template #actions>
         <router-link
           to="/expenses"
-          class="btn btn-lg btn-secondary tap-text max-sm:hidden"
+          class="btn btn-lg btn-secondary sm:min-h-9 max-sm:hidden"
         >
           {{ $t('dashboard.dashboardView.expense') }}
         </router-link>
