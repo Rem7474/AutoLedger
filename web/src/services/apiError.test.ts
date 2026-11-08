@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { setLocale } from '@/i18n'
-import { apiErrorMessage, apiMessageText } from './apiError'
+import { apiErrorMessage, apiMessageText, asNetworkError, NetworkError } from './apiError'
 import { setDistanceUnit } from '@/units'
 
 afterEach(() => {
@@ -62,5 +62,18 @@ describe('apiMessageText', () => {
 
   it('shows the server text of a message without a catalog entry', () => {
     expect(apiMessageText({ code: 'unknown.thing', message: 'Server text' })).toBe('Server text')
+  })
+})
+
+describe('asNetworkError', () => {
+  it('swaps the browser\'s failed-fetch TypeError for a translated message', () => {
+    const swapped = asNetworkError(new TypeError('Failed to fetch'))
+    expect(swapped).toBeInstanceOf(NetworkError)
+    expect((swapped as Error).message).not.toMatch(/Failed to fetch/)
+  })
+
+  it('leaves every other error as it is', () => {
+    const other = new Error('boom')
+    expect(asNetworkError(other)).toBe(other)
   })
 })

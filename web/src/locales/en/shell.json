@@ -76,6 +76,10 @@
     "vehicles": "Vehicles",
     "account": "Account"
   },
+  "notFound": {
+    "title": "Page not found",
+    "message": "This address does not lead anywhere in the app."
+  },
   "stale": {
     "title": "Changed elsewhere",
     "message": "This item was changed since you opened it, by someone else or in another window. Nothing was saved: the latest version is loaded again, make your changes on it."
@@ -120,6 +124,7 @@
     "invalidResponse": "Invalid server response",
     "notReady": "Error ({status}): The database or the service is not ready",
     "requestFailed": "The request failed ({status})",
+    "offline": "You are offline: the data will come back with the network.",
     "driveNoToll": "Drive marked as toll-free",
     "chargeCostConfirmed": "Charge cost confirmed",
     "tripSuggestionDismiss": "Detected trip ruled out",

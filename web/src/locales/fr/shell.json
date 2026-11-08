@@ -76,6 +76,10 @@
     "vehicles": "Véhicules",
     "account": "Compte"
   },
+  "notFound": {
+    "title": "Page introuvable",
+    "message": "Cette adresse ne mène à aucune page de l'application."
+  },
   "stale": {
     "title": "Modifié ailleurs",
     "message": "Cet élément a été modifié depuis son ouverture, par quelqu'un d'autre ou dans une autre fenêtre. Rien n'a été enregistré : la dernière version est rechargée, refaites vos modifications dessus."
@@ -120,6 +124,7 @@
     "invalidResponse": "Réponse du serveur invalide",
     "notReady": "Erreur ({status}): La base de données ou le service n'est pas prêt",
     "requestFailed": "La requête a échoué ({status})",
+    "offline": "Hors ligne : les données reviendront avec le réseau.",
     "driveNoToll": "Trajet marqué sans péage",
     "chargeCostConfirmed": "Coût de la recharge confirmé",
     "tripSuggestionDismiss": "Voyage détecté écarté",

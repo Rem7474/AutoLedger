@@ -564,3 +564,31 @@ test('the home header has no "+ Expense" button on a phone: the "+" of the bar d
   await expect(page.getByRole('heading', { name: 'Dashboard' }).first()).toBeVisible()
   await expect(page.getByRole('main').getByRole('link', { name: 'Expense', exact: true })).toBeHidden()
 })
+
+test('an unknown address shows a page that says so, with the way home', async ({ page }) => {
+  await useVehicle(page, ev.id, '/no/such/page')
+  await expect(page).toHaveURL(/\/no\/such\/page$/)
+  await expect(page.getByRole('heading', { name: 'Page not found' }).last()).toBeVisible()
+  await page.getByRole('main').getByRole('link', { name: 'Home' }).click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('the Trips tab is in the address: it survives a reload and leaves the address with the Drives tab', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await page.getByRole('tab', { name: 'Trips' }).click()
+  await expect(page).toHaveURL(/\/drives\?tab=TRIPS$/)
+  await page.reload()
+  await expect(page.getByRole('tab', { name: 'Trips' })).toHaveAttribute('aria-selected', 'true')
+  await page.getByRole('tab', { name: 'Drives' }).click()
+  await expect(page).toHaveURL(/\/drives$/)
+  await page.goto('/drives?tab=TRIPS')
+  await expect(page.getByRole('tab', { name: 'Trips' })).toHaveAttribute('aria-selected', 'true')
+})
+
+test('a list that cannot load offline says so in plain words, and does not claim the vehicle is tracked by hand', async ({ page }) => {
+  await page.route(/\/api\/vehicles\/[^/]+\/drives(\?|$)/, (route) => route.abort('internetdisconnected'))
+  await useVehicle(page, ev.id, '/drives')
+  await expect(page.getByRole('alert').getByText(/offline/i)).toBeVisible()
+  await expect(page.getByText(/Failed to fetch/i)).toHaveCount(0)
+  await expect(page.getByText(/manual or semi-automatic/i)).toHaveCount(0)
+})

@@ -7,6 +7,8 @@ import { Navigation as PageIcon } from 'lucide-vue-next'
 import { t, intlLocale } from '@/i18n'
 import { distanceUnit } from '@/units'
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { drivesTabQuery, parseDrivesTab, type DrivesTab } from '@/utils/drivesTab'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useConfirm } from '@/composables/useConfirm'
@@ -56,6 +58,8 @@ import {
 // The page owns the drives list, the filters, the selection and which modal is open; the toolbar, the cards,
 // the pagination and the modals are components that report back to it.
 const vehicleStore = useVehicleStore()
+const route = useRoute()
+const router = useRouter()
 const prefs = usePreferencesStore()
 const { showConfirm, showAlert } = useConfirm()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
@@ -237,8 +241,8 @@ function loadDrives(silent = false) {
   return loadList(silent)
 }
 
-// View mode: drives list or trip groups ("voyages")
-const viewMode = ref<'DRIVES' | 'TRIPS'>('DRIVES')
+// View mode: drives list or trip groups ("voyages"), kept in the address (`?tab=TRIPS`) so a reload or Back finds it again
+const viewMode = ref<DrivesTab>(parseDrivesTab(route.query.tab))
 const tripQualifyOnly = ref(false)
 
 // On a phone the filters sit behind one button, so the first drive is not pushed below the fold; a wide screen shows them
@@ -346,6 +350,7 @@ watch(
 
 onMounted(() => {
   void loadDrives()
+  if (viewMode.value === 'TRIPS') void loadTripGroups()
 })
 
 async function markNoToll(d: any) {
@@ -373,10 +378,20 @@ const viewTabs = computed<TabItem[]>(() => [
   { key: 'TRIPS', label: t('drives.drivesView.trips'), icon: Layers },
 ])
 
-function switchView(mode: 'DRIVES' | 'TRIPS') {
+function switchView(mode: DrivesTab) {
   viewMode.value = mode
   if (mode === 'TRIPS') void loadTripGroups()
+  void router.replace({ query: drivesTabQuery(route.query, mode) })
 }
+
+// The address changed under the page (Back, a link): the tab follows it
+watch(
+  () => route.query.tab,
+  (tab) => {
+    const mode = parseDrivesTab(tab)
+    if (mode !== viewMode.value) switchView(mode)
+  }
+)
 
 // The edit form replaces the detail, like the edit of a carpool
 function editTripFromCostModal(virtual: any) {
@@ -429,7 +444,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 <template>
   <div class="space-y-6">
     <!-- Drives informational banner when no telemetry is linked -->
-    <div v-if="vehicleStore.activeVehicle && !vehicleStore.hasTeslaMate && total === 0" class="rounded-2xl border border-info-500/30 bg-info-500/10 p-4 text-sm text-info-200">
+    <div v-if="vehicleStore.activeVehicle && !vehicleStore.hasTeslaMate && total === 0 && !loading && loadError === null" class="rounded-2xl border border-info-500/30 bg-info-500/10 p-4 text-sm text-info-200">
       <span>{{ $t('drives.drivesView.noTelemetryBanner') }}</span>
     </div>
 
@@ -464,7 +479,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       </template>
     </PageHeader>
 
-    <TabBar :model-value="viewMode" :tabs="viewTabs" :label="$t('shell.nav.drives')" id-prefix="drives-tab" @update:model-value="switchView($event as 'DRIVES' | 'TRIPS')" />
+    <TabBar :model-value="viewMode" :tabs="viewTabs" :label="$t('shell.nav.drives')" id-prefix="drives-tab" @update:model-value="switchView($event as DrivesTab)" />
 
     <!-- Filters & Navigation Toolbar (Drives Mode) -->
     <DrivesToolbar

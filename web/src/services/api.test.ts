@@ -164,8 +164,9 @@ describe('offline mutations', () => {
     fetchMock.mockRejectedValueOnce(new Error('abort'))
     await expect(api.updateCharge('v1', 'c1', {})).rejects.toThrow('abort')
 
-    fetchMock.mockRejectedValueOnce(new TypeError('network'))
-    await expect(api.getCharges('v1')).rejects.toThrow('network')
+    // A read that never reached the server says so in the user's language, not with the browser's "Failed to fetch"
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await expect(api.getCharges('v1')).rejects.toThrow(/Hors ligne/)
   })
 
   it('sends the idempotency key with an online flagged mutation', async () => {
