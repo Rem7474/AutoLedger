@@ -164,7 +164,7 @@ function openCarpool() {
         <button type="button" role="menuitem" class="menu-item" @click="emit('edit', d)">
           <Pencil class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.edit') }}
         </button>
-        <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', d)">
+        <button type="button" role="menuitem" class="menu-item menu-item-danger" @click="emit('delete', d)">
           <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
         </button>
       </template>

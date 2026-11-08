@@ -325,9 +325,9 @@ async function handleDriverChange(event: Event) {
             <span>{{ $t('drives.tripSuggestions.create') }}</span>
           </button>
         </div>
-        <div v-else-if="!selectedCostDrive.is_suggestion" class="flex items-center gap-2">
+        <div v-else-if="!selectedCostDrive.is_suggestion && vehicleStore.canEdit" class="flex items-center gap-2">
           <button
-            v-if="selectedCostDrive.is_trip_group && vehicleStore.canEdit"
+            v-if="selectedCostDrive.is_trip_group"
             type="button"
             @click="emit('edit-trip', selectedCostDrive)"
             class="btn btn-lg btn-secondary"

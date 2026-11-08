@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { X, MoreVertical } from 'lucide-vue-next'
-import { barActions, phoneShortcuts, type SelectionAction } from '@/utils/selectionActions'
+import { barActions, phoneShortcuts, sheetOrder, type SelectionAction } from '@/utils/selectionActions'
 import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 import { useIsMobile } from '@/composables/useIsMobile'
 import ModalShell from '@/components/ModalShell.vue'
@@ -41,6 +41,7 @@ const hasMore = computed(() => props.actions.length > 0 && (isMobile.value || pr
 const moreRoot = ref<HTMLElement | null>(null)
 
 // The bar slides out after the last row is deselected: it keeps showing the last counter while it leaves
+const sheetActions = computed(() => sheetOrder(props.actions))
 const shownCount = ref(props.count)
 watch(
   () => props.count,
@@ -138,8 +139,8 @@ onUnmounted(() => {
           {{ shownCount }}
         </span>
         <span class="truncate text-lg font-medium text-white sm:text-sm sm:font-semibold sm:text-slate-200">
-          <span class="sm:hidden">{{ shownCount }}</span>
-          {{ $t(`shell.bulkSelectionBar.selected.${noun}`, shownCount) }}
+          <span class="sm:hidden">{{ $t('shell.bulkSelectionBar.selectedShort', shownCount) }}</span>
+          <span class="max-sm:hidden">{{ $t(`shell.bulkSelectionBar.selected.${noun}`, shownCount) }}</span>
         </span>
 
         <span v-if="metricsSummary" class="hidden sm:inline-flex items-center text-xs text-slate-400 border-l border-slate-700/80 pl-2.5 ml-0.5 font-medium">
@@ -243,8 +244,8 @@ onUnmounted(() => {
     <Teleport v-if="isMobile" to="body">
       <ModalShell v-model:open="moreOpen" :title="`${count} ${$t(`shell.bulkSelectionBar.selected.${noun}`, count)}`" size="sm">
         <div role="menu" class="space-y-1 [&_.menu-item]:min-h-12 [&_.menu-item]:gap-4 [&_.menu-item]:px-4 [&_.menu-item]:text-base [&_.menu-item_svg]:h-5 [&_.menu-item_svg]:w-5" @click="closeOnAction" @change="moreOpen = false">
-          <template v-for="(a, i) in actions" :key="a.key">
-          <hr v-if="i > 0 && a.overflow && !actions[i - 1].overflow" role="separator" class="!my-2 border-slate-800" />
+          <template v-for="(a, i) in sheetActions" :key="a.key">
+          <hr v-if="i > 0 && ((a.danger && !sheetActions[i - 1].danger) || (a.overflow && !a.danger && !sheetActions[i - 1].overflow))" role="separator" class="!my-2 border-slate-800" />
           <button
             type="button"
             role="menuitem"

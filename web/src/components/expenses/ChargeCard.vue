@@ -187,7 +187,7 @@ const costInTeslaMate = computed(() => (toComplete.value ? teslamateCostEditUrl(
         <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" role="menuitem" class="menu-item">
           <ExternalLink class="w-3.5 h-3.5 text-slate-400" />{{ $t('expenses.teslamateLinks.details') }}
         </a>
-        <button v-if="chargeDeletable(c)" type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', c)">
+        <button v-if="chargeDeletable(c)" type="button" role="menuitem" class="menu-item menu-item-danger" @click="emit('delete', c)">
           <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
         </button>
       </RowMenu>

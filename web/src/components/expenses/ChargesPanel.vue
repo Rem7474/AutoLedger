@@ -85,8 +85,9 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
         </span>
       </div>
       <button
+        v-if="vehicleStore.canEdit"
         @click="router.push('/vehicles')"
-        class="shrink-0 font-medium underline hover:text-info-200 transition-colors ml-2"
+        class="tap-text min-w-11 justify-center shrink-0 font-medium underline hover:text-info-200 transition-colors ml-2"
       >
         {{ $t('common.edit') }}
       </button>

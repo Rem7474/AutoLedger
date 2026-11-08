@@ -147,7 +147,7 @@ function printResult() {
       <div class="grid gap-4 sm:grid-cols-2">
         <div v-if="depreciationMissing" class="order-last rounded-2xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300" data-testid="savings-total-missing">
           {{ $t('comparison.depreciationMissing.card') }}
-          <router-link to="/vehicles" class="font-semibold text-sky-400 underline">{{ $t('dashboard.tcoMetricsGrid.depreciationMissingAction') }}</router-link>
+          <router-link to="/vehicles" class="tap-text font-semibold text-sky-400 underline">{{ $t('dashboard.tcoMetricsGrid.depreciationMissingAction') }}</router-link>
         </div>
         <KpiCard
           v-for="card in savingsCards"

@@ -94,6 +94,8 @@ async function handleSubmit() {
             <input id="register-email"
               v-model="email"
               type="email"
+              autocomplete="username"
+              enterkeyhint="next"
               required
               :placeholder="$t('auth.registerView.youExampleCom')"
               class="field pl-10 pr-4 placeholder-slate-500"
@@ -108,6 +110,8 @@ async function handleSubmit() {
             <input id="register-password"
               v-model="password"
               type="password"
+              autocomplete="new-password"
+              enterkeyhint="next"
               required
               placeholder="••••••••"
               class="field pl-10 pr-4 placeholder-slate-500"
@@ -122,6 +126,8 @@ async function handleSubmit() {
             <input id="register-confirm-password"
               v-model="confirmPassword"
               type="password"
+              autocomplete="new-password"
+              enterkeyhint="go"
               required
               placeholder="••••••••"
               class="field pl-10 pr-4 placeholder-slate-500"

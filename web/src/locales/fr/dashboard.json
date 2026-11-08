@@ -189,6 +189,7 @@
     "distanceKm": "Distance ({unit})",
     "lastMonthSDetail": "Détail dernier mois",
     "clickABarOfThe": "Cliquer sur une barre du graphique pour ouvrir le détail chiffré du mois.",
+    "tapABarOfThe": "Touchez une barre du graphique pour ouvrir le détail chiffré du mois.",
     "kmDriven": "Distance parcourue ({unit})",
     "averageCostPerKm": "Coût moyen au {unit} ({cur}/{unit})",
     "tooltipDistance": "Distance : {distance} {unit}",

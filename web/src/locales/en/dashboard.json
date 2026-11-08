@@ -189,6 +189,7 @@
     "distanceKm": "Distance ({unit})",
     "lastMonthSDetail": "Last month's detail",
     "clickABarOfThe": "Click a bar of the chart to open the month's detailed figures.",
+    "tapABarOfThe": "Tap a bar of the chart to open the month's detailed figures.",
     "kmDriven": "Distance driven ({unit})",
     "averageCostPerKm": "Average cost per {unit} ({cur}/{unit})",
     "tooltipDistance": "Distance: {distance} {unit}",
