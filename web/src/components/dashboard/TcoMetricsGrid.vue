@@ -91,7 +91,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
       >
         <p v-if="tco && tco.depreciation_known === false" class="mt-2 text-xs font-medium text-warning-400">
           {{ $t('dashboard.tcoMetricsGrid.depreciationMissing') }}
-          <router-link to="/vehicles" class="relative z-10 underline">{{ $t('dashboard.tcoMetricsGrid.depreciationMissingAction') }}</router-link>
+          <router-link to="/vehicles" class="tap-text relative z-10 underline">{{ $t('dashboard.tcoMetricsGrid.depreciationMissingAction') }}</router-link>
         </p>
         <p v-else-if="rolling && tco?.full_cost_per_km" class="mt-2 text-xs text-slate-300">
           {{ $t('dashboard.tcoMetricsGrid.sincePurchasePerKm', { amount: perUnit(tco.full_cost_per_km), unit: distanceUnit() }) }}
@@ -133,7 +133,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
       >
         <p v-if="tco && tco.depreciation_known === false" class="mt-2 text-xs font-medium text-warning-400">
           {{ $t('dashboard.tcoMetricsGrid.depreciationMissing') }}
-          <router-link to="/vehicles" class="relative z-10 underline">{{ $t('dashboard.tcoMetricsGrid.depreciationMissingAction') }}</router-link>
+          <router-link to="/vehicles" class="tap-text relative z-10 underline">{{ $t('dashboard.tcoMetricsGrid.depreciationMissingAction') }}</router-link>
         </p>
         <p v-else-if="rolling && tco?.full_cost_per_km" class="mt-2 text-xs text-slate-300">
           {{ $t('dashboard.tcoMetricsGrid.sincePurchasePerKm', { amount: perUnit(tco.full_cost_per_km), unit: distanceUnit() }) }}

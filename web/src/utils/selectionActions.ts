@@ -22,6 +22,8 @@ export interface SelectionAction {
 
 // What the bar shows directly: on a phone the first few as icons, on a desktop all of them as buttons
 export const barActions = (actions: SelectionAction[]) => actions.filter((a) => !a.overflow && !a.phoneOnly)
+// The order of the "More" sheet: the actions as given, the destructive ones last
+export const sheetOrder = (actions: SelectionAction[]) => [...actions.filter((a) => !a.danger), ...actions.filter((a) => a.danger)]
 export const phoneShortcuts = (actions: SelectionAction[], max = 3) => barActions(actions).slice(0, max)
 
 // Edit (one row at a time) and delete (several at once; blocked when a row cannot be deleted, e.g. synced from

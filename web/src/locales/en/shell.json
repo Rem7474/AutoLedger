@@ -50,6 +50,7 @@
       "carpool": "carpool selected | carpools selected",
       "drive": "drive selected | drives selected"
     },
+    "selectedShort": "{n} selected | {n} selected",
     "selectOne": "Select a single row",
     "cannotDelete": "Cannot be deleted",
     "moreActions": "More actions",

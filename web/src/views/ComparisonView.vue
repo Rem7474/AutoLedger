@@ -347,7 +347,7 @@ useRefreshHandler(() => loadScenarios(true))
             <button type="button" role="menuitem" class="menu-item" @click="editScenario(sc)">
               <Pencil class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.edit') }}
             </button>
-            <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="removeScenario(sc)">
+            <button type="button" role="menuitem" class="menu-item menu-item-danger" @click="removeScenario(sc)">
               <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
             </button>
           </RowMenu>

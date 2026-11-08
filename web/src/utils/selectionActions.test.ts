@@ -2,11 +2,16 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/i18n', () => ({ t: (key: string) => key }))
 
-import { barActions, editDeleteActions, phoneShortcuts, type SelectionAction } from './selectionActions'
+import { barActions, editDeleteActions, phoneShortcuts, sheetOrder, type SelectionAction } from './selectionActions'
 
 const action = (key: string, overflow = false): SelectionAction => ({ key, label: key, icon: {} as never, run: () => {}, overflow })
 
 describe('selection actions', () => {
+  it('puts the destructive actions last in the sheet, the others keeping their order', () => {
+    const all = [{ ...action('delete'), danger: true }, action('a'), action('b', true)]
+    expect(sheetOrder(all).map((a) => a.key)).toEqual(['a', 'b', 'delete'])
+  })
+
   it('keeps the overflow actions out of the bar', () => {
     const all = [action('a'), action('b', true), action('c')]
     expect(barActions(all).map((a) => a.key)).toEqual(['a', 'c'])

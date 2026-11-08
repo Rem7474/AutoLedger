@@ -83,7 +83,7 @@ const tile = computed(() => reminderDueTile(r.value))
       <button
         v-if="vehicleStore.canEdit"
         type="button"
-        class="px-2.5 py-1.5 bg-success-600/20 hover:bg-success-600/30 text-success-300 text-xs font-semibold rounded-xl border border-success-500/30 flex items-center gap-1.5 transition-colors shrink-0"
+        class="tap px-2.5 py-1.5 bg-success-600/20 hover:bg-success-600/30 text-success-300 text-xs font-semibold rounded-xl border border-success-500/30 flex items-center gap-1.5 transition-colors shrink-0"
         :title="$t('expenses.remindersPanel.markThisMaintenanceAsDone')"
         @click="emit('complete', r)"
       >

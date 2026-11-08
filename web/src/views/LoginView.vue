@@ -117,6 +117,8 @@ async function signIn(emailValue: string, passwordValue: string) {
             <input id="login-email"
               v-model="email"
               type="email"
+              autocomplete="username"
+              enterkeyhint="next"
               required
               :placeholder="$t('auth.loginView.youExampleCom')"
               class="field pl-10 pr-4 placeholder-slate-500"
@@ -131,6 +133,8 @@ async function signIn(emailValue: string, passwordValue: string) {
             <input id="login-password"
               v-model="password"
               type="password"
+              autocomplete="current-password"
+              enterkeyhint="go"
               required
               placeholder="••••••••"
               class="field pl-10 pr-4 placeholder-slate-500"

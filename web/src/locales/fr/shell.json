@@ -50,6 +50,7 @@
       "carpool": "covoiturage sélectionné | covoiturages sélectionnés",
       "drive": "trajet sélectionné | trajets sélectionnés"
     },
+    "selectedShort": "{n} sélectionné | {n} sélectionnés",
     "selectOne": "Sélectionnez une seule ligne",
     "cannotDelete": "Suppression impossible",
     "moreActions": "Plus d'actions",

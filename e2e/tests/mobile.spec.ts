@@ -592,3 +592,59 @@ test('a list that cannot load offline says so in plain words, and does not claim
   await expect(page.getByText(/Failed to fetch/i)).toHaveCount(0)
   await expect(page.getByText(/manual or semi-automatic/i)).toHaveCount(0)
 })
+
+test.describe('signed out', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test('the sign-in and sign-up fields tell the phone what to fill and what the keyboard key does', async ({ page }) => {
+    await page.goto('/login')
+    const attrs = (id: string) => page.locator(id).evaluate((e) => [e.getAttribute('autocomplete'), e.getAttribute('enterkeyhint')])
+    expect(await attrs('#login-email')).toEqual(['username', 'next'])
+    expect(await attrs('#login-password')).toEqual(['current-password', 'go'])
+    await page.goto('/register')
+    expect(await attrs('#register-email')).toEqual(['username', 'next'])
+    expect(await attrs('#register-password')).toEqual(['new-password', 'next'])
+    expect(await attrs('#register-confirm-password')).toEqual(['new-password', 'go'])
+  })
+})
+
+test('the sign-out button of a session and the edit link of the energy estimate have a 44px hit area', async ({ page }) => {
+  await useVehicle(page, ev.id, '/account')
+  const session = page.getByRole('button', { name: /^Sign out / }).first()
+  await expect(session).toBeVisible()
+  const a = (await session.boundingBox())!
+  expect(Math.min(a.width, a.height)).toBeGreaterThanOrEqual(44)
+
+  await useVehicle(page, ev.id, '/energy')
+  const edit = page.getByRole('button', { name: 'Edit', exact: true })
+  await expect(edit).toBeVisible()
+  const b = (await edit.boundingBox())!
+  expect(Math.min(b.width, b.height)).toBeGreaterThanOrEqual(44)
+})
+
+test('the selection bar counter is not cut on a phone, and the sheet ends with Delete set apart', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const row = page.locator('div.relative.card', { has: page.getByRole('button', { name: /^Open the cost breakdown/ }) }).first()
+  const box = (await row.boundingBox())!
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
+  const bar = page.locator('[data-selection-bar]')
+  await expect(bar).toBeVisible()
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+
+  const counter = bar.getByText('1 selected', { exact: true })
+  await expect(counter).toBeVisible()
+  expect(await counter.evaluate((e) => (e.parentElement as HTMLElement).scrollWidth <= (e.parentElement as HTMLElement).clientWidth)).toBe(true)
+
+  await bar.getByRole('button', { name: 'More actions' }).tap()
+  const items = page.getByRole('dialog').getByRole('menuitem')
+  await expect(items.last()).toHaveText('Delete')
+  await expect(page.getByRole('dialog').getByRole('separator')).not.toHaveCount(0)
+})
+
+test('the chart hint says "Tap" on a touch screen', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  await page.getByRole('button', { name: /^Mileage and cost/ }).first().tap()
+  await expect(page.getByText(/^Tap a bar of the chart/)).toBeVisible()
+  await expect(page.getByText(/^Click a bar of the chart/)).toBeHidden()
+})

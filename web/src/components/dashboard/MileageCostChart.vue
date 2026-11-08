@@ -150,7 +150,10 @@ onUnmounted(() => {
           <Activity class="w-4 h-4 text-slate-400" aria-hidden="true" />
           <span>{{ $t('dashboard.mileageCostChart.monthlyMileageAndCostPer', { unit: distanceUnit() }) }}</span>
         </h3>
-        <p class="text-xs text-slate-400 mt-0.5">{{ $t('dashboard.mileageCostChart.clickABarOfThe') }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">
+          <span class="pointer-coarse:hidden">{{ $t('dashboard.mileageCostChart.clickABarOfThe') }}</span>
+          <span class="hidden pointer-coarse:inline">{{ $t('dashboard.mileageCostChart.tapABarOfThe') }}</span>
+        </p>
       </div>
       <button
         v-if="months.length"

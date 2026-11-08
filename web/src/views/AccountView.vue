@@ -324,7 +324,7 @@ useRefreshHandler(() => load(true))
           <button
             type="button"
             :disabled="busyId === s.id"
-            class="btn btn-secondary min-h-11 shrink-0"
+            class="btn btn-secondary min-h-11 min-w-11 shrink-0"
             :aria-label="s.current ? $t('account.signOutThisDevice') : $t('account.signOutDevice', { device: describeUserAgent(s.user_agent) })"
             @click="revoke(s)"
           >

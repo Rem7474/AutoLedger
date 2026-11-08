@@ -112,7 +112,7 @@ function clearCardTestResult() {
           <button v-if="v.role === 'OWNER' && v.teslamate_api_url" type="button" role="menuitem" class="menu-item" :disabled="cardTest?.loading" @click="testCardConnection()">
             <Link2 class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ cardTest?.loading ? $t('vehicles.vehicleCard.testing') : $t('vehicles.vehicleCard.testApi') }}
           </button>
-          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item hover:!text-danger-400" @click="emit('delete', v.id)">
+          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item menu-item-danger" @click="emit('delete', v.id)">
             <Trash2 class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('common.delete') }}
           </button>
         </RowMenu>

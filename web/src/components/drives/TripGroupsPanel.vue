@@ -123,7 +123,7 @@ const actions = computed<SelectionAction[]>(() => {
           <button type="button" role="menuitem" class="menu-item" @click="emit('edit', tg)">
             <Pencil class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.renameTheTrip') }}
           </button>
-          <button type="button" role="menuitem" class="menu-item hover:!text-rose-300" @click="emit('delete', tg)">
+          <button type="button" role="menuitem" class="menu-item menu-item-danger" @click="emit('delete', tg)">
             <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.deleteTheTrip') }}
           </button>
         </RowMenu>
