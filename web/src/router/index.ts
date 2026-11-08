@@ -91,10 +91,8 @@ const router = createRouter({
       name: 'oidc-callback',
       component: () => import('@/views/OIDCCallbackView.vue'),
     },
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/',
-    },
+    // Any other address: a page that says so (signed-out visitors are sent to the sign-in like for every page)
+    authRoute('/:pathMatch(.*)*', 'not-found', () => import('@/views/NotFoundView.vue')),
   ],
 })
 

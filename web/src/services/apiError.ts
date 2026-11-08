@@ -60,3 +60,16 @@ export const isStaleWrite = (err: unknown): err is StaleWriteError => err instan
 
 /** Same for a message object of a payload (a warning, an assumption, a label). */
 export const apiMessageText = (message: ApiErrorBody | null | undefined): string => apiErrorMessage(message, '')
+
+/** A request that never reached the server (offline, server unreachable): its message says so in the user's language. */
+export class NetworkError extends Error {
+  constructor() {
+    super(t('shell.api.offline'))
+    this.name = 'NetworkError'
+  }
+}
+
+/** What a failed `fetch` throws on a network failure is a `TypeError` with the browser's English text: swap it for a `NetworkError`. */
+export function asNetworkError(err: unknown): unknown {
+  return err instanceof TypeError ? new NetworkError() : err
+}

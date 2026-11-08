@@ -33,6 +33,7 @@ const ROUTE_TITLE_KEYS: Record<string, string> = {
   login: 'auth.loginView.signInTo',
   register: 'auth.registerView.createAnAccount',
   onboarding: 'onboarding.onboardingView.welcomeTo',
+  'not-found': 'shell.notFound.title',
 }
 
 const pageTitle = computed(() => {

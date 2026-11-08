@@ -2,7 +2,7 @@ import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 // AutoLedger API Service
 import { newIdempotencyKey } from '@/services/offlineQueue'
-import { apiErrorMessage, StaleWriteError } from '@/services/apiError'
+import { apiErrorMessage, asNetworkError, StaleWriteError } from '@/services/apiError'
 import { csvImportForm, type CSVExecuteResult, type CSVImportBatch, type CSVImportOptions, type CSVImportProfile, type CSVPreviewResult } from '@/services/csvImport'
 import { fetchWithSessionRefresh, isPublicAuthRequest } from '@/services/sessionFetch'
 
@@ -85,7 +85,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}, offlineLa
     if (offlineLabel && err instanceof TypeError) {
       return queueForLater()
     }
-    throw err
+    throw asNetworkError(err)
   }
 
   // A failed refresh keeps the existing redirect for ordinary API requests. The session check is only a question
