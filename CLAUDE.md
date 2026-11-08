@@ -92,7 +92,8 @@ UI and mobile (the PWA is the mobile client: it must feel native, not like a squ
 - Motion and feedback: transitions are 150-250 ms and only on `transform` / `opacity`; honour `prefers-reduced-motion` (global rule). Every action gives feedback within 100 ms (pressed state, spinner on the button, toast); never leave a blank screen: skeleton while loading, an empty state that says what to do, a `LoadError` with a retry.
 - Content: truncate with `truncate` / `line-clamp-*` and a `title`, never let a long address or name push the layout; numbers use tabular figures and the account's units / currency; dates go through `utils/dates.ts`.
 - Offline: a screen or action that needs the server says so rather than failing silently (`offlineStore.isOnline`).
-- Check every UI change at 360, 390 and 430 px and at desktop width with a screenshot (Playwright, `hasTouch` + `isMobile`), before calling it done; attach the mobile capture to the PR.
+- Check every UI change at 360, 390 and 430 px and at desktop width with a screenshot (Playwright, `hasTouch` + `isMobile`), before calling it done.
+- A PR that changes the UI carries before and after captures, mandatory: one pair per screen and state it touches (every variant of a row, empty and filled, a read-only member where the screen differs), same viewport and same data, embedded in the PR `## Notes`. "Before" is taken on `origin/main`, "after" on the branch. Open each capture and look at it closely before posting it. A PR without them is not ready for review. Captures are pushed to a branch of the repository kept for them, never to the source tree.
 
 Refactors
 - Splitting a file is a pure move unless stated otherwise: verify declaration hashes and the multiset of non-blank lines before and after, then `gofmt`, build, vet, tests. For Vue views, compare the rendered DOM and recorded API writes before and after with a Playwright characterization run (mock `/api/**`, fixed clock).
