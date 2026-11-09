@@ -9,7 +9,7 @@ export interface UseRemindersOptions {
   // Called with the error message when loading fails and the reminders tab is the one on screen
   onLoadError: (message: string) => void
   // Called after a reminder was completed together with a logged maintenance expense
-  onExpenseLogged: () => Promise<void> | void
+  onExpenseLogged?: () => Promise<void> | void
   isRemindersTabActive: () => boolean
 }
 
@@ -84,7 +84,7 @@ export function useReminders(options: UseRemindersOptions) {
 
   async function onReminderCompleted(expenseLogged: boolean) {
     await loadReminders()
-    if (expenseLogged && vehicleStore.activeVehicle) await options.onExpenseLogged()
+    if (expenseLogged && vehicleStore.activeVehicle) await options.onExpenseLogged?.()
   }
 
   // The webhook is fetched before the modal opens, so it shows the saved configuration

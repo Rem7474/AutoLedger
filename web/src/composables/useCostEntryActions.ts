@@ -20,6 +20,8 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
   const showCharge = ref(false)
   const editing = ref<any | null>(null)
   const documents = ref<ExpenseDocumentHeader[]>([])
+  // The earlier maintenance entries, read when a new one is added: they suggest descriptions and close a revision
+  const maintenanceExpenses = ref<any[]>([])
 
   const fail = (err: any) => void showAlert(t('common.errorWithMessage', { message: err?.message ?? '' }), t('shell.confirm.error'), 'danger')
 
@@ -28,6 +30,20 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
       documents.value = await api.getDocuments(vehicleId)
     } catch (err) {
       console.error('Failed to load documents', err)
+    }
+  }
+
+  /** Opens the maintenance form empty, for a new entry. */
+  async function addMaintenance() {
+    const vehicle = vehicleStore.activeVehicle
+    if (!vehicle) return
+    editing.value = null
+    showMaintenance.value = true
+    void loadDocuments(vehicle.id)
+    try {
+      maintenanceExpenses.value = await api.getMaintenance(vehicle.id)
+    } catch (err) {
+      console.error('Failed to load the maintenance entries', err)
     }
   }
 
@@ -80,5 +96,5 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     documents.value.unshift(doc)
   }
 
-  return { showToll, showMaintenance, showCharge, editing, documents, open, remove, onDocumentAdded }
+  return { showToll, showMaintenance, showCharge, editing, documents, maintenanceExpenses, open, addMaintenance, remove, onDocumentAdded }
 }

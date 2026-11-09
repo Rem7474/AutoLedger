@@ -6,8 +6,6 @@ import type { ExpensesTab } from '@/composables/useExpensesTabs'
 // The page header buttons: which ones show depends on the active tab. The page opens the matching modal.
 defineProps<{ activeTab: ExpensesTab }>()
 defineEmits<{
-  addToll: []
-  addMaintenance: []
   openWebhook: []
   addReminder: []
   importCsv: []
@@ -19,24 +17,6 @@ const vehicleStore = useVehicleStore()
 
 <template>
   <div v-if="vehicleStore.canEdit" class="flex items-center gap-2">
-    <button
-      v-if="activeTab === 'TOLLS'"
-      @click="$emit('addToll')"
-      class="btn btn-lg btn-primary"
-    >
-      <Plus class="w-3.5 h-3.5" />
-      {{ $t('expenses.expensesView.add') }}
-      <span class="hidden font-normal sm:inline">{{ $t('expenses.expensesView.tollParking') }}</span>
-    </button>
-    <button
-      v-if="activeTab === 'MAINTENANCE' || activeTab === 'FIXED'"
-      @click="$emit('addMaintenance')"
-      class="btn btn-lg btn-primary"
-    >
-      <Plus class="w-3.5 h-3.5" />
-      {{ $t('expenses.expensesView.add') }}
-      <span class="hidden font-normal sm:inline">{{ activeTab === 'FIXED' ? $t('expenses.expensesView.fixedCosts') : $t('expenses.expensesView.maintenance') }}</span>
-    </button>
     <button
       v-if="activeTab === 'REMINDERS'"
       @click="$emit('openWebhook')"

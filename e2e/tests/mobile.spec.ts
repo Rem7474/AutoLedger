@@ -26,8 +26,7 @@ for (const route of ['/drives', '/carpools', '/comparison', '/tires', '/maintena
 }
 
 test('a date field inside a form is the native one on a phone, 16px so the page does not zoom on focus', async ({ page }) => {
-  await useVehicle(page, ev.id, '/expenses')
-  await page.getByRole('button', { name: /^Add/ }).first().click()
+  await useVehicle(page, ev.id, '/costs?theme=maintenance&add=maintenance')
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   // No floating calendar: the browser's own picker opens from a plain date field
@@ -92,44 +91,6 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect.poll(left, { timeout: 12_000 }).toBe(0)
 })
 
-test('a cost deleted on a phone goes at once, comes back with Undo, and is only deleted once the time to undo is over', async ({ page, request }) => {
-  const headers = await authHeaders(request)
-  const description = `Undo probe ${Date.now()}`
-  const created = await request.post(`/api/vehicles/${ev.id}/maintenance`, {
-    headers,
-    data: { description, amount: '12.34', date: new Date().toISOString().slice(0, 10), odometer: 1, category: 'OTHER', type: 'OTHER' },
-  })
-  expect(created.status()).toBe(201)
-  const rows = async () => ((await (await request.get(`/api/vehicles/${ev.id}/maintenance`, { headers })).json()) as { description: string }[]).filter((m) => m.description === description).length
-
-  try {
-    await useVehicle(page, ev.id, '/maintenance')
-    const cdp = await page.context().newCDPSession(page)
-    const deleteFromSelection = async () => {
-      const box = (await page.locator('div.card', { hasText: description }).first().boundingBox())!
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
-      await expect(page.locator('[data-selection-bar]')).toBeVisible()
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-      await page.locator('[data-selection-bar]').getByRole('button', { name: 'Delete' }).click()
-    }
-
-    await deleteFromSelection()
-    await expect(page.getByText(description)).toHaveCount(0)
-    await expect(page.getByRole('dialog')).toHaveCount(0)
-    expect(await rows()).toBe(1)
-    await page.getByRole('button', { name: 'Undo' }).click()
-    await expect(page.getByText(description)).toBeVisible()
-    expect(await rows()).toBe(1)
-
-    await deleteFromSelection()
-    await expect.poll(rows, { timeout: 12_000 }).toBe(0)
-    await expect(page.getByText(description)).toHaveCount(0)
-  } finally {
-    const left = (await (await request.get(`/api/vehicles/${ev.id}/maintenance`, { headers })).json()) as { id: string; description: string }[]
-    for (const m of left.filter((x) => x.description === description)) await request.delete(`/api/vehicles/${ev.id}/maintenance/${m.id}`, { headers })
-  }
-})
-
 // A finger on the screen: Playwright has no swipe, so the touch is dispatched through the browser's input domain.
 async function drag(page: Page, x: number, y: number, dx: number, dy: number, steps = 10) {
   const cdp = await page.context().newCDPSession(page)
@@ -184,8 +145,7 @@ for (const [path, endpoint, startY] of [
 }
 
 test('a sheet is closed by pulling it down by its handle, and a short pull lets it settle back', async ({ page }) => {
-  await useVehicle(page, ev.id, '/expenses')
-  await page.getByRole('button', { name: /^Add/ }).first().click()
+  await useVehicle(page, ev.id, '/costs?theme=maintenance&add=maintenance')
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await page.waitForTimeout(400) // the slide-up animation
@@ -200,8 +160,7 @@ test('a sheet is closed by pulling it down by its handle, and a short pull lets 
 })
 
 test('a sheet is also closed by pulling its content down, but not from a field', async ({ page }) => {
-  await useVehicle(page, ev.id, '/expenses')
-  await page.getByRole('button', { name: /^Add/ }).first().click()
+  await useVehicle(page, ev.id, '/costs?theme=maintenance&add=maintenance')
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await page.waitForTimeout(400)
@@ -254,11 +213,11 @@ test('on the home page every headline figure leads somewhere you can see', async
 
   const figures = page.getByRole('main')
   await figures.getByRole('link', { name: /^Cash paid/ }).click()
-  await expect(page).toHaveURL(/\/expenses/)
+  await expect(page).toHaveURL(/\/costs(\?period=\w+)?$/)
 
   await page.goBack()
   await figures.getByRole('link', { name: /^Energy/ }).click()
-  await expect(page).toHaveURL(/\/energy/)
+  await expect(page).toHaveURL(/\/costs\?theme=energy/)
 })
 
 test('a tire opens from its wheel tile, and the fitted set is one card instead of four', async ({ page }) => {
@@ -372,8 +331,8 @@ test('an odometer reading is added from a sheet on a phone, the history comes fi
 })
 
 test('saving a charge deep in the list keeps the page where it was', async ({ page }) => {
-  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
-  const cards = page.getByRole('main').getByRole('button', { name: /^Open the charge of / })
+  await useVehicle(page, ev.id, '/costs?theme=energy')
+  const cards = page.getByTestId('cost-entry').getByRole('button')
   await expect(cards.first()).toBeVisible()
   const last = cards.last()
   await last.scrollIntoViewIfNeeded()
@@ -418,9 +377,10 @@ test('a cost dragged to the left is deleted with an Undo, and a short drag leave
   const rows = async () => ((await (await request.get(`/api/vehicles/${ev.id}/maintenance`, { headers })).json()) as { description: string }[]).filter((m) => m.description === description).length
 
   try {
-    await useVehicle(page, ev.id, '/maintenance')
-    const row = page.locator('div.card', { hasText: description }).first()
+    await useVehicle(page, ev.id, '/costs?theme=other')
+    const row = page.getByTestId('cost-entry').filter({ hasText: description }).first()
     await row.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(600) // the list settles (figures, charts) before the row is measured
     const box = (await row.boundingBox())!
     const y = box.y + box.height / 2
 
@@ -428,7 +388,7 @@ test('a cost dragged to the left is deleted with an Undo, and a short drag leave
     await drag(page, 340, y, -50, 0)
     await expect(page.getByText(description)).toBeVisible()
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Undo' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toHaveCount(0)
 
     // A vertical move is a scroll: the row stays
     await drag(page, 340, y, -10, 60)
@@ -438,10 +398,10 @@ test('a cost dragged to the left is deleted with an Undo, and a short drag leave
     await expect(page.getByText(description)).toHaveCount(0)
     await expect(page.getByRole('dialog')).toHaveCount(0)
     expect(await rows()).toBe(1)
-    await page.getByRole('button', { name: 'Undo' }).click()
+    await page.getByRole('button', { name: 'Undo', exact: true }).click()
     await expect(page.getByText(description)).toBeVisible()
 
-    await drag(page, 340, (await page.locator('div.card', { hasText: description }).first().boundingBox())!.y + box.height / 2, -200, 4)
+    await drag(page, 340, (await page.getByTestId('cost-entry').filter({ hasText: description }).first().boundingBox())!.y + box.height / 2, -200, 4)
     await expect.poll(rows, { timeout: 12_000 }).toBe(0)
   } finally {
     const left = (await (await request.get(`/api/vehicles/${ev.id}/maintenance`, { headers })).json()) as { id: string; description: string }[]
@@ -1081,27 +1041,6 @@ test.describe('the period bar of the home page', () => {
   }
 })
 
-test('the Analysis sheet of the charges shares the period of the home page and changes it from a sheet over it', async ({ page }) => {
-  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
-  await page.getByRole('button', { name: /^Analysis/ }).first().tap()
-  const analysis = page.getByRole('dialog').first()
-  await expect(analysis).toBeVisible()
-  // No row of presets and no empty date fields any more: one labelled field with the period
-  await expect(analysis.locator('input[type=date]')).toHaveCount(0)
-  const field = analysis.getByRole('button', { name: /Choose the period/ })
-  await expect(field).toBeVisible()
-  await field.tap()
-  const sheet = page.getByRole('dialog', { name: 'Period' })
-  await expect(sheet).toBeVisible()
-  await sheet.getByRole('button', { name: 'Last 3 months' }).tap()
-  await expect(sheet).toBeHidden()
-  await expect(analysis).toBeVisible()
-  await expect(analysis.getByRole('button', { name: /Choose the period: Last 3 months/ })).toBeVisible()
-  // The home page reads the same choice
-  await page.goto('/')
-  await expect(page).toHaveURL(/period=3M/)
-})
-
 test.describe('the period bar of the drives list', () => {
   const bar = (page: Page) => page.getByTestId('period-bar')
 
@@ -1215,4 +1154,23 @@ test('the month detail is titled by its month alone and a swipe moves between mo
   // A swipe down is the sheet's own gesture: the month does not change by it
   await swipeDown(page, 200, y, 40)
   await expect(title).toHaveText(last)
+})
+
+test('the old addresses of the lists land on the costs page, and the tool pages keep their tabs', async ({ page }) => {
+  await useVehicle(page, ev.id, '/expenses?tab=TOLLS')
+  await expect(page).toHaveURL(/\/costs\?theme=tolls/)
+  await expect(page.getByTestId('costs-filter-tolls')).toHaveAttribute('aria-pressed', 'true')
+
+  await page.goto('/maintenance')
+  await expect(page).toHaveURL(/\/costs\?theme=maintenance/)
+
+  await page.goto('/maintenance?tab=REMINDERS')
+  await expect(page).toHaveURL(/\/maintenance\?tab=REMINDERS$/)
+  await expect(page.getByRole('heading', { name: 'Reminders' })).toBeVisible()
+
+  await page.goto('/energy')
+  await expect(page).toHaveURL(/\/energy/)
+  await page.getByTestId('charges-list-link').click()
+  await expect(page).toHaveURL(/\/costs\?theme=energy/)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })

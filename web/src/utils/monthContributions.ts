@@ -11,7 +11,7 @@ export function contributionCategory(key: string): string | null {
 
 /** Page listing the records of a ledger source table. */
 export function contributionRoute(sourceTable: string): string {
-  return sourceTable === 'maintenance_expenses' ? '/expenses' : '/energy'
+  return sourceTable === 'maintenance_expenses' ? '/costs?theme=maintenance' : '/costs?theme=energy'
 }
 
 /** Wording of a recurrence interval: the translation key and its parameters. */

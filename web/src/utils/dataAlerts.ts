@@ -20,7 +20,7 @@ export interface DataAlertLine {
   text: string
 }
 
-const PRICE_PAGES: Record<string, string> = { CHARGE: '/energy?tab=CHARGES', FUEL: '/energy?tab=FUEL' }
+const PRICE_PAGES: Record<string, string> = { CHARGE: '/costs?theme=energy', FUEL: '/energy?tab=FUEL' }
 
 // One line per alert: what is odd, in the vehicle's currency, and where to correct it
 export function dataAlertLine(alert: DataAlert, currency: string): DataAlertLine {
@@ -41,7 +41,7 @@ export function dataAlertLine(alert: DataAlert, currency: string): DataAlertLine
   const median = alert.median ?? 0
   return {
     key: alert.kind,
-    to: '/expenses',
+    to: '/costs',
     text: t('dashboard.dataQualityCard.alerts.amountOutlier', {
       category: t(`dashboard.dataQualityCard.alerts.categories.${alert.category}`),
       date,

@@ -105,8 +105,8 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
           :hint="monthHint"
           @action="emit('open-month', month.raw)"
         />
-        <KpiRow :label="rolling ? $t('dashboard.tcoMetricsGrid.cashPaid') : $t('dashboard.tcoMetricsGrid.totalCost')" :value="cashPaid" :hint="cashHint" to="/expenses" />
-        <KpiRow :label="energyLabel" :value="headline(energyCost)" :hint="energyHint" tone="sky" to="/energy" />
+        <KpiRow :label="rolling ? $t('dashboard.tcoMetricsGrid.cashPaid') : $t('dashboard.tcoMetricsGrid.totalCost')" :value="cashPaid" :hint="cashHint" to="/costs" />
+        <KpiRow :label="energyLabel" :value="headline(energyCost)" :hint="energyHint" tone="sky" to="/costs?theme=energy" />
       </div>
       <Teleport to="body">
         <ModalShell v-model:open="detailsSheet" :title="$t('dashboard.tcoMetricsGrid.details')" size="md">
@@ -149,7 +149,7 @@ const costPerKm = computed(() => (rolling.value ? rolling.value.economicPerKm : 
         :icon="Coins"
         :value="headline(rolling ? rolling.cash : tco?.total_cost)"
         :action-label="$t('dashboard.tcoMetricsGrid.viewExpenses')"
-        to="/expenses"
+        to="/costs"
       >
         <p v-if="estimatedEnergy" class="mt-2 text-xs text-slate-300">
           {{ $t('dashboard.tcoMetricsGrid.ofWhichEstimatedEnergy', { amount: money(estimatedEnergy, 0) }) }}

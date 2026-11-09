@@ -22,9 +22,9 @@ describe('useExpensesTabs', () => {
   })
 
   it('lists the tabs of each section and of each powertrain', () => {
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['TOLLS', 'FIXED', 'DOCUMENTS'])
+    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['DOCUMENTS'])
     route.meta = { section: 'maintenance' }
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['MAINTENANCE', 'REMINDERS'])
+    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['REMINDERS'])
     route.meta = { section: 'energy' }
     expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['CHARGES', 'EFFICIENCY', 'ESTIMATE'])
     store.canRefuel = true
@@ -46,31 +46,34 @@ describe('useExpensesTabs', () => {
   })
 
   it('opens the tab of the query, falling back to the first tab of the section', () => {
-    route.query = { tab: 'fixed' }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('FIXED')
+    route.meta = { section: 'energy' }
+    route.query = { tab: 'estimate' }
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('ESTIMATE')
+    route.meta = {}
     route.query = { tab: 'REMINDERS' }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('TOLLS')
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('DOCUMENTS')
     route.query = { tab: ['documents', 'x'] }
     expect(useExpensesTabs(() => badges).activeTab.value).toBe('DOCUMENTS')
   })
 
   it('writes the tab to the query and follows the query', async () => {
+    route.meta = { section: 'energy' }
     const { activeTab } = useExpensesTabs(() => badges)
-    activeTab.value = 'DOCUMENTS'
+    activeTab.value = 'EFFICIENCY'
     await nextTick()
-    expect(replace).toHaveBeenCalledWith({ query: { tab: 'DOCUMENTS' } })
-    route.query = { tab: 'FIXED' }
+    expect(replace).toHaveBeenCalledWith({ query: { tab: 'EFFICIENCY' } })
+    route.query = { tab: 'estimate' }
     await nextTick()
-    expect(activeTab.value).toBe('FIXED')
+    expect(activeTab.value).toBe('ESTIMATE')
   })
 
   it('shows badges only when there is something to count', () => {
     route.meta = { section: 'maintenance' }
     const { tabs } = useExpensesTabs(() => badges)
-    expect(tabs.value[1].badge).toBeUndefined()
+    expect(tabs.value[0].badge).toBeUndefined()
     badges.urgentReminders = 2
-    expect(tabs.value[1]).toMatchObject({ badge: 2, badgeTone: 'warning' })
+    expect(tabs.value[0]).toMatchObject({ badge: 2, badgeTone: 'warning' })
     badges.overdueReminders = 1
-    expect(tabs.value[1].badgeTone).toBe('danger')
+    expect(tabs.value[0].badgeTone).toBe('danger')
   })
 })

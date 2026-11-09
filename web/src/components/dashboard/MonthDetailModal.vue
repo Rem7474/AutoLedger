@@ -364,7 +364,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             <span>{{ $t('dashboard.monthDetailModal.vehicleDrives') }}</span>
           </router-link>
           <router-link
-            to="/expenses"
+            to="/costs"
             class="btn btn-secondary"
           >
             <Receipt class="w-3.5 h-3.5 text-warning-400" />

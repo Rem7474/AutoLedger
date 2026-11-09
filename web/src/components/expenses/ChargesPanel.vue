@@ -30,6 +30,8 @@ const props = defineProps<{
   loading: boolean
   loadingMoreCharges: boolean
   missingCostOnly: boolean
+  /** The list is the charges to complete only: no filter to switch, the page links to the whole list. */
+  toCompleteOnly?: boolean
 }>()
 const emit = defineEmits<{
   'toggle-missing-cost': []
@@ -93,7 +95,7 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
       </button>
     </div>
 
-    <div v-if="chargesWithoutCost > 0 || missingCostOnly" class="flex flex-wrap items-center gap-2">
+    <div v-if="!toCompleteOnly && (chargesWithoutCost > 0 || missingCostOnly)" class="flex flex-wrap items-center gap-2">
       <ToQualifyFilter
         class="max-sm:min-h-11 max-sm:rounded-xl max-sm:text-sm"
         :count="chargesWithoutCost"
@@ -104,12 +106,12 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
       />
     </div>
     <ListSkeleton v-if="loading" />
-    <EmptyState v-else-if="!charges.length" :icon="Zap" :title="$t('expenses.chargesPanel.empty')">
+    <EmptyState v-else-if="!charges.length && !toCompleteOnly" :icon="Zap" :title="$t('expenses.chargesPanel.empty')">
       <template #actions>
         <EmptySourceHints quick-kind="CHARGE" @import-csv="emit('import-csv')" />
       </template>
     </EmptyState>
-    <div v-else class="space-y-3">
+    <div v-else-if="charges.length" class="space-y-3">
       <section v-for="month in months" :key="month.key" class="space-y-2">
         <header class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-2">
           <h3 class="text-sm font-bold capitalize text-white">{{ monthLabel(month.date) }}</h3>

@@ -138,7 +138,7 @@ onMounted(() => {
       <!-- The quick-add button and the bottom bar already cover this on a phone. Not .tap-text: its unlayered display beats max-sm:hidden -->
       <template #actions>
         <router-link
-          to="/expenses"
+          to="/costs"
           class="btn btn-lg btn-secondary sm:min-h-9 max-sm:hidden"
         >
           {{ $t('dashboard.dashboardView.expense') }}
