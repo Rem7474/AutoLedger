@@ -63,8 +63,9 @@ interface Scroller {
 }
 
 /**
- * Brings `el` to `top` once the page is tall enough to reach it (its data arrives after the first render), waiting at most
- * `RESTORE_MS`, and gives up as soon as the reader scrolls by hand. Returns the function that cancels it.
+ * Brings `el` to `top` once the page is tall enough to reach it (its data arrives after the first render). When the page
+ * stays shorter than that for `RESTORE_MS`, it goes as low as the page reaches. It gives up as soon as the reader scrolls
+ * by hand. Returns the function that cancels it.
  */
 export function restoreScroll(el: Scroller, top: number, env: RestoreEnv): () => void {
   const deadline = env.now() + RESTORE_MS
@@ -78,10 +79,12 @@ export function restoreScroll(el: Scroller, top: number, env: RestoreEnv): () =>
   const release = env.onInteract(stop)
   const step = () => {
     if (stopped) return
-    if (el.scrollHeight - el.clientHeight >= top) {
+    const reachable = el.scrollHeight - el.clientHeight
+    if (reachable >= top) {
       el.scrollTop = top
       stop()
     } else if (env.now() >= deadline) {
+      el.scrollTop = Math.max(0, reachable)
       stop()
     } else {
       frame = env.raf(step)
