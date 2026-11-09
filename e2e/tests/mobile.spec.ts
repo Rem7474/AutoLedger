@@ -900,8 +900,13 @@ test('a definition opens on touch, and Back closes it', async ({ page }) => {
   const tip = page.getByRole('main').getByRole('button', { name: /^Economic cost: / }).first()
   await tip.scrollIntoViewIfNeeded()
   const box = (await tip.boundingBox())!
-  expect(box.width).toBeGreaterThanOrEqual(43)
-  expect(box.height).toBeGreaterThanOrEqual(43)
+  // The button is the size of its glyph; the finger's 44 px hit area is around it
+  expect(box.height).toBeLessThanOrEqual(20)
+  const cx = box.x + box.width / 2
+  const cy = box.y + box.height / 2
+  for (const [dx, dy] of [[-21, 0], [21, 0], [0, -21], [0, 21]]) {
+    expect(await tip.evaluate((el, [x, y]) => document.elementFromPoint(x, y) === el, [cx + dx, cy + dy])).toBe(true)
+  }
   const before = page.url()
   await tip.tap()
   const sheet = page.getByRole('dialog', { name: 'Economic cost' })
