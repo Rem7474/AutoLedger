@@ -99,13 +99,23 @@ describe('restoreScroll', () => {
     expect(el.scrollTop).toBe(900)
   })
 
-  it('gives up after the delay without moving the page', () => {
+  it('goes as low as the page reaches when it stays too short for the delay', () => {
     const f = fakeEnv()
-    const el = { scrollTop: 0, scrollHeight: 800, clientHeight: 800 }
+    const el = { scrollTop: 0, scrollHeight: 5449, clientHeight: 800 }
+    restoreScroll(el, 6000, f.env)
+    expect(el.scrollTop).toBe(0)
+    f.tick(RESTORE_MS + 1)
+    expect(el.scrollTop).toBe(4649)
+    el.scrollHeight = 9000
+    f.tick()
+    expect(el.scrollTop).toBe(4649)
+  })
+
+  it('stays at the top when the page does not scroll at all', () => {
+    const f = fakeEnv()
+    const el = { scrollTop: 0, scrollHeight: 700, clientHeight: 800 }
     restoreScroll(el, 900, f.env)
     f.tick(RESTORE_MS + 1)
-    el.scrollHeight = 5000
-    f.tick()
     expect(el.scrollTop).toBe(0)
   })
 
