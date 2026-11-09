@@ -2,8 +2,7 @@
   "dashboardView": {
     "expense": "+ Expense",
     "subtitle": "Actual cost of ownership and cost per {unit} for {name}",
-    "yourVehicle": "your vehicle",
-    "chartsPeriod": "Charts period"
+    "yourVehicle": "your vehicle"
   },
   "costBreakdownDonut": {
     "depreciationMissing": "Depreciation is not entered: the slice is missing, not zero.",
@@ -332,13 +331,6 @@
     "hintFull": "Economic cost: tire wear spread over use, depreciation included.",
     "hintCash": "Money actually paid: tires when bought, no depreciation.",
     "cashTitle": "Breakdown of cash spent"
-  },
-  "range": {
-    "all": "All",
-    "oneYear": "1 year",
-    "sixMonths": "6 months",
-    "threeMonths": "3 months",
-    "oneMonth": "1 month"
   },
   "urgentReminders": {
     "andOthers": "{titles} and {count} more"

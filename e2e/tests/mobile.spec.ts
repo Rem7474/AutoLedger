@@ -1002,3 +1002,24 @@ test.describe('the period bar of the home page', () => {
     })
   }
 })
+
+test('the Analysis sheet of the charges shares the period of the home page and changes it from a sheet over it', async ({ page }) => {
+  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+  await page.getByRole('button', { name: /^Analysis/ }).first().tap()
+  const analysis = page.getByRole('dialog').first()
+  await expect(analysis).toBeVisible()
+  // No row of presets and no empty date fields any more: one labelled field with the period
+  await expect(analysis.locator('input[type=date]')).toHaveCount(0)
+  const field = analysis.getByRole('button', { name: /Choose the period/ })
+  await expect(field).toBeVisible()
+  await field.tap()
+  const sheet = page.getByRole('dialog', { name: 'Period' })
+  await expect(sheet).toBeVisible()
+  await sheet.getByRole('button', { name: 'Last 3 months' }).tap()
+  await expect(sheet).toBeHidden()
+  await expect(analysis).toBeVisible()
+  await expect(analysis.getByRole('button', { name: /Choose the period: Last 3 months/ })).toBeVisible()
+  // The home page reads the same choice
+  await page.goto('/')
+  await expect(page).toHaveURL(/period=3M/)
+})

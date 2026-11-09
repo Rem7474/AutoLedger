@@ -1,5 +1,4 @@
 import { intlLocale } from '@/i18n'
-import { rangeToMonths, type MonthlyRangeKey } from '@/utils/dashboard'
 
 // The monthly cash history of one family of costs (tolls, servicing, fixed costs), as the API returns it: every
 // calendar month from the first record to the current one, a month without a record at zero.
@@ -10,25 +9,6 @@ export interface CostMonth {
 
 /** Months a window of N months looks back over for the smoothed average. */
 export const ROLLING_AVERAGE_MONTHS = 12
-
-const monthEnd = (month: string): string => {
-  const [y, m] = month.split('-').map(Number)
-  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10)
-}
-
-/**
- * The months of a period: the last N months of a preset (the current one included, everything for the whole
- * history), or, for a range of days picked on the calendar, the months it covers entirely (a monthly figure cannot be
- * split over a part of a month).
- */
-export function monthsOfPeriod(history: CostMonth[], range: MonthlyRangeKey, custom: [string, string] | null): CostMonth[] {
-  if (custom) {
-    const [from, to] = custom
-    return history.filter((m) => `${m.month}-01` >= from && monthEnd(m.month) <= to)
-  }
-  const months = rangeToMonths(range)
-  return months ? history.slice(-months) : history
-}
 
 /**
  * The smoothed monthly cost at each month of the history: the average of the month and the eleven before it. A

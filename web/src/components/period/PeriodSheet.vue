@@ -8,7 +8,7 @@ import { PERIOD_PRESETS, presetOf, presetPeriod, type Period } from '@/utils/per
 
 // The ready-made periods as chips, then a free range with its two labelled ends. The free range only shows once
 // "Custom" is chosen; a preset applies at once.
-const props = defineProps<{ period: Period }>()
+const props = defineProps<{ period: Period; nested?: boolean }>()
 const emit = defineEmits<{ pick: [period: Period] }>()
 const open = defineModel<boolean>('open', { required: true })
 
@@ -38,7 +38,7 @@ function apply() {
 </script>
 
 <template>
-  <ModalShell v-model:open="open" size="sm" :title="$t('period.sheet.title')">
+  <ModalShell v-model:open="open" size="sm" :nested="nested" :title="$t('period.sheet.title')">
     <div class="space-y-4">
       <div class="flex flex-wrap gap-2" role="group" :aria-label="$t('period.sheet.presets')">
         <button

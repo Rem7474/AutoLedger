@@ -2,8 +2,7 @@
   "dashboardView": {
     "expense": "+ Dépense",
     "subtitle": "Coût réel de possession et coût au {unit} pour {name}",
-    "yourVehicle": "votre véhicule",
-    "chartsPeriod": "Période des graphiques"
+    "yourVehicle": "votre véhicule"
   },
   "costBreakdownDonut": {
     "depreciationMissing": "Dépréciation non renseignée : la part est manquante, pas nulle.",
@@ -332,13 +331,6 @@
     "hintFull": "Coût économique : usure des pneus amortie et décote incluses.",
     "hintCash": "Sommes réellement payées : pneus au moment de l'achat, sans décote.",
     "cashTitle": "Répartition des dépenses décaissées"
-  },
-  "range": {
-    "all": "Tout",
-    "oneYear": "1 an",
-    "sixMonths": "6 mois",
-    "threeMonths": "3 mois",
-    "oneMonth": "1 mois"
   },
   "urgentReminders": {
     "andOthers": "{titles} et {count} autre(s)"
