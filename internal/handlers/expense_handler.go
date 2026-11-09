@@ -126,6 +126,20 @@ func (h *ExpenseHandler) ListDriveExpenses(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, list)
 }
 
+// GetDriveExpense answers one travel expense of the vehicle, as the list gives it.
+func (h *ExpenseHandler) GetDriveExpense(w http.ResponseWriter, r *http.Request) {
+	vehicleID := chi.URLParam(r, "vehicleId")
+	if v := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleViewer); v == nil {
+		return
+	}
+	expense, err := h.repo.GetDriveExpense(r.Context(), vehicleID, chi.URLParam(r, "expenseId"), requestLanguage(r, h.repo))
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to read the expense")
+		return
+	}
+	writeJSON(w, http.StatusOK, expense)
+}
+
 func (h *ExpenseHandler) UpdateDriveExpense(w http.ResponseWriter, r *http.Request) {
 	vehicleID := chi.URLParam(r, "vehicleId")
 	expenseID := chi.URLParam(r, "expenseId")

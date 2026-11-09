@@ -43,19 +43,29 @@ func (r *Repository) CreateMaintenanceExpense(ctx context.Context, m *models.Mai
 	return nil
 }
 
-func (r *Repository) ListMaintenanceExpenses(ctx context.Context, vehicleID string) ([]models.MaintenanceExpense, error) {
-	query := `
+const maintenanceExpenseSelect = `
 		SELECT m.id, m.vehicle_id, m.category, m.amount, m.currency, m.fx_rate, m.date,
 		       m.odometer, m.is_recurring, m.recurrence_interval_months, m.recurrence_end_date, m.description,
 		       m.amortization_mode, m.coverage_km, m.coverage_months, m.closes_maintenance_id,
 		       m.document_id, doc.filename,
 		       m.created_at, m.updated_at, m.version
 		FROM maintenance_expenses m
-		LEFT JOIN expense_documents doc ON m.document_id = doc.id
+		LEFT JOIN expense_documents doc ON m.document_id = doc.id`
+
+func scanMaintenanceExpense(row pgx.Row, m *models.MaintenanceExpense) error {
+	return row.Scan(
+		&m.ID, &m.VehicleID, &m.Category, &m.Amount, &m.Currency, &m.FxRate, &m.Date,
+		&m.Odometer, &m.IsRecurring, &m.RecurrenceIntervalMonths, &m.RecurrenceEndDate, &m.Description,
+		&m.AmortizationMode, &m.CoverageKm, &m.CoverageMonths, &m.ClosesMaintenanceID,
+		&m.DocumentID, &m.DocumentFilename,
+		&m.CreatedAt, &m.UpdatedAt, &m.Version,
+	)
+}
+
+func (r *Repository) ListMaintenanceExpenses(ctx context.Context, vehicleID string) ([]models.MaintenanceExpense, error) {
+	rows, err := r.pool.Query(ctx, maintenanceExpenseSelect+`
 		WHERE m.vehicle_id = $1
-		ORDER BY m.date DESC;
-	`
-	rows, err := r.pool.Query(ctx, query, vehicleID)
+		ORDER BY m.date DESC;`, vehicleID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,18 +74,23 @@ func (r *Repository) ListMaintenanceExpenses(ctx context.Context, vehicleID stri
 	var list []models.MaintenanceExpense
 	for rows.Next() {
 		var m models.MaintenanceExpense
-		if err := rows.Scan(
-			&m.ID, &m.VehicleID, &m.Category, &m.Amount, &m.Currency, &m.FxRate, &m.Date,
-			&m.Odometer, &m.IsRecurring, &m.RecurrenceIntervalMonths, &m.RecurrenceEndDate, &m.Description,
-			&m.AmortizationMode, &m.CoverageKm, &m.CoverageMonths, &m.ClosesMaintenanceID,
-			&m.DocumentID, &m.DocumentFilename,
-			&m.CreatedAt, &m.UpdatedAt, &m.Version,
-		); err != nil {
+		if err := scanMaintenanceExpense(rows, &m); err != nil {
 			return nil, err
 		}
 		list = append(list, m)
 	}
 	return list, rows.Err()
+}
+
+// GetMaintenanceExpense reads one expense of the vehicle; ErrNotFound when it is not one of its.
+func (r *Repository) GetMaintenanceExpense(ctx context.Context, vehicleID, id string) (*models.MaintenanceExpense, error) {
+	var m models.MaintenanceExpense
+	err := scanMaintenanceExpense(r.pool.QueryRow(ctx, maintenanceExpenseSelect+`
+		WHERE m.vehicle_id = $1 AND m.id::text = $2;`, vehicleID, id), &m)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &m, err
 }
 
 func (r *Repository) UpdateMaintenanceExpense(ctx context.Context, m *models.MaintenanceExpense) error {

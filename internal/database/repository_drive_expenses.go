@@ -147,9 +147,7 @@ func tripLabelWords(lang string) (start, end string) {
 	return servertext.Text(lang, "trip.departure"), servertext.Text(lang, "trip.arrival")
 }
 
-func (r *Repository) ListDriveExpenses(ctx context.Context, vehicleID, lang string) ([]models.DriveExpense, error) {
-	start, end := tripLabelWords(lang)
-	query := `
+const driveExpenseSelect = `
 		SELECT
 			e.id, e.vehicle_id, e.trip_group_id, tg.name,
 			ARRAY(SELECT tgd.drive_id::text FROM trip_group_drives tgd WHERE tgd.trip_group_id = e.trip_group_id ORDER BY tgd.order_index),
@@ -164,11 +162,23 @@ func (r *Repository) ListDriveExpenses(ctx context.Context, vehicleID, lang stri
 		FROM drive_expenses e
 		LEFT JOIN drives d ON e.drive_id = d.id AND d.vehicle_id = e.vehicle_id
 		LEFT JOIN trip_groups tg ON e.trip_group_id = tg.id AND tg.vehicle_id = e.vehicle_id
-		LEFT JOIN expense_documents doc ON e.document_id = doc.id
+		LEFT JOIN expense_documents doc ON e.document_id = doc.id`
+
+func scanDriveExpense(row pgx.Row, e *models.DriveExpense) error {
+	return row.Scan(
+		&e.ID, &e.VehicleID, &e.TripGroupID, &e.TripGroupName, &e.TripGroupDriveIDs,
+		&e.DriveID, &e.DriveTitle, &e.Type,
+		&e.Amount, &e.Currency, &e.FxRate, &e.Date, &e.Notes,
+		&e.DocumentID, &e.DocumentFilename,
+		&e.Source, &e.CreatedAt, &e.Version,
+	)
+}
+
+func (r *Repository) ListDriveExpenses(ctx context.Context, vehicleID, lang string) ([]models.DriveExpense, error) {
+	start, end := tripLabelWords(lang)
+	rows, err := r.pool.Query(ctx, driveExpenseSelect+`
 		WHERE e.vehicle_id = $1
-		ORDER BY e.date DESC;
-	`
-	rows, err := r.pool.Query(ctx, query, vehicleID, start, end)
+		ORDER BY e.date DESC;`, vehicleID, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -177,18 +187,24 @@ func (r *Repository) ListDriveExpenses(ctx context.Context, vehicleID, lang stri
 	var list []models.DriveExpense
 	for rows.Next() {
 		var e models.DriveExpense
-		if err := rows.Scan(
-			&e.ID, &e.VehicleID, &e.TripGroupID, &e.TripGroupName, &e.TripGroupDriveIDs,
-			&e.DriveID, &e.DriveTitle, &e.Type,
-			&e.Amount, &e.Currency, &e.FxRate, &e.Date, &e.Notes,
-			&e.DocumentID, &e.DocumentFilename,
-			&e.Source, &e.CreatedAt, &e.Version,
-		); err != nil {
+		if err := scanDriveExpense(rows, &e); err != nil {
 			return nil, err
 		}
 		list = append(list, e)
 	}
 	return list, rows.Err()
+}
+
+// GetDriveExpense reads one expense of the vehicle; ErrNotFound when it is not one of its.
+func (r *Repository) GetDriveExpense(ctx context.Context, vehicleID, id, lang string) (*models.DriveExpense, error) {
+	start, end := tripLabelWords(lang)
+	var e models.DriveExpense
+	err := scanDriveExpense(r.pool.QueryRow(ctx, driveExpenseSelect+`
+		WHERE e.vehicle_id = $1 AND e.id::text = $4;`, vehicleID, start, end, id), &e)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &e, err
 }
 
 func (r *Repository) DeleteDriveExpense(ctx context.Context, vehicleID, expenseID string) error {
