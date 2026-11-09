@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Bell, Car, ClipboardList, Disc, FileText, Gauge, Pencil, Plug, Scale, Users } from 'lucide-vue-next'
+import { Bell, BatteryCharging, Car, ClipboardList, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import VehicleTile from '@/components/vehicle/VehicleTile.vue'
+import SheetRow from '@/components/SheetRow.vue'
+import BatteryHealthCard from '@/components/dashboard/BatteryHealthCard.vue'
+import ResaleValueCard from '@/components/dashboard/ResaleValueCard.vue'
+import LeaseContractCard from '@/components/dashboard/LeaseContractCard.vue'
 import VehicleFormModal from '@/components/vehicles/VehicleFormModal.vue'
 import OwnershipWizardModal from '@/components/vehicles/OwnershipWizardModal.vue'
 import VehicleMembersModal from '@/components/vehicles/VehicleMembersModal.vue'
@@ -11,6 +15,10 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { api } from '@/services/api'
 import { t } from '@/i18n'
 import { formatDistance } from '@/units'
+import { formatAmount } from '@/currency'
+import { formatPercent } from '@/utils/numbers'
+import { summarizeFittedTires, wearAndRemaining } from '@/utils/tires'
+import { useTireList } from '@/composables/useTireList'
 import { nextDueReminder } from '@/utils/dashboard'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 
@@ -22,18 +30,32 @@ const isOwner = computed(() => !vehicle.value?.role || vehicle.value.role === 'O
 
 const reminders = ref<any[]>([])
 const ownership = ref<any | null>(null)
+const tco = ref<any | null>(null)
+const batteryPercent = ref<number | null>(null)
+const resaleValue = ref<number | null>(null)
+// Bumped when a battery reading changes: the resale estimate depends on the health
+const resaleRefresh = ref(0)
+const { mountedTires, hasMountedTires, loadTires } = useTireList()
 async function load() {
   const v = vehicle.value
   if (!v) return
-  const [r, o] = await Promise.all([
+  void loadTires(true)
+  const [r, o, c, health, residual] = await Promise.all([
     api.getReminders(v.id).catch(() => []),
     isOwner.value ? api.getOwnership(v.id).catch(() => null) : Promise.resolve(null),
+    api.getTCO(v.id).catch(() => null),
+    vehicleStore.canCharge ? api.getBatteryHealth(v.id).catch(() => null) : Promise.resolve(null),
+    api.getResidualValue(v.id, { km_share: 0.5, health_weight: 1 }).catch(() => null),
   ])
+  if (v.id !== vehicle.value?.id) return
   reminders.value = r
   ownership.value = o
+  tco.value = c
+  batteryPercent.value = typeof health?.health_percent === 'number' ? health.health_percent : null
+  resaleValue.value = typeof residual?.current_value === 'number' ? residual.current_value : null
 }
 onMounted(load)
-watch(() => vehicle.value?.id, load)
+watch([() => vehicle.value?.id, resaleRefresh], load)
 useRefreshHandler(async () => {
   await vehicleStore.fetchVehicles()
   await load()
@@ -45,6 +67,17 @@ const nextService = computed(() => {
   const left = next.reminder.remaining_km
   return left != null ? t('vehicles.vehicleView.nextServiceIn', { title: next.reminder.title, distance: formatDistance(left) }) : next.reminder.title
 })
+
+// The most worn tire, said once in words; no state colour on the line, the colour is on the tires screen
+const tiresDetail = computed(() => {
+  if (!hasMountedTires.value) return null
+  const worn = summarizeFittedTires(mountedTires.value).mostWorn
+  if (!worn) return null
+  const { worn: used, left } = wearAndRemaining(worn.pct)
+  return t('tires.tireSetSummary.wornAndLeft', { worn: formatPercent(used, 0), left: formatPercent(left, 0) })
+})
+const batteryHint = computed(() => (batteryPercent.value === null ? t('dashboard.sheets.batteryHint') : t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })))
+const resaleHint = computed(() => (resaleValue.value === null ? t('dashboard.sheets.resaleHint') : t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })))
 
 const showEdit = ref(false)
 const showOwnership = ref(false)
@@ -71,9 +104,20 @@ async function onSaved() {
 
     <div class="space-y-2">
       <VehicleTile :icon="Bell" :title="$t('vehicles.vehicleView.maintenance')" :detail="nextService" to="/maintenance?tab=REMINDERS" />
-      <VehicleTile :icon="Disc" :title="$t('shell.nav.tires')" to="/tires" />
+      <VehicleTile :icon="Disc" :title="$t('shell.nav.tires')" :detail="tiresDetail" to="/tires" />
       <VehicleTile :icon="ClipboardList" :title="$t('vehicles.vehicleView.readings')" to="/odometer" />
       <VehicleTile :icon="Scale" :title="$t('shell.nav.comparison')" to="/comparison" />
+    </div>
+
+    <!-- Condition and value of the vehicle -->
+    <div class="space-y-2">
+      <SheetRow v-if="vehicleStore.canCharge" v-slot="{ bare }" :title="$t('dashboard.sheets.battery')" :hint="batteryHint" :icon="BatteryCharging">
+        <BatteryHealthCard :vehicle-id="vehicle.id" :bare="bare" @updated="resaleRefresh++" />
+      </SheetRow>
+      <SheetRow v-slot="{ bare }" :title="$t('dashboard.sheets.resale')" :hint="resaleHint" :icon="TrendingDown">
+        <ResaleValueCard :vehicle-id="vehicle.id" :has-battery="vehicleStore.canCharge" :refresh-key="resaleRefresh" :bare="bare" />
+      </SheetRow>
+      <LeaseContractCard :tco="tco" />
     </div>
 
     <div class="space-y-2">

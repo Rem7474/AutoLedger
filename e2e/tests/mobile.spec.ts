@@ -272,6 +272,26 @@ test('a tire opens from its wheel tile, and the fitted set is one card instead o
   await expect(page.getByRole('dialog')).toBeVisible()
 })
 
+test('battery, resale value and contract are on the vehicle sheet, and the home keeps one line that points there', async ({ page, request }) => {
+  await useVehicle(page, ev.id, '/vehicle')
+  const main = page.getByRole('main')
+  await expect(main.getByRole('button', { name: /Battery health/ })).toBeVisible()
+  await expect(main.getByRole('button', { name: /Resale value/ })).toBeVisible()
+  await main.getByRole('button', { name: /Battery health/ }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.goBack()
+  await useVehicle(page, ev.id, '/')
+  await expect(page.getByRole('main').getByRole('link', { name: /Vehicle sheet/ })).toHaveAttribute('href', '/vehicle')
+  await expect(page.getByRole('main').getByRole('button', { name: /Resale value/ })).toHaveCount(0)
+  // A combustion vehicle has no battery line
+  const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')
+  if (ice) {
+    await useVehicle(page, ice.id, '/vehicle')
+    await expect(page.getByRole('main').getByRole('button', { name: /Resale value/ })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('button', { name: /Battery health/ })).toHaveCount(0)
+  }
+})
+
 // The keyboard itself cannot be tested headless: the attribute that picks it can. A whole-kilometre field has no comma key.
 test('the vehicle sheet lists the screens of the vehicle, each opens and Back returns to the sheet', async ({ page }) => {
   await useVehicle(page, ev.id, '/vehicle')
