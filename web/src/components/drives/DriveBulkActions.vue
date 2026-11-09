@@ -99,7 +99,7 @@ const actions = computed<SelectionAction[]>(() => {
   if (props.tollDetectionActive) {
     list.push({
       key: 'toll',
-      label: props.bulkApplyingToll ? t('drives.driveBulkActions.applying') : t('drives.driveBulkActions.autoToll', { count: n }),
+      label: props.bulkApplyingToll ? t('drives.driveBulkActions.applying') : t('drives.driveBulkActions.autoToll'),
       icon: Receipt,
       run: () => emit('bulk-toll'),
       busy: props.bulkApplyingToll,

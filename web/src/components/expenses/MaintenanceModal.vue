@@ -308,7 +308,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
           <label for="expense-maint-odometer" class="block text-xs font-semibold text-slate-300">{{ $t('expenses.maintenanceModal.odometerKm', { unit: distanceUnit() }) }}</label>
           <span v-if="detectingOdometer" class="text-xs text-slate-400">{{ $t('expenses.maintenanceModal.detectingTheMileage') }}</span>
         </div>
-        <DistanceInput id="expense-maint-odometer" v-model="maintForm.odometer" class="field" />
+        <DistanceInput inputmode="numeric" id="expense-maint-odometer" v-model="maintForm.odometer" class="field" />
         <div v-if="detectedOdometer !== null && detectedOdometer > 0" class="flex items-center justify-between text-xs text-success-400 mt-1">
           <span>{{ $t('expenses.maintenanceModal.mileageDetectedKm', { unit: distanceUnit(), detectedOdometer: formatDistanceValue(detectedOdometer) }) }}</span>
           <button

@@ -336,7 +336,7 @@ async function addFirstEntry() {
             </div>
             <div>
               <label for="onboarding-vehicle-odometer" class="block text-xs font-semibold text-slate-300 mb-1.5">{{ $t('onboarding.onboardingView.currentOdometerKm', { unit: distanceUnit() }) }}</label>
-              <DistanceInput id="onboarding-vehicle-odometer"
+              <DistanceInput inputmode="numeric" id="onboarding-vehicle-odometer"
                 v-model="vehicleOdometer"
                 min="0"
                 step="1"

@@ -60,7 +60,7 @@
     "add": "Add",
     "drives": "{name} ({length} drives)",
     "trip": "Trip",
-    "noExistingTripUseMerge": "No existing trip: use “Merge & toll” to create one.",
+    "noExistingTripUseMerge": "No existing trip: use “Merge trips” to create one.",
     "addDriveSToA": "Add {length} drive(s) to a trip",
     "noTrip": "No trip to add these drives to yet"
   },
@@ -69,7 +69,7 @@
     "chooseDriver": "Choose…",
     "changeDriver": "Set the driver of the selected drives",
     "changeDriverAction": "Change driver",
-    "addToTrip": "Add to trip",
+    "addToTrip": "Add to a trip",
     "export": "Export",
     "exportTheSelectionAsCsv": "Export the selection as CSV",
     "personal": "Personal",
@@ -77,11 +77,11 @@
     "work": "Work",
     "markTheSelectionAsWork": "Mark the selection as work drives",
     "detectsTheTollsAndRecords": "Detects the tolls and records the estimated fare (manual tolls are left untouched)",
-    "mergeToll": "Merge & toll",
+    "mergeToll": "Merge trips",
     "carpoolMany": "Carpool ({count})",
     "carpool": "Carpool",
     "applying": "Applying...",
-    "autoToll": "Auto toll ({count})",
+    "autoToll": "Detect tolls",
     "syncedCannotEdit": "Synced from TeslaMate, cannot be edited",
     "syncedCannotDelete": "Synced from TeslaMate, cannot be deleted"
   },
@@ -294,7 +294,7 @@
     "hide": "Hide",
     "legs": "Legs",
     "dateSeparator": ": ",
-    "noTripsHint": "Select several drives, then “Merge & toll” to create one."
+    "noTripsHint": "Select several drives, then “Merge trips” to create one."
   },
   "tripEditModal": {
     "name": "Name",

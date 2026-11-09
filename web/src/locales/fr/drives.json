@@ -60,7 +60,7 @@
     "add": "Ajouter",
     "drives": "{name} ({length} trajets)",
     "trip": "Voyage",
-    "noExistingTripUseMerge": "Aucun voyage existant : utilisez « Fusionner & Péage » pour en créer un.",
+    "noExistingTripUseMerge": "Aucun voyage existant : utilisez « Fusionner les trajets » pour en créer un.",
     "addDriveSToA": "Ajouter {length} trajet(s) à un voyage",
     "noTrip": "Aucun trajet auquel ajouter ces trajets pour l'instant"
   },
@@ -69,7 +69,7 @@
     "chooseDriver": "Choisir…",
     "changeDriver": "Définir le conducteur des trajets sélectionnés",
     "changeDriverAction": "Changer le conducteur",
-    "addToTrip": "Ajouter voyage",
+    "addToTrip": "Ajouter à un voyage",
     "export": "Export",
     "exportTheSelectionAsCsv": "Exporter la sélection en CSV",
     "personal": "Perso",
@@ -77,11 +77,11 @@
     "work": "Pro",
     "markTheSelectionAsWork": "Marquer la sélection comme trajets Pro",
     "detectsTheTollsAndRecords": "Détecte les péages et enregistre le tarif estimé (sans toucher aux péages manuels)",
-    "mergeToll": "Fusionner & péage",
+    "mergeToll": "Fusionner les trajets",
     "carpoolMany": "Covoiturer ({count})",
     "carpool": "Covoiturer",
     "applying": "Application...",
-    "autoToll": "Péage auto ({count})",
+    "autoToll": "Détecter le péage",
     "syncedCannotEdit": "Synchronisé depuis TeslaMate, non modifiable",
     "syncedCannotDelete": "Synchronisé depuis TeslaMate, suppression impossible"
   },
@@ -294,7 +294,7 @@
     "hide": "Masquer",
     "legs": "Étapes",
     "dateSeparator": " : ",
-    "noTripsHint": "Sélectionnez plusieurs trajets puis « Fusionner & Péage » pour en créer un."
+    "noTripsHint": "Sélectionnez plusieurs trajets puis « Fusionner les trajets » pour en créer un."
   },
   "tripEditModal": {
     "name": "Nom",

@@ -78,7 +78,7 @@ const handlePackSwapSubmit = () => runOnce(handlePackSwapSubmitAction)
   >
     <div>
       <label for="tire-pack-swap-odometer" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tirePackSwapModal.odometerAtTheSwapKm', { unit: distanceUnit() }) }}</label>
-      <DistanceInput id="tire-pack-swap-odometer"
+      <DistanceInput inputmode="numeric" id="tire-pack-swap-odometer"
         v-model="packSwapForm.odometer"
         class="field"
       />

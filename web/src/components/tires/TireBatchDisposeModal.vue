@@ -111,7 +111,7 @@ async function handleBatchDisposeSubmit() {
       </div>
       <div>
         <label for="batch-dispose-odo" class="block text-slate-300 mb-1 font-semibold">{{ $t('tires.tireBatchDisposeModal.vehicleMileage') }}</label>
-        <DistanceInput text
+        <DistanceInput inputmode="numeric" text
           id="batch-dispose-odo"
           v-model="batchDisposeForm.odometer"
           :placeholder="$t('tires.tireBatchDisposeModal.optionalForAGarageTire')"

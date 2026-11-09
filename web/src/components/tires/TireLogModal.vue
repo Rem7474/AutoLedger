@@ -96,7 +96,7 @@ const handleAddLog = () => runOnce(handleAddLogAction)
     </div>
     <div>
       <label for="tire-new-log-odometer" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tireLogModal.currentOdometerKm', { unit: distanceUnit() }) }}</label>
-      <DistanceInput id="tire-new-log-odometer"
+      <DistanceInput inputmode="numeric" id="tire-new-log-odometer"
         v-model="newLogForm.odometer"
         class="field"
       />

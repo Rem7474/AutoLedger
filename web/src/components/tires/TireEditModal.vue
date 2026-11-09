@@ -225,7 +225,7 @@ const handleSaveTireEdit = () => runOnce(handleSaveTireEditAction)
           </div>
           <div>
             <label for="tire-edit-mounted-odometer" class="block text-xs text-slate-400 mb-1 font-semibold">{{ $t('tires.tireEditModal.odometerAtFittingKm', { unit: distanceUnit() }) }}</label>
-            <DistanceInput id="tire-edit-mounted-odometer" v-model="tireEditForm.mounted_odometer" min="0" :placeholder="tireEditIds.length > 1 ? $t('tires.tireEditModal.unchanged') : ''" class="field" />
+            <DistanceInput inputmode="numeric" id="tire-edit-mounted-odometer" v-model="tireEditForm.mounted_odometer" min="0" :placeholder="tireEditIds.length > 1 ? $t('tires.tireEditModal.unchanged') : ''" class="field" />
           </div>
         </div>
       </div>

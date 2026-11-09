@@ -272,6 +272,19 @@ test('a tire opens from its wheel tile, and the fitted set is one card instead o
   await expect(page.getByRole('dialog')).toBeVisible()
 })
 
+// The keyboard itself cannot be tested headless: the attribute that picks it can. A whole-kilometre field has no comma key.
+test('an odometer field asks for the numeric keyboard, a price for the decimal one', async ({ page }) => {
+  await useVehicle(page, ev.id, '/odometer')
+  await page.getByRole('main').getByRole('button', { name: 'Add the reading' }).click()
+  const sheet = page.getByRole('dialog', { name: 'New odometer reading' })
+  await expect(sheet.getByLabel(/^Mileage/)).toHaveAttribute('inputmode', 'numeric')
+  await useVehicle(page, ev.id, '/tires')
+  await page.getByRole('button', { name: 'Add tires' }).click()
+  const price = page.locator('#tire-add-tire-price')
+  await expect(price).toHaveAttribute('inputmode', 'decimal')
+  await expect(price).toHaveAttribute('type', 'text')
+})
+
 test('an odometer reading is added from a sheet on a phone, the history comes first', async ({ page, request }) => {
   await useVehicle(page, ev.id, '/odometer')
   const main = page.getByRole('main')

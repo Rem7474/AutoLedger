@@ -140,7 +140,7 @@ const handleSave = () => runOnce(handleSaveAction)
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label for="vehicle-current-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.vehicleFormModal.currentMileage', { unit: distanceUnit() }) }}</label>
-          <DistanceInput
+          <DistanceInput inputmode="numeric"
             id="vehicle-current-odometer"
             v-model="form.current_odometer"
             step="1"

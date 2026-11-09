@@ -166,7 +166,7 @@ const handleSaveSession = () => runOnce(handleSaveSessionAction)
       </div>
       <div>
         <label for="tire-session-mounted-odometer" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tireSessionModal.odometerAtFittingKm', { unit: distanceUnit() }) }}</label>
-        <DistanceInput id="tire-session-mounted-odometer"
+        <DistanceInput inputmode="numeric" id="tire-session-mounted-odometer"
           v-model="sessionForm.mounted_odometer"
           @input="onSessionOdometerChange"
           class="field"
@@ -193,7 +193,7 @@ const handleSaveSession = () => runOnce(handleSaveSessionAction)
       </div>
       <div>
         <label for="tire-session-dismounted-odometer" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tireSessionModal.odometerAtRemovalKm', { unit: distanceUnit() }) }}</label>
-        <DistanceInput id="tire-session-dismounted-odometer"
+        <DistanceInput inputmode="numeric" id="tire-session-dismounted-odometer"
           v-model="sessionForm.dismounted_odometer"
           @input="onSessionOdometerChange"
           class="field"

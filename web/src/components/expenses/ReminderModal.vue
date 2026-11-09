@@ -311,7 +311,7 @@ const handleSaveReminder = () => runOnce(handleSaveReminderAction)
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label for="reminder-form-last-odo" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.reminderModal.odometerAtLastMaintenanceKm', { unit: distanceUnit() }) }}</label>
-            <DistanceInput text
+            <DistanceInput inputmode="numeric" text
               id="reminder-form-last-odo"
               v-model="reminderForm.last_service_odometer"
               min="0"

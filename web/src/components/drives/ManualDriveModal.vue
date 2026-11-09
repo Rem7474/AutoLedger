@@ -212,7 +212,7 @@ async function handleSubmit() {
             <label for="manual-drive-start-odo" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.startOdo', { unit: distanceUnit() }) }}
             </label>
-            <DistanceInput
+            <DistanceInput inputmode="numeric"
               id="manual-drive-start-odo"
               v-model="startOdometer"
               step="any"
@@ -224,7 +224,7 @@ async function handleSubmit() {
             <label for="manual-drive-end-odo" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.endOdo', { unit: distanceUnit() }) }}
             </label>
-            <DistanceInput
+            <DistanceInput inputmode="numeric"
               id="manual-drive-end-odo"
               v-model="endOdometer"
               step="any"
