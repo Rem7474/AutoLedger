@@ -3,8 +3,9 @@ import { t } from '@/i18n'
 import { formatMonthLabel } from '@/utils/dates'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
-import { computeMonthFixedVariable, filterMonthsByRange, monthlyCostSeries, type MonthDetailMode } from '@/utils/dashboard'
-import { usePreferencesStore } from '@/stores/preferences'
+import { computeMonthFixedVariable, monthlyCostSeries, type MonthDetailMode } from '@/utils/dashboard'
+import { usePeriodStore } from '@/stores/period'
+import { filterMonthsByPeriod } from '@/utils/period'
 import { currencySymbol, formatAmount, formatAxisAmount } from '@/currency'
 import { distanceUnit, perDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -19,9 +20,8 @@ const vehicleStore = useVehicleStore()
 const currency = computed(() => vehicleStore.currency)
 
 const monthlyChartRef = ref<HTMLCanvasElement | null>(null)
-const prefs = usePreferencesStore()
-const monthlyChartRange = computed(() => prefs.dashboardRange)
-const filteredMonthlyCosts = computed(() => filterMonthsByRange(props.monthlyCosts || [], monthlyChartRange.value))
+const periodStore = usePeriodStore()
+const filteredMonthlyCosts = computed(() => filterMonthsByPeriod(props.monthlyCosts || [], periodStore.costs))
 let monthlyChartInstance: Chart | null = null
 
 // Economic: each cost spread over the period it covers, so a one-off purchase does not crush the other months.
@@ -172,7 +172,7 @@ function renderChart() {
 }
 
 onMounted(renderChart)
-watch([() => props.monthlyCosts, monthlyChartRange, mode], renderChart, { flush: 'post' })
+watch([() => props.monthlyCosts, () => periodStore.costs, mode], renderChart, { flush: 'post' })
 onUnmounted(() => {
   if (monthlyChartInstance) monthlyChartInstance.destroy()
 })

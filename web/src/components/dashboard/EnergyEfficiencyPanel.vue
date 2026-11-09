@@ -12,10 +12,10 @@ import EnergyBatterySection from './EnergyBatterySection.vue'
 import EnergyTemperatureSection from './EnergyTemperatureSection.vue'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import { AXIS_TEXT, GRID_COLOR, fmt, fmtMoney, fmtPercent, perUnit, mergeAcDcClasses, type ChargeClass, type EnergyStats } from './energyStats'
-import { filterMonthsByRange, rangeToMonths } from '@/utils/dashboard'
+import { filterMonthsByPeriod, placeStatsParams } from '@/utils/period'
 import { categoryColor, placeCategoryRows, type PlaceStats } from '@/utils/chargingInsights'
 import { placeCategoryKey } from '@/utils/chargingPlaces'
-import { usePreferencesStore } from '@/stores/preferences'
+import { usePeriodStore } from '@/stores/period'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
 import { distanceUnit } from '@/units'
@@ -45,8 +45,8 @@ const placeDonutItems = computed(() => placeRows.value.map((r) => ({ label: plac
 const placeTotalKwh = computed(() => placeRows.value.reduce((sum, r) => sum + r.kwh, 0))
 const placeLabel = (category: string) => (category ? t(placeCategoryKey(category)) : t('expenses.chargingInsights.unclassified'))
 const failed = ref(false)
-const prefs = usePreferencesStore()
-const range = computed(() => prefs.dashboardRange)
+const periodStore = usePeriodStore()
+const range = computed(() => periodStore.costs)
 
 const consumptionRef = ref<HTMLCanvasElement | null>(null)
 const costRef = ref<HTMLCanvasElement | null>(null)
@@ -63,7 +63,7 @@ const donutItems = computed(() =>
   acDc.value.classes.map((c) => ({ label: classLabel(c.class).label, color: CLASS_COLOR[c.class as 'AC' | 'DC'], amount: c.kwh_added })),
 )
 
-const visibleMonths = computed(() => filterMonthsByRange(stats.value?.months ?? [], range.value))
+const visibleMonths = computed(() => filterMonthsByPeriod(stats.value?.months ?? [], range.value))
 
 // A line or bar chart of one value, or of an estimate repeated every month, tells nothing the figures above do not already say.
 const hasTrend = (values: (number | null | undefined)[]) => new Set(values.filter((v): v is number => typeof v === 'number').map((v) => v.toFixed(2))).size >= 2
@@ -182,14 +182,14 @@ watch(
 
 async function loadPlaces() {
   try {
-    placeStats.value = await api.getChargingPlaceStats(props.vehicleId, { months: rangeToMonths(range.value) })
+    placeStats.value = await api.getChargingPlaceStats(props.vehicleId, placeStatsParams(range.value))
   } catch (err) {
     console.error('Failed to load charging place statistics', err)
     placeStats.value = null
   }
 }
 watch(
-  () => [props.vehicleId, props.syncKey, range.value],
+  () => [props.vehicleId, props.syncKey, JSON.stringify(range.value)],
   () => loadPlaces(),
   { immediate: true },
 )

@@ -2,5 +2,29 @@
   "all": "All time",
   "lastMonths": "Last {count} months",
   "range": "{from} – {to}",
-  "year": "{year}"
+  "year": "{year}",
+  "bar": {
+    "label": "Period",
+    "open": "Choose the period: {period}",
+    "previous": "Previous period",
+    "next": "Next period",
+    "rounded": "Rounded to whole months"
+  },
+  "sheet": {
+    "title": "Period",
+    "presets": "Ready-made periods",
+    "custom": "Custom",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "preset": {
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "last3": "Last 3 months",
+      "last6": "Last 6 months",
+      "last12": "Last 12 months",
+      "thisYear": "This year",
+      "all": "All time"
+    }
+  }
 }

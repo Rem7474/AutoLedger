@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { setLocale } from '@/i18n'
 import {
+  filterMonthsByPeriod,
+  queryNamesPeriod,
+  withPeriodQuery,
+  placeStatsParams,
   addMonths,
   canStep,
   isRoundedToMonths,
@@ -166,5 +170,49 @@ describe('stored values', () => {
     expect(periodFromLegacyRange('ALL')).toEqual({ kind: 'all' })
     expect(periodFromLegacyRange('2Y')).toBeNull()
     expect(periodFromLegacyRange(null)).toBeNull()
+  })
+})
+
+describe('filterMonthsByPeriod', () => {
+  const now = new Date(2026, 10, 9)
+  const list = ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11'].map((month) => ({ month }))
+  it('keeps the months a live window touches', () => {
+    expect(filterMonthsByPeriod(list, { kind: 'months', count: 3, end: null }, now).map((m) => m.month)).toEqual(['2026-09', '2026-10', '2026-11'])
+  })
+  it('keeps everything for the whole history', () => {
+    expect(filterMonthsByPeriod(list, { kind: 'all' }, now)).toHaveLength(7)
+  })
+  it('rounds a free range outwards to whole months', () => {
+    expect(filterMonthsByPeriod(list, { kind: 'custom', from: '2026-06-20', to: '2026-08-02' }, now).map((m) => m.month)).toEqual(['2026-06', '2026-07', '2026-08'])
+  })
+  it('keeps a past window by its end month', () => {
+    expect(filterMonthsByPeriod(list, { kind: 'months', count: 1, end: '2026-07' }, now).map((m) => m.month)).toEqual(['2026-07'])
+  })
+})
+
+describe('placeStatsParams', () => {
+  const now = new Date(2026, 10, 9)
+  it('asks for N months when the window ends now', () => {
+    expect(placeStatsParams({ kind: 'months', count: 6, end: null }, now)).toEqual({ months: 6 })
+  })
+  it('asks for 0 months for the whole history', () => {
+    expect(placeStatsParams({ kind: 'all' }, now)).toEqual({ months: 0 })
+  })
+  it('asks for exact days otherwise', () => {
+    expect(placeStatsParams({ kind: 'year', year: 2025 }, now)).toEqual({ from: '2025-01-01', to: '2025-12-31' })
+  })
+})
+
+describe('period in the URL query', () => {
+  it('replaces the period parameters and keeps the others', () => {
+    expect(withPeriodQuery({ tab: 'charges', period: '3M', end: '2026-08' }, { kind: 'year', year: 2025 })).toEqual({ tab: 'charges', period: 'Y2025' })
+    expect(withPeriodQuery({ from: '2026-01-01', to: '2026-02-01' }, { kind: 'all' })).toEqual({ period: 'all' })
+  })
+  it('knows whether a query names a period exactly', () => {
+    const p = { kind: 'months', count: 3, end: null } as const
+    expect(queryNamesPeriod({ period: '3M' }, p)).toBe(true)
+    expect(queryNamesPeriod({ period: '3M', end: '2026-08' }, p)).toBe(false)
+    expect(queryNamesPeriod({}, p)).toBe(false)
+    expect(queryNamesPeriod({ period: ['3M'] }, p)).toBe(true)
   })
 })

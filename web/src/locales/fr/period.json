@@ -2,5 +2,29 @@
   "all": "Tout",
   "lastMonths": "{count} derniers mois",
   "range": "{from} – {to}",
-  "year": "{year}"
+  "year": "{year}",
+  "bar": {
+    "label": "Période",
+    "open": "Choisir la période : {period}",
+    "previous": "Période précédente",
+    "next": "Période suivante",
+    "rounded": "Arrondie aux mois entiers"
+  },
+  "sheet": {
+    "title": "Période",
+    "presets": "Périodes prédéfinies",
+    "custom": "Personnalisé",
+    "from": "Du",
+    "to": "Au",
+    "apply": "Appliquer",
+    "preset": {
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Mois dernier",
+      "last3": "3 derniers mois",
+      "last6": "6 derniers mois",
+      "last12": "12 derniers mois",
+      "thisYear": "Cette année",
+      "all": "Tout"
+    }
+  }
 }
