@@ -59,8 +59,8 @@ function clear() {
 
     <template v-else>
       <label
-        class="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-sky-500/30 bg-sky-600/20 px-3 text-sm font-semibold text-sky-200"
-        :class="offlineStore.isOnline && !uploading ? 'cursor-pointer hover:bg-sky-600/30' : 'opacity-60'"
+        class="btn btn-secondary min-h-12 w-full text-sm"
+        :class="offlineStore.isOnline && !uploading ? 'cursor-pointer' : 'opacity-60'"
       >
         <Camera class="h-4 w-4" aria-hidden="true" />
         {{ uploading ? $t('quickadd.quickPhotoField.uploading') : $t('quickadd.quickPhotoField.photo') }}

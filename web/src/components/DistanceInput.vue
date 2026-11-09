@@ -114,5 +114,5 @@ function onInput(event: Event) {
 </script>
 
 <template>
-  <input :id="id" ref="input" type="text" inputmode="decimal" autocomplete="off" :value="shown" @input="onInput" />
+  <input :id="id" ref="input" type="text" :inputmode="whole ? 'numeric' : 'decimal'" autocomplete="off" :value="shown" @input="onInput" />
 </template>

@@ -262,12 +262,9 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
         <label for="tire-add-tire-price" class="block text-xs font-semibold text-slate-400 mb-1">
           {{ isTotalPrice ? $t('tires.tireAddModal.totalPrice', { cur: currencySymbol(vehicleStore.currency) }) : $t('tires.tireAddModal.pricePerTire', { cur: currencySymbol(vehicleStore.currency) }) }}
         </label>
-        <input id="tire-add-tire-price"
-          v-model.number="priceModel"
-          type="number"
-          inputmode="decimal"
+        <NumberInput id="tire-add-tire-price"
+          v-model="priceModel"
           min="0"
-          :step="isTotalPrice ? 10 : 5"
           placeholder="0"
           :aria-invalid="errors.price ? 'true' : undefined"
           aria-describedby="tire-add-error-price"

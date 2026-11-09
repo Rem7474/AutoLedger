@@ -87,7 +87,7 @@ const handleDisposeTire = () => runOnce(handleDisposeTireAction)
       </div>
       <div v-if="['FL', 'FR', 'RL', 'RR'].includes(selectedTire.current_position)">
         <label for="tire-dispose-odometer" class="block text-xs text-slate-400 mb-1 font-semibold">{{ $t('tires.tireDisposeModal.odometerAtRemovalKm', { unit: distanceUnit() }) }}</label>
-        <DistanceInput id="tire-dispose-odometer" v-model="disposeForm.odometer" min="0" required class="field" />
+        <DistanceInput inputmode="numeric" id="tire-dispose-odometer" v-model="disposeForm.odometer" min="0" required class="field" />
       </div>
     </form>
     <template #footer>

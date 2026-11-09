@@ -159,3 +159,17 @@ describe('API error codes', () => {
     expect([...new Set(missing)]).toEqual([])
   })
 })
+
+describe('selection actions of the drives', () => {
+  it('name what they do, with no counter and no internal vocabulary', () => {
+    const expected = {
+      fr: { autoToll: 'Détecter le péage', mergeToll: 'Fusionner les trajets', addToTrip: 'Ajouter à un voyage' },
+      en: { autoToll: 'Detect tolls', mergeToll: 'Merge trips', addToTrip: 'Add to a trip' },
+    } as const
+    for (const locale of ['fr', 'en'] as const) {
+      setLocale(locale)
+      for (const [key, label] of Object.entries(expected[locale])) expect(t(`drives.driveBulkActions.${key}`)).toBe(label)
+    }
+    setLocale('en')
+  })
+})

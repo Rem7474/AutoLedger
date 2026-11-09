@@ -29,7 +29,7 @@ const notes = defineModel<string>('notes', { required: true })
     </div>
     <div>
       <label for="checkpoint-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.odometerReadingsPanel.mileageKm', { unit: distanceUnit() }) }}</label>
-      <DistanceInput text
+      <DistanceInput inputmode="numeric" text
         id="checkpoint-odometer"
         v-model="odometer"
         step="1"

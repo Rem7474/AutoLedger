@@ -255,7 +255,7 @@ async function deleteOwnershipAction() {
         </div>
         <div>
           <label for="own-start-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('vehicles.ownershipWizardModal.odometerAtTheStartKm', { unit: distanceUnit() }) }}</label>
-          <DistanceInput id="own-start-odometer" v-model="ownershipForm.start_odometer" min="0" :placeholder="$t('common.example', { value: '0' })" class="field" />
+          <DistanceInput inputmode="numeric" id="own-start-odometer" v-model="ownershipForm.start_odometer" min="0" :placeholder="$t('common.example', { value: '0' })" class="field" />
         </div>
       </div>
     </div>

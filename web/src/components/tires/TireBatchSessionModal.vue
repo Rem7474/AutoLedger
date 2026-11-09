@@ -191,7 +191,7 @@ async function handleSaveBatchSession() {
       </div>
       <div>
         <label for="batch-session-mounted-odometer" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tireBatchSessionModal.odometerAtFittingKm', { unit: distanceUnit() }) }}</label>
-        <DistanceInput
+        <DistanceInput inputmode="numeric"
           id="batch-session-mounted-odometer"
           v-model="batchSessionForm.mounted_odometer"
           @input="onBatchOdometerChange"
@@ -212,7 +212,7 @@ async function handleSaveBatchSession() {
       </div>
       <div>
         <label for="batch-session-dismounted-odometer" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tireBatchSessionModal.odometerAtRemovalKm', { unit: distanceUnit() }) }}</label>
-        <DistanceInput
+        <DistanceInput inputmode="numeric"
           id="batch-session-dismounted-odometer"
           v-model="batchSessionForm.dismounted_odometer"
           @input="onBatchOdometerChange"
@@ -223,7 +223,7 @@ async function handleSaveBatchSession() {
 
     <div>
       <label for="batch-session-distance-km" class="block text-slate-400 mb-1 font-semibold">{{ $t('tires.tireBatchSessionModal.sessionDistanceKm', { unit: distanceUnit() }) }}</label>
-      <DistanceInput
+      <DistanceInput inputmode="numeric"
         id="batch-session-distance-km"
         v-model="batchSessionForm.distance_km"
         :placeholder="$t('tires.tireBatchSessionModal.calculatedFromTheOdometersOr')"

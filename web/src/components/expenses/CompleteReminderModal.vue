@@ -124,7 +124,7 @@ const handleCompleteReminder = () => runOnce(handleCompleteReminderAction)
         </div>
         <div>
           <label for="complete-form-odo" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.completeReminderModal.odometerAtTheWorkKm', { unit: distanceUnit() }) }}</label>
-          <DistanceInput text
+          <DistanceInput inputmode="numeric" text
             id="complete-form-odo"
             v-model="completeForm.service_odometer"
             min="0"
