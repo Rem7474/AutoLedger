@@ -39,6 +39,19 @@ describe('catalogs', () => {
       expect(placeholders(other.messages[key]), key).toEqual(placeholders(message))
     }
   })
+
+  // French capitalises the first word only; proper nouns and acronyms are the named exceptions.
+  const PROPER_NOUNS = ['Home', 'Assistant', 'TeslaMate', 'Grafana', 'SSO', 'CSV', 'HTTP', 'Basic', 'Auth', 'PDF', 'DOT', 'Wi', 'Fi', 'OK', 'Flotte', 'Foyer', 'Bearer', 'Discord', 'TeslaMateApi']
+  it('fr values do not capitalise every word', () => {
+    const french = others.find((o) => o.locale === 'fr')!.messages
+    const offenders = Object.entries(french).filter(([key, value]) => {
+      if (key.endsWith('Placeholder')) return false
+      const words = value.split(/\s+/).map((w) => w.replace(/[^\p{L}]+$/u, '')).filter((w) => /^[\p{L}]/u.test(w) && !PROPER_NOUNS.includes(w))
+      const capitalised = words.filter((w) => /^\p{Lu}\p{Ll}/u.test(w))
+      return capitalised.length >= 2 && capitalised.length === words.length
+    })
+    expect(offenders.map(([key]) => key)).toEqual([])
+  })
 })
 
 describe('setLocale', () => {

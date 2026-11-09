@@ -6,6 +6,11 @@ export function formatNumber(value: number, digits = 1): string {
   return value.toLocaleString(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
 
+/** A quantity (kWh, litres) in the current language: up to `digits` decimals, none when the value is whole ("3,7", "12"). */
+export function formatQuantity(value: number, digits = 1): string {
+  return value.toLocaleString(intlLocale(), { maximumFractionDigits: digits })
+}
+
 /** A percentage in the current language, with the language's own spacing ("18,7 %" in French). */
 export function formatPercent(value: number, digits = 1): string {
   return (value / 100).toLocaleString(intlLocale(), { style: 'percent', minimumFractionDigits: digits, maximumFractionDigits: digits })

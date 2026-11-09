@@ -5,7 +5,7 @@ import { api } from '@/services/api'
 import { distanceUnit, formatDistanceValue } from '@/units'
 import DistanceInput from '@/components/DistanceInput.vue'
 import NumberInput from '@/components/NumberInput.vue'
-import { formatAmount } from '@/currency'
+import { currencyDisplayOf, formatAmount } from '@/currency'
 import { perVolume, volumeUnitLabel } from '@/units'
 import { useComparisonPriceHistory } from '@/composables/useComparisonPriceHistory'
 import { useEnergyPriceWarning } from '@/composables/useEnergyPriceWarning'
@@ -112,7 +112,7 @@ watch(dirty, (d) => {
 })
 
 function fmtMoney(v: number): string {
-  return Number(v || 0).toLocaleString(intlLocale(), { style: 'currency', currency: props.currency, maximumFractionDigits: 0 })
+  return Number(v || 0).toLocaleString(intlLocale(), { style: 'currency', currency: props.currency, currencyDisplay: currencyDisplayOf(props.currency), maximumFractionDigits: 0 })
 }
 
 function fmtSigned(v: number): string {

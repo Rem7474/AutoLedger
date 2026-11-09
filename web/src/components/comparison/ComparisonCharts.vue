@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { currencyDisplayOf } from '@/currency'
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { intlLocale, t } from '@/i18n'
@@ -18,7 +19,7 @@ const props = defineProps<{
 const sk = (key: string) => sideKey(key, props.side)
 
 function fmtMoney(v: number | null | undefined): string {
-  return Number(v || 0).toLocaleString(intlLocale(), { style: 'currency', currency: props.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return Number(v || 0).toLocaleString(intlLocale(), { style: 'currency', currency: props.currency, currencyDisplay: currencyDisplayOf(props.currency), minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 
 const chartRef = ref<HTMLCanvasElement | null>(null)

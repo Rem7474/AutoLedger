@@ -17,7 +17,7 @@
     "scrapTheSelectedTires": "Mettre au rebut les pneus sélectionnés",
     "editInBulk": "Modifier par lot",
     "crossRotation": "Permutation croisée",
-    "frontRear": "Avant ⇄ Arrière",
+    "frontRear": "Avant ⇄ arrière",
     "quickVehicleRotationsIn1": "Permutations rapides du véhicule en 1 clic :",
     "modeChangesToTiresRotations": ". Les modifications de pneumatiques, permutations et relevés sont désactivés.",
     "readOnly": "Lecteur seul",
@@ -114,7 +114,7 @@
   },
   "tireBatchSessionModal": {
     "eGWinterSeason2023": "Ex: Saison hiver 2023-2024",
-    "commentNotes": "Commentaire / Notes",
+    "commentNotes": "Commentaire / notes",
     "calculatedFromTheOdometersOr": "Auto-calculé par les odomètres ou manuel",
     "sessionDistanceKm": "Distance de la session ({unit})",
     "odometerAtRemovalKm": "Odomètre démontage ({unit})",
@@ -280,7 +280,7 @@
   },
   "tireSessionModal": {
     "eGWinterSeason2024": "Ex: Saison hivernale 2024",
-    "commentNotes": "Commentaire / Notes",
+    "commentNotes": "Commentaire / notes",
     "calculatedOrForced": "Auto-calculé ou forcé",
     "sessionDistanceKm": "Distance de la session ({unit})",
     "odometerAtRemovalKm": "Odomètre démontage ({unit})",

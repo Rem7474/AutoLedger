@@ -13,4 +13,9 @@ describe('formatCostPerDistance', () => {
     expect(formatCostPerDistance(0.0525, 'EUR', 4)).toMatch(/0,0525/)
     expect(formatCostPerDistance(0.0525, 'EUR', 3, true)).toMatch(/0,053.*\/km/)
   })
+
+  it('always shows the same number of decimals, so a list lines up', () => {
+    expect(formatCostPerDistance(0.23, 'EUR')).toMatch(/^0,230\s€$/)
+    expect(formatCostPerDistance(0.231, 'EUR')).toMatch(/^0,231\s€$/)
+  })
 })

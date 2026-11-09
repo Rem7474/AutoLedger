@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { setLocale } from '@/i18n'
-import { formatDecimalInput, formatNumber, formatPercent, formatPercentOrUnknown, parseDecimal } from './numbers'
+import { formatDecimalInput, formatNumber, formatQuantity, formatPercent, formatPercentOrUnknown, parseDecimal } from './numbers'
 
 const plain = (s: string) => s.replace(/[  ]/g, ' ')
 
@@ -16,6 +16,19 @@ describe('formatNumber', () => {
     setLocale('en')
     expect(formatNumber(39.25, 2)).toBe('39.25')
     expect(formatNumber(1234.5, 1)).toBe('1,234.5')
+  })
+})
+
+describe('formatQuantity', () => {
+  it('rounds a quantity to one decimal and leaves a whole one whole', () => {
+    setLocale('fr')
+    expect(formatQuantity(3.7123)).toBe('3,7')
+    expect(formatQuantity(12)).toBe('12')
+    expect(formatQuantity(0)).toBe('0')
+    expect(plain(formatQuantity(1234.56, 1))).toBe('1 234,6')
+    setLocale('en')
+    expect(formatQuantity(3.7123)).toBe('3.7')
+    setLocale('fr')
   })
 })
 

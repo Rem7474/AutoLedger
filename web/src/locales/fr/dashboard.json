@@ -194,7 +194,7 @@
     "minDistanceNote": "Les mois de moins de {distance} {unit} ne sont pas tracés."
   },
   "monthDetailModal": {
-    "expensesAndInvoices": "Dépenses & Factures",
+    "expensesAndInvoices": "Dépenses & factures",
     "vehicleDrives": "Trajets du véhicule",
     "monthTotal": "Total du mois",
     "carpoolRevenue": "Payé par les passagers",
@@ -271,7 +271,7 @@
   "tcoMetricsGrid": {
     "depreciationMissing": "Dépréciation non renseignée : le coût complet omet son plus gros poste.",
     "depreciationMissingAction": "La renseigner",
-    "tollsAndParking": "Péages & Parkings",
+    "tollsAndParking": "Péages & parkings",
     "chargeSWithoutACost": "{charges_without_cost} recharge(s) sans coût",
     "fullCostPerKm": "Coût complet / {unit}",
     "totalCost": "Décaissé depuis l'achat",
@@ -318,7 +318,7 @@
   },
   "donut": {
     "energy": "Énergie",
-    "tolls": "Péages & Parkings",
+    "tolls": "Péages & parkings",
     "tires": "Pneus (usure amortie)",
     "maintenance": "Entretien & réparations",
     "insurance": "Assurance",
@@ -344,17 +344,17 @@
   "breakdown": {
     "energy": "Énergie",
     "energyNote": "dont {amount} estimés (énergie non suivie)",
-    "tolls": "Péages & Parkings",
+    "tolls": "Péages & parkings",
     "tires": "Pneus",
     "tiresSub": "usure amortie",
     "tiresCashNote": "{amount} décaissés ce mois (achat pneus)",
     "tiresAmortizedNote": "Amorti sur {km} {unit} ({zero} décaissé)",
-    "maintenance": "Entretien & Réparations",
+    "maintenance": "Entretien & réparations",
     "smoothed": "lissé",
     "maintenanceBilledNote": "{amount} facturés à l'atelier ce mois",
     "maintenanceSmoothedNote": "Lissage révisions/pièces sur la période",
     "insurance": "Assurance",
-    "financing": "Financement & Location",
+    "financing": "Financement & location",
     "financingNote": "Lissé : {smoothed} (mensualité réglée : {paid})",
     "other": "Abonnements, taxes & autres"
   },

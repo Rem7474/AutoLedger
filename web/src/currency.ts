@@ -12,12 +12,17 @@ export function formatMoney(cents: number, currency: string): string {
 // No currency is ever assumed: while the vehicle that owns an amount is not loaded yet (`currency` is empty),
 // the figure reads as a plain number, without a symbol, rather than as an amount in a guessed currency.
 function numberFormat(currency: string, options: Intl.NumberFormatOptions): Intl.NumberFormat {
-  return new Intl.NumberFormat(intlLocale(), currency ? { style: 'currency', currency, ...options } : options)
+  return new Intl.NumberFormat(intlLocale(), currency ? { style: 'currency', currency, currencyDisplay: currencyDisplayOf(currency), ...options } : options)
+}
+
+/** How a currency is written: the pound is "£" (French would otherwise write "£GB"); the dollars keep their regional mark ("$US", "$CA") because they would be ambiguous. */
+export function currencyDisplayOf(currency: string): 'symbol' | 'narrowSymbol' {
+  return currency === 'GBP' ? 'narrowSymbol' : 'symbol'
 }
 
 /** Formats a currency amount already in main units (not cents), e.g. a €/km rate. */
-export function formatAmount(amount: number, currency: string, maximumFractionDigits = 2): string {
-  return numberFormat(currency, { maximumFractionDigits }).format(amount)
+export function formatAmount(amount: number, currency: string, maximumFractionDigits = 2, minimumFractionDigits?: number): string {
+  return numberFormat(currency, { maximumFractionDigits, ...(minimumFractionDigits === undefined ? {} : { minimumFractionDigits }) }).format(amount)
 }
 
 /** A figure shown when its value is not known: a missing amount reads as a dash, never as a zero. */
@@ -32,7 +37,7 @@ export function formatAmountOrUnknown(amount: number | null | undefined, currenc
 /** Just the symbol ("€", "$"...), for a chart axis or dataset label that cannot show a full amount. */
 export function currencySymbol(currency: string): string {
   if (!currency) return ''
-  const part = new Intl.NumberFormat(intlLocale(), { style: 'currency', currency }).formatToParts(0).find((p) => p.type === 'currency')
+  const part = new Intl.NumberFormat(intlLocale(), { style: 'currency', currency, currencyDisplay: currencyDisplayOf(currency) }).formatToParts(0).find((p) => p.type === 'currency')
   return part?.value ?? currency
 }
 

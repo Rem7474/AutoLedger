@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Zap, Disc, Wrench, Shield } from 'lucide-vue-next'
 import { formatAmount } from '@/currency'
+import { formatQuantity } from '@/utils/numbers'
 import { distanceUnit, formatDistance, perDistance } from '@/units'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 
@@ -13,7 +14,7 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
   <CostItemRow
     :icon="Zap"
     :label="$t('drives.driveCostModal.electricEnergy')"
-    :sub="$t('drives.driveCostModal.kwhKwh', { electricity_kwh: drive.costs?.electricity_kwh || 0, electricity_rate: formatAmount(drive.costs?.electricity_rate ?? 0, currency, 3) })"
+    :sub="$t('drives.driveCostModal.kwhKwh', { electricity_kwh: formatQuantity(Number(drive.costs?.electricity_kwh) || 0), electricity_rate: formatAmount(drive.costs?.electricity_rate ?? 0, currency, 3) })"
     :amount="drive.costs?.electricity_cost || 0"
     :share-pct="breakdown.byKey.energy.sharePct"
     :cost-per-km="breakdown.byKey.energy.costPerKm"
