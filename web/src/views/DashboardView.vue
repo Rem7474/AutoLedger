@@ -9,7 +9,6 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { api, type MaintenanceReminder } from '@/services/api'
 
-import EnergyEfficiencyPanel from '@/components/dashboard/EnergyEfficiencyPanel.vue'
 import UrgentRemindersBanner from '@/components/dashboard/UrgentRemindersBanner.vue'
 import NextDueCard from '@/components/dashboard/NextDueCard.vue'
 import DashboardFollowUp from '@/components/dashboard/DashboardFollowUp.vue'
@@ -200,20 +199,10 @@ onMounted(() => {
         <NextDueCard :reminders="dashboardReminders" :can-edit="vehicleStore.canEdit" />
       </DashboardFollowUp>
 
-      <!-- One period for the charts and the energy summary below: above the tab bar on a phone, pinned under the top bar from md -->
+      <!-- One period for the charts below: above the tab bar on a phone, pinned under the top bar from md -->
       <div class="max-md:contents md:sticky md:top-[4.25rem] md:z-30 md:bg-slate-950/90 md:py-2 md:backdrop-blur-md">
         <PeriodBar :period="period" :label="periodLabel" :rounded="rounded" :can-previous="canPrevious" :can-next="canNext" @step="stepPeriod" @pick="setPeriod" />
       </div>
-
-      <!-- Energy summary: consumption and real cost per 100 km (electric vehicles); the detail is on the energy page -->
-      <EnergyEfficiencyPanel
-        v-if="vehicleStore.activeVehicle && vehicleStore.canCharge && (!vehicleStore.canRefuel || (tco?.total_kwh_added || 0) > 0)"
-        :vehicle-id="vehicleStore.activeVehicle.id"
-        :grafana-url="vehicleStore.activeVehicle.teslamate_grafana_url"
-        :sync-key="vehicleStore.lastSyncTimestamp"
-        show-link
-        summary
-      />
 
       <!-- Below sm each block below the figures is one row that opens it in a sheet, so the page is a short list instead of
            a long stack of charts; a month opened from a sheet takes over from it -->
