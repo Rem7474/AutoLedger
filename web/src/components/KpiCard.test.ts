@@ -93,7 +93,7 @@ describe('KpiCard', () => {
   it('adds the definition tip when a glossary term is given', async () => {
     setLocale('en')
     const html = await render({ label: 'Cash paid', value: '1 200 €', term: 'cashPaid' })
-    expect(html).toContain('role="note"')
+    expect(html).toContain('aria-haspopup="dialog"')
   })
 
   it('renders the delta with its tone and the secondary lines from the slot', async () => {

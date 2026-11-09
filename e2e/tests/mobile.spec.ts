@@ -785,3 +785,102 @@ test('a reload brings the page back to where it was', async ({ page }) => {
   await page.reload()
   await expect.poll(() => shellTop(page), { timeout: 5000 }).toBeGreaterThan(left - 3)
 })
+
+// A vehicle of its own with two fitted tires (front left "Alpha", rear left "Beta"), removed at the end.
+async function withFittedTires(request: import('@playwright/test').APIRequestContext, fn: (vehicleId: string) => Promise<void>, storage = false) {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Tire rotation reference', powertrain: 'EV', currency: 'EUR', current_odometer: 1000 } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  try {
+    const tire = (model: string, current_position: string) =>
+      request.post(`/api/vehicles/${vehicle.id}/tires`, {
+        headers,
+        data: { brand: model, model: 'Grip', dimension: '205/55R16', season: 'SUMMER', purchase_date: '2026-01-01', purchase_price: 9000, current_position, mounted_odometer: current_position === 'STORAGE' ? undefined : 0, initial_depth_mm: 8, min_legal_depth_mm: 1.6, estimated_lifespan_km: 40000 },
+      })
+    expect((await tire('Alpha', 'FL')).ok()).toBeTruthy()
+    expect((await tire('Beta', 'RL')).ok()).toBeTruthy()
+    if (storage) expect((await tire('Gamma', 'STORAGE')).ok()).toBeTruthy()
+    await fn(vehicle.id)
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+}
+
+test('a quick rotation shows at once, comes back with Undo, and is only sent once the time to undo is over', async ({ page, request }) => {
+  await withFittedTires(request, async (vehicleId) => {
+    const sent: string[] = []
+    await page.route(/\/tires\/quick-rotate$/, (route) => {
+      sent.push(route.request().postData() ?? '')
+      return route.continue()
+    })
+    await useVehicle(page, vehicleId, '/tires')
+    const tiles = page.getByRole('main').getByRole('button', { name: /^Open / })
+    await expect(tiles.first()).toHaveAccessibleName(/Alpha/)
+
+    await page.getByRole('button', { name: 'Front ⇄ Rear' }).tap()
+    await expect(tiles.first()).toHaveAccessibleName(/Beta/)
+    await expect(page.getByText('Tires rotated')).toBeVisible()
+    // One rotation at a time while the time to undo runs
+    await expect(page.getByRole('button', { name: 'Front ⇄ Rear' })).toBeDisabled()
+    await page.getByRole('button', { name: 'Undo' }).tap()
+    await expect(tiles.first()).toHaveAccessibleName(/Alpha/)
+    await page.waitForTimeout(500)
+    expect(sent).toHaveLength(0)
+
+    await page.getByRole('button', { name: 'Front ⇄ Rear' }).tap()
+    await expect(tiles.first()).toHaveAccessibleName(/Beta/)
+    await expect.poll(() => sent.length, { timeout: 12_000 }).toBe(1)
+    expect(sent[0]).toContain('FRONT_BACK')
+    await expect(tiles.first()).toHaveAccessibleName(/Beta/)
+  })
+})
+
+test('"Change set" is disabled with its reason when no tire is in storage, and opens the swap when one is', async ({ page, request }) => {
+  await withFittedTires(request, async (vehicleId) => {
+    await useVehicle(page, vehicleId, '/tires')
+    const button = page.getByRole('button', { name: 'Change set' })
+    await expect(button).toBeDisabled()
+    await expect(page.getByText('No tire set in storage')).toBeVisible()
+    await expect(button).toHaveAccessibleDescription('No tire set in storage')
+  })
+  await withFittedTires(
+    request,
+    async (vehicleId) => {
+      await useVehicle(page, vehicleId, '/tires')
+      await expect(page.getByRole('button', { name: 'Change set' })).toBeEnabled()
+      await expect(page.getByText('No tire set in storage')).toHaveCount(0)
+      await page.getByRole('button', { name: 'Change set' }).tap()
+      await expect(page.getByRole('dialog')).toBeVisible()
+    },
+    true,
+  )
+})
+
+test('a definition opens on touch, and Back closes it', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  const tip = page.getByRole('main').getByRole('button', { name: /^Economic cost: / }).first()
+  await tip.scrollIntoViewIfNeeded()
+  const box = (await tip.boundingBox())!
+  expect(box.width).toBeGreaterThanOrEqual(43)
+  expect(box.height).toBeGreaterThanOrEqual(43)
+  const before = page.url()
+  await tip.tap()
+  const sheet = page.getByRole('dialog', { name: 'Economic cost' })
+  await expect(sheet).toBeVisible()
+  await expect(sheet).toContainText('Costs spread over the period they cover')
+  // Above the bottom bar, not stacked under it by the card that holds the tip
+  const definition = sheet.getByText('Costs spread over')
+  await expect
+    .poll(() =>
+      definition.evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+        return !!top && !el.contains(top)
+      }),
+    )
+    .toBe(false)
+  await page.goBack()
+  await expect(sheet).toHaveCount(0)
+  expect(page.url()).toBe(before)
+})

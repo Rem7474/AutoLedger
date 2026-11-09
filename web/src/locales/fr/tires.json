@@ -41,14 +41,15 @@
     "deleteSessionMessage": "Confirmez-vous la suppression de cette session de montage ?",
     "deleteReadingTitle": "Supprimer le relevé de gomme",
     "deleteReadingMessage": "Supprimer le relevé de {depth} mm du {date} ?",
-    "changeSetNeedsStorage": "Aucun jeu de pneus n’est stocké au garage pour l’échange. Ajoutez-en un d’abord avec « Ajouter des pneus ».",
     "noScrappedTire": "Aucun pneu au rebut",
     "noScrappedTireHint": "Les pneus mis au rebut (usés, crevés, vendus) apparaissent ici avec leur kilométrage et leur coût final.",
     "noTireYet": "Aucun pneu enregistré",
     "noTireYetHint": "Ajoutez le jeu monté sur le véhicule pour suivre son usure, son kilométrage et son coût par distance.",
     "scrapNone": "Seuls les pneus montés ou stockés peuvent être mis au rebut",
     "timelineRow": "Pneus par kilométrage",
-    "timelineHint": "Quel train a roulé sur quelle distance"
+    "timelineHint": "Quel train a roulé sur quelle distance",
+    "rotated": "Pneus permutés",
+    "changeSetNoStorage": "Aucun train au garage"
   },
   "tireAddModal": {
     "createTheTires": "Créer les pneus",
