@@ -219,8 +219,6 @@
     "closeEsc": "Fermer (Échap)",
     "nextMonth": "Mois suivant (→)",
     "previousMonth": "Mois précédent (←)",
-    "fullBreakdownOfTheExpense": "Ventilation complète des postes de dépenses et coût au {unit}",
-    "costDetails": "Détail des coûts — {value}",
     "ofWhichKmSmoothed": "dont {smoothedKm} {unit} lissés",
     "smoothingIncluded": "Lissage d'usage inclus",
     "cashAmounts": "Montants comptants",

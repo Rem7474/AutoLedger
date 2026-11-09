@@ -1191,3 +1191,28 @@ test('the costs page draws the monthly charts for the whole cost, and only for t
   await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
+
+test('the month detail is titled by its month alone and a swipe moves between months', async ({ page }) => {
+  await useVehicle(page, ev.id, '/costs')
+  await page.getByRole('button', { name: /Last month/ }).click()
+  const dialog = page.getByRole('dialog')
+  const title = dialog.getByRole('heading', { level: 3 })
+  await expect(title).toBeVisible()
+  const last = await title.innerText()
+  expect(last).toMatch(/^[A-Za-z]+ \d{4}$/)
+
+  const body = dialog.getByTestId('month-detail-body')
+  const box = (await body.boundingBox())!
+  const y = Math.min(box.y + 120, 600)
+  // Swiping right brings the month before
+  await drag(page, 100, y, 180, 4)
+  await expect(title).not.toHaveText(last)
+  const before = await title.innerText()
+  // Swiping left brings the month after, back to the last one
+  await drag(page, 300, y, -180, 4)
+  await expect(title).toHaveText(last)
+  expect(before).not.toBe(last)
+  // A swipe down is the sheet's own gesture: the month does not change by it
+  await swipeDown(page, 200, y, 40)
+  await expect(title).toHaveText(last)
+})

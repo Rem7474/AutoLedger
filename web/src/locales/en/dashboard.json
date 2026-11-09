@@ -219,8 +219,6 @@
     "closeEsc": "Close (Esc)",
     "nextMonth": "Next month (→)",
     "previousMonth": "Previous month (←)",
-    "fullBreakdownOfTheExpense": "Full breakdown of the expense categories and cost per {unit}",
-    "costDetails": "Cost details — {value}",
     "ofWhichKmSmoothed": "of which {smoothedKm} {unit} smoothed",
     "smoothingIncluded": "Usage smoothing included",
     "cashAmounts": "Cash amounts",

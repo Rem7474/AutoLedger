@@ -6,6 +6,7 @@ import { formatPercent } from '@/utils/numbers'
 import { intlLocale, t } from '@/i18n'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Coins, Zap, Receipt, Disc, Wrench, Briefcase, ArrowRight, Activity, Shield, Users, ChevronLeft, ChevronRight, PieChart, Info, SlidersHorizontal } from 'lucide-vue-next'
+import { monthSwipeDirection, startsAtScreenEdge } from '@/utils/monthSwipe'
 import { buildMonthBreakdown, formatMonthName, type MonthDetailMode } from '@/utils/dashboard'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import { currencySymbol, formatAmount } from '@/currency'
@@ -59,6 +60,20 @@ function selectNextMonth() {
   }
 }
 
+// A swipe on the body moves between months; the touch is read where it starts and where it ends
+let swipeStart: { x: number; y: number } | null = null
+function onSwipeStart(e: PointerEvent) {
+  swipeStart = e.pointerType === 'touch' && !startsAtScreenEdge(e.clientX, window.innerWidth) ? { x: e.clientX, y: e.clientY } : null
+}
+function onSwipeEnd(e: PointerEvent) {
+  const start = swipeStart
+  swipeStart = null
+  if (!start) return
+  const direction = monthSwipeDirection(e.clientX - start.x, e.clientY - start.y)
+  if (direction === 'previous') selectPrevMonth()
+  else if (direction === 'next') selectNextMonth()
+}
+
 function closeMonthDetail() {
   selectedMonth.value = null
   expandedKey.value = null
@@ -98,12 +113,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             <PieChart class="w-5 h-5" />
           </div>
           <div class="min-w-0 truncate">
-            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2 truncate">
-              <span class="truncate">{{ $t('dashboard.monthDetailModal.costDetails', { value: formatMonthName(selectedMonthBreakdown.month) }) }}</span>
-            </h3>
-            <p class="text-xs text-slate-400 truncate">
-              {{ $t('dashboard.monthDetailModal.fullBreakdownOfTheExpense', { unit: distanceUnit() }) }}
-            </p>
+            <h3 class="truncate text-base font-bold text-white sm:text-lg">{{ formatMonthName(selectedMonthBreakdown.month) }}</h3>
           </div>
         </div>
     </template>
@@ -129,6 +139,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             </button>
           </div>
     </template>
+    <div class="touch-pan-y space-y-5" data-testid="month-detail-body" @pointerdown="onSwipeStart" @pointerup="onSwipeEnd" @pointercancel="swipeStart = null">
 
 
       <!-- The month's four figures: the dashboard's cards, in their dense form -->
@@ -341,6 +352,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           </CostTotalBar>
         </div>
       </div>
+    </div>
 
     <template #footer>
         <div class="flex items-center gap-2">
