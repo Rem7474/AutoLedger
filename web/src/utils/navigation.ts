@@ -9,8 +9,11 @@ export const NAV_SECTIONS: { headingKey?: string; names: string[] }[] = [
   { names: ['dashboard'] },
   { headingKey: 'shell.navSections.tracking', names: ['fleet', 'drives', 'carpools', 'odometer', 'energy'] },
   { headingKey: 'shell.navSections.costs', names: ['expenses', 'maintenance', 'tires', 'comparison'] },
-  { headingKey: 'shell.navSections.management', names: ['vehicles', 'account'] },
+  { headingKey: 'shell.navSections.management', names: ['vehicle', 'vehicles', 'account'] },
 ]
+
+/** Pages the vehicle sheet opens: the phone's "More" sheet does not list them again. */
+export const VEHICLE_SHEET_PAGES = ['odometer', 'tires', 'comparison', 'vehicles']
 
 /**
  * Spreads the pages the account can open over the sections, in the order the sections list them. A section left without
