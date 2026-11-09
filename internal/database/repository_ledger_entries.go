@@ -10,6 +10,8 @@ import (
 // LedgerEntry is one line of the cost ledger with what is needed to tell it from the others: the amount is in the
 // vehicle's currency, as in every total.
 type LedgerEntry struct {
+	// SourceID is the id of the row in Source that the line comes from, what a client opens or edits.
+	SourceID string
 	Date     time.Time
 	Category string // ENERGY, TOLL, PARKING, TRAVEL_OTHER, MAINTENANCE, REPAIR, INSURANCE, SUBSCRIPTION, TAX, FINANCING, TIRES...
 	Source   string // charge_logs, fuel_logs, drive_expenses, maintenance_expenses, tires, vehicle_ownership
@@ -73,7 +75,7 @@ func (r *Repository) ListLedgerEntries(ctx context.Context, vehicleID, ownerID s
 		dir = "ASC"
 	}
 	rows, err := r.pool.Query(ctx, `
-		SELECT l.entry_date, l.category, l.source_table, l.amount_eur,
+		SELECT l.source_id::text, l.entry_date, l.category, l.source_table, l.amount_eur,
 		       CASE l.source_table
 		            WHEN 'maintenance_expenses' THEN NULLIF(btrim(m.description), '')
 		            WHEN 'drive_expenses' THEN NULLIF(btrim(e.notes), '')
@@ -107,7 +109,7 @@ func (r *Repository) ListLedgerEntries(ctx context.Context, vehicleID, ownerID s
 	var entries []LedgerEntry
 	for rows.Next() {
 		var e LedgerEntry
-		if err := rows.Scan(&e.Date, &e.Category, &e.Source, &e.Amount, &e.Note, &e.Place, &e.PlaceCategory, &e.Kwh, &e.Liters, &e.Recurring, &e.HasDocument); err != nil {
+		if err := rows.Scan(&e.SourceID, &e.Date, &e.Category, &e.Source, &e.Amount, &e.Note, &e.Place, &e.PlaceCategory, &e.Kwh, &e.Liters, &e.Recurring, &e.HasDocument); err != nil {
 			return nil, nil, err
 		}
 		entries = append(entries, e)
@@ -136,4 +138,15 @@ func (r *Repository) ListLedgerEntries(ctx context.Context, vehicleID, ownerID s
 		byCategory = append(byCategory, t)
 	}
 	return entries, byCategory, totals.Err()
+}
+
+// CarpoolRevenueBetween sums what the passengers paid for the carpools of a vehicle dated in [from, to) in the given
+// time zone; a nil bound is open. It is not a cost, so the ledger does not carry it.
+func (r *Repository) CarpoolRevenueBetween(ctx context.Context, vehicleID string, from, to *time.Time) (money.Cents, error) {
+	var total money.Cents
+	err := r.pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(total_revenue), 0) FROM carpool_trips
+		WHERE vehicle_id = $1 AND ($2::timestamptz IS NULL OR date >= $2) AND ($3::timestamptz IS NULL OR date < $3);
+	`, vehicleID, from, to).Scan(&total)
+	return total, err
 }
