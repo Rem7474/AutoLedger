@@ -13,16 +13,18 @@ const open = ref(false)
 </script>
 
 <template>
-  <span class="inline-flex align-middle">
+  <span class="ml-1 inline-flex align-middle">
+    <!-- The button is the size of its glyph, so it neither widens the gap to its label nor stretches the line it sits in;
+         the hit area (44 px) is a pseudo-element around it -->
     <button
       type="button"
-      class="tap inline-flex items-center justify-center text-slate-500 hover:text-slate-300 focus-visible:text-slate-300"
+      class="no-tap relative inline-flex items-center justify-center text-slate-400 hover:text-slate-200 focus-visible:text-slate-200 after:absolute after:-inset-3.5 after:content-['']"
       :title="definition"
       :aria-label="`${label}: ${definition}`"
       aria-haspopup="dialog"
       @click.stop="open = true"
     >
-      <Info class="h-3.5 w-3.5" aria-hidden="true" />
+      <Info class="size-4" aria-hidden="true" />
     </button>
     <!-- In the body: a card that stacks its content (z-10 over its overlay) would keep the sheet under the bottom bar -->
     <Teleport to="body">
