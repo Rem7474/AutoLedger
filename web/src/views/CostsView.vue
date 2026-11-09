@@ -5,6 +5,11 @@ import { Wallet } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import PeriodBar from '@/components/period/PeriodBar.vue'
 import CostEntryRow from '@/components/costs/CostEntryRow.vue'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
+import TollModal from '@/components/expenses/TollModal.vue'
+import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
+import ChargeModal from '@/components/expenses/ChargeModal.vue'
+import DocumentPreviewModal from '@/components/expenses/DocumentPreviewModal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
 import ListSkeleton from '@/components/ListSkeleton.vue'
@@ -14,7 +19,9 @@ import { api, type CostEntriesResponse } from '@/services/api'
 import { usePeriod } from '@/composables/usePeriod'
 import { useInfiniteList } from '@/composables/useInfiniteList'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { COST_FILTERS, amountValue, categoriesOfFilter, costPerKm, entryKey, isCostFilterKey, type CostFilterKey } from '@/utils/costEntries'
+import { useCostEntryActions } from '@/composables/useCostEntryActions'
+import { useDocumentPreview } from '@/composables/useDocumentPreview'
+import { COST_FILTERS, amountValue, categoriesOfFilter, costPerKm, entryKey, entryTarget, isCostFilterKey, type CostFilterKey } from '@/utils/costEntries'
 import { dayLabel, groupByDay } from '@/utils/dayGroups'
 import { toLocalDay } from '@/utils/dates'
 import { THEME_STYLES } from '@/utils/themes'
@@ -69,6 +76,31 @@ watch(filter, (key) => {
   void router.replace({ query: { ...route.query, theme: key === 'all' ? undefined : key } })
 })
 useRefreshHandler(() => load(true))
+
+// A line opens its record, and a swipe deletes it with a way back: the line leaves the page at once and returns if the
+// deletion is taken back or refused
+const removed = new Map<string, { row: (typeof items.value)[number]; index: number }>()
+const actions = useCostEntryActions({
+  hide: (id) => {
+    const index = items.value.findIndex((e) => e.id === id)
+    if (index < 0) return
+    removed.set(id, { row: items.value[index], index })
+    items.value = items.value.filter((e) => e.id !== id)
+  },
+  restore: (id) => {
+    const gone = removed.get(id)
+    removed.delete(id)
+    if (!gone || items.value.some((e) => e.id === id)) return
+    const next = [...items.value]
+    next.splice(Math.min(gone.index, next.length), 0, gone.row)
+    items.value = next
+  },
+  reload: () => load(true),
+})
+const { showToll, showMaintenance, showCharge, editing, documents, onDocumentAdded } = actions
+const { previewDoc, closeDocPreview, viewOrDownloadDocument } = useDocumentPreview(() => vehicleStore.activeVehicle?.id)
+const currentOdometer = computed(() => vehicleStore.activeVehicle?.current_odometer || 0)
+const swipeable = (e: { source: string; source_id: string }) => vehicleStore.canEdit && entryTarget(e).type === 'edit'
 
 const groups = computed(() => {
   const today = toLocalDay()
@@ -138,10 +170,28 @@ const chipClass = (key: CostFilterKey) => {
       <p class="px-1 text-xs text-slate-400">{{ $t('costs.list.shownOf', { count: items.length, total }) }}</p>
       <section v-for="group in groups" :key="group.day" class="space-y-2">
         <h2 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h2>
-        <CostEntryRow v-for="e in group.items" :key="e.id" :entry="e" :currency="currency" />
+        <SwipeToDelete v-for="e in group.items" :key="e.id" :disabled="!swipeable(e)" @delete="actions.remove(e, e.id)">
+          <CostEntryRow :entry="e" :currency="currency" :readonly="!vehicleStore.canEdit" @open="actions.open" />
+        </SwipeToDelete>
       </section>
       <InfiniteSentinel v-if="hasMore" :loading="loadingMore" :error="moreError" :label="$t('costs.list.loadMore')" @more="loadMore" />
       <p v-if="filter === 'all'" class="px-1 text-xs text-slate-500">{{ $t('costs.estimateNote') }}</p>
     </div>
+
+    <TollModal v-model:open="showToll" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
+    <MaintenanceModal
+      v-model:open="showMaintenance"
+      :vehicle-id="vehicleStore.activeVehicle.id"
+      :editing="editing"
+      :documents="documents"
+      :maintenance-expenses="[]"
+      :current-odometer="currentOdometer"
+      default-category="MAINTENANCE"
+      @saved="load(true)"
+      @document-added="onDocumentAdded"
+      @view-document="viewOrDownloadDocument"
+    />
+    <ChargeModal v-model:open="showCharge" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" :current-odometer="currentOdometer" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
+    <DocumentPreviewModal :preview-doc="previewDoc" @close="closeDocPreview" />
   </div>
 </template>
