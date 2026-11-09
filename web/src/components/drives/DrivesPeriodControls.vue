@@ -96,7 +96,7 @@ function onCustomDateChange() {
 
 <template>
   <div class="flex flex-wrap items-center gap-2">
-    <div class="flex items-center rounded-xl border border-slate-800/80 bg-slate-950 p-1" role="group" :aria-label="$t('drives.drivesToolbar.period')">
+    <div class="flex max-w-full flex-wrap items-center rounded-xl border border-slate-800/80 bg-slate-950 p-1" role="group" :aria-label="$t('drives.drivesToolbar.period')">
       <button
         v-for="m in MODES"
         :key="m"

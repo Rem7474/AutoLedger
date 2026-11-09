@@ -3,7 +3,10 @@ import { setDistanceUnit } from '@/units'
 import {
   applyBatchTag,
   buildSuggestionCostDrive,
+  canStepDrivesPeriod,
   countActiveDriveFilters,
+  drivesPeriodLabel,
+  stepDrivesPeriod,
   summarizeDriveCarpools,
   buildTripCostDrive,
   currentYearMonth,
@@ -296,19 +299,19 @@ describe('buildSuggestionCostDrive', () => {
 })
 
 describe('countActiveDriveFilters', () => {
-  const none = { mode: 'DRIVES' as const, periodMode: 'ALL', unqualifiedOnly: false, hasTollOnly: false, selectedTag: '', tripQualifyOnly: false }
+  const none = { mode: 'DRIVES' as const, unqualifiedOnly: false, hasTollOnly: false, selectedTag: '', tripQualifyOnly: false }
   it('is zero when nothing narrows the list', () => {
     expect(countActiveDriveFilters(none)).toBe(0)
   })
-  it('counts the period, the toll filters and the tag of the drives list', () => {
-    expect(countActiveDriveFilters({ ...none, periodMode: 'MONTH', unqualifiedOnly: true, hasTollOnly: true, selectedTag: 'Pro' })).toBe(4)
+  it('counts the toll filters and the tag of the drives list', () => {
+    expect(countActiveDriveFilters({ ...none, unqualifiedOnly: true, hasTollOnly: true, selectedTag: 'Pro' })).toBe(3)
   })
   it('counts the carpool filter of the drives list', () => {
     expect(countActiveDriveFilters({ ...none, carpoolFilter: 'yes' })).toBe(1)
     expect(countActiveDriveFilters({ ...none, carpoolFilter: '' })).toBe(0)
   })
   it('counts only the filters of the trips list in trip mode', () => {
-    expect(countActiveDriveFilters({ ...none, mode: 'TRIPS', hasTollOnly: true, selectedTag: 'Pro', tripQualifyOnly: true, periodMode: 'CUSTOM' })).toBe(2)
+    expect(countActiveDriveFilters({ ...none, mode: 'TRIPS', hasTollOnly: true, selectedTag: 'Pro', tripQualifyOnly: true })).toBe(1)
   })
 })
 
@@ -376,5 +379,37 @@ describe('summarizeDriveCarpools', () => {
   })
   it('counts a carpool without passenger as zero', () => {
     expect(summarizeDriveCarpools([{ id: 'a', title: 'A', passenger_count: 0, total_revenue: 0 }])).toEqual({ count: 1, passengers: 0, revenue: 0 })
+  })
+})
+
+describe('the drives period bar', () => {
+  const base = { mode: 'ALL' as const, anchor: '2026-11-09', month: '2026-11', from: '', to: '' }
+  const today = new Date(2026, 10, 9)
+
+  it('words a unit, and nothing for "all"', () => {
+    expect(drivesPeriodLabel(base)).toBe('')
+    expect(drivesPeriodLabel({ ...base, mode: 'YEAR' })).toBe('2026')
+    expect(drivesPeriodLabel({ ...base, mode: 'MONTH' })).toMatch(/2026/)
+    expect(drivesPeriodLabel({ ...base, mode: 'DAY' })).toMatch(/9/)
+    expect(drivesPeriodLabel({ ...base, mode: 'WEEK' })).toMatch(/^9 .+ – 15 .+ 2026$/)
+  })
+  it('words a range, with an open end', () => {
+    expect(drivesPeriodLabel({ ...base, mode: 'CUSTOM' })).toBe('')
+    expect(drivesPeriodLabel({ ...base, mode: 'CUSTOM', from: '2026-01-02', to: '2026-02-03' })).toMatch(/ – /)
+    expect(drivesPeriodLabel({ ...base, mode: 'CUSTOM', from: '2026-01-02' })).toMatch(/ – …$/)
+    expect(drivesPeriodLabel({ ...base, mode: 'CUSTOM', to: '2026-02-03' })).toMatch(/^… – /)
+  })
+  it('steps a unit and leaves "all" and a range alone', () => {
+    expect(stepDrivesPeriod({ ...base, mode: 'MONTH' }, -1)).toEqual({ anchor: '2026-10-01', month: '2026-10' })
+    expect(stepDrivesPeriod({ ...base, mode: 'DAY' }, 1)).toEqual({ anchor: '2026-11-10', month: '2026-11' })
+    expect(stepDrivesPeriod(base, 1)).toBeNull()
+    expect(stepDrivesPeriod({ ...base, mode: 'CUSTOM' }, -1)).toBeNull()
+  })
+  it('goes back freely and forward only up to today', () => {
+    expect(canStepDrivesPeriod({ ...base, mode: 'MONTH' }, -1, today)).toBe(true)
+    expect(canStepDrivesPeriod({ ...base, mode: 'MONTH' }, 1, today)).toBe(false)
+    expect(canStepDrivesPeriod({ ...base, mode: 'MONTH', month: '2026-10' }, 1, today)).toBe(true)
+    expect(canStepDrivesPeriod({ ...base, mode: 'DAY' }, 1, today)).toBe(false)
+    expect(canStepDrivesPeriod(base, -1, today)).toBe(false)
   })
 })
