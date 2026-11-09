@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CostEntryLine } from '@/services/api'
-import { amountValue, categoriesOfFilter, COST_FILTERS, costPerKm, entryDetail, entryKey, entryLabel, iconOfEntry, isCostFilterKey, themeOfEntry } from './costEntries'
+import { amountValue, categoriesOfFilter, COST_FILTERS, costPerKm, entryDetail, entryKey, entryLabel, iconOfEntry, isCostFilterKey, themeOfEntry, entryTarget } from './costEntries'
 
 const line = (over: Partial<CostEntryLine> = {}): CostEntryLine => ({
   date: '2026-03-10',
@@ -75,5 +75,18 @@ describe('the figures of a period', () => {
   it('has no cost per kilometre without a distance', () => {
     expect(costPerKm(50, 200)).toBe(0.25)
     expect(costPerKm(50, 0)).toBeNull()
+  })
+})
+
+describe('entryTarget', () => {
+  it('opens the form of the record a line comes from', () => {
+    expect(entryTarget({ source: 'charge_logs', source_id: 'c1' })).toEqual({ type: 'edit', modal: 'charge', id: 'c1' })
+    expect(entryTarget({ source: 'drive_expenses', source_id: 'e1' })).toEqual({ type: 'edit', modal: 'toll', id: 'e1' })
+    expect(entryTarget({ source: 'maintenance_expenses', source_id: 'm1' })).toEqual({ type: 'edit', modal: 'maintenance', id: 'm1' })
+  })
+  it('sends the lines held by another screen there, and leaves the others alone', () => {
+    expect(entryTarget({ source: 'fuel_logs', source_id: 'f1' })).toEqual({ type: 'link', to: '/energy?tab=FUEL' })
+    expect(entryTarget({ source: 'tires', source_id: 't1' })).toEqual({ type: 'link', to: '/tires' })
+    expect(entryTarget({ source: 'vehicle_ownership', source_id: 'o1' })).toEqual({ type: 'none' })
   })
 })

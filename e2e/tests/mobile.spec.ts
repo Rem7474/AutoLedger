@@ -1156,3 +1156,15 @@ test('the costs page lists the cost lines of the period under their figures, and
   await expect(page.getByTestId('costs-filter-tolls')).toHaveAttribute('aria-pressed', 'true')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
+
+test('a line of the costs page opens the form of its record, read from the server', async ({ page }) => {
+  await useVehicle(page, ev.id, '/costs?theme=tolls')
+  const row = page.getByTestId('cost-entry').first()
+  await expect(row).toBeVisible()
+  await row.getByRole('button').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('input').first()).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+})

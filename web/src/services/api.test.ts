@@ -386,6 +386,9 @@ describe('endpoint contract', () => {
     ['getDriveExpensesForDrive', () => api.getDriveExpensesForDrive('v1', 'd1'), 'GET', '/vehicles/v1/drives/d1/expenses'],
     ['getTCO', () => api.getTCO('v1'), 'GET', '/vehicles/v1/tco'],
     ['getCostHistory', () => api.getCostHistory('v1', 'tolls'), 'GET', '/vehicles/v1/cost-history?kind=tolls'],
+    ['getCharge', () => api.getCharge('v1', 'c1'), 'GET', '/vehicles/v1/charges/c1'],
+    ['getDriveExpense', () => api.getDriveExpense('v1', 'e1'), 'GET', '/vehicles/v1/expenses/e1'],
+    ['getMaintenanceExpense', () => api.getMaintenanceExpense('v1', 'm1'), 'GET', '/vehicles/v1/maintenance/m1'],
     ['getCostEntries', () => api.getCostEntries('v1'), 'GET', '/vehicles/v1/cost-entries?'],
     [
       'getCostEntriesFiltered',

@@ -361,6 +361,7 @@ export const api = {
     request<any>(`/vehicles/${vehicleId}/expenses`, { method: 'POST', body: JSON.stringify(data) }, t('shell.api.toll', { amount: formatAmount(Number(data.amount), data.currency ?? '') })),
   updateDriveExpense: (vehicleId: string, expenseId: string, data: any) =>
     request<any>(`/vehicles/${vehicleId}/expenses/${expenseId}`, { method: 'PUT', body: JSON.stringify(data) }, t('shell.api.tollEdit')),
+  getDriveExpense: (vehicleId: string, expenseId: string) => request<any>(`/vehicles/${vehicleId}/expenses/${expenseId}`),
   deleteDriveExpense: (vehicleId: string, expenseId: string) =>
     request<void>(`/vehicles/${vehicleId}/expenses/${expenseId}`, { method: 'DELETE' }),
   getMaintenance: (vehicleId: string) => request<any[]>(`/vehicles/${vehicleId}/maintenance`),
@@ -368,6 +369,7 @@ export const api = {
     request<any>(`/vehicles/${vehicleId}/maintenance`, { method: 'POST', body: JSON.stringify(data) }, t('shell.api.expense', { description: data.description })),
   updateMaintenance: (vehicleId: string, maintenanceId: string, data: any) =>
     request<any>(`/vehicles/${vehicleId}/maintenance/${maintenanceId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  getMaintenanceExpense: (vehicleId: string, maintenanceId: string) => request<any>(`/vehicles/${vehicleId}/maintenance/${maintenanceId}`),
   deleteMaintenance: (vehicleId: string, maintenanceId: string) =>
     request<void>(`/vehicles/${vehicleId}/maintenance/${maintenanceId}`, { method: 'DELETE' }),
   getCharges: (vehicleId: string, params: { page?: number; limit?: number; missingCost?: boolean } = {}) => {
@@ -379,6 +381,7 @@ export const api = {
     request<any>(`/vehicles/${vehicleId}/charges`, { method: 'POST', body: JSON.stringify(data) }, t('shell.api.charge', { kwh: formatQuantity(Number(data.kwh_added)) })),
   updateCharge: (vehicleId: string, chargeId: string, data: any) =>
     request<any>(`/vehicles/${vehicleId}/charges/${chargeId}`, { method: 'PUT', body: JSON.stringify(data) }, t('shell.api.chargeCost')),
+  getCharge: (vehicleId: string, chargeId: string) => request<any>(`/vehicles/${vehicleId}/charges/${chargeId}`),
   deleteCharge: (vehicleId: string, chargeId: string) =>
     request<any>(`/vehicles/${vehicleId}/charges/${chargeId}`, { method: 'DELETE' }),
   getChargingPlaceStats: (vehicleId: string, period: { months: number } | { from: string; to: string }) => {

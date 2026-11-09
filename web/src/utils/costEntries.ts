@@ -73,3 +73,23 @@ export function entryDetail(e: CostEntryLine, formatNumber: (n: number) => strin
   if (e.recurring) parts.push(t('costs.recurring'))
   return parts.join(' · ')
 }
+
+/** What a tap on a line does: edit the record in its own form, go to the screen that holds it, or nothing (a line with no record of its own). */
+export type EntryTarget = { type: 'edit'; modal: 'charge' | 'toll' | 'maintenance'; id: string } | { type: 'link'; to: string } | { type: 'none' }
+
+export function entryTarget(e: Pick<CostEntryLine, 'source' | 'source_id'>): EntryTarget {
+  switch (e.source) {
+    case 'charge_logs':
+      return { type: 'edit', modal: 'charge', id: e.source_id }
+    case 'drive_expenses':
+      return { type: 'edit', modal: 'toll', id: e.source_id }
+    case 'maintenance_expenses':
+      return { type: 'edit', modal: 'maintenance', id: e.source_id }
+    case 'fuel_logs':
+      return { type: 'link', to: '/energy?tab=FUEL' }
+    case 'tires':
+      return { type: 'link', to: '/tires' }
+    default:
+      return { type: 'none' }
+  }
+}
