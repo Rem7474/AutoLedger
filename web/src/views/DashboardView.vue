@@ -148,29 +148,25 @@ onMounted(() => {
       </template>
     </PageHeader>
 
-    <!-- Empty state if no vehicle -->
-    <div v-if="!vehicleStore.activeVehicle" class="p-8 text-center card">
-      <p class="text-slate-400 mb-4">{{ $t('dashboard.dashboardView.noVehicleConfigured') }}</p>
-      <router-link to="/vehicles" class="btn btn-lg btn-primary">
-        {{ $t('dashboard.dashboardView.createYourFirstVehicle') }}
-      </router-link>
-    </div>
-
     <!-- SKELETON LOADING STATE -->
-    <div v-else-if="loading" class="space-y-6 animate-pulse motion-reduce:animate-none">
-      <!-- 4 KPI Card Skeletons -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div v-for="i in 4" :key="i" class="p-5 card h-32 flex flex-col justify-between">
-          <div class="flex justify-between items-center">
-            <div class="h-3 w-20 bg-slate-800 rounded"></div>
-            <div class="h-8 w-8 bg-slate-800 rounded-xl"></div>
+    <div v-if="loading" class="space-y-6 animate-pulse motion-reduce:animate-none">
+      <!-- The page is one hero figure, a card of three lines and the follow-up row: the skeleton has the same shape -->
+      <div class="card p-5 space-y-3">
+        <div class="h-3 w-44 bg-slate-800 rounded"></div>
+        <div class="h-10 w-40 bg-slate-800 rounded"></div>
+        <div class="h-3 w-56 max-w-full bg-slate-800/60 rounded"></div>
+        <div class="h-3 w-24 bg-slate-800/60 rounded"></div>
+      </div>
+      <div class="card divide-y divide-slate-800/70">
+        <div v-for="i in 3" :key="i" class="flex items-center justify-between gap-4 p-4">
+          <div class="space-y-2 min-w-0">
+            <div class="h-4 w-32 bg-slate-800 rounded"></div>
+            <div class="h-3 w-52 max-w-full bg-slate-800/60 rounded"></div>
           </div>
-          <div class="space-y-2">
-            <div class="h-7 w-28 bg-slate-800 rounded"></div>
-            <div class="h-3 w-36 bg-slate-800/60 rounded"></div>
-          </div>
+          <div class="h-6 w-20 shrink-0 bg-slate-800 rounded"></div>
         </div>
       </div>
+      <div class="h-10 w-full bg-slate-800/40 rounded-xl"></div>
 
       <!-- Charts Skeletons -->
       <!-- One period for the monthly cost and mileage charts below; pinned only where there is room for it -->

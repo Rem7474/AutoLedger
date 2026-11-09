@@ -154,5 +154,10 @@
   },
   "pullRefresh": {
     "refreshing": "Refreshing"
+  },
+  "noVehicle": {
+    "title": "Add a vehicle first",
+    "hint": "Drives, expenses, tires and the figures of this page are recorded per vehicle.",
+    "action": "Add a vehicle"
   }
 }

@@ -7,29 +7,31 @@ import { replaceOverHeldEntry } from '@/utils/backEntryNavigation'
 import { installScrollMemory } from '@/utils/scrollMemory'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
-// A page that needs a signed-in session.
-const authRoute = (path: string, name: string, component: RouteComponent): RouteRecordRaw => ({
+// A page that needs a signed-in session; `needsVehicle` marks the pages about a vehicle: without one the shell shows a
+// single "add a vehicle first" state in their place.
+const authRoute = (path: string, name: string, component: RouteComponent, needsVehicle = false): RouteRecordRaw => ({
   path,
   name,
   component,
-  meta: { requiresAuth: true },
+  meta: { requiresAuth: true, needsVehicle },
 })
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    authRoute('/', 'dashboard', () => import('@/views/DashboardView.vue')),
+    authRoute('/', 'dashboard', () => import('@/views/DashboardView.vue'), true),
     {
-      // Where an assistant sends the user to approve its access. Signing in first brings the user back here.
+      // Where an assistant sends the user to approve its access. Signing in first brings the user back here. A page of
+      // its own, outside the shell: no tab bar or vehicle picker between the user and the decision.
       path: '/oauth/authorize',
       name: 'oauth-authorize',
       component: () => import('@/views/OAuthAuthorizeView.vue'),
-      meta: { requiresAuth: true, resumeAfterLogin: true },
+      meta: { requiresAuth: true, resumeAfterLogin: true, bare: true },
     },
-    authRoute('/fleet', 'fleet', () => import('@/views/FleetView.vue')),
-    authRoute('/drives', 'drives', () => import('@/views/DrivesView.vue')),
-    authRoute('/carpools', 'carpools', () => import('@/views/CarpoolView.vue')),
-    authRoute('/odometer', 'odometer', () => import('@/views/ManualTrackingView.vue')),
+    authRoute('/fleet', 'fleet', () => import('@/views/FleetView.vue'), true),
+    authRoute('/drives', 'drives', () => import('@/views/DrivesView.vue'), true),
+    authRoute('/carpools', 'carpools', () => import('@/views/CarpoolView.vue'), true),
+    authRoute('/odometer', 'odometer', () => import('@/views/ManualTrackingView.vue'), true),
     {
       // Former address of the odometer page; the energy estimate and the fill-ups moved to the energy page
       path: '/manual',
@@ -40,13 +42,13 @@ const router = createRouter({
         return { path: '/odometer' }
       },
     },
-    authRoute('/comparison', 'comparison', () => import('@/views/ComparisonView.vue')),
-    authRoute('/tires', 'tires', () => import('@/views/TiresView.vue')),
+    authRoute('/comparison', 'comparison', () => import('@/views/ComparisonView.vue'), true),
+    authRoute('/tires', 'tires', () => import('@/views/TiresView.vue'), true),
     {
       path: '/expenses',
       name: 'expenses',
       component: () => import('@/views/ExpensesView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, needsVehicle: true },
       // Maintenance and reminders moved to their own menu entry
       beforeEnter: (to) => {
         const tab = String(to.query.tab ?? '').toUpperCase()
@@ -58,7 +60,7 @@ const router = createRouter({
       path: '/maintenance',
       name: 'maintenance',
       component: () => import('@/views/ExpensesView.vue'),
-      meta: { requiresAuth: true, section: 'maintenance' },
+      meta: { requiresAuth: true, needsVehicle: true, section: 'maintenance' },
       beforeEnter: (to) => {
         const tab = String(to.query.tab ?? '').toUpperCase()
         if (['TOLLS', 'DOCUMENTS'].includes(tab)) return { name: 'expenses', query: to.query, replace: true }
@@ -69,7 +71,7 @@ const router = createRouter({
       path: '/energy',
       name: 'energy',
       component: () => import('@/views/ExpensesView.vue'),
-      meta: { requiresAuth: true, section: 'energy' },
+      meta: { requiresAuth: true, needsVehicle: true, section: 'energy' },
     },
     authRoute('/vehicles', 'vehicles', () => import('@/views/VehiclesView.vue')),
     authRoute('/account', 'account', () => import('@/views/AccountView.vue')),
