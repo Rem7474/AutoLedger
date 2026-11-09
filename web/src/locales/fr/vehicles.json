@@ -266,5 +266,17 @@
     "ICE": "Thermique (pleins saisis à la main)",
     "PHEV": "Hybride rechargeable (recharges et pleins)",
     "REEV": "Prolongateur d'autonomie (recharges et pleins)"
+  },
+  "vehicleView": {
+    "nextServiceIn": "{title} dans {distance}",
+    "record": "Relever",
+    "maintenance": "Entretien et rappels",
+    "readings": "Relevés du compteur",
+    "contract": "Contrat",
+    "contractMissing": "Pas encore renseigné",
+    "dataSources": "Sources de données",
+    "sharing": "Partage et accès",
+    "edit": "Modifier le véhicule",
+    "manage": "Gérer les véhicules"
   }
 }

@@ -273,6 +273,23 @@ test('a tire opens from its wheel tile, and the fitted set is one card instead o
 })
 
 // The keyboard itself cannot be tested headless: the attribute that picks it can. A whole-kilometre field has no comma key.
+test('the vehicle sheet lists the screens of the vehicle, each opens and Back returns to the sheet', async ({ page }) => {
+  await useVehicle(page, ev.id, '/vehicle')
+  const main = page.getByRole('main')
+  await expect(main.getByRole('heading', { name: ev.name })).toBeVisible()
+  await expect(main.getByRole('link', { name: 'Record' })).toHaveAttribute('href', '/odometer')
+  await main.getByRole('link', { name: 'Tires' }).click()
+  await expect(page).toHaveURL(/\/tires$/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/vehicle$/)
+  // The "More" sheet no longer repeats what the sheet opens
+  await page.getByRole('button', { name: 'More' }).click()
+  const more = page.getByRole('dialog')
+  await expect(more.getByRole('link', { name: 'Vehicle' })).toBeVisible()
+  await expect(more.getByRole('link', { name: 'Tires' })).toHaveCount(0)
+  await expect(more.getByRole('link', { name: 'Comparison' })).toHaveCount(0)
+})
+
 test('an odometer field asks for the numeric keyboard, a price for the decimal one', async ({ page }) => {
   await useVehicle(page, ev.id, '/odometer')
   await page.getByRole('main').getByRole('button', { name: 'Add the reading' }).click()

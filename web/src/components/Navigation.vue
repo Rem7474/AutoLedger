@@ -25,7 +25,7 @@ import {
 import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
-import { groupNavItems } from '@/utils/navigation'
+import { groupNavItems, VEHICLE_SHEET_PAGES } from '@/utils/navigation'
 import { quickKindForRoute } from '@/utils/quickAdd'
 import NavBarItem from '@/components/NavBarItem.vue'
 import SheetGrabber from '@/components/SheetGrabber.vue'
@@ -48,6 +48,7 @@ const allNavItems = [
   { name: 'expenses', labelKey: 'shell.nav.expenses', path: '/expenses', icon: Receipt },
   { name: 'maintenance', labelKey: 'shell.nav.maintenance', path: '/maintenance', icon: Wrench },
   { name: 'comparison', labelKey: 'shell.nav.comparison', path: '/comparison', icon: Scale },
+  { name: 'vehicle', labelKey: 'shell.nav.vehicle', path: '/vehicle', icon: Car },
   { name: 'vehicles', labelKey: 'shell.nav.vehicles', path: '/vehicles', icon: Car },
   { name: 'account', labelKey: 'shell.nav.account', path: '/account', icon: UserRound },
 ]
@@ -72,8 +73,10 @@ const primaryItems = computed(() =>
   primaryNames.value.map((name) => navItems.value.find((item) => item.name === name)).filter((item) => !!item),
 )
 const secondaryItems = computed(() => navItems.value.filter((item) => !primaryNames.value.includes(item.name)))
+// The vehicle sheet opens these pages: the "More" sheet lists them no more, and stays lit while one of them is open
+const moreItems = computed(() => secondaryItems.value.filter((item) => !VEHICLE_SHEET_PAGES.includes(item.name)))
 // The "More" sheet groups the pages under the same headings as the sidebar
-const moreSections = computed(() => groupNavItems(secondaryItems.value))
+const moreSections = computed(() => groupNavItems(moreItems.value))
 const leftItems = computed(() => primaryItems.value.slice(0, 2))
 const rightItems = computed(() => primaryItems.value.slice(2))
 const moreActive = computed(() => secondaryItems.value.some((item) => item.name === currentRouteName.value))

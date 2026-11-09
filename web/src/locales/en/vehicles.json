@@ -266,5 +266,17 @@
     "ICE": "Combustion (fill-ups entered by hand)",
     "PHEV": "Plug-in hybrid (charges and fill-ups)",
     "REEV": "Range extender (charges and fill-ups)"
+  },
+  "vehicleView": {
+    "nextServiceIn": "{title} in {distance}",
+    "record": "Record",
+    "maintenance": "Maintenance and reminders",
+    "readings": "Odometer readings",
+    "contract": "Contract",
+    "contractMissing": "Not set up yet",
+    "dataSources": "Data sources",
+    "sharing": "Sharing and access",
+    "edit": "Edit the vehicle",
+    "manage": "Manage vehicles"
   }
 }

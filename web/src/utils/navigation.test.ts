@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupNavItems, NAV_SECTIONS } from './navigation'
+import { groupNavItems, NAV_SECTIONS, VEHICLE_SHEET_PAGES } from './navigation'
 
 const item = (name: string) => ({ name })
 const all = NAV_SECTIONS.flatMap((s) => s.names).map(item)
@@ -27,5 +27,12 @@ describe('groupNavItems', () => {
 
   it('returns nothing for no page', () => {
     expect(groupNavItems([])).toEqual([])
+  })
+})
+
+describe('VEHICLE_SHEET_PAGES', () => {
+  it('names pages the sidebar still lists', () => {
+    const named = NAV_SECTIONS.flatMap((s) => s.names)
+    for (const name of VEHICLE_SHEET_PAGES) expect(named).toContain(name)
   })
 })

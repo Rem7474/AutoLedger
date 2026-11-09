@@ -31,6 +31,8 @@ function onVehicleChange(event: Event) {
   const target = event.target as HTMLSelectElement
   if (target.value === 'new') {
     router.push({ path: '/vehicles', query: { add: '1' } })
+  } else if (target.value === 'manage') {
+    router.push('/vehicles')
   } else {
     vehicleStore.setActiveVehicle(target.value)
   }
@@ -56,6 +58,7 @@ function onVehicleChange(event: Event) {
             <option v-for="v in vehicleStore.vehicles" :key="v.id" :value="v.id">
               {{ v.name }}
             </option>
+            <option v-if="vehicleStore.vehicles.length > 1" value="manage">{{ $t('vehicles.vehicleView.manage') }}</option>
             <option value="new">{{ $t('shell.topBar.addAVehicle2') }}</option>
           </select>
 
