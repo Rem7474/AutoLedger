@@ -12,6 +12,7 @@ import { teslamateDriveUrl as buildTeslamateDriveUrl } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { buildDriveBreakdown } from '@/utils/costBreakdown'
 import { formatAmount } from '@/currency'
+import { formatQuantity } from '@/utils/numbers'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import ModalShell from '@/components/ModalShell.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
@@ -184,7 +185,7 @@ async function handleDriverChange(event: Event) {
           <span v-if="selectedCostDrive.duration_min" class="text-slate-400">{{ $t('drives.driveCostModal.min', { duration_min: selectedCostDrive.duration_min }) }}</span>
           <span v-if="selectedCostDrive.drives_count" class="text-sky-400 font-semibold">{{ $t('drives.driveCostModal.legs', { drives_count: selectedCostDrive.drives_count }) }}</span>
           <span v-if="selectedCostDrive.speed_avg" class="text-slate-400">{{ $t('drives.driveCostModal.kmHAvg', { speed: speedUnit(), speed_avg: Math.round(kmToDisplayDistance(selectedCostDrive.speed_avg)) }) }}</span>
-          <span v-if="selectedCostDrive.costs?.electricity_kwh" class="text-theme-energy font-mono">{{ $t('drives.driveCostModal.kwh', { electricity_kwh: selectedCostDrive.costs.electricity_kwh }) }}</span>
+          <span v-if="selectedCostDrive.costs?.electricity_kwh" class="text-theme-energy font-mono">{{ $t('drives.driveCostModal.kwh', { electricity_kwh: formatQuantity(Number(selectedCostDrive.costs.electricity_kwh)) }) }}</span>
         </div>
 
         <!-- Tag qualification (only for individual drives) -->

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { currencyDisplayOf } from '@/currency'
 import { computed } from 'vue'
 import { intlLocale, t } from '@/i18n'
 import { distanceUnit, formatDistanceValue, perDistance } from '@/units'
@@ -24,6 +25,7 @@ function fmtMoney(v: number | null | undefined, digits = 0): string {
   return Number(v || 0).toLocaleString(intlLocale(), {
     style: 'currency',
     currency: props.currency,
+    currencyDisplay: currencyDisplayOf(props.currency),
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   })

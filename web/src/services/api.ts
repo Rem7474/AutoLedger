@@ -1,5 +1,6 @@
 import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
+import { formatQuantity } from '@/utils/numbers'
 // AutoLedger API Service
 import { newIdempotencyKey } from '@/services/offlineQueue'
 import { apiErrorMessage, asNetworkError, StaleWriteError } from '@/services/apiError'
@@ -375,7 +376,7 @@ export const api = {
     return request<any>(`/vehicles/${vehicleId}/charges?${q.toString()}`)
   },
   createCharge: (vehicleId: string, data: any) =>
-    request<any>(`/vehicles/${vehicleId}/charges`, { method: 'POST', body: JSON.stringify(data) }, t('shell.api.charge', { kwh: data.kwh_added })),
+    request<any>(`/vehicles/${vehicleId}/charges`, { method: 'POST', body: JSON.stringify(data) }, t('shell.api.charge', { kwh: formatQuantity(Number(data.kwh_added)) })),
   updateCharge: (vehicleId: string, chargeId: string, data: any) =>
     request<any>(`/vehicles/${vehicleId}/charges/${chargeId}`, { method: 'PUT', body: JSON.stringify(data) }, t('shell.api.chargeCost')),
   deleteCharge: (vehicleId: string, chargeId: string) =>

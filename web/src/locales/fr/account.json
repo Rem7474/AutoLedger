@@ -59,7 +59,7 @@
   "volumeUnit_gal_uk": "Gallons UK",
   "currencyPerVehicle": "La devise se règle par véhicule, à sa création (page Véhicules) ; ce n'est pas un réglage du compte.",
   "tokens": {
-    "title": "Jetons d'API & Automatisations",
+    "title": "Jetons d'API & automatisations",
     "subtitle": "Pour envoyer des données depuis Home Assistant, une borne ou un script. Un jeton n'ouvre que les routes d'intégration, jamais le reste du compte.",
     "create": "Générer un jeton",
     "haIntegrationTitle": "Intégration Home Assistant (HACS)",

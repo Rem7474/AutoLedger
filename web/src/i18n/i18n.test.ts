@@ -39,6 +39,20 @@ describe('catalogs', () => {
       expect(placeholders(other.messages[key]), key).toEqual(placeholders(message))
     }
   })
+
+  // French capitalises the first word of a label only; proper nouns and acronyms are the named exceptions. Sentences and example placeholders are left alone.
+  const PROPER_NOUNS = ['Home', 'Assistant', 'TeslaMate', 'TeslaMateApi', 'Grafana', 'SSO', 'CSV', 'HTTP', 'Basic', 'Auth', 'PDF', 'DOT', 'Bearer', 'Discord', 'Flotte', 'Foyer', 'Pro', 'Perso', 'Wi', 'Fi', 'OK', 'Telegram', 'Gotify', 'TeslaMateAPI', 'Échap', 'France', 'Mo']
+  it('fr labels capitalise their first word only', () => {
+    const french = others.find((o) => o.locale === 'fr')!.messages
+    const offenders = Object.entries(french).filter(([key, value]) => {
+      if (key.endsWith('Placeholder') || /[.:;!?«]/.test(value)) return false
+      return value.split(' | ').some((form) => {
+        const words = form.split(/\s+/).map((w) => w.replace(/[^\p{L}]/gu, '')).filter(Boolean)
+        return words.slice(1).some((w) => /^\p{Lu}\p{Ll}/u.test(w) && !PROPER_NOUNS.includes(w))
+      })
+    })
+    expect(offenders.map(([key, value]) => `${key}: ${value}`)).toEqual([])
+  })
 })
 
 describe('setLocale', () => {

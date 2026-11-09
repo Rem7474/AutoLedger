@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { currencySymbol, formatAmount, formatAmountOrUnknown, formatAxisAmount, formatMoney } from './currency'
+import { currencyDisplayOf, currencySymbol, formatAmount, formatAmountOrUnknown, formatAxisAmount, formatMoney } from './currency'
 
 describe('formatMoney', () => {
   it('divides cents into the main unit before formatting', () => {
@@ -25,6 +25,17 @@ describe('unknown currency', () => {
     expect(formatMoney(154000, '')).not.toMatch(/[€$]/)
     expect(formatAxisAmount(400000, '')).not.toMatch(/[€$]/)
     expect(currencySymbol('')).toBe('')
+  })
+})
+
+describe('the pound', () => {
+  it('is written "£", not "£GB", while the dollars keep their regional mark', () => {
+    expect(formatAmount(12.5, 'GBP')).toMatch(/^12,50\s£$/)
+    expect(currencySymbol('GBP')).toBe('£')
+    expect(formatAmount(12.5, 'USD')).toMatch(/\$US/)
+    expect(formatAmount(12.5, 'CAD')).toMatch(/\$CA/)
+    expect(currencyDisplayOf('GBP')).toBe('narrowSymbol')
+    expect(currencyDisplayOf('EUR')).toBe('symbol')
   })
 })
 

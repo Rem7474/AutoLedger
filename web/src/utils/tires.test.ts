@@ -43,7 +43,7 @@ describe('getConditionBadge / getSeasonIcon', () => {
 
   it('treats anything but winter and all-season as summer', () => {
     expect(getSeasonIcon('WINTER').label).toBe('Hiver')
-    expect(getSeasonIcon('ALL_SEASON').label).toBe('4 Saisons')
+    expect(getSeasonIcon('ALL_SEASON').label).toBe('4 saisons')
     expect(getSeasonIcon('SUMMER').label).toBe('Été')
     expect(getSeasonIcon('').label).toBe('Été')
   })

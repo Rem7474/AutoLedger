@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { currencyDisplayOf } from '@/currency'
 import { intlLocale, t } from '@/i18n'
 import { distanceUnit, formatDistanceValue } from '@/units'
 import { ref, computed, watch, onMounted, onBeforeUnmount, onScopeDispose, nextTick } from 'vue'
@@ -117,7 +118,7 @@ const commonCurrency = computed(() => canCompareCurrencies(props.items.map(i => 
 // Never label or plot different currencies as if their amounts were interchangeable.
 function fmtMoney(v: number | null | undefined, currency: string, digits = 0): string {
   const fractions = { minimumFractionDigits: digits, maximumFractionDigits: digits }
-  return Number(v || 0).toLocaleString(intlLocale(), currency ? { style: 'currency', currency, ...fractions } : fractions)
+  return Number(v || 0).toLocaleString(intlLocale(), currency ? { style: 'currency', currency, currencyDisplay: currencyDisplayOf(currency), ...fractions } : fractions)
 }
 
 function breakEven(r: any): string {
