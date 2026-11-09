@@ -24,9 +24,9 @@ import {
   type PlaceStats,
 } from '@/utils/chargingInsights'
 import { placeCategoryKey } from '@/utils/chargingPlaces'
-import { rangeToMonths, type MonthlyRangeKey } from '@/utils/dashboard'
-import MonthlyRangeSelector from '@/components/dashboard/MonthlyRangeSelector.vue'
-import AppDateRangePicker from '@/components/AppDateRangePicker.vue'
+import PeriodField from '@/components/period/PeriodField.vue'
+import { usePeriodStore } from '@/stores/period'
+import { placeStatsParams } from '@/utils/period'
 
 Chart.register(...registerables)
 
@@ -39,20 +39,10 @@ const AXIS_TEXT = '#94a3b8'
 const GRID_COLOR = '#1e293b'
 const ESTIMATED_COLOR = '#475569'
 
-// The last month by default, like the dashboard's presets; a custom range is two days picked on a calendar
-const range = ref<MonthlyRangeKey>('1M')
-const customRange = ref<[string, string] | null>(null)
-const today = new Date().toLocaleDateString('en-CA')
+// The period is the one of the home page and the other sheets of figures
+const periodStore = usePeriodStore()
 const detailsOpen = ref(false)
-
-function pickRange(value: [string, string] | null) {
-  customRange.value = value
-}
-
-const period = computed(() => {
-  if (customRange.value) return { from: customRange.value[0], to: customRange.value[1] }
-  return { months: rangeToMonths(range.value) }
-})
+const period = computed(() => placeStatsParams(periodStore.costs))
 const mode = ref<BreakdownMode>('energy')
 const stats = ref<PlaceStats | null>(null)
 const failed = ref(false)
@@ -175,9 +165,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-slate-300 max-sm:basis-full">{{ $t('expenses.chargingInsights.period') }}</span>
-        <MonthlyRangeSelector class="max-sm:basis-full" v-model="range" :custom="customRange !== null" :label="$t('expenses.chargingInsights.period')" @pick="customRange = null" />
-        <div class="max-sm:basis-full"><AppDateRangePicker :model-value="customRange" :max="today" :aria-label="$t('expenses.chargingInsights.period')" @update:model-value="pickRange" /></div>
+        <PeriodField class="max-sm:basis-full" />
         <div class="flex items-center gap-1 bg-slate-800/60 p-0.5 rounded-lg max-sm:basis-full sm:ml-auto" role="group">
           <button
             v-for="m in (['energy', 'cost'] as const)"

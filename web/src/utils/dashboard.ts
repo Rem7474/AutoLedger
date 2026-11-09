@@ -2,35 +2,6 @@ import { intlLocale, t } from '@/i18n'
 import { COST_COLORS } from '@/utils/costBreakdown'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
-// The shortest period first, the whole history last: the order of every period selector
-export const monthlyRangeOptions = [
-  { key: '1M', labelKey: 'dashboard.range.oneMonth' },
-  { key: '3M', labelKey: 'dashboard.range.threeMonths' },
-  { key: '6M', labelKey: 'dashboard.range.sixMonths' },
-  { key: '1Y', labelKey: 'dashboard.range.oneYear' },
-  { key: 'ALL', labelKey: 'dashboard.range.all' },
-] as const
-export type MonthlyRangeKey = (typeof monthlyRangeOptions)[number]['key']
-
-const monthlyRangeMonths: Record<MonthlyRangeKey, number | null> = {
-  ALL: null,
-  '1Y': 12,
-  '6M': 6,
-  '3M': 3,
-  '1M': 1,
-}
-
-/** Number of calendar months of a range, the current one included; 0 for the whole history. */
-export function rangeToMonths(range: MonthlyRangeKey): number {
-  return monthlyRangeMonths[range] ?? 0
-}
-
-/** The last N months of the monthly costs for a chart range. */
-export function filterMonthsByRange<T>(list: T[], range: MonthlyRangeKey): T[] {
-  const months = monthlyRangeMonths[range]
-  return months ? list.slice(-months) : list
-}
-
 export function formatMonthName(monthStr: string) {
   if (!monthStr) return ''
   const parts = monthStr.split('-')

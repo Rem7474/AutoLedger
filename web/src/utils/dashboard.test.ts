@@ -10,33 +10,13 @@ import {
   rollingWindowStats,
   monthlyCostSeries,
   plottedCostPerKm,
-  filterMonthsByRange,
   formatMonthName,
   nextDueReminder,
   reminderProgress,
   sortRemindersByUrgency,
   summarizeUrgentReminders,
   groupRemindersByDue,
-  monthlyRangeOptions,
-  rangeToMonths,
 } from './dashboard'
-
-describe('filterMonthsByRange', () => {
-  const list = Array.from({ length: 14 }, (_, i) => ({ month: i + 1 }))
-
-  it('keeps everything for ALL and the last N months otherwise', () => {
-    expect(filterMonthsByRange(list, 'ALL')).toHaveLength(14)
-    expect(filterMonthsByRange(list, '1Y').map((m) => m.month)[0]).toBe(3)
-    expect(filterMonthsByRange(list, '6M')).toHaveLength(6)
-    expect(filterMonthsByRange(list, '3M').map((m) => m.month)).toEqual([12, 13, 14])
-    expect(filterMonthsByRange(list, '1M')).toEqual([{ month: 14 }])
-  })
-
-  it('does not fail on a short or empty list', () => {
-    expect(filterMonthsByRange([{ month: 1 }], '1Y')).toHaveLength(1)
-    expect(filterMonthsByRange([], '3M')).toEqual([])
-  })
-})
 
 describe('formatMonthName', () => {
   it('capitalizes the French month name', () => {
@@ -549,14 +529,5 @@ describe('followUpItems', () => {
   it('has nothing to say when the data is complete and only overdue reminders remain', () => {
     expect(followUpItems({ is_complete: true }, [{ ...base, status: 'OVERDUE', remaining_km: -5 }], true)).toEqual({ data: false, maintenance: null })
     expect(followUpItems(null, [], true)).toEqual({ data: false, maintenance: null })
-  })
-})
-
-describe('period presets', () => {
-  it('lists the shortest period first and the whole history last', () => {
-    expect(monthlyRangeOptions.map((o) => o.key)).toEqual(['1M', '3M', '6M', '1Y', 'ALL'])
-    const months = monthlyRangeOptions.map((o) => rangeToMonths(o.key))
-    expect(months.slice(0, -1)).toEqual([1, 3, 6, 12])
-    expect(months[months.length - 1]).toBe(0)
   })
 })

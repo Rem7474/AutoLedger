@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { monthsOfPeriod, periodLabel, rollingAverage, summarizePeriod, type CostMonth } from './costHistory'
+import { periodLabel, rollingAverage, summarizePeriod, type CostMonth } from './costHistory'
 
 const history = (amounts: number[], first = '2025-01'): CostMonth[] =>
   amounts.map((amount, i) => {
@@ -7,32 +7,6 @@ const history = (amounts: number[], first = '2025-01'): CostMonth[] =>
     const d = new Date(Date.UTC(y, m - 1 + i, 1))
     return { month: d.toISOString().slice(0, 7), amount }
   })
-
-describe('monthsOfPeriod', () => {
-  const list = history(Array.from({ length: 18 }, (_, i) => i + 1))
-
-  it('takes the last N months of a preset, the current one included, and everything for the whole history', () => {
-    expect(monthsOfPeriod(list, '1M', null).map((m) => m.amount)).toEqual([18])
-    expect(monthsOfPeriod(list, '3M', null).map((m) => m.amount)).toEqual([16, 17, 18])
-    expect(monthsOfPeriod(list, '1Y', null)).toHaveLength(12)
-    expect(monthsOfPeriod(list, 'ALL', null)).toHaveLength(18)
-  })
-
-  it('takes only the months a range of days covers entirely', () => {
-    const got = monthsOfPeriod(list, '1Y', ['2025-03-15', '2025-06-30'])
-    expect(got.map((m) => m.month)).toEqual(['2025-04', '2025-05', '2025-06'])
-  })
-
-  it('reads the last day of February in a leap year', () => {
-    const feb = history([1, 2, 3], '2028-01')
-    expect(monthsOfPeriod(feb, 'ALL', ['2028-02-01', '2028-02-29']).map((m) => m.month)).toEqual(['2028-02'])
-    expect(monthsOfPeriod(feb, 'ALL', ['2028-02-01', '2028-02-28'])).toEqual([])
-  })
-
-  it('is empty for a range inside one month', () => {
-    expect(monthsOfPeriod(list, 'ALL', ['2025-03-05', '2025-03-20'])).toEqual([])
-  })
-})
 
 describe('rollingAverage', () => {
   it('averages a month with the eleven before it', () => {

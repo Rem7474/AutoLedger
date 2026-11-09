@@ -3,14 +3,14 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import KpiCard from '@/components/KpiCard.vue'
 import LoadError from '@/components/LoadError.vue'
-import MonthlyRangeSelector from '@/components/dashboard/MonthlyRangeSelector.vue'
-import AppDateRangePicker from '@/components/AppDateRangePicker.vue'
+import PeriodField from '@/components/period/PeriodField.vue'
+import { usePeriodStore } from '@/stores/period'
+import { filterMonthsByPeriod } from '@/utils/period'
 import { api } from '@/services/api'
 import { currencySymbol, formatAmount } from '@/currency'
 import { t } from '@/i18n'
 import { COST_COLORS } from '@/utils/costBreakdown'
-import { ROLLING_AVERAGE_MONTHS, monthsOfPeriod, periodLabel, rollingAverage, shortMonth, summarizePeriod, type CostMonth } from '@/utils/costHistory'
-import type { MonthlyRangeKey } from '@/utils/dashboard'
+import { ROLLING_AVERAGE_MONTHS, periodLabel, rollingAverage, shortMonth, summarizePeriod, type CostMonth } from '@/utils/costHistory'
 
 Chart.register(...registerables)
 
@@ -31,10 +31,7 @@ const GRID_COLOR = '#1e293b'
 const AVERAGE_COLOR = '#e2e8f0'
 const barColor = { tolls: COST_COLORS.tolls, service: COST_COLORS.maintenance, fixed: COST_COLORS.insurance }
 
-// A year by default: the smoothed average needs a year to mean something
-const range = ref<MonthlyRangeKey>('1Y')
-const customRange = ref<[string, string] | null>(null)
-const today = new Date().toLocaleDateString('en-CA')
+const periodStore = usePeriodStore()
 
 const history = ref<CostMonth[]>([])
 const failed = ref(false)
@@ -57,7 +54,7 @@ async function load() {
 }
 watch(() => [props.vehicleId, props.kind, props.syncKey], load, { immediate: true })
 
-const months = computed(() => monthsOfPeriod(history.value, range.value, customRange.value))
+const months = computed(() => filterMonthsByPeriod(history.value, periodStore.costs))
 const summary = computed(() => summarizePeriod(months.value))
 const averages = computed(() => rollingAverage(history.value))
 const smoothed = computed(() => averages.value[averages.value.length - 1] ?? null)
@@ -114,11 +111,7 @@ onBeforeUnmount(() => chart?.destroy())
   <section v-else-if="loaded" :class="bare ? 'space-y-4' : 'space-y-4 card p-4'" :aria-label="$t('expenses.costHistory.title', { label })">
     <header class="space-y-2">
       <h3 class="text-sm font-bold text-white" :class="{ 'sr-only': bare }">{{ $t('expenses.costHistory.title', { label }) }}</h3>
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-slate-300 max-sm:basis-full">{{ $t('expenses.costHistory.period') }}</span>
-        <MonthlyRangeSelector class="max-sm:basis-full" v-model="range" :custom="customRange !== null" :label="$t('expenses.costHistory.period')" @pick="customRange = null" />
-        <div class="max-sm:basis-full"><AppDateRangePicker v-model="customRange" :max="today" :aria-label="$t('expenses.costHistory.period')" /></div>
-      </div>
+      <PeriodField />
     </header>
 
     <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
