@@ -1,6 +1,5 @@
 {
   "dashboardView": {
-    "expense": "+ Expense",
     "subtitle": "Actual cost of ownership and cost per {unit} for {name}",
     "yourVehicle": "your vehicle"
   },
@@ -275,26 +274,10 @@
     "depreciationMissingAction": "Enter it",
     "tollsAndParking": "Tolls and parking",
     "chargeSWithoutACost": "{charges_without_cost} charge(s) without a cost",
-    "fullCostPerKm": "Full cost / {unit}",
     "totalCost": "Cash paid since purchase",
-    "fuel": "Fuel (fill-ups)",
-    "energy": "Energy (charges)",
-    "ofWhichEstimatedEnergy": "of which {amount} estimated energy",
-    "energyPanelLink": "Energy efficiency",
-    "energyHybrid": "Energy (charges + fill-ups)",
     "hybridSplit": "Electricity {electricity} · fuel {fuel}",
-    "cashPaid": "Cash paid",
-    "viewExpenses": "View expenses",
     "economicWindow": "Economic cost: {amount} · {cost_per_km}/{unit}",
-    "sincePurchase": "Since {month}: {amount}",
-    "economicPerKm": "Economic cost / {unit}",
-    "windowMonths": "last month | last {months} months",
-    "sincePurchasePerKm": "Full cost since purchase: {amount}/{unit}",
-    "currentMonth": "{month}",
-    "currentMonthShort": "Current month",
     "monthDistance": "{distance_km} {unit}",
-    "viewTheBreakdown": "View the breakdown",
-    "details": "Cost details",
     "fullCostLabel": "Full cost since purchase",
     "depreciationLabel": "of which depreciation",
     "economicWindowLabel": "Economic cost · last month | Economic cost · last {months} months",
@@ -304,19 +287,7 @@
     "avgPrice": "Average price",
     "kwhLabel": "Energy charged",
     "hybridSplitLabel": "Split",
-    "spentSoFar": "spent so far",
     "alreadyScheduled": "+ {amount} already scheduled"
-  },
-  "nextDueCard": {
-    "title": "Next maintenance",
-    "empty": "No upcoming maintenance scheduled",
-    "create": "Create a reminder",
-    "viewReminders": "View reminders",
-    "othersSoon": "+{count} other due soon | +{count} others due soon"
-  },
-  "urgentRemindersBanner": {
-    "viewTheReminders": "View the reminders",
-    "overdue": "Overdue maintenance"
   },
   "donut": {
     "energy": "Energy",
@@ -333,9 +304,6 @@
     "hintFull": "Economic cost: tire wear spread over use, depreciation included.",
     "hintCash": "Money actually paid: tires when bought, no depreciation.",
     "cashTitle": "Breakdown of cash spent"
-  },
-  "urgentReminders": {
-    "andOthers": "{titles} and {count} more"
   },
   "lease": {
     "inProgress": "In progress",
@@ -359,12 +327,6 @@
     "financing": "Financing and leasing",
     "financingNote": "Smoothed: {smoothed} (monthly payment made: {paid})",
     "other": "Subscriptions, taxes and other"
-  },
-  "followUp": {
-    "title": "Follow-up",
-    "toComplete": "data to complete",
-    "maintenanceSoon": "maintenance coming up",
-    "maintenanceToPlan": "maintenance to schedule"
   },
   "batteryHealth": {
     "title": "Battery health",
@@ -418,18 +380,27 @@
     "advancedHint": "The value combines age, mileage and battery health. These weights set the share of each: keep the defaults if unsure."
   },
   "sheets": {
-    "breakdown": "Cost breakdown",
-    "breakdownHint": "Share of each cost item",
-    "mileageLast": "{month}: {distance} driven",
     "batteryNow": "State of health: {pct}",
     "resaleNow": "Worth about {value} today",
-    "mileage": "Mileage and cost per distance",
-    "mileageHint": "Distance and cost per distance, month by month",
     "battery": "Battery health",
     "batteryHint": "Capacity readings and state of health",
     "resale": "Resale value",
     "vehicleSheetHint": "Battery, resale value and contract",
     "vehicleSheet": "Vehicle sheet",
-    "resaleHint": "Estimated value today and at the end of the contract"
+    "resaleHint": "Estimated value today and at the end of the contract",
+    "totals": "Totals since purchase",
+    "totalsHint": "Full cost, depreciation, energy and distance"
+  },
+  "today": {
+    "upcoming": "Coming up",
+    "toCheck": "To check",
+    "tireTitle": "Tires: {name}",
+    "nothingPlanned": "No maintenance is planned yet.",
+    "nothingSoon": "Nothing is due soon.",
+    "planOne": "Plan one",
+    "spentIn": "Spent in {month}",
+    "themesLabel": "What the month's spending is made of",
+    "perKm": "Cost per {unit}",
+    "wholeMonth": "The whole month, scheduled included"
   }
 }

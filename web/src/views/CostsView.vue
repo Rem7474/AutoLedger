@@ -11,6 +11,8 @@ import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
 import ChargeModal from '@/components/expenses/ChargeModal.vue'
 import MonthlyCostChart from '@/components/dashboard/MonthlyCostChart.vue'
 import CostBreakdownDonut from '@/components/dashboard/CostBreakdownDonut.vue'
+import TagBreakdown from '@/components/dashboard/TagBreakdown.vue'
+import { usePreferencesStore } from '@/stores/preferences'
 import MileageCostChart from '@/components/dashboard/MileageCostChart.vue'
 import MonthDetailModal from '@/components/dashboard/MonthDetailModal.vue'
 import ChargingInsights from '@/components/expenses/ChargingInsights.vue'
@@ -119,6 +121,7 @@ watch(
 const { previewDoc, closeDocPreview, viewOrDownloadDocument } = useDocumentPreview(() => vehicleStore.activeVehicle?.id)
 // The charts of the whole cost, month by month: they come from the cost engine, like the figures of the home page, and
 // follow the period; a bar opens the figures of its month
+const prefs = usePreferencesStore()
 const tco = ref<any | null>(null)
 const monthlyCosts = computed(() => (tco.value ? tco.value.monthly_costs || [] : null))
 const selectedMonth = ref<any | null>(null)
@@ -212,6 +215,8 @@ const chipClass = (key: CostFilterKey) => {
       <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
       <CostBreakdownDonut :tco="tco" />
       <MileageCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
+      <!-- Shows itself only once a drive carries a tag -->
+      <TagBreakdown v-if="prefs.proPersoEnabled" :tco="tco" />
     </template>
 
     <ChargingInsights

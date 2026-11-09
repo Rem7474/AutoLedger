@@ -264,21 +264,23 @@ test('a vehicle card selects its vehicle and keeps the setup in its menu', async
   await expect(options).toHaveAttribute('aria-expanded', 'true')
 })
 
-test('the dashboard follow-up zone is closed on a phone and opens on demand', async ({ page }) => {
+test('the home is the present: the month so far, what is coming up, a line to the vehicle, and no period bar', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await useVehicle(page, ev.id, '/')
-  const toggle = page.getByRole('button', { name: /^Follow-up/ })
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
-  await expect(page.locator('#dashboard-follow-up')).toBeHidden()
-  await toggle.click()
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.locator('#dashboard-follow-up')).toBeVisible()
+  const main = page.getByRole('main')
+  await expect(main.getByTestId('today-hero')).toBeVisible()
+  await expect(main.getByTestId('today-per-km')).toBeVisible()
+  await expect(main.getByRole('heading', { name: 'Coming up' })).toBeVisible()
+  await expect(main.getByTestId('upcoming')).toBeVisible()
+  await expect(main.getByRole('link', { name: /Vehicle sheet/ })).toHaveAttribute('href', '/vehicle')
+  await expect(page.getByTestId('period-bar')).toHaveCount(0)
 })
 
-test('the dashboard follow-up zone is open on a wide screen', async ({ page }) => {
+test('the home hero leads to the journal of costs on a wide screen too', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await useVehicle(page, ev.id, '/')
-  await expect(page.getByRole('button', { name: /^Follow-up/ })).toHaveAttribute('aria-expanded', 'true')
+  await page.getByTestId('today-hero').getByRole('link').first().click()
+  await expect(page).toHaveURL(/\/costs/)
 })
 
 test('the odometer page lists the mileage typed on fill-ups, read-only', async ({ page }) => {

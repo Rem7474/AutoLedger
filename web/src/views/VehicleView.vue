@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Bell, BatteryCharging, Car, ClipboardList, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users, Zap, Activity } from 'lucide-vue-next'
+import { Bell, BatteryCharging, Car, ClipboardList, Coins, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users, Zap, Activity } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import VehicleTile from '@/components/vehicle/VehicleTile.vue'
 import SheetRow from '@/components/SheetRow.vue'
@@ -9,6 +9,7 @@ import ResaleValueCard from '@/components/dashboard/ResaleValueCard.vue'
 import ModalShell from '@/components/ModalShell.vue'
 import TariffPlansPanel from '@/components/tariffs/TariffPlansPanel.vue'
 import LeaseContractCard from '@/components/dashboard/LeaseContractCard.vue'
+import TcoDetailsList from '@/components/dashboard/TcoDetailsList.vue'
 import VehicleFormModal from '@/components/vehicles/VehicleFormModal.vue'
 import OwnershipWizardModal from '@/components/vehicles/OwnershipWizardModal.vue'
 import VehicleMembersModal from '@/components/vehicles/VehicleMembersModal.vue'
@@ -129,6 +130,9 @@ async function onSaved() {
         <ResaleValueCard :vehicle-id="vehicle.id" :has-battery="vehicleStore.canCharge" :refresh-key="resaleRefresh" :bare="bare" />
       </SheetRow>
       <LeaseContractCard :tco="tco" />
+      <SheetRow v-if="tco" v-slot="{ bare }" :title="$t('dashboard.sheets.totals')" :hint="$t('dashboard.sheets.totalsHint')" :icon="Coins">
+        <TcoDetailsList :class="bare ? '' : 'p-4'" :tco="tco" />
+      </SheetRow>
     </div>
 
     <div class="space-y-2">
