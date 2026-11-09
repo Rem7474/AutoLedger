@@ -44,6 +44,8 @@ func TestCostEntriesAddUpToTheMonthlyCost(t *testing.T) {
 		`INSERT INTO maintenance_expenses (vehicle_id, category, amount, date, description) VALUES ($1, 'MAINTENANCE', 80, '2026-03-12T10:00:00Z', 'Brakes')`,
 		`INSERT INTO maintenance_expenses (vehicle_id, category, amount, date, description) VALUES ($1, 'INSURANCE', 30, '2026-03-31T22:30:00Z', 'Insurance')`,
 		`INSERT INTO maintenance_expenses (vehicle_id, category, amount, date, description) VALUES ($1, 'TAX', 5, '2026-04-02T10:00:00Z', 'April')`,
+		`INSERT INTO drives (vehicle_id, start_time, end_time, distance_km) VALUES ($1, '2026-03-05T08:00:00Z', '2026-03-05T09:00:00Z', 120)`,
+		`INSERT INTO drives (vehicle_id, start_time, end_time, distance_km) VALUES ($1, '2026-04-05T08:00:00Z', '2026-04-05T09:00:00Z', 50)`,
 		`INSERT INTO carpool_trips (vehicle_id, title, date, total_revenue) VALUES ($1, 'Commute', '2026-03-15T10:00:00Z', 20)`,
 		`INSERT INTO carpool_trips (vehicle_id, title, date, total_revenue) VALUES ($1, 'Next month', '2026-04-03T10:00:00Z', 7)`,
 	} {
@@ -79,6 +81,9 @@ func TestCostEntriesAddUpToTheMonthlyCost(t *testing.T) {
 	entries := body["entries"].([]any)
 	if len(entries) != 2 || amount(body, "paid_total") != 92.5 || amount(body, "carpool_received") != 20 || amount(body, "net_total") != 72.5 {
 		t.Fatalf("march: %v", body)
+	}
+	if body["distance_km"] != float64(120) {
+		t.Fatalf("the distance is the one of the drives of the period: %v", body["distance_km"])
 	}
 	first := entries[0].(map[string]any)
 	if first["source"] == "" || first["source_id"] == "" {

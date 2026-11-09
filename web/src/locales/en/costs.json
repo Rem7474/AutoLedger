@@ -1,0 +1,54 @@
+{
+  "title": "Costs",
+  "subtitle": "Everything the vehicle cost over the period",
+  "filtersLabel": "Cost theme",
+  "filters": {
+    "all": "All",
+    "energy": "Energy",
+    "tolls": "Tolls",
+    "maintenance": "Maintenance",
+    "tires": "Tires",
+    "insurance": "Insurance",
+    "financing": "Financing",
+    "other": "Other"
+  },
+  "headline": {
+    "net": "Net cash out",
+    "paidTheme": "Cash out · {theme}",
+    "paidLine": "Paid {amount}",
+    "receivedLine": "received from passengers {amount}",
+    "perKm": "{value}/{unit}"
+  },
+  "list": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "shownOf": "{count} of {total}",
+    "loadMore": "Show more",
+    "receipt": "Receipt attached"
+  },
+  "empty": {
+    "title": "No costs in this period",
+    "body": "Charges, tolls, servicing, insurance and other costs of this vehicle appear here once they are entered or synced."
+  },
+  "categories": {
+    "energy": "Energy",
+    "toll": "Toll",
+    "parking": "Parking",
+    "travel_other": "Travel expense",
+    "maintenance": "Maintenance",
+    "repair": "Repair",
+    "insurance": "Insurance",
+    "subscription": "Subscription",
+    "tax": "Tax",
+    "financing": "Financing",
+    "tires": "Tires",
+    "accessory": "Accessory",
+    "other": "Other"
+  },
+  "recurring": "recurring",
+  "estimateNote": "Excludes estimated energy and upcoming instalments, which have no line.",
+  "kinds": {
+    "charge": "Charge",
+    "fuel_fill_up": "Fill-up"
+  }
+}

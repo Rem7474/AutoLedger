@@ -93,6 +93,12 @@ test.describe('sheets opened on a phone', () => {
     expect(await violationsOf(page, 'resale value')).toEqual([])
   })
 
+  test('the costs page has no violation', async ({ page }) => {
+    await useVehicle(page, ev.id, '/costs')
+    await expect(page.getByTestId('cost-entry').first()).toBeVisible()
+    expect(await violationsOf(page, 'costs')).toEqual([])
+  })
+
   test('the carpool detail sheet has no violation', async ({ page }) => {
     await useVehicle(page, ev.id, '/carpools')
     await page.getByRole('main').getByRole('button', { name: /^Open / }).first().tap()

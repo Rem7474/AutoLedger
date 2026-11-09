@@ -1,0 +1,54 @@
+{
+  "title": "Dépenses",
+  "subtitle": "Tout ce que le véhicule a coûté sur la période",
+  "filtersLabel": "Thème de dépense",
+  "filters": {
+    "all": "Tout",
+    "energy": "Énergie",
+    "tolls": "Péages",
+    "maintenance": "Entretien",
+    "tires": "Pneus",
+    "insurance": "Assurance",
+    "financing": "Financement",
+    "other": "Autres"
+  },
+  "headline": {
+    "net": "Décaissé net",
+    "paidTheme": "Décaissé · {theme}",
+    "paidLine": "Payé {amount}",
+    "receivedLine": "reçu des passagers {amount}",
+    "perKm": "{value}/{unit}"
+  },
+  "list": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "shownOf": "{count} sur {total}",
+    "loadMore": "Afficher la suite",
+    "receipt": "Justificatif joint"
+  },
+  "empty": {
+    "title": "Aucune dépense sur cette période",
+    "body": "Les recharges, péages, entretiens, assurances et autres frais de ce véhicule apparaissent ici dès qu'ils sont saisis ou synchronisés."
+  },
+  "categories": {
+    "energy": "Énergie",
+    "toll": "Péage",
+    "parking": "Parking",
+    "travel_other": "Frais de trajet",
+    "maintenance": "Entretien",
+    "repair": "Réparation",
+    "insurance": "Assurance",
+    "subscription": "Abonnement",
+    "tax": "Taxe",
+    "financing": "Financement",
+    "tires": "Pneus",
+    "accessory": "Accessoire",
+    "other": "Autre"
+  },
+  "recurring": "récurrent",
+  "estimateNote": "Hors énergie estimée et échéances à venir, qui n'ont pas de ligne.",
+  "kinds": {
+    "charge": "Recharge",
+    "fuel_fill_up": "Plein"
+  }
+}

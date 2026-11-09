@@ -150,3 +150,15 @@ func (r *Repository) CarpoolRevenueBetween(ctx context.Context, vehicleID string
 	`, vehicleID, from, to).Scan(&total)
 	return total, err
 }
+
+// DriveDistanceBetween sums the distance of the drives of a vehicle that began in [from, to); a nil bound is open.
+// A drive whose distance was not recorded adds nothing.
+func (r *Repository) DriveDistanceBetween(ctx context.Context, vehicleID string, from, to *time.Time) (float64, error) {
+	var km float64
+	err := r.pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(distance_km), 0)::float8 FROM drives
+		WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL
+		  AND ($2::timestamptz IS NULL OR start_time >= $2) AND ($3::timestamptz IS NULL OR start_time < $3);
+	`, vehicleID, from, to).Scan(&km)
+	return km, err
+}
