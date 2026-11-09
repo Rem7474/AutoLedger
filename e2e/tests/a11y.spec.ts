@@ -76,3 +76,27 @@ test('the pages of a combustion vehicle have no WCAG 2.1 AA violation', async ({
     expect(violations.map((v) => `${route} ${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([])
   }
 })
+
+// The sheets a phone opens from a row hold content the page itself does not show: axe reads them open too.
+test.describe('sheets opened on a phone', () => {
+  test.use({ viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true })
+
+  const violationsOf = async (page: import('@playwright/test').Page, name: string) => {
+    const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
+    return violations.map((v) => `${name} ${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)
+  }
+
+  test('the resale value sheet has no violation', async ({ page }) => {
+    await useVehicle(page, ev.id, '/')
+    await page.getByRole('main').getByRole('button', { name: /Resale value/ }).first().tap()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    expect(await violationsOf(page, 'resale value')).toEqual([])
+  })
+
+  test('the carpool detail sheet has no violation', async ({ page }) => {
+    await useVehicle(page, ev.id, '/carpools')
+    await page.getByRole('main').getByRole('button', { name: /^Open / }).first().tap()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    expect(await violationsOf(page, 'carpool detail')).toEqual([])
+  })
+})

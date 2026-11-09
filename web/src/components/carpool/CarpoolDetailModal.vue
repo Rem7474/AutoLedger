@@ -49,7 +49,7 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
 </script>
 
 <template>
-  <ModalShell v-if="trip" v-model:open="open" size="lg" footer-class="items-center justify-between">
+  <ModalShell v-if="trip" v-model:open="open" size="lg" footer-class="items-center justify-between" :body-label="trip.title">
     <template #title>
         <div class="flex items-center gap-2.5 min-w-0 pr-2">
           <div class="p-2 rounded-xl shrink-0 bg-rose-500/10 text-rose-400">

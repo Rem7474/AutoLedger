@@ -128,7 +128,7 @@ const marker = computed(() => {
             ? $t('dashboard.resale.optionWorthIt', { amount: formatAmount(optionMargin, cur) })
             : $t('dashboard.resale.optionAboveValue', { amount: formatAmount(-optionMargin, cur) }) }}
         </p>
-        <p class="mt-1 text-slate-500">{{ $t('dashboard.resale.optionHint') }}</p>
+        <p class="mt-1 text-slate-400">{{ $t('dashboard.resale.optionHint') }}</p>
       </div>
 
       <svg v-if="curvePath" viewBox="0 0 200 40" preserveAspectRatio="none" class="h-16 w-full" role="img" :aria-label="$t('dashboard.resale.curve')">
@@ -145,7 +145,7 @@ const marker = computed(() => {
           <label class="block text-slate-400">
             {{ $t('dashboard.resale.expectedKm') }}
             <DistanceInput whole text v-model="expectedKm" min="0" step="1000" class="mt-1 block w-40 field" @change="load" />
-            <span class="mt-1 block text-slate-500">{{ $t('dashboard.resale.expectedKmHint') }}</span>
+            <span class="mt-1 block text-slate-400">{{ $t('dashboard.resale.expectedKmHint') }}</span>
           </label>
           <p class="text-slate-400">{{ $t('dashboard.resale.advancedHint') }}</p>
           <div class="flex flex-wrap items-end gap-3">
