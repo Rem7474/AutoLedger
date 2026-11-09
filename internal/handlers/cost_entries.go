@@ -30,8 +30,10 @@ type CostEntries struct {
 	// filtered by category or amount, since the filtered lines are then not the whole cost.
 	CarpoolReceived IntegrationAmount `json:"carpool_received"`
 	NetTotal        IntegrationAmount `json:"net_total"`
-	Entries         []CostEntry       `json:"entries"`
-	NextOffset      *int              `json:"next_offset"`
+	// DistanceKm is the distance of the drives that began in the period, the base of a cost per kilometre.
+	DistanceKm float64     `json:"distance_km"`
+	Entries    []CostEntry `json:"entries"`
+	NextOffset *int        `json:"next_offset"`
 }
 
 // GetCostEntries lists the recorded cost lines of a vehicle: the page, and the totals of every matching line.
@@ -92,6 +94,10 @@ func (h *TCOHandler) GetCostEntries(w http.ResponseWriter, r *http.Request) {
 			writeRepoError(w, r, err, "Failed to list the cost entries")
 			return
 		}
+	}
+	if out.DistanceKm, err = h.repo.DriveDistanceBetween(r.Context(), vehicle.ID, f.From, f.To); err != nil {
+		writeRepoError(w, r, err, "Failed to list the cost entries")
+		return
 	}
 	out.CarpoolReceived = amountOf(received, vehicle.Currency)
 	out.NetTotal = amountOf(paid-received, vehicle.Currency)

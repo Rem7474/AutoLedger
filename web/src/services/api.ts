@@ -387,6 +387,15 @@ export const api = {
   },
   getCostHistory: (vehicleId: string, kind: 'tolls' | 'service' | 'fixed') =>
     request<{ kind: string; current_month: string; months: { month: string; amount: number }[] }>(`/vehicles/${vehicleId}/cost-history?kind=${kind}`),
+  getCostEntries: (vehicleId: string, params: { from?: string; to?: string; categories?: string[]; limit?: number; offset?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.from) q.set('from', params.from)
+    if (params.to) q.set('to', params.to)
+    if (params.categories?.length) q.set('category', params.categories.join(','))
+    if (params.limit) q.set('limit', String(params.limit))
+    if (params.offset) q.set('offset', String(params.offset))
+    return request<CostEntriesResponse>(`/vehicles/${vehicleId}/cost-entries?${q.toString()}`)
+  },
   getChargingPlaces: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/charging-places`),
   createChargingPlace: (vehicleId: string, data: { name: string; category: string }) =>
     request<any>(`/vehicles/${vehicleId}/charging-places`, { method: 'POST', body: JSON.stringify(data) }),
@@ -887,4 +896,41 @@ export interface FleetSummaryResponse {
   monthly_costs: FleetMonthlyCost[]
   vehicles: VehicleFleetMetric[]
   member_km_shares: MemberKmShare[]
+}
+
+/** An amount as the read API writes it: a decimal string and its currency. */
+export interface ApiAmount {
+  amount: string
+  currency: string
+}
+
+/** One line of the cost ledger, with the record it comes from. */
+export interface CostEntryLine {
+  date: string
+  /** Lower case ledger category: energy, toll, parking, travel_other, maintenance, repair, insurance, subscription, tax, financing, tires, accessory, other. */
+  category: string
+  kind: string
+  amount: ApiAmount
+  note: string | null
+  place: string | null
+  place_category: string | null
+  kwh: number | null
+  litres: number | null
+  recurring: boolean
+  has_receipt: boolean | null
+  source: string
+  source_id: string
+}
+
+export interface CostEntriesResponse {
+  vehicle_id: string
+  currency: string
+  count: number
+  paid_total: ApiAmount
+  by_category: { category: string; count: number; amount: ApiAmount }[]
+  carpool_received: ApiAmount
+  net_total: ApiAmount
+  distance_km: number
+  entries: CostEntryLine[]
+  next_offset: number | null
 }

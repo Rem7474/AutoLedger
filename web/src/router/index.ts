@@ -73,6 +73,7 @@ const router = createRouter({
       component: () => import('@/views/ExpensesView.vue'),
       meta: { requiresAuth: true, needsVehicle: true, section: 'energy' },
     },
+    authRoute('/costs', 'costs', () => import('@/views/CostsView.vue'), true),
     authRoute('/vehicle', 'vehicle', () => import('@/views/VehicleView.vue'), true),
     authRoute('/vehicles', 'vehicles', () => import('@/views/VehiclesView.vue')),
     authRoute('/account', 'account', () => import('@/views/AccountView.vue')),

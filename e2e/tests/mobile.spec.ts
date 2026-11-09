@@ -1137,3 +1137,22 @@ test.describe('the period bar of the drives list', () => {
     await expect(bar(page).getByRole('button', { name: 'Next period' })).toBeEnabled()
   })
 })
+
+test('the costs page lists the cost lines of the period under their figures, and a theme filters both', async ({ page }) => {
+  await useVehicle(page, ev.id, '/costs')
+  const headline = page.getByTestId('costs-headline')
+  await expect(headline).toContainText('Net cash out')
+  await expect(page.getByTestId('cost-entry').first()).toBeVisible()
+  const all = await headline.innerText()
+
+  await page.getByTestId('costs-filter-tolls').click()
+  await expect(headline).toContainText('Cash out · Tolls')
+  await expect(page).toHaveURL(/theme=tolls/)
+  await expect(page.getByTestId('cost-entry').first()).toBeVisible()
+  expect(await headline.innerText()).not.toBe(all)
+
+  // The filter is in the address: a reload keeps it
+  await page.reload()
+  await expect(page.getByTestId('costs-filter-tolls')).toHaveAttribute('aria-pressed', 'true')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
