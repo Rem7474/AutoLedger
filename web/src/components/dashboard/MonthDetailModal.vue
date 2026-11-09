@@ -175,17 +175,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       <div v-if="selectedMonthBreakdown.fixedVar && selectedMonthBreakdown.fixedVar.totalAmount > 0" class="p-3.5 bg-slate-800/40 border border-slate-700/50 rounded-xl space-y-2">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
           <span class="font-semibold text-white flex items-center gap-1.5">
-            <SlidersHorizontal class="w-3.5 h-3.5 text-sky-400" />
+            <SlidersHorizontal class="w-3.5 h-3.5 text-slate-400" />
             <span>{{ $t('dashboard.monthDetailModal.fixedVsVariable') }}</span>
           </span>
           <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs">
-            <span class="flex items-center gap-1.5 text-sky-300">
-              <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+            <span class="flex items-center gap-1.5 text-slate-300">
+              <span class="w-2 h-2 rounded-full bg-slate-500"></span>
               <span>{{ $t('dashboard.monthDetailModal.fixedCosts') }} : <strong class="text-white">{{ formatPercent(selectedMonthBreakdown.fixedVar.fixedPct, 0) }}</strong> ({{ formatAmount(selectedMonthBreakdown.fixedVar.fixedAmount, currency) }})</span>
             </span>
             <span class="text-slate-400 max-sm:hidden" aria-hidden="true">•</span>
-            <span class="flex items-center gap-1.5 text-amber-300">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span class="flex items-center gap-1.5 text-slate-300">
+              <span class="w-2 h-2 rounded-full bg-slate-200"></span>
               <span>{{ $t('dashboard.monthDetailModal.variableCosts') }} : <strong class="text-white">{{ formatPercent(selectedMonthBreakdown.fixedVar.variablePct, 0) }}</strong> ({{ formatAmount(selectedMonthBreakdown.fixedVar.variableAmount, currency) }})</span>
             </span>
           </div>
@@ -194,12 +194,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         <!-- Bicolor bar -->
         <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex" role="progressbar" :aria-label="$t('dashboard.monthDetailModal.fixedVsVariable')">
           <div
-            class="bg-sky-500 h-full transition-all duration-300"
+            class="bg-slate-500 h-full transition-all duration-300"
             :style="{ width: `${selectedMonthBreakdown.fixedVar.fixedPct}%` }"
             :title="`${$t('dashboard.monthDetailModal.fixedCosts')}: ${selectedMonthBreakdown.fixedVar.fixedPct}%`"
           ></div>
           <div
-            class="bg-amber-400 h-full transition-all duration-300"
+            class="bg-slate-200 h-full transition-all duration-300"
             :style="{ width: `${selectedMonthBreakdown.fixedVar.variablePct}%` }"
             :title="`${$t('dashboard.monthDetailModal.variableCosts')}: ${selectedMonthBreakdown.fixedVar.variablePct}%`"
           ></div>

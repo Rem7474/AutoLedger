@@ -211,7 +211,7 @@ const handleSave = () => runOnce(handleSaveAction)
             </select>
             <p class="text-xs text-slate-400 mt-1">
               {{ $t('tariffs.planSelectHint') }}
-              <router-link to="/account" class="text-sky-400 underline" @click="open = false">{{ $t('tariffs.editor.manageLink') }}</router-link>
+              <router-link to="/account" class="text-slate-100 underline" @click="open = false">{{ $t('tariffs.editor.manageLink') }}</router-link>
             </p>
           </div>
 

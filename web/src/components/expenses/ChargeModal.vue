@@ -194,7 +194,7 @@ const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicl
             <button v-if="canReopenCost" type="button" class="text-info-400 hover:text-info-300 font-medium" @click="reviewCost(false)">
               {{ $t('expenses.costReview.reopen') }}
             </button>
-            <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-info-400 hover:text-info-300 font-medium">
+            <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 inline-flex items-center gap-1 text-slate-100 hover:text-white font-medium">
               <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
             </a>
           </p>
@@ -234,7 +234,7 @@ const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicl
           :tariff="tariffCost"
         >
           <template #cost-action>
-            <a v-if="setCostUrl" :href="setCostUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium">
+            <a v-if="setCostUrl" :href="setCostUrl" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 inline-flex items-center gap-1 text-xs text-slate-100 hover:text-white font-medium">
               <ExternalLink class="w-3.5 h-3.5" />
               {{ $t('expenses.chargeModal.costInTeslaMate') }}
             </a>

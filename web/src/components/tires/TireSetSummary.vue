@@ -11,7 +11,7 @@ const summary = computed(() => summarizeFittedTires(props.mounted))
 // The verdict each figure already carries: every wheel fitted is good, a missing one is worth a look; the wear of the
 // most worn tire is its own tone; a replacement that falls due is a warning
 const fittedTone = computed(() => (summary.value.fitted === 0 ? 'default' : summary.value.fitted === MOUNTED_POSITIONS.length ? 'success' : 'warning'))
-const wearToneOf = { ok: 'success', warning: 'warning', danger: 'danger' } as const
+const wearToneOf = { ok: 'default', warning: 'warning', danger: 'danger' } as const
 const wornTone = computed(() => (summary.value.mostWorn ? wearToneOf[summary.value.mostWorn.tone] : 'default'))
 const replacementTone = computed(() => (summary.value.nextReplacement && isForecastDue(summary.value.nextReplacement) ? 'warning' : 'default'))
 const replacement = computed(() => {

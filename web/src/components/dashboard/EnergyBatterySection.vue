@@ -129,7 +129,7 @@ onBeforeUnmount(() => chart?.destroy())
 
     <p v-if="grafanaUrl" class="text-xs text-slate-400">
       {{ $t('dashboard.energyBatterySection.detailedCurvesIn') }}
-      <a :href="grafanaUrl" target="_blank" rel="noopener noreferrer" class="font-semibold text-sky-300 underline">{{ $t('dashboard.energyBatterySection.teslamateGrafana') }}</a>.
+      <a :href="grafanaUrl" target="_blank" rel="noopener noreferrer" class="font-semibold text-slate-100 underline">{{ $t('dashboard.energyBatterySection.teslamateGrafana') }}</a>.
     </p>
   </div>
 </template>
