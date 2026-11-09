@@ -177,8 +177,9 @@ export function wearTone(lifeProgressPct: number, condition?: string): WearTone 
   return 'ok'
 }
 
+// A tire in good shape is not a verdict to colour: its figure is white and the gauge carries the judgement, amber and red are the warnings
 export const WEAR_TONE_BG: Record<WearTone, string> = { ok: 'bg-success-500', warning: 'bg-warning-500', danger: 'bg-rose-500' }
-export const WEAR_TONE_TEXT: Record<WearTone, string> = { ok: 'text-success-400', warning: 'text-warning-400', danger: 'text-rose-400' }
+export const WEAR_TONE_TEXT: Record<WearTone, string> = { ok: 'text-white', warning: 'text-warning-400', danger: 'text-rose-400' }
 
 export type TireFormField = 'brand' | 'model' | 'dimension' | 'price' | 'initial_depth_mm' | 'estimated_lifespan_km'
 

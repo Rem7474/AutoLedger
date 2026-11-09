@@ -184,7 +184,7 @@ async function handleDriverChange(event: Event) {
           <span v-if="selectedCostDrive.duration_min" class="text-slate-400">{{ $t('drives.driveCostModal.min', { duration_min: selectedCostDrive.duration_min }) }}</span>
           <span v-if="selectedCostDrive.drives_count" class="text-sky-400 font-semibold">{{ $t('drives.driveCostModal.legs', { drives_count: selectedCostDrive.drives_count }) }}</span>
           <span v-if="selectedCostDrive.speed_avg" class="text-slate-400">{{ $t('drives.driveCostModal.kmHAvg', { speed: speedUnit(), speed_avg: Math.round(kmToDisplayDistance(selectedCostDrive.speed_avg)) }) }}</span>
-          <span v-if="selectedCostDrive.costs?.electricity_kwh" class="text-info-400 font-mono">{{ $t('drives.driveCostModal.kwh', { electricity_kwh: selectedCostDrive.costs.electricity_kwh }) }}</span>
+          <span v-if="selectedCostDrive.costs?.electricity_kwh" class="text-theme-energy font-mono">{{ $t('drives.driveCostModal.kwh', { electricity_kwh: selectedCostDrive.costs.electricity_kwh }) }}</span>
         </div>
 
         <!-- Tag qualification (only for individual drives) -->

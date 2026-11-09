@@ -225,7 +225,7 @@ onBeforeUnmount(() => {
         </h3>
         <p class="mt-0.5 text-xs text-slate-400">{{ $t('dashboard.energyEfficiencyPanel.whatTheCarUsesAnd') }}</p>
       </div>
-      <router-link v-if="showLink && !summary" to="/energy" class="tap-text text-xs font-semibold text-sky-400 underline">
+      <router-link v-if="showLink && !summary" to="/energy" class="tap-text text-xs font-semibold text-slate-100 underline">
         {{ $t('dashboard.energyEfficiencyPanel.seeEnergy') }}
       </router-link>
       <span v-if="summary" class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-300">
@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
         <p v-if="stats?.summary.charge_efficiency == null" class="mt-0.5 text-xs text-slate-400">
           {{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyEmpty') }}
           <span class="block">
-            <router-link to="/energy?tab=CHARGES" class="tap-text font-semibold text-sky-400 underline">{{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyAction') }}</router-link>
+            <router-link to="/energy?tab=CHARGES" class="tap-text font-semibold text-slate-100 underline">{{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyAction') }}</router-link>
           </span>
         </p>
       </KpiCard>
@@ -349,7 +349,7 @@ onBeforeUnmount(() => {
           </li>
         </ul>
       </div>
-      <router-link to="/energy?tab=CHARGES" class="tap-text mt-1 inline-block text-xs font-semibold text-sky-400 underline">
+      <router-link to="/energy?tab=CHARGES" class="tap-text mt-1 inline-block text-xs font-semibold text-slate-100 underline">
         {{ $t('dashboard.energyEfficiencyPanel.placeLink') }}
       </router-link>
     </div>
@@ -393,7 +393,7 @@ onBeforeUnmount(() => {
       <EnergyBatterySection v-if="basis?.battery !== 'unavailable'" :stats="stats" :grafana-url="grafanaUrl" />
     </template>
 
-    <router-link v-if="summary" to="/energy" class="tap-text inline-block text-xs font-semibold text-sky-400 underline">
+    <router-link v-if="summary" to="/energy" class="tap-text inline-block text-xs font-semibold text-slate-100 underline">
       {{ $t('dashboard.energyEfficiencyPanel.seeEnergy') }}
     </router-link>
   </component>

@@ -94,14 +94,14 @@ onMounted(() => {
 
 <template>
   <div class="space-y-5">
-    <div class="bg-gradient-to-br from-info-950/40 to-slate-950/60 border border-info-500/20 rounded-xl p-4 space-y-4">
+    <div class="bg-gradient-to-br from-theme-energy/10 to-slate-950/60 border border-theme-energy/20 rounded-xl p-4 space-y-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="p-2 bg-info-500/10 text-info-400 rounded-lg">
+          <div class="p-2 bg-theme-energy/10 text-theme-energy rounded-lg">
             <Zap class="w-4 h-4" />
           </div>
           <div>
-            <h4 class="text-xs font-bold text-info-400">{{ $t('manual.estimatedEnergyPanel.energyEstimate') }}</h4>
+            <h4 class="text-xs font-bold text-theme-energy">{{ $t('manual.estimatedEnergyPanel.energyEstimate') }}</h4>
             <p class="text-xs text-slate-400">{{ $t('manual.estimatedEnergyPanel.automaticallyFillInTheEnergy') }}</p>
           </div>
         </div>
@@ -145,7 +145,7 @@ onMounted(() => {
         <div v-if="preview" class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
           <div class="text-slate-300 font-semibold flex items-center justify-between">
             <span>{{ $t('manual.estimatedEnergyPanel.estimateOverSmoothedKm', { distance: formatDistance(preview.distance) }) }}</span>
-            <span class="text-info-400 font-bold font-mono">
+            <span class="text-theme-energy font-bold font-mono">
               ≈ {{ formatAmount(preview.cost, vehicleStore.currency) }}
             </span>
           </div>

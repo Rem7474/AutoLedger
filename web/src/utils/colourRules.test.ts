@@ -37,4 +37,17 @@ describe('colour rules', () => {
     }
     expect(found).toEqual([])
   })
+
+  // Sky is the colour of energy: a link is recognised by its underline or its chevron, not by a blue.
+  it('does not colour a link sky', () => {
+    const root = join(__dirname, '..')
+    const found: string[] = []
+    for (const file of sources(root)) {
+      const hits = readFileSync(file, 'utf8')
+        .split('\n')
+        .filter((line) => /<(?:a|router-link|RouterLink)\b/.test(line) && /text-(?:sky|info)-[34]00/.test(line))
+      if (hits.length) found.push(relative(root, file))
+    }
+    expect(found).toEqual([])
+  })
 })

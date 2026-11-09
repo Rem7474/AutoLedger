@@ -46,7 +46,7 @@ watch(() => [props.vehicleId, props.month, props.category], load, { immediate: t
       <ul v-else class="space-y-1">
         <li v-for="item in data.items" :key="`${item.source_id}-${item.date}`" class="flex items-center justify-between gap-3">
           <div class="min-w-0">
-            <router-link :to="contributionRoute(item.source_table)" class="text-sky-300 hover:text-sky-200 truncate">
+            <router-link :to="contributionRoute(item.source_table)" class="underline underline-offset-2 text-slate-100 hover:text-white truncate">
               {{ item.label || formatDayTime(item.date) }}
             </router-link>
             <span class="text-slate-400"> · {{ formatDayTime(item.date) }}</span>

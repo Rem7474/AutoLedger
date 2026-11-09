@@ -179,7 +179,7 @@ const showTodo = ref(false)
     <ul v-if="alertLines.length" class="space-y-1" :aria-label="$t('dashboard.dataQualityCard.alertsTitle')" data-testid="data-alerts">
       <li v-for="line in alertLines" :key="line.key" class="flex items-center justify-between gap-3 text-xs text-warning-100/90 bg-slate-950/40 rounded-lg px-2.5 py-1.5">
         <span class="min-w-0">{{ line.text }}</span>
-        <router-link :to="line.to" class="shrink-0 font-semibold text-sky-400 tap-text">{{ $t('dashboard.dataQualityCard.alertCheck') }}</router-link>
+        <router-link :to="line.to" class="underline underline-offset-2 shrink-0 font-semibold text-slate-100 tap-text">{{ $t('dashboard.dataQualityCard.alertCheck') }}</router-link>
       </li>
     </ul>
     <p v-if="!scored" class="text-xs text-slate-400">{{ $t('dashboard.dataQualityCard.noScoreHint') }}</p>
