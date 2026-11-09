@@ -27,16 +27,19 @@ let monthlyChartInstance: Chart | null = null
 // Economic: each cost spread over the period it covers, so a one-off purchase does not crush the other months.
 // Cash: what was paid in the month.
 const mode = ref<MonthDetailMode>('economic')
-const seriesLabel = (key: string) =>
-  ({
+// The legend takes the short names so that it stays on two lines on a phone; the table and the tooltips keep the full ones
+const seriesLabel = (key: string, short = false): string => {
+  const labels: Record<string, string> = {
     energy: t('dashboard.donut.energy'),
-    tolls: t('dashboard.donut.tolls'),
+    tolls: short ? t('dashboard.monthlyCostChart.tollsShort') : t('dashboard.donut.tolls'),
     tires: t('dashboard.monthlyCostChart.tires'),
     maintenance: t('dashboard.monthlyCostChart.maintenance'),
     insurance: t('dashboard.donut.insurance'),
     financing: t('dashboard.monthlyCostChart.financing'),
-    other: t('dashboard.donut.other'),
-  })[key] ?? key
+    other: short ? t('dashboard.monthlyCostChart.otherShort') : t('dashboard.donut.other'),
+  }
+  return labels[key] ?? key
+}
 // The same figures as a table for screen readers: one column per cost item, the month total last
 const tableData = computed(() => {
   const { series, totals, nets } = monthlyCostSeries(filteredMonthlyCosts.value, mode.value)
@@ -119,7 +122,7 @@ function renderChart() {
             generateLabels: (chart) =>
               Chart.defaults.plugins.legend.labels.generateLabels(chart).map((item) => ({
                 ...item,
-                text: seriesLabel(series[item.datasetIndex ?? 0].key),
+                text: seriesLabel(series[item.datasetIndex ?? 0].key, true),
               })),
           },
         },
