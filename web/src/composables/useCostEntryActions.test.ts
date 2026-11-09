@@ -6,6 +6,7 @@ const api = vi.hoisted(() => ({
   getCharge: vi.fn(),
   getDriveExpense: vi.fn(),
   getMaintenanceExpense: vi.fn(),
+  getMaintenance: vi.fn(),
   getDocuments: vi.fn(),
   deleteCharge: vi.fn(),
   deleteDriveExpense: vi.fn(),
@@ -75,6 +76,29 @@ describe('useCostEntryActions', () => {
     await a.open(entry('drive_expenses'))
     expect(a.showToll.value).toBe(true)
     expect(a.documents.value).toEqual([])
+  })
+
+  it('opens the maintenance form empty, with the receipts and the earlier entries that suggest and close a revision', async () => {
+    api.getMaintenance.mockResolvedValue([{ id: 'm1' }])
+    const a = useCostEntryActions(hooks())
+    a.editing.value = { id: 'old' }
+    await a.addMaintenance()
+    expect(a.showMaintenance.value).toBe(true)
+    expect(a.editing.value).toBeNull()
+    expect(a.maintenanceExpenses.value).toEqual([{ id: 'm1' }])
+    expect(api.getDocuments).toHaveBeenCalledWith('v1')
+  })
+
+  it('still opens the empty maintenance form when the earlier entries cannot be read, and opens nothing without a vehicle', async () => {
+    api.getMaintenance.mockRejectedValue(new Error('down'))
+    const a = useCostEntryActions(hooks())
+    await a.addMaintenance()
+    expect(a.showMaintenance.value).toBe(true)
+    expect(a.maintenanceExpenses.value).toEqual([])
+    const b = useCostEntryActions(hooks())
+    store.activeVehicle = null
+    await b.addMaintenance()
+    expect(b.showMaintenance.value).toBe(false)
   })
 
   it('adds a receipt uploaded from a form to the list', () => {

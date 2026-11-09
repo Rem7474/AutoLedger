@@ -103,7 +103,19 @@ const actions = useCostEntryActions({
   },
   reload: () => load(true),
 })
-const { showToll, showMaintenance, showCharge, editing, documents, onDocumentAdded } = actions
+const { showToll, showMaintenance, showCharge, editing, documents, maintenanceExpenses, onDocumentAdded } = actions
+// The quick entry sheet sends a maintenance entry here: the form opens on arrival and the parameter is dropped
+watch(
+  () => [route.query.add, vehicleStore.canEdit] as const,
+  async ([add, canEdit]) => {
+    if (add !== 'maintenance') return
+    const { add: _drop, ...rest } = route.query
+    // The address is clean before the form takes its history entry, so that Back does not come back to `add`
+    await router.replace({ query: rest })
+    if (canEdit) await nextTick(actions.addMaintenance)
+  },
+  { immediate: true },
+)
 const { previewDoc, closeDocPreview, viewOrDownloadDocument } = useDocumentPreview(() => vehicleStore.activeVehicle?.id)
 // The charts of the whole cost, month by month: they come from the cost engine, like the figures of the home page, and
 // follow the period; a bar opens the figures of its month
@@ -233,7 +245,7 @@ const chipClass = (key: CostFilterKey) => {
       :vehicle-id="vehicleStore.activeVehicle.id"
       :editing="editing"
       :documents="documents"
-      :maintenance-expenses="[]"
+      :maintenance-expenses="maintenanceExpenses"
       :current-odometer="currentOdometer"
       default-category="MAINTENANCE"
       @saved="load(true)"

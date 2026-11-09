@@ -3,8 +3,7 @@ import LoadError from '@/components/LoadError.vue'
 import TabBar from '@/components/TabBar.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { t } from '@/i18n'
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { useExpensesTabs, type ExpensesTab } from '@/composables/useExpensesTabs'
@@ -13,8 +12,6 @@ import { useDocumentPreview } from '@/composables/useDocumentPreview'
 import { useReminders } from '@/composables/useReminders'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
 import DocumentPreviewModal from '@/components/expenses/DocumentPreviewModal.vue'
-import TollsPanel from '@/components/expenses/TollsPanel.vue'
-import MaintenancePanel from '@/components/expenses/MaintenancePanel.vue'
 import RemindersPanel from '@/components/expenses/RemindersPanel.vue'
 import ChargesPanel from '@/components/expenses/ChargesPanel.vue'
 import FuelLogsPanel from '@/components/manual/FuelLogsPanel.vue'
@@ -22,25 +19,18 @@ import EnergyEfficiencyPanel from '@/components/dashboard/EnergyEfficiencyPanel.
 import EstimatedEnergyPanel from '@/components/manual/EstimatedEnergyPanel.vue'
 import ExpensesHeaderActions from '@/components/expenses/ExpensesHeaderActions.vue'
 import DocumentsPanel from '@/components/expenses/DocumentsPanel.vue'
-import TollModal from '@/components/expenses/TollModal.vue'
-import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
 import ChargeModal from '@/components/expenses/ChargeModal.vue'
-import ChargingPlacesModal from '@/components/expenses/ChargingPlacesModal.vue'
-import ChargingInsights from '@/components/expenses/ChargingInsights.vue'
-import SheetRow from '@/components/SheetRow.vue'
 import UploadDocumentModal from '@/components/expenses/UploadDocumentModal.vue'
 import ReminderModal from '@/components/expenses/ReminderModal.vue'
 import CompleteReminderModal from '@/components/expenses/CompleteReminderModal.vue'
 import WebhookModal from '@/components/expenses/WebhookModal.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
 import QualifyChargesModal from '@/components/expenses/QualifyChargesModal.vue'
-import { Zap, Eye } from 'lucide-vue-next'
+import { ChevronRight, Zap, Eye } from 'lucide-vue-next'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 
 // The page owns the lists, the active tab and which modal is open; each modal owns its form and its API
 // call and reports back with "saved".
-const router = useRouter()
-const route = useRoute()
 const vehicleStore = useVehicleStore()
 const { showAlert } = useConfirm()
 
@@ -55,14 +45,13 @@ const { activeTab, pageTitle, pageSubtitle, pageIcon, tabs } = useExpensesTabs((
   documents: documents.value.length,
 }))
 
-const driveExpenses = ref<any[]>([])
-const maintenanceExpenses = ref<any[]>([])
 const charges = ref<any[]>([])
 const chargesWithoutCost = ref(0)
 const chargesTotal = ref(0)
 const chargesPage = ref(1)
 const loadingMoreCharges = ref(false)
-const missingCostOnly = ref(false)
+// This page lists only the charges to complete; the whole list is read on the Costs page
+const missingCostOnly = true
 const loading = ref(false)
 const loadError = ref<string | null>(null)
 
@@ -94,24 +83,13 @@ const {
   onLoadError: (message) => {
     loadError.value = message
   },
-  onExpenseLogged: async () => {
-    if (vehicleStore.activeVehicle) maintenanceExpenses.value = await api.getMaintenance(vehicleStore.activeVehicle.id)
-  },
 })
 
 // Documents & Invoices
 const documents = ref<ExpenseDocumentHeader[]>([])
 
 // Modals, with the item being edited (null when adding)
-const showAddTollModal = ref(false)
-const editingToll = ref<any | null>(null)
-const showAddMaintModal = ref(false)
-const editingMaint = ref<any | null>(null)
 const showChargeModal = ref(false)
-const showPlacesModal = ref(false)
-const placesVersion = ref(0)
-// What makes the charging figures stale: a synchronisation, a charge added or removed, a place changed
-const insightsKey = computed(() => `${vehicleStore.lastSyncTimestamp}|${chargesTotal.value}|${placesVersion.value}`)
 const editingCharge = ref<any | null>(null)
 const showUploadDocModal = ref(false)
 
@@ -161,18 +139,14 @@ async function loadData(keepList = false) {
   if (!keepList) loading.value = true
   loadError.value = null
   try {
-    if (activeTab.value === 'TOLLS') {
-      driveExpenses.value = await api.getDriveExpenses(vehicleStore.activeVehicle.id)
-    } else if (activeTab.value === 'MAINTENANCE' || activeTab.value === 'FIXED') {
-      maintenanceExpenses.value = await api.getMaintenance(vehicleStore.activeVehicle.id)
-    } else if (activeTab.value === 'REMINDERS') {
+    if (activeTab.value === 'REMINDERS') {
       await loadReminders()
     } else if (activeTab.value === 'CHARGES' && vehicleStore.canCharge) {
       const pages = keepList ? chargesPage.value : 1
       const loaded: any[] = []
       let res: any
       for (let page = 1; page <= pages; page++) {
-        res = await api.getCharges(vehicleStore.activeVehicle.id, { page, missingCost: missingCostOnly.value })
+        res = await api.getCharges(vehicleStore.activeVehicle.id, { page, missingCost: missingCostOnly })
         loaded.push(...res.charges)
       }
       chargesPage.value = pages
@@ -195,7 +169,7 @@ async function loadData(keepList = false) {
   }
 }
 
-const { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, refreshData, { tolls: driveExpenses, maintenance: maintenanceExpenses, charges })
+const { handleDeleteCharges, handleDeleteCharge, handleDeleteDocument } = useExpenseDeletions(documents, refreshData, { charges })
 
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value, vehicleStore.lastSyncTimestamp],
@@ -204,59 +178,18 @@ watch(
   }
 )
 
-// The quick entry sheet sends maintenance entries here: the form opens on arrival and the parameter is dropped.
-watch(
-  () => [route.query.add, vehicleStore.canEdit] as const,
-  ([add, canEdit]) => {
-    if (add !== 'maintenance') return
-    const { add: _drop, ...rest } = route.query
-    router.replace({ query: rest })
-    // Once mounted, so the modal sees its `open` go from false to true and loads its defaults
-    if (canEdit) nextTick(openAddMaintModal)
-  },
-  { immediate: true },
-)
-
 onMounted(() => {
   void loadData()
   void loadReminders()
 })
 
-// Tolls & parking
-function openAddTollModal() {
-  editingToll.value = null
-  showAddTollModal.value = true
-  void ensureDocumentsLoaded()
-}
-
-function openEditTollModal(e: any) {
-  editingToll.value = e
-  showAddTollModal.value = true
-  void ensureDocumentsLoaded()
-}
-
-// Maintenance & fixed expenses
-const newExpenseCategory = ref('MAINTENANCE')
-function openAddMaintModal() {
-  editingMaint.value = null
-  newExpenseCategory.value = activeTab.value === 'FIXED' ? 'INSURANCE' : 'MAINTENANCE'
-  showAddMaintModal.value = true
-  void ensureDocumentsLoaded()
-}
-
-function openEditMaintModal(m: any) {
-  editingMaint.value = m
-  showAddMaintModal.value = true
-  void ensureDocumentsLoaded()
-}
-
-// Charges: manual entry and cost completion
+// Charges: manual entry, and the charges whose cost is missing
 // Next page of charges, so that older charges can also be completed or corrected
 async function loadMoreCharges() {
   if (!vehicleStore.activeVehicle) return
   loadingMoreCharges.value = true
   try {
-    const res = await api.getCharges(vehicleStore.activeVehicle.id, { page: chargesPage.value + 1, missingCost: missingCostOnly.value })
+    const res = await api.getCharges(vehicleStore.activeVehicle.id, { page: chargesPage.value + 1, missingCost: missingCostOnly })
     chargesPage.value += 1
     charges.value = [...charges.value, ...res.charges]
     chargesTotal.value = res.total || 0
@@ -274,11 +207,6 @@ async function reviewChargeCost(c: any, reviewed: boolean) {
   } catch (err: any) {
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
-}
-
-function toggleMissingCostFilter() {
-  missingCostOnly.value = !missingCostOnly.value
-  void loadData()
 }
 
 const showCSVImportModal = ref(false)
@@ -314,8 +242,6 @@ function openUploadDocumentModal() {
       <template #actions>
         <ExpensesHeaderActions
           :active-tab="activeTab"
-          @add-toll="openAddTollModal"
-          @add-maintenance="openAddMaintModal"
           @open-webhook="openWebhookModal"
           @add-reminder="openAddReminderModal()"
           @import-csv="openCSVImportModal"
@@ -339,31 +265,6 @@ function openUploadDocumentModal() {
     <LoadError v-if="loadError !== null" :message="loadError" @retry="loadData()" />
 
     <!-- Content -->
-    <TollsPanel
-      v-if="activeTab === 'TOLLS' && vehicleStore.activeVehicle"
-      :vehicle-id="vehicleStore.activeVehicle.id"
-      :drive-expenses="driveExpenses"
-      :loading="loading"
-      @add="openAddTollModal"
-      @edit="openEditTollModal"
-      @delete="handleDeleteToll"
-      @delete-many="handleDeleteTolls"
-      @view-document="viewOrDownloadDocument"
-    />
-
-    <MaintenancePanel
-      v-if="activeTab === 'MAINTENANCE' || activeTab === 'FIXED'"
-      :kind="activeTab === 'FIXED' ? 'fixed' : 'service'"
-      :vehicle-id="vehicleId"
-      :maintenance-expenses="maintenanceExpenses"
-      :loading="loading"
-      @add="openAddMaintModal"
-      @edit="openEditMaintModal"
-      @delete="handleDeleteMaint"
-      @delete-many="handleDeleteMaints"
-      @view-document="viewOrDownloadDocument"
-    />
-
     <RemindersPanel
       v-if="activeTab === 'REMINDERS'"
       :reminders="reminders"
@@ -421,32 +322,28 @@ function openUploadDocumentModal() {
       :can-edit="vehicleStore.canEdit"
     />
 
-    <SheetRow
-      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge && vehicleStore.activeVehicle"
-      v-slot="{ bare, close }"
-      :title="$t('expenses.analysis.title')"
-      :enabled="chargesTotal > 0"
-      :hint="$t('expenses.chargingInsights.analysisHint')"
+    <router-link
+      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge"
+      to="/costs?theme=energy"
+      class="card flex items-center justify-between gap-3 px-4 py-3"
+      data-testid="charges-list-link"
     >
-      <ChargingInsights
-        :vehicle-id="vehicleStore.activeVehicle.id"
-        :currency="vehicleStore.currency"
-        :has-charges="chargesTotal > 0"
-        :sync-key="insightsKey"
-        :bare="bare"
-        @manage-places="close(); showPlacesModal = true"
-      />
-    </SheetRow>
+      <span class="min-w-0">
+        <span class="block text-sm font-semibold text-white">{{ $t('expenses.chargesTools.openList') }}</span>
+        <span class="block text-xs text-slate-400">{{ $t('expenses.chargesTools.listHint') }}</span>
+      </span>
+      <ChevronRight class="size-5 shrink-0 text-slate-400" aria-hidden="true" />
+    </router-link>
 
     <ChargesPanel
       v-if="activeTab === 'CHARGES' && vehicleStore.canCharge"
+      to-complete-only
       :charges="charges"
       :charges-total="chargesTotal"
       :charges-without-cost="chargesWithoutCost"
       :loading="loading"
       :loading-more-charges="loadingMoreCharges"
       :missing-cost-only="missingCostOnly"
-      @toggle-missing-cost="toggleMissingCostFilter"
       @import-csv="openCSVImportModal"
       @load-more="loadMoreCharges"
       @edit="openEditChargeModal"
@@ -465,31 +362,6 @@ function openUploadDocumentModal() {
       @delete="handleDeleteDocument"
       @view-document="viewOrDownloadDocument"
     />
-
-    <TollModal
-      v-model:open="showAddTollModal"
-      :vehicle-id="vehicleId"
-      :editing="editingToll"
-      :documents="documents"
-      @saved="refreshData"
-      @document-added="onDocumentAdded"
-      @view-document="viewOrDownloadDocument"
-    />
-
-    <MaintenanceModal
-      v-model:open="showAddMaintModal"
-      :vehicle-id="vehicleId"
-      :editing="editingMaint"
-      :documents="documents"
-      :maintenance-expenses="maintenanceExpenses"
-      :current-odometer="currentOdometer"
-      :default-category="newExpenseCategory"
-      @saved="refreshData"
-      @document-added="onDocumentAdded"
-      @view-document="viewOrDownloadDocument"
-    />
-
-    <ChargingPlacesModal v-model:open="showPlacesModal" :vehicle-id="vehicleId" :can-edit="vehicleStore.canEdit" @changed="() => { placesVersion++; refreshData() }" />
 
     <ChargeModal
       v-model:open="showChargeModal"

@@ -30,10 +30,10 @@
     "deleteReminderTitle": "Delete the reminder",
     "deleteReminderMessage": "Are you sure you want to delete the maintenance reminder “{title}”?",
     "reminderDeleted": "Reminder deleted",
-    "expensesTitle": "Expenses",
-    "expensesSubtitle": "Tolls, parking, fixed costs and receipts",
-    "maintenanceTitle": "Maintenance",
-    "maintenanceSubtitle": "Maintenance, repairs and reminders",
+    "expensesTitle": "Receipts",
+    "expensesSubtitle": "The invoices and receipts attached to your costs",
+    "maintenanceTitle": "Reminders",
+    "maintenanceSubtitle": "What is due on the vehicle, and when",
     "efficiency": "Efficiency",
     "estimate": "Estimate",
     "energyTitle": "Energy",
@@ -544,5 +544,9 @@
   },
   "analysis": {
     "title": "Analysis"
+  },
+  "chargesTools": {
+    "listHint": "Every charge is listed with your other costs.",
+    "openList": "See the charges"
   }
 }

@@ -30,10 +30,10 @@
     "deleteReminderTitle": "Supprimer le rappel",
     "deleteReminderMessage": "Êtes-vous sûr de vouloir supprimer le rappel d'entretien « {title} » ?",
     "reminderDeleted": "Rappel supprimé",
-    "expensesTitle": "Dépenses",
-    "expensesSubtitle": "Péages, parkings, frais fixes et justificatifs",
-    "maintenanceTitle": "Entretien",
-    "maintenanceSubtitle": "Entretien, réparations et rappels",
+    "expensesTitle": "Justificatifs",
+    "expensesSubtitle": "Les factures et reçus rattachés à vos coûts",
+    "maintenanceTitle": "Rappels",
+    "maintenanceSubtitle": "Ce qui est à faire sur le véhicule, et quand",
     "efficiency": "Efficacité",
     "estimate": "Estimation",
     "energyTitle": "Énergie",
@@ -544,5 +544,9 @@
   },
   "analysis": {
     "title": "Analyse"
+  },
+  "chargesTools": {
+    "listHint": "Toutes les recharges sont listées avec vos autres coûts.",
+    "openList": "Voir les recharges"
   }
 }

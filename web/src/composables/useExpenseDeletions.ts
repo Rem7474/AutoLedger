@@ -6,8 +6,6 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { deleteWithUndo } from '@/composables/useUndoableDelete'
 
 export interface ExpenseLists {
-  tolls: Ref<any[]>
-  maintenance: Ref<any[]>
   charges: Ref<any[]>
 }
 
@@ -36,14 +34,6 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
       committed: () => void reload(),
       onError: (err: any) => void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger'),
     })
-  }
-
-  function handleDeleteToll(row: any) {
-    deleteRow(lists.tolls, row, t('expenses.expensesView.costDeleted'), (v, id) => api.deleteDriveExpense(v, id))
-  }
-
-  function handleDeleteMaint(row: any) {
-    deleteRow(lists.maintenance, row, t('expenses.expensesView.costDeleted'), (v, id) => api.deleteMaintenance(v, id))
   }
 
   function handleDeleteCharge(row: any) {
@@ -83,12 +73,8 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
     await reload()
   }
   const deleteManyMessage = (count: number) => t('expenses.expensesView.deleteManyMessage', { count })
-  const handleDeleteTolls = (items: any[]) =>
-    items.length === 1 ? handleDeleteToll(items[0]) : deleteMany(items, t('expenses.expensesView.deleteExpenseTitle'), deleteManyMessage(items.length), (v, id) => api.deleteDriveExpense(v, id))
-  const handleDeleteMaints = (items: any[]) =>
-    items.length === 1 ? handleDeleteMaint(items[0]) : deleteMany(items, t('expenses.expensesView.deleteExpenseTitle'), deleteManyMessage(items.length), (v, id) => api.deleteMaintenance(v, id))
   const handleDeleteCharges = (items: any[]) =>
     items.length === 1 ? handleDeleteCharge(items[0]) : deleteMany(items, t('expenses.expensesView.deleteChargeTitle'), deleteManyMessage(items.length), (v, id) => api.deleteCharge(v, id))
 
-  return { handleDeleteTolls, handleDeleteMaints, handleDeleteCharges, handleDeleteToll, handleDeleteMaint, handleDeleteCharge, handleDeleteDocument }
+  return { handleDeleteCharges, handleDeleteCharge, handleDeleteDocument }
 }

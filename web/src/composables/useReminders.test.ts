@@ -130,6 +130,13 @@ describe('useReminders', () => {
     expect(api.getReminders).toHaveBeenCalledTimes(2)
   })
 
+  it('completes a reminder that logged an expense when the page has no list of expenses to refresh', async () => {
+    vi.mocked(api.getReminders).mockResolvedValue([] as any)
+    const r = useReminders({ onLoadError: vi.fn(), isRemindersTabActive: () => true })
+    await r.onReminderCompleted(true)
+    expect(api.getReminders).toHaveBeenCalledTimes(1)
+  })
+
   it('opens the webhook modal with the saved configuration, or without it when loading fails', async () => {
     vi.mocked(api.getVehicleWebhook).mockResolvedValue({ url: 'https://x' } as any)
     const { r } = setup()

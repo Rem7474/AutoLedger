@@ -395,17 +395,18 @@ test.describe('the tire modals share one frame', () => {
 })
 
 test('the expense and vehicle modals open named and close on Escape', async ({ page }) => {
-  await useVehicle(page, ev.id, '/expenses')
-  await page.getByRole('button', { name: 'Add Toll / parking' }).click()
-  const toll = page.getByRole('dialog', { name: 'Add a toll / parking fee' })
-  await expect(toll).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(toll).toHaveCount(0)
+  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+  await page.getByRole('button', { name: 'Add a charge' }).click()
+  const charge = page.getByRole('dialog').first()
+  await expect(charge).toBeVisible()
+  await charge.getByRole('button', { name: 'Close', exact: true }).first().click()
+  await expect(charge).toHaveCount(0)
 
-  await page.getByRole('tab', { name: 'Fixed costs' }).click()
-  await page.getByRole('button', { name: 'Add Fixed costs' }).click()
+  // The quick entry sends a maintenance entry to the costs page, where its form opens
+  await useVehicle(page, ev.id, '/costs?theme=maintenance&add=maintenance')
   const maintenance = page.getByRole('dialog', { name: /Add maintenance \/ fixed expense/ })
   await expect(maintenance).toBeVisible()
+  await expect(page).not.toHaveURL(/add=/)
   await maintenance.getByRole('button', { name: 'Close', exact: true }).first().click()
   await expect(maintenance).toHaveCount(0)
 

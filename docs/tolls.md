@@ -38,4 +38,4 @@ If a toll was entered by hand, or for a trip group, on another drive of the same
 
 ## History
 
-The Tolls tab opens on the history of what was paid for tolls, parking and other travel expenses: the total and the monthly average of a period (1, 3, 6 or 12 months, the whole history, or a range of days), the 12-month average, and a chart of the amount paid per month with the 12-month average drawn over it. A range of days counts the months it covers entirely. The Maintenance and Fixed costs tabs show the same history for their own expenses; a recurring expense counts once for each month it was due.
+On the Costs page, the Tolls filter lists what was paid for tolls, parking and other travel expenses over the period chosen at the top, with the total paid and the cost per kilometre; a line opens its record for editing, and swiping it deletes it with a way back. The Maintenance filter does the same for servicing and repairs, and the whole cost adds the figures by month. A recurring expense counts once for each month it was due.

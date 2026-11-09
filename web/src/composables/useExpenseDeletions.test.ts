@@ -7,7 +7,7 @@ import { useToast } from './useToast'
 
 const { toasts } = useToast()
 
-const api = vi.hoisted(() => ({ deleteDriveExpense: vi.fn(), deleteMaintenance: vi.fn(), deleteCharge: vi.fn(), deleteDocument: vi.fn() }))
+const api = vi.hoisted(() => ({ deleteCharge: vi.fn(), deleteDocument: vi.fn() }))
 vi.mock('@/services/api', () => ({ api }))
 const store = vi.hoisted(() => ({ activeVehicle: { id: 'v1' } as { id: string } | null, currency: 'EUR' }))
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => store }))
@@ -17,8 +17,6 @@ vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => confirm }))
 const setup = () => {
   const documents = ref<any[]>([{ id: 'doc1', filename: 'a.pdf' }, { id: 'doc2', filename: 'b.pdf' }])
   const lists = {
-    tolls: ref<any[]>([{ id: 'x1' }, { id: 't1' }, { id: 't2' }]),
-    maintenance: ref<any[]>([{ id: 'x1' }, { id: 'm1' }]),
     charges: ref<any[]>([{ id: 'x1' }, { id: 'c1' }]),
   }
   const reload = vi.fn().mockResolvedValue(undefined)
@@ -36,12 +34,10 @@ describe('useExpenseDeletions', () => {
 
   // One row goes through its own wording, a selection through one confirmation for all of them
   const kinds = [
-    ['tolls', 'handleDeleteTolls', 'deleteDriveExpense'],
-    ['maintenance entries', 'handleDeleteMaints', 'deleteMaintenance'],
     ['charges', 'handleDeleteCharges', 'deleteCharge'],
   ] as const
 
-  const listOf = { tolls: 'tolls', 'maintenance entries': 'maintenance', charges: 'charges' } as const
+  const listOf = { charges: 'charges' } as const
 
   for (const [label, handler, call] of kinds) {
     it(`takes a single one of the ${label} off the list at once and deletes it once the time to undo is over`, async () => {
@@ -111,11 +107,7 @@ describe('useExpenseDeletions', () => {
     await h.handleDeleteCharges([])
     expect(confirm.showConfirm).not.toHaveBeenCalled()
     store.activeVehicle = null
-    await h.handleDeleteTolls([{ id: 'x1' }, { id: 'x2' }])
-    await h.handleDeleteMaints([{ id: 'x1' }])
     await h.handleDeleteCharge({ id: 'c1', kwh_added: 1 })
-    await h.handleDeleteToll({ id: 't1', amount: '1' })
-    await h.handleDeleteMaint({ id: 'm1', amount: '1' })
     await h.handleDeleteDocument({ id: 'doc1', filename: 'a.pdf' } as any)
     expect(confirm.showConfirm).not.toHaveBeenCalled()
     expect(reload).not.toHaveBeenCalled()

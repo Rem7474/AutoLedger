@@ -12,9 +12,9 @@ describe('contributionCategory', () => {
 
 describe('contributionRoute', () => {
   it('sends charging and fuel records to the energy page and the rest to expenses', () => {
-    expect(contributionRoute('charge_logs')).toBe('/energy')
-    expect(contributionRoute('fuel_logs')).toBe('/energy')
-    expect(contributionRoute('maintenance_expenses')).toBe('/expenses')
+    expect(contributionRoute('charge_logs')).toBe('/costs?theme=energy')
+    expect(contributionRoute('fuel_logs')).toBe('/costs?theme=energy')
+    expect(contributionRoute('maintenance_expenses')).toBe('/costs?theme=maintenance')
   })
 })
 

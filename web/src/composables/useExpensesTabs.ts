@@ -3,9 +3,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { t } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { TabItem } from '@/components/TabBar.vue'
-import { Receipt, Fuel, Wrench, Zap, Gauge, Calculator, Paperclip, Bell, Landmark } from 'lucide-vue-next'
+import { Receipt, Fuel, Wrench, Zap, Gauge, Calculator, Paperclip, Bell } from 'lucide-vue-next'
 
-export type ExpensesTab = 'TOLLS' | 'FIXED' | 'MAINTENANCE' | 'REMINDERS' | 'CHARGES' | 'FUEL' | 'DOCUMENTS' | 'EFFICIENCY' | 'ESTIMATE'
+export type ExpensesTab = 'REMINDERS' | 'CHARGES' | 'FUEL' | 'DOCUMENTS' | 'EFFICIENCY' | 'ESTIMATE'
 
 export interface ExpensesTabBadges {
   urgentReminders: number
@@ -14,8 +14,9 @@ export interface ExpensesTabBadges {
   documents: number
 }
 
-// One view, three menu entries: /expenses (tolls, fixed costs, receipts), /maintenance (maintenance, reminders)
-// and /energy (efficiency, charges, estimate). Owns the section, the tab list and the `tab` query parameter.
+// One view, three entries, the tools next to the lists of the Costs page: /expenses (receipts), /maintenance
+// (reminders) and /energy (charges to complete, efficiency, estimate, fill-ups). Owns the section, the tab list and
+// the `tab` query parameter.
 // The badges are read lazily, so they may come from state declared after this call.
 export function useExpensesTabs(badges: () => ExpensesTabBadges) {
   const router = useRouter()
@@ -32,9 +33,9 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
     return vehicleStore.canRefuel ? ['CHARGES', 'EFFICIENCY', 'FUEL'] : ['CHARGES', 'EFFICIENCY', 'ESTIMATE']
   }
   const sectionTabs = computed<ExpensesTab[]>(() => {
-    if (isMaintenanceSection.value) return ['MAINTENANCE', 'REMINDERS']
+    if (isMaintenanceSection.value) return ['REMINDERS']
     if (isEnergySection.value) return energyTabs()
-    return ['TOLLS', 'FIXED', 'DOCUMENTS']
+    return ['DOCUMENTS']
   })
 
   function parseTab(raw: unknown): ExpensesTab {
@@ -64,7 +65,6 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
     const b = badges()
     if (isMaintenanceSection.value) {
       return [
-        { key: 'MAINTENANCE', label: t('expenses.expensesView.maintenance'), icon: Wrench },
         {
           key: 'REMINDERS',
           label: t('expenses.expensesView.reminders'),
@@ -92,8 +92,6 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
       return list
     }
     return [
-      { key: 'TOLLS', label: t('expenses.expensesView.tolls'), icon: Receipt },
-      { key: 'FIXED', label: t('expenses.expensesView.fixedCosts'), icon: Landmark },
       {
         key: 'DOCUMENTS',
         label: t('expenses.expensesView.receipts'),

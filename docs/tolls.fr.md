@@ -38,4 +38,4 @@ Si un péage a été saisi à la main, ou pour un groupe de trajets, sur un autr
 
 ## Historique
 
-L'onglet Péages s'ouvre sur l'historique de ce qui a été payé en péages, parkings et autres frais de déplacement : le total et la moyenne mensuelle d'une période (1, 3, 6 ou 12 mois, tout l'historique, ou une plage de jours), la moyenne sur 12 mois, et un graphique des montants payés par mois avec la moyenne sur 12 mois tracée par-dessus. Une plage de jours compte les mois qu'elle couvre entièrement. Les onglets Entretien et Coûts fixes affichent le même historique pour leurs propres dépenses ; une dépense récurrente compte une fois pour chaque mois d'échéance.
+Sur la page Coûts, le filtre Péages liste ce qui a été payé en péages, parkings et autres frais de déplacement sur la période choisie en haut, avec le total payé et le coût au kilomètre ; une ligne ouvre son enregistrement pour le modifier, et la balayer le supprime avec un retour en arrière possible. Le filtre Entretien fait de même pour l'entretien et les réparations, et le coût total ajoute les chiffres par mois. Une dépense récurrente compte une fois pour chaque mois d'échéance.
