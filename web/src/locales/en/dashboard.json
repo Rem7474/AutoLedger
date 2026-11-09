@@ -191,7 +191,9 @@
     "averageCostPerKm": "Average cost per {unit} ({cur}/{unit})",
     "tooltipDistance": "Distance: {distance} {unit}",
     "tooltipCostPerKm": "Cost price: {cost}/{unit}",
-    "minDistanceNote": "Months under {distance} {unit} are not plotted."
+    "minDistanceNote": "Months under {distance} {unit} are not plotted.",
+    "inProgress": "in progress",
+    "inProgressNote": "○ {month}: {cost}/{unit}, in progress, outside the scale."
   },
   "monthDetailModal": {
     "expensesAndInvoices": "Expenses and invoices",
