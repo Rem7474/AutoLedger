@@ -4,6 +4,7 @@ import { rememberLoginRedirect, takeLoginRedirect } from '@/utils/loginRedirect'
 import { installViewTransitions } from '@/utils/viewTransition'
 import { backEntryHeld, releaseBackEntry } from '@/composables/useEscapeToClose'
 import { replaceOverHeldEntry } from '@/utils/backEntryNavigation'
+import { installScrollMemory } from '@/utils/scrollMemory'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
 // A page that needs a signed-in session.
@@ -165,6 +166,7 @@ router.afterEach((to, from, failure) => {
   if (!failure && to.path !== from.path) releaseBackEntry()
 })
 
+installScrollMemory(router, { scroller: () => document.querySelector<HTMLElement>('.app-scroll') })
 installViewTransitions(router)
 
 // A new deployment removes the hashed chunks of the previous build: a navigation that fails to fetch one reloads the

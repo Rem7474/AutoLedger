@@ -722,3 +722,66 @@ test('Back closes the layers one at a time: the selection sheet, then the select
   await page.goBack()
   expect(path(page)).not.toBe('/drives')
 })
+
+// The shell scrolls inside .app-scroll: Back puts a page back where it was left, a new page starts at the top.
+const shellTop = (page: import('@playwright/test').Page) => page.evaluate(() => document.querySelector('.app-scroll')!.scrollTop)
+const scrollShell = async (page: import('@playwright/test').Page, top: number) => {
+  await page.evaluate((y) => document.querySelector('.app-scroll')!.scrollTo(0, y), top)
+  await expect.poll(() => shellTop(page)).toBeGreaterThan(top - 3)
+}
+const openCarpooling = async (page: import('@playwright/test').Page) => {
+  await openMore(page)
+  await page.getByRole('dialog').getByRole('link', { name: 'Carpooling' }).tap()
+  await expect(page).toHaveURL(/\/carpools$/)
+}
+
+test('Back puts a page where it was left, and a page opened afresh starts at the top', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await scrollShell(page, 800)
+  const left = await shellTop(page)
+  await openCarpooling(page)
+  await expect.poll(() => shellTop(page)).toBe(0)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/drives$/)
+  await expect.poll(() => shellTop(page), { timeout: 5000 }).toBeGreaterThan(left - 3)
+  expect(await shellTop(page)).toBeLessThan(left + 3)
+})
+
+test('going forward again restores the page too, and two visits of a page keep their own position', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await scrollShell(page, 500)
+  const first = await shellTop(page)
+  await openCarpooling(page)
+  await page.goBack()
+  await expect.poll(() => shellTop(page)).toBeGreaterThan(first - 3)
+  await page.goForward()
+  await expect(page).toHaveURL(/\/carpools$/)
+  await expect.poll(() => shellTop(page)).toBe(0)
+  await page.goBack()
+  await expect.poll(() => shellTop(page), { timeout: 5000 }).toBeGreaterThan(first - 3)
+})
+
+test('a page that loads slowly is put back once it is tall enough', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await scrollShell(page, 800)
+  const left = await shellTop(page)
+  await openCarpooling(page)
+  await page.route(/\/api\/vehicles\/[^/]+\/drives(\?|$)/, async (route) => {
+    await new Promise((r) => setTimeout(r, 700))
+    await route.continue()
+  })
+  await page.goBack()
+  await expect(page).toHaveURL(/\/drives$/)
+  await expect.poll(() => shellTop(page), { timeout: 5000 }).toBeGreaterThan(left - 3)
+})
+
+test('a reload brings the page back to where it was', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await scrollShell(page, 800)
+  const left = await shellTop(page)
+  await openCarpooling(page)
+  await page.goBack()
+  await expect.poll(() => shellTop(page)).toBeGreaterThan(left - 3)
+  await page.reload()
+  await expect.poll(() => shellTop(page), { timeout: 5000 }).toBeGreaterThan(left - 3)
+})
