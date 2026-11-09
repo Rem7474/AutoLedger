@@ -88,7 +88,7 @@ const actions = computed<SelectionAction[]>(() => {
               <div class="text-sm font-extrabold text-white">
                 {{ Number(tg.tolls_total || 0) > 0 ? $t('drives.tripGroupsPanel.costsAmount', { amount: formatAmount(Number(tg.tolls_total), vehicleStore.currency) }) : $t('drives.tripGroupsPanel.costDetail') }}
               </div>
-              <div v-if="tg.distance_km > 0 && tg.tolls_total" class="text-xs font-mono text-slate-400">
+              <div v-if="tg.distance_km > 0 && tg.tolls_total" class="text-xs text-slate-400">
                 {{ formatAmount(perDistance(Number(tg.tolls_total) / tg.distance_km), vehicleStore.currency, 3) }}/{{ distanceUnit() }}
               </div>
             </div>

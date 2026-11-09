@@ -222,7 +222,7 @@ const showTodo = ref(false)
         class="text-xs text-warning-100/90 flex items-center justify-between gap-3 bg-slate-950/40 rounded-lg px-2.5 py-1.5"
       >
         <span>{{ new Date(issue.date).toLocaleString(intlLocale(), { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }} — {{ issueLabels[issue.type]?.() || issue.type }}</span>
-        <span class="font-mono">{{ issue.km > 0 ? '+' : '' }}{{ formatDistance(issue.km, 1) }}</span>
+        <span>{{ issue.km > 0 ? '+' : '' }}{{ formatDistance(issue.km, 1) }}</span>
       </div>
     </div>
   </div>

@@ -32,7 +32,7 @@ const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
       >
         <div class="flex items-center justify-between font-semibold">
           <span class="flex items-center gap-1.5">
-            <span class="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-xs font-mono text-slate-300">
+            <span class="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-xs text-slate-300">
               {{ legIdx + 1 }}
             </span>
             <span>{{ stops[legIdx] }} → {{ stops[legIdx + 1] }}</span>

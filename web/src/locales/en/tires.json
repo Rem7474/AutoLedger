@@ -384,7 +384,7 @@
   "tireSetSummary": {
     "fitted": "Wheels fitted",
     "mostWorn": "Most worn tire",
-    "ofLifespan": "of its lifespan",
+    "wornAndLeft": "{worn} worn · {left} left",
     "nextReplacement": "Next replacement"
   },
   "overview": {

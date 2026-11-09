@@ -145,13 +145,13 @@ onMounted(() => {
         <div v-if="preview" class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
           <div class="text-slate-300 font-semibold flex items-center justify-between">
             <span>{{ $t('manual.estimatedEnergyPanel.estimateOverSmoothedKm', { distance: formatDistance(preview.distance) }) }}</span>
-            <span class="text-theme-energy font-bold font-mono">
+            <span class="text-theme-energy font-bold">
               ≈ {{ formatAmount(preview.cost, vehicleStore.currency) }}
             </span>
           </div>
           <p class="text-slate-400 text-xs">
             {{ $t('manual.estimatedEnergyPanel.estimatedVolume') }}
-            <strong class="text-slate-200 font-mono">{{ $t('manual.estimatedEnergyPanel.kwh', { kwh: Math.round(preview.kwh).toLocaleString(intlLocale()) }) }}</strong>
+            <strong class="text-slate-200">{{ $t('manual.estimatedEnergyPanel.kwh', { kwh: Math.round(preview.kwh).toLocaleString(intlLocale()) }) }}</strong>
             {{ $t('manual.estimatedEnergyPanel.kmSpreadProRataAcross', { unit: distanceUnit(), cost: formatAmount(perDistance(preview.cost / (preview.distance || 1)), vehicleStore.currency, 3) }) }}
           </p>
         </div>

@@ -203,8 +203,8 @@ interface MaintenanceLike {
   fx_rate?: number | string | null
 }
 
-/** Colour classes of an expense category: the badge and the accent bar of its row, from the category's theme. */
-export function categoryStyle(category: string): { badge: string; accent: string } {
+/** Colour classes of an expense category: the badge and the tonal glyph of its row, from the category's theme. */
+export function categoryStyle(category: string): { badge: string; tint: string } {
   return THEME_STYLES[themeOfExpense(category)]
 }
 

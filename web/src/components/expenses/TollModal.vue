@@ -292,7 +292,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
                 <Square v-else class="w-4 h-4 text-slate-400" />
                 <span>{{ formatDayTime(d.start_time) }}{{ $t('expenses.tollModal.dateSeparator') }}{{ (d.start_address || $t('expenses.tollModal.start')).split(',')[0] }} → {{ (d.end_address || $t('expenses.tollModal.destination')).split(',')[0] }}</span>
               </div>
-              <span class="font-mono text-xs text-slate-400">{{ formatDistance(d.distance_km) }}</span>
+              <span class="text-xs text-slate-400">{{ formatDistance(d.distance_km) }}</span>
             </div>
           </div>
         </div>

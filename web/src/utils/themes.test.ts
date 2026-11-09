@@ -128,7 +128,7 @@ describe('themes', () => {
       const style = THEME_STYLES[theme]
       const token = TOKEN_NAME[theme] ?? 'neutral'
       expect(style.badge).toContain(`text-theme-${token}`)
-      expect(style.accent).toBe(`border-l-theme-${token}`)
+      expect(style.tint).toBe(`bg-theme-${token}/15 text-theme-${token}`)
       expect(style.text).toBe(`text-theme-${token}`)
     }
   })

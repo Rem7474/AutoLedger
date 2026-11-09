@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import RowLeading from '@/components/RowLeading.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import RowMenu from '@/components/RowMenu.vue'
@@ -84,8 +85,8 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
       </ListSummary>
       <SwipeToDelete v-for="e in driveExpenses" :key="e.id" :disabled="!vehicleStore.canEdit || selectedIds.length > 0" @delete="emit('delete', e)">
       <div
-        class="relative hover:border-slate-700/90 border-l-4 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
-        :class="[THEME_STYLES.tolls.accent, { '!border-rose-500/40 bg-slate-800/40': isSelected(e) }]"
+        class="relative hover:border-slate-700/90 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(e) }"
       >
         <CardOpenButton
           v-if="vehicleStore.canEdit"
@@ -97,6 +98,7 @@ const expenseTypeLabel = (type: string) => (TYPE_LABEL_KEYS[type] ? t(TYPE_LABEL
           @pointercancel="press.onPointercancel"
           @contextmenu="press.onContextmenu"
         />
+        <RowLeading :icon="Receipt" :selected="isSelected(e)" :tint="THEME_STYLES.tolls.tint" />
         <RowSelectBox v-if="showBox" :id="e.id" :checked="isSelected(e)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(e)" />
         <div class="space-y-1.5 min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">

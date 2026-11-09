@@ -31,7 +31,7 @@ const formatDate = formatDayTime
       </div>
       <div class="flex items-center gap-3 shrink-0">
         <span class="text-xs font-bold text-rose-400">{{ formatDistance(leg.distance_km) }}</span>
-        <span class="text-xs font-mono font-bold text-white">{{ formatAmount(leg.costs?.total_cost || 0, vehicleCurrency) }}</span>
+        <span class="text-xs font-bold text-white">{{ formatAmount(leg.costs?.total_cost || 0, vehicleCurrency) }}</span>
         <ChevronRight class="w-4 h-4 text-slate-400" />
       </div>
     </button>

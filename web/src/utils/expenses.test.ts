@@ -283,12 +283,12 @@ describe('categoryStyle', () => {
   it('reads the style of the category theme and falls back to neutral', () => {
     expect(categoryStyle('INSURANCE')).toBe(THEME_STYLES.insurance)
     expect(categoryStyle('REPAIR')).toBe(THEME_STYLES.repairs)
-    expect(categoryStyle('OTHER').accent).toBe('border-l-theme-neutral')
+    expect(categoryStyle('OTHER').tint).toBe('bg-theme-neutral/15 text-theme-neutral')
   })
   it('never uses a status or brand hue for a category', () => {
     for (const c of ['INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING', 'MAINTENANCE', 'REPAIR', 'ACCESSORY']) {
       const s = categoryStyle(c)
-      expect(`${s.badge} ${s.accent}`).not.toMatch(/emerald|green|amber|red|rose|yellow/)
+      expect(`${s.badge} ${s.tint}`).not.toMatch(/emerald|green|amber|red|rose|yellow/)
     }
   })
 })
