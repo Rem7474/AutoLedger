@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, type RouteComponent, type RouteRecordRa
 import { useAuthStore } from '@/stores/auth'
 import { rememberLoginRedirect, takeLoginRedirect } from '@/utils/loginRedirect'
 import { installViewTransitions } from '@/utils/viewTransition'
+import { backEntryHeld, releaseBackEntry } from '@/composables/useEscapeToClose'
+import { replaceOverHeldEntry } from '@/utils/backEntryNavigation'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
 // A page that needs a signed-in session.
@@ -148,6 +150,19 @@ router.beforeEach(async (to, _from, next) => {
   } else {
     next()
   }
+})
+
+// A layer (modal, sheet) holds a history entry for the system Back. A navigation to another page replaces that entry
+// instead of stacking on it, so Back from the new page goes to the page before, not to a copy of the one left.
+let replacedOverEntry: string | null = null
+router.beforeEach((to, from) => {
+  if (!replaceOverHeldEntry(backEntryHeld(), to, from, replacedOverEntry)) return
+  replacedOverEntry = to.fullPath
+  return { path: to.path, query: to.query, hash: to.hash, replace: true }
+})
+router.afterEach((to, from, failure) => {
+  replacedOverEntry = null
+  if (!failure && to.path !== from.path) releaseBackEntry()
 })
 
 installViewTransitions(router)

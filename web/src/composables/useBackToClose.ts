@@ -1,5 +1,3 @@
-import { getCurrentScope, onScopeDispose, watch } from 'vue'
-
 // What the guard needs from the browser; a test passes a stand-in.
 export interface BackEnv {
   /** Adds a history entry on the current page (same address). */
@@ -11,7 +9,8 @@ export interface BackEnv {
 }
 
 /**
- * Makes the system back gesture (or button) close a transient mode instead of leaving the page. While `set(true)` is
+ * Makes the system back gesture (or button) close a transient mode instead of leaving the page. One guard serves the
+ * whole stack of layers (see useEscapeToClose). While `set(true)` is
  * in effect the guard holds one history entry; Back pops it and calls `close`. When the mode ends some other way, the
  * guard pops its own entry so the next Back goes where the user expects.
  */
@@ -49,6 +48,12 @@ export function createBackGuard(env: BackEnv, close: () => boolean) {
         env.back()
       }
     },
+    /** Whether the guard's entry is the current one. */
+    held: () => onTop,
+    /** Gives the entry up without popping it: the page's own navigation has replaced it. */
+    release() {
+      onTop = false
+    },
     dispose() {
       stop()
       // The entry stays when the page itself is left: popping it would navigate back to the page being left
@@ -59,7 +64,7 @@ export function createBackGuard(env: BackEnv, close: () => boolean) {
   }
 }
 
-const browserEnv: BackEnv = {
+export const browserBackEnv: BackEnv = {
   // Keeps the router's own state in the entry, so it still finds its place on traversal
   push: () => window.history.pushState({ ...window.history.state, backGuard: true }, ''),
   back: () => window.history.back(),
@@ -67,12 +72,4 @@ const browserEnv: BackEnv = {
     window.addEventListener('popstate', fn)
     return () => window.removeEventListener('popstate', fn)
   },
-}
-
-/** Back closes the mode while `active()` is true; `close` returns whether it did. */
-export function useBackToClose(active: () => boolean, close: () => boolean) {
-  if (typeof window === 'undefined') return
-  const guard = createBackGuard(browserEnv, close)
-  watch(active, (on) => guard.set(on), { immediate: true })
-  if (getCurrentScope()) onScopeDispose(() => guard.dispose())
 }

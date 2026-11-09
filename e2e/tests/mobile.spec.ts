@@ -648,3 +648,77 @@ test('the chart hint says "Tap" on a touch screen', async ({ page }) => {
   await expect(page.getByText(/^Tap a bar of the chart/)).toBeVisible()
   await expect(page.getByText(/^Click a bar of the chart/)).toBeHidden()
 })
+
+// The system Back (page.goBack) closes the layer on top before it leaves the page.
+const path = (page: import('@playwright/test').Page) => new URL(page.url()).pathname
+const openMore = (page: import('@playwright/test').Page) => page.getByRole('navigation').getByRole('button', { name: 'More' }).tap()
+
+test('Back closes the More sheet and stays on the page', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  await openMore(page)
+  const sheet = page.getByRole('dialog')
+  await expect(sheet).toBeVisible()
+  await page.goBack()
+  await expect(sheet).toHaveCount(0)
+  expect(path(page)).toBe('/drives')
+})
+
+test('a link of the More sheet opens its page, and Back from there returns to the page before, not to a copy of it', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const before = await page.evaluate(() => history.length)
+  await openMore(page)
+  await page.getByRole('dialog').getByRole('link', { name: 'Carpooling' }).tap()
+  await expect(page).toHaveURL(/\/carpools$/)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect(await page.evaluate(() => history.length)).toBe(before + 1)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/drives$/)
+})
+
+test('Back closes a modal of a list, then leaves the page', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const start = path(page)
+  await page.getByRole('button', { name: /^Open the cost breakdown/ }).first().tap()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.goBack()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect(path(page)).toBe(start)
+  await page.goBack()
+  expect(path(page)).not.toBe(start)
+})
+
+test('a modal closed by its own button leaves no entry behind', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const before = await page.evaluate(() => history.length)
+  await page.getByRole('button', { name: /^Open the cost breakdown/ }).first().tap()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  await page.waitForTimeout(300)
+  await page.goBack()
+  expect(path(page)).not.toBe('/drives')
+  expect(before).toBeGreaterThan(0)
+})
+
+test('Back closes the layers one at a time: the selection sheet, then the selection, then the page', async ({ page }) => {
+  await useVehicle(page, ev.id, '/drives')
+  const row = page.locator('div.relative.card', { has: page.getByRole('button', { name: /^Open the cost breakdown/ }) }).first()
+  const box = (await row.boundingBox())!
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
+  const bar = page.locator('[data-selection-bar]')
+  await expect(bar).toBeVisible()
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await bar.getByRole('button', { name: 'More actions' }).tap()
+  await expect(page.getByRole('dialog')).toBeVisible()
+
+  await page.goBack()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(bar).toBeVisible()
+  await page.goBack()
+  await expect(bar).toHaveCount(0)
+  expect(path(page)).toBe('/drives')
+  await page.goBack()
+  expect(path(page)).not.toBe('/drives')
+})

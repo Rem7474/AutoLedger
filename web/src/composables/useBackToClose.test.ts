@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { effectScope, nextTick, ref } from 'vue'
-import { createBackGuard, useBackToClose, type BackEnv } from './useBackToClose'
+import { describe, expect, it, vi } from 'vitest'
+import { createBackGuard, type BackEnv } from './useBackToClose'
 
 function fakeEnv() {
   let fire: () => void = () => {}
@@ -105,47 +104,16 @@ function fakeWindow() {
   return { history, listeners, popstate: () => [...listeners].forEach((fn) => fn()) }
 }
 
-describe('useBackToClose', () => {
-  afterEach(() => vi.unstubAllGlobals())
-
-  it('pushes a history entry that keeps the router state while active, and closes on Back', async () => {
-    const w = fakeWindow()
-    const active = ref(false)
-    const close = vi.fn(() => true)
-    const scope = effectScope()
-    scope.run(() => useBackToClose(() => active.value, close))
-    expect(w.history.pushState).not.toHaveBeenCalled()
-    active.value = true
-    await nextTick()
-    expect(w.history.pushState).toHaveBeenCalledWith({ position: 3, backGuard: true }, '')
-    w.popstate()
-    expect(close).toHaveBeenCalledTimes(1)
-    scope.stop()
-  })
-
-  it('pops its entry through history.back when the mode ends another way, and listens no more once the scope is gone', async () => {
-    const w = fakeWindow()
-    const active = ref(true)
-    const close = vi.fn(() => true)
-    const scope = effectScope()
-    scope.run(() => useBackToClose(() => active.value, close))
-    expect(w.history.pushState).toHaveBeenCalledTimes(1)
-    active.value = false
-    await nextTick()
-    expect(w.history.back).toHaveBeenCalledTimes(1)
-    scope.stop()
-    expect(w.listeners.size).toBe(0)
-  })
-
-  it('does nothing outside a browser', () => {
-    vi.stubGlobal('window', undefined)
-    expect(() => useBackToClose(() => true, () => true)).not.toThrow()
-  })
-
-  it('stays registered when used outside an effect scope', () => {
-    const w = fakeWindow()
-    useBackToClose(() => true, () => true)
-    expect(w.history.pushState).toHaveBeenCalledTimes(1)
-    expect(w.listeners.size).toBe(1)
+describe('createBackGuard held and release', () => {
+  it('reports its entry, and lets it go without popping when the page navigated by itself', () => {
+    const env = fakeEnv()
+    const guard = createBackGuard(env, () => true)
+    expect(guard.held()).toBe(false)
+    guard.set(true)
+    expect(guard.held()).toBe(true)
+    guard.release()
+    expect(guard.held()).toBe(false)
+    guard.set(false)
+    expect(env.back).not.toHaveBeenCalled()
   })
 })
