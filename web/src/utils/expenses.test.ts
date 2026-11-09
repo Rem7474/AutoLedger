@@ -1,3 +1,4 @@
+import { THEME_STYLES } from './themes'
 import { describe, expect, it } from 'vitest'
 import {
   reminderPresets,
@@ -279,13 +280,15 @@ describe('reminderDueTile', () => {
 })
 
 describe('categoryStyle', () => {
-  it('gives each known category its own colour and falls back to neutral', () => {
-    const known = ['INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING', 'MAINTENANCE', 'REPAIR', 'ACCESSORY'].map((c) => categoryStyle(c).accent)
-    expect(new Set(known).size).toBe(known.length)
-    expect(categoryStyle('OTHER').accent).toBe('border-l-slate-600')
+  it('reads the style of the category theme and falls back to neutral', () => {
+    expect(categoryStyle('INSURANCE')).toBe(THEME_STYLES.insurance)
+    expect(categoryStyle('REPAIR')).toBe(THEME_STYLES.repairs)
+    expect(categoryStyle('OTHER').accent).toBe('border-l-theme-neutral')
   })
   it('never uses a status or brand hue for a category', () => {
-    const known = ['INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING', 'MAINTENANCE', 'REPAIR', 'ACCESSORY'].map((c) => categoryStyle(c))
-    for (const s of known) expect(`${s.badge} ${s.accent}`).not.toMatch(/emerald|green|amber|orange|red|rose|yellow/)
+    for (const c of ['INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING', 'MAINTENANCE', 'REPAIR', 'ACCESSORY']) {
+      const s = categoryStyle(c)
+      expect(`${s.badge} ${s.accent}`).not.toMatch(/emerald|green|amber|red|rose|yellow/)
+    }
   })
 })

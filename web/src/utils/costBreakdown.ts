@@ -1,14 +1,15 @@
 import { t } from '@/i18n'
+import { THEME_HEX } from '@/utils/themes'
 
-// One color and label per cost category, shared by the monthly breakdown and the drive breakdown.
+// One color and label per cost category, shared by the monthly breakdown and the drive breakdown (the colours of the themes).
 export const COST_COLORS = {
-  energy: '#38bdf8',
-  tolls: '#f59e0b',
-  tires: '#10b981',
-  maintenance: '#ec4899',
-  insurance: '#a855f7',
-  financing: '#f97316',
-  other: '#64748b',
+  energy: THEME_HEX.energy,
+  tolls: THEME_HEX.tolls,
+  tires: THEME_HEX.tires,
+  maintenance: THEME_HEX.maintenance,
+  insurance: THEME_HEX.insurance,
+  financing: THEME_HEX.financing,
+  other: THEME_HEX.other,
 } as const
 
 export type CostCategory = keyof typeof COST_COLORS
