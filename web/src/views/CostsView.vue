@@ -9,6 +9,8 @@ import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import TollModal from '@/components/expenses/TollModal.vue'
 import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
 import ChargeModal from '@/components/expenses/ChargeModal.vue'
+import ChargingInsights from '@/components/expenses/ChargingInsights.vue'
+import ChargingPlacesModal from '@/components/expenses/ChargingPlacesModal.vue'
 import DocumentPreviewModal from '@/components/expenses/DocumentPreviewModal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
@@ -99,6 +101,14 @@ const actions = useCostEntryActions({
 })
 const { showToll, showMaintenance, showCharge, editing, documents, onDocumentAdded } = actions
 const { previewDoc, closeDocPreview, viewOrDownloadDocument } = useDocumentPreview(() => vehicleStore.activeVehicle?.id)
+// The energy theme adds the figures by month and by place; managing the places changes both them and the lines
+const showPlaces = ref(false)
+const placesVersion = ref(0)
+const insightsKey = computed(() => `${vehicleStore.lastSyncTimestamp}|${summary.value?.count ?? 0}|${placesVersion.value}`)
+const onPlacesChanged = () => {
+  placesVersion.value++
+  void load(true)
+}
 const currentOdometer = computed(() => vehicleStore.activeVehicle?.current_odometer || 0)
 const swipeable = (e: { source: string; source_id: string }) => vehicleStore.canEdit && entryTarget(e).type === 'edit'
 
@@ -163,6 +173,16 @@ const chipClass = (key: CostFilterKey) => {
       </div>
     </div>
 
+    <ChargingInsights
+      v-if="filter === 'energy' && vehicleStore.canCharge"
+      :vehicle-id="vehicleStore.activeVehicle.id"
+      :currency="currency"
+      :has-charges="(summary?.count ?? 0) > 0"
+      :sync-key="insightsKey"
+      :with-period="false"
+      @manage-places="showPlaces = true"
+    />
+
     <ListSkeleton v-if="loading" :rows="6" />
     <LoadError v-else-if="error !== null" :message="error" @retry="load()" />
     <EmptyState v-else-if="!items.length" :icon="Wallet" :title="$t('costs.empty.title')">{{ $t('costs.empty.body') }}</EmptyState>
@@ -192,6 +212,7 @@ const chipClass = (key: CostFilterKey) => {
       @view-document="viewOrDownloadDocument"
     />
     <ChargeModal v-model:open="showCharge" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" :current-odometer="currentOdometer" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
+    <ChargingPlacesModal v-model:open="showPlaces" :vehicle-id="vehicleStore.activeVehicle.id" :can-edit="vehicleStore.canEdit" @changed="onPlacesChanged" />
     <DocumentPreviewModal :preview-doc="previewDoc" @close="closeDocPreview" />
   </div>
 </template>

@@ -1168,3 +1168,17 @@ test('a line of the costs page opens the form of its record, read from the serve
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
 })
+
+test('the energy theme of the costs page adds the figures by month and by place, under the one period bar', async ({ page }) => {
+  await useVehicle(page, ev.id, '/costs')
+  await expect(page.getByRole('heading', { name: 'Charging by place' })).toHaveCount(0)
+  await page.getByTestId('costs-filter-energy').click()
+  const analysis = page.getByRole('region', { name: 'Charging by place' })
+  await expect(analysis).toBeVisible()
+  // The period is the bar of the page, not a second control in the analysis
+  await expect(analysis.getByRole('button', { name: /month|Last|Current/i })).toHaveCount(0)
+  await analysis.getByRole('button', { name: 'Places', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.keyboard.press('Escape')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})

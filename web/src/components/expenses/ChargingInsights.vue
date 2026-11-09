@@ -31,8 +31,8 @@ import { placeStatsParams } from '@/utils/period'
 Chart.register(...registerables)
 
 // Energy and price of the charges by month and by place, and what charging everything at home would have cost.
-// `bare`: shown inside a sheet, which already is the frame.
-const props = defineProps<{ vehicleId: string; currency: string; hasCharges: boolean; syncKey?: unknown; bare?: boolean }>()
+// `bare`: shown inside a sheet, which already is the frame. `withPeriod` false: the page already carries the period bar.
+const props = withDefaults(defineProps<{ vehicleId: string; currency: string; hasCharges: boolean; syncKey?: unknown; bare?: boolean; withPeriod?: boolean }>(), { withPeriod: true })
 const emit = defineEmits<{ 'manage-places': [] }>()
 
 const AXIS_TEXT = '#94a3b8'
@@ -165,7 +165,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <PeriodField class="max-sm:basis-full" />
+        <PeriodField v-if="withPeriod" class="max-sm:basis-full" />
         <div class="flex items-center gap-1 bg-slate-800/60 p-0.5 rounded-lg max-sm:basis-full sm:ml-auto" role="group">
           <button
             v-for="m in (['energy', 'cost'] as const)"
