@@ -260,7 +260,9 @@
     "economicHint": "Chaque coût réparti sur la période qu'il couvre.",
     "cashHint": "Ce qui a été payé chaque mois.",
     "month": "Mois",
-    "total": "Total"
+    "total": "Total",
+    "tollsShort": "Péages",
+    "otherShort": "Autres"
   },
   "tagBreakdown": {
     "ofTollsAndParking": "{value} de péages & parkings",

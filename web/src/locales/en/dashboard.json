@@ -260,7 +260,9 @@
     "economicHint": "Each cost spread over the period it covers.",
     "cashHint": "What was paid in each month.",
     "month": "Month",
-    "total": "Total"
+    "total": "Total",
+    "tollsShort": "Tolls",
+    "otherShort": "Other"
   },
   "tagBreakdown": {
     "ofTollsAndParking": "{value} of tolls and parking",
