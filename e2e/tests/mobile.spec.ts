@@ -570,7 +570,7 @@ test('an unknown address shows a page that says so, with the way home', async ({
   await expect(page).toHaveURL(/\/no\/such\/page$/)
   await expect(page.getByRole('heading', { name: 'Page not found' }).last()).toBeVisible()
   await page.getByRole('main').getByRole('link', { name: 'Home' }).click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/(\?period=[^&]*)?$/)
 })
 
 test('the Trips tab is in the address: it survives a reload and leaves the address with the Drives tab', async ({ page }) => {
@@ -930,4 +930,75 @@ test('in the month detail the two modes share the track, and the fixed/variable 
   const track = (await modes.nth(0).locator('xpath=..').boundingBox())!
   expect(a.width + b.width).toBeGreaterThan(track.width - 14)
   await expect(dialog.getByText('•', { exact: true })).toBeHidden()
+})
+
+test.describe('the period bar of the home page', () => {
+  const bar = (page: Page) => page.getByTestId('period-bar')
+
+  test('an arrow goes to the neighbouring period, the URL follows without a history entry, and a reload keeps it', async ({ page }) => {
+    await useVehicle(page, ev.id, '/')
+    await expect(bar(page)).toBeVisible()
+    await expect(page).toHaveURL(/period=12M/)
+    const before = await page.evaluate(() => history.length)
+    await bar(page).getByRole('button', { name: 'Previous period' }).tap()
+    await expect(page).toHaveURL(/period=12M&end=\d{4}-\d{2}/)
+    expect(await page.evaluate(() => history.length)).toBe(before)
+    const label = await bar(page).getByRole('button', { name: /Choose the period/ }).getAttribute('aria-label')
+    await page.reload()
+    await expect(bar(page).getByRole('button', { name: /Choose the period/ })).toHaveAttribute('aria-label', label!)
+    await expect(bar(page).getByRole('button', { name: 'Next period' })).toBeEnabled()
+  })
+
+  test('the system Back closes the sheet and leaves the URL as it was', async ({ page }) => {
+    await useVehicle(page, ev.id, '/')
+    const url = page.url()
+    await bar(page).getByRole('button', { name: /Choose the period/ }).tap()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await page.goBack()
+    await expect(dialog).toBeHidden()
+    expect(page.url()).toBe(url)
+  })
+
+  test('a preset closes the sheet and changes the period; "Custom" shows labelled From and To fields with 44px targets', async ({ page }) => {
+    await useVehicle(page, ev.id, '/')
+    await bar(page).getByRole('button', { name: /Choose the period/ }).tap()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByRole('button', { name: 'Last 3 months' }).tap()
+    await expect(dialog).toBeHidden()
+    await expect(page).toHaveURL(/period=3M/)
+
+    await bar(page).getByRole('button', { name: /Choose the period/ }).tap()
+    await expect(dialog.locator('input[type=date]')).toHaveCount(0)
+    await dialog.getByRole('button', { name: 'Custom' }).tap()
+    await expect(dialog.getByText('From', { exact: true })).toBeVisible()
+    await expect(dialog.getByText('To', { exact: true })).toBeVisible()
+    const fields = dialog.locator('input[type=date]')
+    await expect(fields).toHaveCount(2)
+    for (const box of await Promise.all([fields.nth(0).boundingBox(), fields.nth(1).boundingBox()])) expect(box!.height).toBeGreaterThanOrEqual(44)
+    await fields.nth(0).fill('2026-01-10')
+    await fields.nth(1).fill('2026-02-20')
+    await dialog.getByRole('button', { name: 'Apply' }).tap()
+    await expect(page).toHaveURL(/from=2026-01-10&to=2026-02-20/)
+  })
+
+  test('the bar gives way while the page is read downwards and comes back upwards, above the tab bar', async ({ page }) => {
+    await useVehicle(page, ev.id, '/')
+    const nav = (await page.locator('nav[aria-label]').last().boundingBox())!
+    const shown = (await bar(page).boundingBox())!
+    expect(shown.y + shown.height).toBeLessThanOrEqual(nav.y)
+    await page.evaluate(() => document.querySelector('.app-scroll')!.scrollTo(0, 600))
+    await expect.poll(async () => (await bar(page).boundingBox())!.y).toBeGreaterThanOrEqual(844)
+    await page.evaluate(() => document.querySelector('.app-scroll')!.scrollTo(0, 400))
+    await expect.poll(async () => (await bar(page).boundingBox())!.y).toBeLessThan(nav.y)
+  })
+
+  for (const width of [360, 430]) {
+    test(`no horizontal overflow at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 844 })
+      await useVehicle(page, ev.id, '/')
+      await expect(bar(page)).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+    })
+  }
 })

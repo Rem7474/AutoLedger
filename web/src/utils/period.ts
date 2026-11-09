@@ -209,3 +209,31 @@ export function periodFromLegacyRange(key: string | null): Period | null {
       return null
   }
 }
+
+/** The months of a monthly series (`month` = YYYY-MM) that a period touches; the whole series for the whole history. */
+export function filterMonthsByPeriod<T extends { month: string }>(list: T[], p: Period, now: Date = new Date()): T[] {
+  const { from, to } = touchedMonths(p, now)
+  return list.filter((m) => (from === null || m.month >= from) && (to === null || m.month <= to))
+}
+
+/** What the place statistics endpoint takes: N months back from now when the period ends now, else exact days. */
+export function placeStatsParams(p: Period, now: Date = new Date()): { months: number } | { from: string; to: string } {
+  if (p.kind === 'all') return { months: 0 }
+  if (p.kind === 'months' && p.end === null) return { months: p.count }
+  const { from, to } = periodBounds(p, now)
+  return { from: from as string, to: to as string }
+}
+
+const PERIOD_QUERY_KEYS = ['period', 'end', 'from', 'to']
+
+/** A URL query with the period parameters replaced by those of `p`, every other parameter kept. */
+export function withPeriodQuery(query: Query, p: Period): Query {
+  const rest = Object.fromEntries(Object.entries(query).filter(([key]) => !PERIOD_QUERY_KEYS.includes(key)))
+  return { ...rest, ...periodToQuery(p) }
+}
+
+/** Whether a URL query already names exactly this period (and no stray period parameter). */
+export function queryNamesPeriod(query: Query, p: Period): boolean {
+  const wanted = periodToQuery(p)
+  return PERIOD_QUERY_KEYS.every((key) => one(query[key]) === (wanted[key] ?? null))
+}

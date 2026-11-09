@@ -23,7 +23,8 @@ import CostBreakdownDonut from '@/components/dashboard/CostBreakdownDonut.vue'
 import MileageCostChart from '@/components/dashboard/MileageCostChart.vue'
 import TagBreakdown from '@/components/dashboard/TagBreakdown.vue'
 import MonthDetailModal from '@/components/dashboard/MonthDetailModal.vue'
-import MonthlyRangeSelector from '@/components/dashboard/MonthlyRangeSelector.vue'
+import PeriodBar from '@/components/period/PeriodBar.vue'
+import { usePeriod } from '@/composables/usePeriod'
 import { distanceUnit, formatDistance } from '@/units'
 import { formatAmount } from '@/currency'
 import { formatMonthLabel } from '@/utils/dates'
@@ -38,6 +39,7 @@ import { hasReminderSchedule } from '@/utils/expenses'
 // receives the data it shows. A click on a month (chart or banner) opens its detail modal.
 const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
+const { period, label: periodLabel, rounded, canPrevious, canNext, step: stepPeriod, set: setPeriod } = usePeriod()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
 const tco = ref<any | null>(null)
 const loading = ref(true)
@@ -133,7 +135,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 max-md:pb-16">
     <!-- Header Summary -->
     <PageHeader :title="$t('shell.nav.dashboard')" :icon="PageIcon">
       {{ $t('dashboard.dashboardView.subtitle', { unit: distanceUnit(), name: vehicleStore.activeVehicle?.name || $t('dashboard.dashboardView.yourVehicle') }) }}
@@ -169,17 +171,6 @@ onMounted(() => {
       <div class="h-10 w-full bg-slate-800/40 rounded-xl"></div>
 
       <!-- Charts Skeletons -->
-      <!-- One period for the monthly cost and mileage charts below; pinned only where there is room for it -->
-      <div class="sm:sticky sm:top-[4.25rem] z-30 flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 py-2 backdrop-blur-md">
-        <span class="text-xs font-semibold text-slate-300 max-sm:sr-only">{{ $t('dashboard.dashboardView.chartsPeriod') }}</span>
-        <MonthlyRangeSelector
-          class="w-full sm:w-auto"
-          :model-value="prefs.dashboardRange"
-          :label="$t('dashboard.dashboardView.chartsPeriod')"
-          @update:model-value="prefs.setDashboardRange"
-        />
-      </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 card p-5 h-80 flex flex-col justify-between">
           <div class="h-4 w-44 bg-slate-800 rounded"></div>
@@ -212,15 +203,9 @@ onMounted(() => {
         <NextDueCard :reminders="dashboardReminders" :can-edit="vehicleStore.canEdit" />
       </DashboardFollowUp>
 
-      <!-- One period for the charts and the energy summary below; pinned only where there is room for it -->
-      <div class="sm:sticky sm:top-[4.25rem] z-30 flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 py-2 backdrop-blur-md">
-        <span class="text-xs font-semibold text-slate-300 max-sm:sr-only">{{ $t('dashboard.dashboardView.chartsPeriod') }}</span>
-        <MonthlyRangeSelector
-          class="w-full sm:w-auto"
-          :model-value="prefs.dashboardRange"
-          :label="$t('dashboard.dashboardView.chartsPeriod')"
-          @update:model-value="prefs.setDashboardRange"
-        />
+      <!-- One period for the charts and the energy summary below: above the tab bar on a phone, pinned under the top bar from md -->
+      <div class="max-md:contents md:sticky md:top-[4.25rem] md:z-30 md:bg-slate-950/90 md:py-2 md:backdrop-blur-md">
+        <PeriodBar :period="period" :label="periodLabel" :rounded="rounded" :can-previous="canPrevious" :can-next="canNext" @step="stepPeriod" @pick="setPeriod" />
       </div>
 
       <!-- Energy summary: consumption and real cost per 100 km (electric vehicles); the detail is on the energy page -->

@@ -4,8 +4,9 @@ import { formatMonthLabel } from '@/utils/dates'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { Activity, PieChart } from 'lucide-vue-next'
-import { filterMonthsByRange, MIN_PLOTTED_DISTANCE_KM, plottedCostPerKm } from '@/utils/dashboard'
-import { usePreferencesStore } from '@/stores/preferences'
+import { MIN_PLOTTED_DISTANCE_KM, plottedCostPerKm } from '@/utils/dashboard'
+import { usePeriodStore } from '@/stores/period'
+import { filterMonthsByPeriod } from '@/utils/period'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
 import ChartTable from '@/components/charts/ChartTable.vue'
@@ -20,9 +21,8 @@ const vehicleStore = useVehicleStore()
 
 const distanceRef = ref<HTMLCanvasElement | null>(null)
 const costRef = ref<HTMLCanvasElement | null>(null)
-const prefs = usePreferencesStore()
-const range = computed(() => prefs.dashboardRange)
-const months = computed(() => filterMonthsByRange(props.monthlyCosts || [], range.value))
+const periodStore = usePeriodStore()
+const months = computed(() => filterMonthsByPeriod(props.monthlyCosts || [], periodStore.costs))
 let distanceChart: Chart | null = null
 let costChart: Chart | null = null
 
@@ -135,7 +135,7 @@ function renderCharts() {
 }
 
 onMounted(renderCharts)
-watch([() => props.monthlyCosts, range], renderCharts, { flush: 'post' })
+watch([() => props.monthlyCosts, () => periodStore.costs], renderCharts, { flush: 'post' })
 onUnmounted(() => {
   distanceChart?.destroy()
   costChart?.destroy()
