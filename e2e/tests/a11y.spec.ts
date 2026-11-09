@@ -87,7 +87,7 @@ test.describe('sheets opened on a phone', () => {
   }
 
   test('the resale value sheet has no violation', async ({ page }) => {
-    await useVehicle(page, ev.id, '/')
+    await useVehicle(page, ev.id, '/vehicle')
     await page.getByRole('main').getByRole('button', { name: /Resale value/ }).first().tap()
     await expect(page.getByRole('dialog')).toBeVisible()
     expect(await violationsOf(page, 'resale value')).toEqual([])

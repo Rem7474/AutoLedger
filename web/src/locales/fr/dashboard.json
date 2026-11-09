@@ -426,6 +426,8 @@
     "battery": "Santé de la batterie",
     "batteryHint": "Relevés de capacité et état de santé",
     "resale": "Valeur de revente",
+    "vehicleSheetHint": "Batterie, valeur de revente et contrat",
+    "vehicleSheet": "Fiche du véhicule",
     "resaleHint": "Valeur estimée aujourd’hui et en fin de contrat"
   }
 }

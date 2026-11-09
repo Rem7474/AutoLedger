@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import LoadError from '@/components/LoadError.vue'
 import PageHeader from '@/components/PageHeader.vue'
-import { Activity, BatteryCharging, ChartPie, LayoutDashboard as PageIcon, TrendingDown } from 'lucide-vue-next'
+import { Activity, Car, ChartPie, ChevronRight, LayoutDashboard as PageIcon } from 'lucide-vue-next'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import SheetRow from '@/components/SheetRow.vue'
 import { ref, onMounted, watch, computed } from 'vue'
@@ -9,14 +9,11 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
 import { api, type MaintenanceReminder } from '@/services/api'
 
-import BatteryHealthCard from '@/components/dashboard/BatteryHealthCard.vue'
-import ResaleValueCard from '@/components/dashboard/ResaleValueCard.vue'
 import EnergyEfficiencyPanel from '@/components/dashboard/EnergyEfficiencyPanel.vue'
 import UrgentRemindersBanner from '@/components/dashboard/UrgentRemindersBanner.vue'
 import NextDueCard from '@/components/dashboard/NextDueCard.vue'
 import DashboardFollowUp from '@/components/dashboard/DashboardFollowUp.vue'
 import DataQualityCard from '@/components/dashboard/DataQualityCard.vue'
-import LeaseContractCard from '@/components/dashboard/LeaseContractCard.vue'
 import TcoMetricsGrid from '@/components/dashboard/TcoMetricsGrid.vue'
 import MonthlyCostChart from '@/components/dashboard/MonthlyCostChart.vue'
 import CostBreakdownDonut from '@/components/dashboard/CostBreakdownDonut.vue'
@@ -30,7 +27,6 @@ import { formatAmount } from '@/currency'
 import { formatMonthLabel } from '@/utils/dates'
 import { formatPercent } from '@/utils/numbers'
 import { lastDrivenMonth, topCostShares } from '@/utils/homeRows'
-import { useIsMobile } from '@/composables/useIsMobile'
 import { countFollowUpItems, followUpItems } from '@/utils/dashboard'
 import { t } from '@/i18n'
 import { hasReminderSchedule } from '@/utils/expenses'
@@ -55,15 +51,12 @@ const followUpLabels = computed(() => {
   return labels
 })
 const selectedMonth = ref<any | null>(null)
-// Bumped when a battery reading changes: the resale estimate depends on the health
-const resaleRefresh = ref(0)
 
 // Monthly costs for the charts; null until the TCO is loaded
 const monthlyCosts = computed(() => (tco.value ? tco.value.monthly_costs || [] : null))
 
 // Below sm the blocks under the trend are rows: each one says what it holds, so the figure is read without opening it.
-// The battery and the resale value are loaded here for that only (the cards load their own when opened), and a phone only.
-const isMobile = useIsMobile()
+// The battery and the resale value are loaded here for the one line that points to the vehicle sheet.
 const batteryPercent = ref<number | null>(null)
 const resaleValue = ref<number | null>(null)
 
@@ -73,7 +66,7 @@ async function loadRowFigures() {
   batteryPercent.value = null
   resaleValue.value = null
   const id = vehicleId.value
-  if (!id || !isMobile.value) return
+  if (!id) return
   const [health, residual] = await Promise.all([
     vehicleStore.canCharge ? api.getBatteryHealth(id).catch(() => null) : null,
     api.getResidualValue(id, { km_share: 0.5, health_weight: 1 }).catch(() => null),
@@ -82,7 +75,7 @@ async function loadRowFigures() {
   batteryPercent.value = typeof health?.health_percent === 'number' ? health.health_percent : null
   resaleValue.value = typeof residual?.current_value === 'number' ? residual.current_value : null
 }
-watch([vehicleId, resaleRefresh, isMobile], loadRowFigures, { immediate: true })
+watch(vehicleId, loadRowFigures, { immediate: true })
 
 const breakdownHint = computed(() => {
   const top = topCostShares(tco.value, 1)
@@ -92,8 +85,12 @@ const mileageHint = computed(() => {
   const m = lastDrivenMonth(monthlyCosts.value)
   return m ? t('dashboard.sheets.mileageLast', { month: formatMonthLabel(m.month), distance: formatDistance(m.distance_km) }) : t('dashboard.sheets.mileageHint')
 })
-const batteryHint = computed(() => (batteryPercent.value === null ? t('dashboard.sheets.batteryHint') : t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })))
-const resaleHint = computed(() => (resaleValue.value === null ? t('dashboard.sheets.resaleHint') : t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })))
+// The line says the figure when there is one (battery health first, then the resale value), else what the sheet holds
+const vehicleSheetHint = computed(() => {
+  if (batteryPercent.value !== null) return t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })
+  if (resaleValue.value !== null) return t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })
+  return t('dashboard.sheets.vehicleSheetHint')
+})
 
 function openMonthDetail(m: any) {
   if (!m) return
@@ -235,23 +232,15 @@ onMounted(() => {
       <!-- Shows itself only once a drive carries a tag -->
       <TagBreakdown v-if="prefs.proPersoEnabled" :tco="tco" />
 
-      <!-- Condition and value of the vehicle: slower-moving than the cost figures above, so they come last -->
-      <LeaseContractCard :tco="tco" />
-
-      <!-- Two unrelated questions, so two cards: how healthy the battery is, and what the vehicle is worth -->
-      <div v-if="vehicleStore.activeVehicle" class="grid grid-cols-1 items-start gap-4 sm:gap-6" :class="vehicleStore.canCharge ? 'lg:grid-cols-2' : ''">
-        <SheetRow v-if="vehicleStore.canCharge" v-slot="{ bare }" :title="$t('dashboard.sheets.battery')" :hint="batteryHint" :icon="BatteryCharging">
-          <BatteryHealthCard :vehicle-id="vehicleStore.activeVehicle.id" :bare="bare" @updated="resaleRefresh++" />
-        </SheetRow>
-        <SheetRow v-slot="{ bare }" :title="$t('dashboard.sheets.resale')" :hint="resaleHint" :icon="TrendingDown">
-          <ResaleValueCard
-            :vehicle-id="vehicleStore.activeVehicle.id"
-            :has-battery="vehicleStore.canCharge"
-            :refresh-key="resaleRefresh"
-            :bare="bare"
-          />
-        </SheetRow>
-      </div>
+      <!-- Battery health, resale value and the contract are on the vehicle sheet; the page keeps one line that says where -->
+      <router-link v-if="vehicleStore.activeVehicle" to="/vehicle" class="flex w-full items-center gap-3 card px-4 py-3 transition-colors active:bg-slate-800/60">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-slate-300"><Car class="h-5 w-5" aria-hidden="true" /></span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-sm font-semibold text-white">{{ $t('dashboard.sheets.vehicleSheet') }}</span>
+          <span class="block truncate text-xs text-slate-400">{{ vehicleSheetHint }}</span>
+        </span>
+        <ChevronRight class="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
+      </router-link>
     </div>
 
     <MonthDetailModal v-model:month="selectedMonth" :monthly-costs="tco?.monthly_costs || []" />
