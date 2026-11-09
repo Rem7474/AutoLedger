@@ -182,6 +182,20 @@ func (h *ExpenseHandler) ListMaintenance(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, list)
 }
 
+// GetMaintenance answers one maintenance, insurance or fixed expense of the vehicle, as the list gives it.
+func (h *ExpenseHandler) GetMaintenance(w http.ResponseWriter, r *http.Request) {
+	vehicleID := chi.URLParam(r, "vehicleId")
+	if v := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleViewer); v == nil {
+		return
+	}
+	expense, err := h.repo.GetMaintenanceExpense(r.Context(), vehicleID, chi.URLParam(r, "maintenanceId"))
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to read the expense")
+		return
+	}
+	writeJSON(w, http.StatusOK, expense)
+}
+
 func (h *ExpenseHandler) UpdateMaintenance(w http.ResponseWriter, r *http.Request) {
 	vehicleID := chi.URLParam(r, "vehicleId")
 	maintID := chi.URLParam(r, "maintenanceId")

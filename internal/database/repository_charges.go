@@ -149,6 +149,21 @@ func (r *Repository) ListCharges(ctx context.Context, vehicleID string, missingC
 	return list, total, rows.Err()
 }
 
+// GetCharge reads one charge of the vehicle; ErrNotFound when it is not one of its (a charge deleted upstream is not).
+func (r *Repository) GetCharge(ctx context.Context, vehicleID, id string) (*models.ChargeLog, error) {
+	var c models.ChargeLog
+	err := scanCharge(r.pool.QueryRow(ctx, `
+		SELECT `+chargeSelectColumns+`
+		FROM charge_logs c
+		LEFT JOIN expense_documents doc ON c.document_id = doc.id
+		WHERE c.vehicle_id = $1 AND c.id::text = $2 AND c.deleted_upstream_at IS NULL;
+	`, vehicleID, id), &c)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &c, err
+}
+
 // CountChargesWithoutCost counts the charges whose cost is still to be completed (see ChargeCostToReviewSQL).
 func (r *Repository) CountChargesWithoutCost(ctx context.Context, vehicleID string) (int, error) {
 	var count int

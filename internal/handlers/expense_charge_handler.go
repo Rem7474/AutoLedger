@@ -53,6 +53,20 @@ func (h *ExpenseHandler) ListCharges(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetCharge answers one charge of the vehicle, as the list gives it.
+func (h *ExpenseHandler) GetCharge(w http.ResponseWriter, r *http.Request) {
+	vehicleID := chi.URLParam(r, "vehicleId")
+	if v := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleViewer); v == nil {
+		return
+	}
+	charge, err := h.repo.GetCharge(r.Context(), vehicleID, chi.URLParam(r, "chargeId"))
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to read the charge")
+		return
+	}
+	writeJSON(w, http.StatusOK, charge)
+}
+
 type SaveChargeRequest struct {
 	ExpectedVersion *int64       `json:"expected_version"` // The version the client read; absent: not checked
 	Date            string       `json:"date"`
