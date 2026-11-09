@@ -1,0 +1,6 @@
+{
+  "all": "Tout",
+  "lastMonths": "{count} derniers mois",
+  "range": "{from} – {to}",
+  "year": "{year}"
+}
