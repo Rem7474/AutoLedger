@@ -9,6 +9,10 @@ import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import TollModal from '@/components/expenses/TollModal.vue'
 import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
 import ChargeModal from '@/components/expenses/ChargeModal.vue'
+import MonthlyCostChart from '@/components/dashboard/MonthlyCostChart.vue'
+import CostBreakdownDonut from '@/components/dashboard/CostBreakdownDonut.vue'
+import MileageCostChart from '@/components/dashboard/MileageCostChart.vue'
+import MonthDetailModal from '@/components/dashboard/MonthDetailModal.vue'
 import ChargingInsights from '@/components/expenses/ChargingInsights.vue'
 import ChargingPlacesModal from '@/components/expenses/ChargingPlacesModal.vue'
 import DocumentPreviewModal from '@/components/expenses/DocumentPreviewModal.vue'
@@ -101,6 +105,24 @@ const actions = useCostEntryActions({
 })
 const { showToll, showMaintenance, showCharge, editing, documents, onDocumentAdded } = actions
 const { previewDoc, closeDocPreview, viewOrDownloadDocument } = useDocumentPreview(() => vehicleStore.activeVehicle?.id)
+// The charts of the whole cost, month by month: they come from the cost engine, like the figures of the home page, and
+// follow the period; a bar opens the figures of its month
+const tco = ref<any | null>(null)
+const monthlyCosts = computed(() => (tco.value ? tco.value.monthly_costs || [] : null))
+const selectedMonth = ref<any | null>(null)
+async function loadTco() {
+  const vehicle = vehicleStore.activeVehicle
+  if (!vehicle) return
+  try {
+    const res = await api.getTCO(vehicle.id)
+    if (vehicle.id === vehicleStore.activeVehicle?.id) tco.value = res
+  } catch (err) {
+    console.error('Failed to load the monthly costs', err)
+  }
+}
+onMounted(() => void loadTco())
+watch([() => vehicleStore.activeVehicle?.id, () => vehicleStore.lastSyncTimestamp], () => void loadTco())
+
 // The energy theme adds the figures by month and by place; managing the places changes both them and the lines
 const showPlaces = ref(false)
 const placesVersion = ref(0)
@@ -173,6 +195,13 @@ const chipClass = (key: CostFilterKey) => {
       </div>
     </div>
 
+    <!-- The month-by-month charts, for the whole cost -->
+    <template v-if="filter === 'all' && monthlyCosts && monthlyCosts.length > 0">
+      <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
+      <CostBreakdownDonut :tco="tco" />
+      <MileageCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
+    </template>
+
     <ChargingInsights
       v-if="filter === 'energy' && vehicleStore.canCharge"
       :vehicle-id="vehicleStore.activeVehicle.id"
@@ -212,6 +241,7 @@ const chipClass = (key: CostFilterKey) => {
       @view-document="viewOrDownloadDocument"
     />
     <ChargeModal v-model:open="showCharge" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" :current-odometer="currentOdometer" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
+    <MonthDetailModal v-model:month="selectedMonth" :monthly-costs="monthlyCosts || []" />
     <ChargingPlacesModal v-model:open="showPlaces" :vehicle-id="vehicleStore.activeVehicle.id" :can-edit="vehicleStore.canEdit" @changed="onPlacesChanged" />
     <DocumentPreviewModal :preview-doc="previewDoc" @close="closeDocPreview" />
   </div>

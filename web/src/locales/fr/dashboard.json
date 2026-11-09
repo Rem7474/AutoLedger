@@ -191,7 +191,9 @@
     "averageCostPerKm": "Coût moyen au {unit} ({cur}/{unit})",
     "tooltipDistance": "Distance : {distance} {unit}",
     "tooltipCostPerKm": "Coût de revient : {cost}/{unit}",
-    "minDistanceNote": "Les mois de moins de {distance} {unit} ne sont pas tracés."
+    "minDistanceNote": "Les mois de moins de {distance} {unit} ne sont pas tracés.",
+    "inProgress": "en cours",
+    "inProgressNote": "○ {month} : {cost}/{unit}, en cours, hors de l’échelle."
   },
   "monthDetailModal": {
     "expensesAndInvoices": "Dépenses & factures",

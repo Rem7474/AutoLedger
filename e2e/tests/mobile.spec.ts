@@ -1182,3 +1182,12 @@ test('the energy theme of the costs page adds the figures by month and by place,
   await page.keyboard.press('Escape')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
+
+test('the costs page draws the monthly charts for the whole cost, and only for the whole cost', async ({ page }) => {
+  await useVehicle(page, ev.id, '/costs')
+  await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toBeVisible()
+  // A theme is a subset of the cost: the charts of the whole cost are not shown under it
+  await page.getByTestId('costs-filter-tolls').click()
+  await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toHaveCount(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})

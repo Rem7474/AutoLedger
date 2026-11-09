@@ -5,6 +5,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { Activity, PieChart } from 'lucide-vue-next'
 import { MIN_PLOTTED_DISTANCE_KM, plottedCostPerKm } from '@/utils/dashboard'
+import { costPerKmSeries, monthKeyOf } from '@/utils/partialMonth'
 import { usePeriodStore } from '@/stores/period'
 import { filterMonthsByPeriod } from '@/utils/period'
 import { currencySymbol, formatAmount } from '@/currency'
@@ -31,12 +32,23 @@ const tableRows = computed(() =>
   months.value.map((m: any) => {
     const cost = plottedCostPerKm(m)
     return [
-      formatMonthLabel(m.month),
+      formatMonthLabel(m.month) + (m.month === monthKeyOf(new Date()) ? ` (${t('dashboard.mileageCostChart.inProgress')})` : ''),
       formatDistanceValue(m.distance_km || 0),
       cost == null ? '—' : formatAmount(perDistance(cost), vehicleStore.currency, 3),
     ]
   }),
 )
+
+// The month in progress, said in words under the chart: its point is hollow and held at the top of the scale
+const partialNote = computed(() => {
+  const series = costPerKmSeries(months.value, new Date())
+  if (!series.partial) return null
+  return t('dashboard.mileageCostChart.inProgressNote', {
+    month: formatMonthLabel(months.value[series.partial.index].month),
+    cost: formatAmount(perDistance(series.partial.value), vehicleStore.currency, 3),
+    unit: distanceUnit(),
+  })
+})
 
 const AXIS = '#64748b'
 const GRID = '#1e293b'
@@ -101,18 +113,21 @@ function renderCharts() {
   }
 
   if (costRef.value) {
+    // The month in progress is a hollow point apart, outside the scale; a month under the minimum distance, or without a
+    // known cost, is a gap rather than a point
+    const series = costPerKmSeries(list, new Date())
+    const top = series.scaleMax === undefined ? undefined : perDistance(series.scaleMax)
+    const partial = series.partial
+    const partialAt = partial ? perDistance(partial.value) : null
+    const label = t('dashboard.mileageCostChart.averageCostPerKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) })
     costChart = new Chart(costRef.value, {
       type: 'line',
       data: {
         labels,
         datasets: [
           {
-            label: t('dashboard.mileageCostChart.averageCostPerKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) }),
-            // A month under the minimum distance, or without a known cost, is a gap rather than a point
-            data: list.map((m: any) => {
-              const v = plottedCostPerKm(m)
-              return v == null ? null : perDistance(v)
-            }),
+            label,
+            data: series.complete.map((v) => (v == null ? null : perDistance(v))),
             borderColor: '#38bdf8',
             backgroundColor: '#38bdf8',
             borderWidth: 2.5,
@@ -121,16 +136,41 @@ function renderCharts() {
             tension: 0.3,
             spanGaps: false,
           },
+          {
+            label: `${label} · ${t('dashboard.mileageCostChart.inProgress')}`,
+            // Drawn at the top of the scale when it is above it: the tooltip and the table give the figure
+            data: list.map((_m: any, i: number) => (partial && partialAt !== null && i === partial.index ? (top === undefined ? partialAt : Math.min(partialAt, top)) : null)),
+            actual: list.map((_m: any, i: number) => (partial && partialAt !== null && i === partial.index ? partialAt : null)),
+            showLine: false,
+            clip: false,
+            borderColor: '#38bdf8',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointStyle: 'circle',
+          } as any,
         ],
       },
-      options: baseOptions(
-        () => costRef.value,
-        () => costChart,
-        list,
-        (v) => t('dashboard.mileageCostChart.tooltipCostPerKm', { unit: distanceUnit(), cost: formatAmount(v, vehicleStore.currency, 3) }),
-        (v) => formatAmount(v, vehicleStore.currency, 2),
-      ),
+      options: {
+        ...baseOptions(
+          () => costRef.value,
+          () => costChart,
+          list,
+          (v) => t('dashboard.mileageCostChart.tooltipCostPerKm', { unit: distanceUnit(), cost: formatAmount(v, vehicleStore.currency, 3) }),
+          (v) => formatAmount(v, vehicleStore.currency, 2),
+        ),
+      },
     })
+    const options = costChart.options as any
+    options.plugins.tooltip.callbacks.label = (context: any) => {
+      const actual = context.dataset.actual?.[context.dataIndex]
+      const value = actual ?? Number(context.raw)
+      const text = t('dashboard.mileageCostChart.tooltipCostPerKm', { unit: distanceUnit(), cost: formatAmount(value, vehicleStore.currency, 3) })
+      return actual == null ? text : `${text} (${t('dashboard.mileageCostChart.inProgress')})`
+    }
+    if (top !== undefined) options.scales.y.max = top
+    costChart.update()
   }
 }
 
@@ -178,6 +218,7 @@ onUnmounted(() => {
         <div class="h-40 sm:h-52">
           <canvas ref="costRef" role="img" :aria-label="$t('dashboard.mileageCostChart.costKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) })"></canvas>
         </div>
+        <p v-if="partialNote" class="mt-1 text-xs text-slate-300" data-testid="cost-km-in-progress">{{ partialNote }}</p>
         <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.mileageCostChart.minDistanceNote', { distance: formatDistanceValue(MIN_PLOTTED_DISTANCE_KM), unit: distanceUnit() }) }}</p>
       </div>
     </div>
