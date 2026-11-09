@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useQuickAddStore } from '@/stores/quickAdd'
@@ -87,13 +87,6 @@ useSheetSwipe(moreSheet, () => (showMore.value = false), 767)
 watch(() => route.path, () => {
   showMore.value = false
 })
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') showMore.value = false
-}
-
-onMounted(() => document.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 function handleLogout() {
   showMore.value = false

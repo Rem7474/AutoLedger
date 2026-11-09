@@ -2,10 +2,9 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { X, MoreVertical } from 'lucide-vue-next'
 import { barActions, phoneShortcuts, sheetOrder, type SelectionAction } from '@/utils/selectionActions'
-import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
+import { hasOpenEscapeLayer, useEscapeToClose } from '@/composables/useEscapeToClose'
 import { useIsMobile } from '@/composables/useIsMobile'
 import ModalShell from '@/components/ModalShell.vue'
-import { useBackToClose } from '@/composables/useBackToClose'
 
 const props = withDefaults(
   defineProps<{
@@ -51,13 +50,15 @@ watch(
 )
 
 // On a phone the system Back (gesture or button) leaves the selection instead of the page
-useBackToClose(
-  () => isMobile.value && props.count > 0,
+// (a layer of the stack that does not use Escape: the bar handles that key itself, below)
+useEscapeToClose(
+  () => props.count > 0,
   () => {
     if (props.disabled) return false
     emit('clear')
     return true
-  }
+  },
+  { back: () => isMobile.value, escape: false },
 )
 
 // Closing the selection hands the focus back to the last row that had it, unless that row is gone. The row takes the
