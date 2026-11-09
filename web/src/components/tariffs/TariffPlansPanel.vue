@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { CalendarPlus, Copy, Pencil, Plus, Trash2, Zap } from 'lucide-vue-next'
+import { CalendarPlus, Copy, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import { api, type TariffPlan } from '@/services/api'
 import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
@@ -75,15 +75,9 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="card p-5 space-y-4" aria-labelledby="account-tariffs">
+  <section class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-      <div>
-        <h2 id="account-tariffs" class="flex items-center gap-2 text-sm font-bold text-white">
-          <Zap class="h-4 w-4 text-slate-400" aria-hidden="true" />
-          {{ $t('tariffs.editor.title') }}
-        </h2>
-        <p class="text-xs text-slate-400 mt-0.5">{{ $t('tariffs.editor.subtitle') }}</p>
-      </div>
+      <p class="text-xs text-slate-400">{{ $t('tariffs.editor.subtitle') }}</p>
       <button type="button" class="btn btn-secondary" @click="openModal(null, null)">
         <Plus class="h-3.5 w-3.5" />
         {{ $t('tariffs.editor.create') }}

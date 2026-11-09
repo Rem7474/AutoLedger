@@ -77,6 +77,7 @@ async function save() {
   <ModalShell
     v-model:open="open"
     size="lg"
+    nested
     body-class=""
     footer-class="items-center justify-between gap-3"
     :aria-label="planId ? $t('tariffs.editor.editTitle') : $t('tariffs.editor.newTitle')"

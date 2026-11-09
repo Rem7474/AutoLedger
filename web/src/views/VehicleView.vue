@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Bell, BatteryCharging, Car, ClipboardList, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users } from 'lucide-vue-next'
+import { Bell, BatteryCharging, Car, ClipboardList, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users, Zap } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import VehicleTile from '@/components/vehicle/VehicleTile.vue'
 import SheetRow from '@/components/SheetRow.vue'
 import BatteryHealthCard from '@/components/dashboard/BatteryHealthCard.vue'
 import ResaleValueCard from '@/components/dashboard/ResaleValueCard.vue'
+import ModalShell from '@/components/ModalShell.vue'
+import TariffPlansPanel from '@/components/tariffs/TariffPlansPanel.vue'
 import LeaseContractCard from '@/components/dashboard/LeaseContractCard.vue'
 import VehicleFormModal from '@/components/vehicles/VehicleFormModal.vue'
 import OwnershipWizardModal from '@/components/vehicles/OwnershipWizardModal.vue'
@@ -79,6 +81,7 @@ const tiresDetail = computed(() => {
 const batteryHint = computed(() => (batteryPercent.value === null ? t('dashboard.sheets.batteryHint') : t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })))
 const resaleHint = computed(() => (resaleValue.value === null ? t('dashboard.sheets.resaleHint') : t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })))
 
+const showTariffs = ref(false)
 const showEdit = ref(false)
 const showOwnership = ref(false)
 const showMembers = ref(false)
@@ -122,12 +125,16 @@ async function onSaved() {
 
     <div class="space-y-2">
       <VehicleTile v-if="isOwner" :icon="FileText" :title="$t('vehicles.vehicleView.contract')" :detail="ownership ? null : $t('vehicles.vehicleView.contractMissing')" @click="showOwnership = true" />
+      <VehicleTile v-if="vehicleStore.canCharge" :icon="Zap" :title="$t('vehicles.vehicleView.homeCharging')" :detail="$t('vehicles.vehicleView.homeChargingHint')" @click="showTariffs = true" />
       <VehicleTile :icon="Plug" :title="$t('vehicles.vehicleView.dataSources')" @click="showSources = true" />
       <VehicleTile :icon="Users" :title="$t('vehicles.vehicleView.sharing')" @click="showMembers = true" />
       <VehicleTile v-if="isOwner" :icon="Pencil" :title="$t('vehicles.vehicleView.edit')" @click="showEdit = true" />
       <VehicleTile v-if="vehicleStore.vehicles.length > 1" :icon="Car" :title="$t('vehicles.vehicleView.manage')" to="/vehicles" />
     </div>
 
+    <ModalShell v-model:open="showTariffs" :title="$t('tariffs.editor.title')" :icon="Zap" size="lg">
+      <TariffPlansPanel />
+    </ModalShell>
     <VehicleFormModal v-model:open="showEdit" :editing="vehicle" @saved="onSaved" />
     <OwnershipWizardModal v-model:open="showOwnership" :vehicle="vehicle" :ownership="ownership" @saved="(o: any) => { ownership = o; vehicleStore.lastSyncTimestamp = Date.now() }" @deleted="() => { ownership = null; vehicleStore.lastSyncTimestamp = Date.now() }" />
     <VehicleMembersModal v-model:open="showMembers" :vehicle="vehicle" />
