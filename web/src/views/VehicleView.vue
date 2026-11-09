@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Bell, BatteryCharging, Car, ClipboardList, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users, Zap } from 'lucide-vue-next'
+import { Bell, BatteryCharging, Car, ClipboardList, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users, Zap, Activity } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import VehicleTile from '@/components/vehicle/VehicleTile.vue'
 import SheetRow from '@/components/SheetRow.vue'
@@ -19,6 +19,8 @@ import { t } from '@/i18n'
 import { formatDistance } from '@/units'
 import { formatAmount } from '@/currency'
 import { formatPercent } from '@/utils/numbers'
+import { fmt, perUnit } from '@/components/dashboard/energyStats'
+import { distanceUnit } from '@/units'
 import { summarizeFittedTires, wearAndRemaining } from '@/utils/tires'
 import { useTireList } from '@/composables/useTireList'
 import { nextDueReminder } from '@/utils/dashboard'
@@ -33,6 +35,7 @@ const isOwner = computed(() => !vehicle.value?.role || vehicle.value.role === 'O
 const reminders = ref<any[]>([])
 const ownership = ref<any | null>(null)
 const tco = ref<any | null>(null)
+const consumption = ref<number | null>(null)
 const batteryPercent = ref<number | null>(null)
 const resaleValue = ref<number | null>(null)
 // Bumped when a battery reading changes: the resale estimate depends on the health
@@ -42,17 +45,20 @@ async function load() {
   const v = vehicle.value
   if (!v) return
   void loadTires(true)
-  const [r, o, c, health, residual] = await Promise.all([
+  const [r, o, c, health, residual, energy] = await Promise.all([
     api.getReminders(v.id).catch(() => []),
     isOwner.value ? api.getOwnership(v.id).catch(() => null) : Promise.resolve(null),
     api.getTCO(v.id).catch(() => null),
     vehicleStore.canCharge ? api.getBatteryHealth(v.id).catch(() => null) : Promise.resolve(null),
     api.getResidualValue(v.id, { km_share: 0.5, health_weight: 1 }).catch(() => null),
+    vehicleStore.canCharge ? api.getEnergyStats(v.id).catch(() => null) : Promise.resolve(null),
   ])
   if (v.id !== vehicle.value?.id) return
   reminders.value = r
   ownership.value = o
   tco.value = c
+  const kwh100 = perUnit(energy?.summary?.consumption_kwh_100km)
+  consumption.value = typeof kwh100 === 'number' && kwh100 > 0 ? kwh100 : null
   batteryPercent.value = typeof health?.health_percent === 'number' ? health.health_percent : null
   resaleValue.value = typeof residual?.current_value === 'number' ? residual.current_value : null
 }
@@ -78,6 +84,7 @@ const tiresDetail = computed(() => {
   const { worn: used, left } = wearAndRemaining(worn.pct)
   return t('tires.tireSetSummary.wornAndLeft', { worn: formatPercent(used, 0), left: formatPercent(left, 0) })
 })
+const consumptionDetail = computed(() => (consumption.value === null ? null : `${fmt(consumption.value, 1)} kWh/100 ${distanceUnit()}`))
 const batteryHint = computed(() => (batteryPercent.value === null ? t('dashboard.sheets.batteryHint') : t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })))
 const resaleHint = computed(() => (resaleValue.value === null ? t('dashboard.sheets.resaleHint') : t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })))
 
@@ -107,6 +114,7 @@ async function onSaved() {
 
     <div class="space-y-2">
       <VehicleTile :icon="Bell" :title="$t('vehicles.vehicleView.maintenance')" :detail="nextService" to="/maintenance?tab=REMINDERS" />
+      <VehicleTile v-if="vehicleStore.canCharge" :icon="Activity" :title="$t('vehicles.vehicleView.consumption')" :detail="consumptionDetail" to="/energy" />
       <VehicleTile :icon="Disc" :title="$t('shell.nav.tires')" :detail="tiresDetail" to="/tires" />
       <VehicleTile :icon="ClipboardList" :title="$t('vehicles.vehicleView.readings')" to="/odometer" />
       <VehicleTile :icon="Scale" :title="$t('shell.nav.comparison')" to="/comparison" />

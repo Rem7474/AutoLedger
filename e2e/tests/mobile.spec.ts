@@ -292,6 +292,18 @@ test('battery, resale value and contract are on the vehicle sheet, and the home 
   }
 })
 
+test('the consumption is a tile of the vehicle sheet that opens the energy page, no longer a block of the home', async ({ page }) => {
+  await useVehicle(page, ev.id, '/vehicle')
+  const tile = page.getByRole('main').getByRole('link', { name: /Consumption/ })
+  await expect(tile).toHaveAttribute('href', '/energy')
+  await tile.click()
+  await expect(page).toHaveURL(/\/energy/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/vehicle$/)
+  await useVehicle(page, ev.id, '/')
+  await expect(page.getByRole('main').getByText(/kWh\/100/)).toHaveCount(0)
+})
+
 test('the tariff plans are a row of the vehicle sheet for a vehicle that charges, no longer on the account page', async ({ page, request }) => {
   await useVehicle(page, ev.id, '/vehicle')
   await page.getByRole('main').getByRole('button', { name: /Home charging/ }).click()
