@@ -28,6 +28,16 @@
   --color-danger-500: var(--color-rose-500);
   --color-danger-600: var(--color-rose-600);
   --color-danger-900: var(--color-rose-900);
+
+  /* The hue of a cost theme (see utils/themes.ts, which holds the same colours as hex for the charts) */
+  --color-theme-energy: var(--color-sky-400);
+  --color-theme-tolls: var(--color-orange-500);
+  --color-theme-tires: var(--color-cyan-300);
+  --color-theme-maintenance: var(--color-pink-400);
+  --color-theme-insurance: var(--color-lime-300);
+  --color-theme-financing: var(--color-indigo-400);
+  --color-theme-taxes: var(--color-slate-300);
+  --color-theme-neutral: var(--color-slate-400);
 }
 
 .dp--theme-dark {

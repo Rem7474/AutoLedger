@@ -1,3 +1,5 @@
+import { THEME_HEX } from '@/utils/themes'
+
 export type DonutMode = 'full' | 'cash'
 
 export const DONUT_KEYS = ['energy', 'tolls', 'tires', 'maintenance', 'insurance', 'financing', 'depreciation', 'other'] as const
@@ -17,16 +19,7 @@ export function donutAmounts(tco: any, mode: DonutMode): number[] {
   ]
 }
 
-const DONUT_COLORS: Record<(typeof DONUT_KEYS)[number], string> = {
-  energy: '#38bdf8',
-  tolls: '#f59e0b',
-  tires: '#10b981',
-  maintenance: '#ec4899',
-  insurance: '#a855f7',
-  financing: '#f97316',
-  depreciation: '#e11d48',
-  other: '#64748b',
-}
+const DONUT_COLORS: Record<(typeof DONUT_KEYS)[number], string> = THEME_HEX
 
 /** The slices with an amount, largest first, each with its share of the total shown. */
 export function donutRows(tco: any, mode: DonutMode) {
