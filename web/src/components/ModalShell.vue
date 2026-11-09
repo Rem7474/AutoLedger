@@ -22,6 +22,8 @@ const props = withDefaults(
     nested?: boolean
     bodyClass?: string
     footerClass?: string
+    /** Names the scrolling body as a region and makes it reachable by keyboard: for content with nothing to focus in it. */
+    bodyLabel?: string
   }>(),
   { size: 'md', nested: false, bodyClass: 'space-y-4', footerClass: 'justify-end gap-2' },
 )
@@ -59,7 +61,7 @@ const footer = computed(() => modalFooterClass(props.footerClass))
         </div>
       </div>
 
-      <div class="p-5 overflow-y-auto flex-1 overscroll-contain" :class="bodyClass">
+      <div class="p-5 overflow-y-auto flex-1 overscroll-contain" :class="bodyClass" :tabindex="bodyLabel ? 0 : undefined" :role="bodyLabel ? 'region' : undefined" :aria-label="bodyLabel">
         <slot />
       </div>
 
