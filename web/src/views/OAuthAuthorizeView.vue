@@ -78,7 +78,7 @@ async function decide(decision: 'approve' | 'deny') {
 </script>
 
 <template>
-  <div class="max-w-lg mx-auto py-8">
+  <div class="max-w-lg mx-auto p-4 sm:py-8">
     <div class="card p-6 space-y-5">
       <div class="flex items-center gap-3">
         <ShieldCheck class="w-6 h-6 text-rose-400 shrink-0" />
@@ -163,7 +163,8 @@ async function decide(decision: 'approve' | 'deny') {
 
         <div v-if="error" class="p-3 bg-danger-500/10 border border-danger-500/20 rounded-xl text-sm text-danger-400" role="alert">{{ error }}</div>
 
-        <div class="flex gap-3">
+        <!-- Pinned to the bottom of the screen (above the home indicator), so the decision is in reach however long the page is -->
+        <div class="sticky bottom-0 -mx-6 -mb-6 flex gap-3 rounded-b-2xl border-t border-slate-800 bg-slate-900/95 px-6 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur">
           <button type="button" :disabled="deciding || !approvable" class="btn btn-lg btn-primary flex-1" @click="decide('approve')">{{ t('oauth.authorize.approve') }}</button>
           <button type="button" :disabled="deciding" class="btn btn-lg btn-secondary flex-1" @click="decide('deny')">{{ t('oauth.authorize.deny') }}</button>
         </div>

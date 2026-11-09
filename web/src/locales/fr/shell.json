@@ -154,5 +154,10 @@
   },
   "pullRefresh": {
     "refreshing": "Actualisation"
+  },
+  "noVehicle": {
+    "title": "Ajoutez d’abord un véhicule",
+    "hint": "Les trajets, dépenses, pneus et chiffres de cette page sont enregistrés par véhicule.",
+    "action": "Ajouter un véhicule"
   }
 }

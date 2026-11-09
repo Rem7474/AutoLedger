@@ -884,3 +884,50 @@ test('a definition opens on touch, and Back closes it', async ({ page }) => {
   await expect(sheet).toHaveCount(0)
   expect(page.url()).toBe(before)
 })
+
+test('an account without a vehicle sees one "Add a vehicle first" state on every page about a vehicle', async ({ page }) => {
+  await page.route(/\/api\/vehicles$/, (route) => (route.request().method() === 'GET' ? route.fulfill({ json: [] }) : route.continue()))
+  for (const route of ['/', '/drives', '/carpools', '/odometer', '/tires', '/expenses', '/maintenance', '/energy', '/fleet', '/comparison']) {
+    await page.goto(route)
+    await expect(page.getByRole('heading', { name: 'Add a vehicle first' }), route).toBeVisible()
+    await expect(page.getByRole('main').getByRole('link', { name: 'Add a vehicle' }), route).toHaveAttribute('href', '/vehicles')
+    // None of the page's own actions
+    await expect(page.getByRole('main').getByRole('button'), route).toHaveCount(0)
+  }
+  // The vehicles page is where the first one is added
+  await page.goto('/vehicles')
+  await expect(page.getByRole('heading', { name: 'Add a vehicle first' })).toHaveCount(0)
+})
+
+test('the authorization page has no tab bar or vehicle picker, and its buttons stay at the bottom of the screen', async ({ page, request }) => {
+  const { authorizeUrl, pkce, registerClient } = await import('./oauthFlow')
+  const clientId = await registerClient(request, 'Layout assistant')
+  await page.goto(authorizeUrl(clientId, pkce().challenge, 'layout'))
+  await expect(page.getByRole('heading', { name: 'Authorize an application' })).toBeVisible()
+  await expect(page.getByRole('navigation')).toHaveCount(0)
+  await expect(page.getByRole('combobox')).toHaveCount(0)
+  const approve = page.getByRole('button', { name: 'Approve' })
+  await expect(approve).toBeVisible()
+  const box = (await approve.boundingBox())!
+  expect(box.y + box.height).toBeLessThanOrEqual(844)
+  expect(box.y).toBeGreaterThan(844 - 140)
+  // Still in reach after scrolling the whole page
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  const after = (await approve.boundingBox())!
+  expect(after.y + after.height).toBeLessThanOrEqual(844)
+})
+
+test('in the month detail the two modes share the track, and the fixed/variable line has no stray bullet', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  await page.getByRole('main').getByRole('button', { name: /spent so far/ }).first().tap()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  const modes = dialog.locator('button[aria-pressed]')
+  await expect(modes).toHaveCount(2)
+  const [a, b] = [(await modes.nth(0).boundingBox())!, (await modes.nth(1).boundingBox())!]
+  expect(Math.abs(a.width - b.width)).toBeLessThan(2)
+  // Together they fill the track (border, padding and gap apart)
+  const track = (await modes.nth(0).locator('xpath=..').boundingBox())!
+  expect(a.width + b.width).toBeGreaterThan(track.width - 14)
+  await expect(dialog.getByText('•', { exact: true })).toBeHidden()
+})

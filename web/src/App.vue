@@ -12,6 +12,7 @@ import ConfirmModal from '@/components/ConfirmModal.vue'
 import ToastHost from '@/components/ToastHost.vue'
 import PullRefreshIndicator from '@/components/PullRefreshIndicator.vue'
 import { usePullToRefresh } from '@/composables/usePullToRefresh'
+import NoVehicleState from '@/components/NoVehicleState.vue'
 import QuickAddSheet from '@/components/quickadd/QuickAddSheet.vue'
 
 const route = useRoute()
@@ -56,7 +57,8 @@ const showDashboardLayout = computed(() => {
     authStore.isAuthenticated &&
     route.name !== 'onboarding' &&
     route.name !== 'login' &&
-    route.name !== 'register'
+    route.name !== 'register' &&
+    !route.meta.bare
   )
 })
 
@@ -104,6 +106,8 @@ onMounted(async () => {
           <div class="w-9 h-9 border-3 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
           <p class="text-xs font-medium text-slate-400">{{ $t('shell.app.loadingYourVehicle') }}</p>
         </div>
+        <!-- A page about a vehicle, and no vehicle: one state instead of the empty forms and figures of the page -->
+        <NoVehicleState v-else-if="route.meta.needsVehicle && !vehicleStore.activeVehicle" />
         <router-view v-else />
       </main>
     </div>

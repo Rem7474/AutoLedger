@@ -178,12 +178,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             <SlidersHorizontal class="w-3.5 h-3.5 text-sky-400" />
             <span>{{ $t('dashboard.monthDetailModal.fixedVsVariable') }}</span>
           </span>
-          <div class="flex items-center gap-3 text-xs flex-wrap">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs">
             <span class="flex items-center gap-1.5 text-sky-300">
               <span class="w-2 h-2 rounded-full bg-sky-500"></span>
               <span>{{ $t('dashboard.monthDetailModal.fixedCosts') }} : <strong class="text-white">{{ formatPercent(selectedMonthBreakdown.fixedVar.fixedPct, 0) }}</strong> ({{ formatAmount(selectedMonthBreakdown.fixedVar.fixedAmount, currency) }})</span>
             </span>
-            <span class="text-slate-400">•</span>
+            <span class="text-slate-400 max-sm:hidden" aria-hidden="true">•</span>
             <span class="flex items-center gap-1.5 text-amber-300">
               <span class="w-2 h-2 rounded-full bg-amber-400"></span>
               <span>{{ $t('dashboard.monthDetailModal.variableCosts') }} : <strong class="text-white">{{ formatPercent(selectedMonthBreakdown.fixedVar.variablePct, 0) }}</strong> ({{ formatAmount(selectedMonthBreakdown.fixedVar.variableAmount, currency) }})</span>
@@ -223,7 +223,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             @click="monthDetailViewMode = 'economic'"
             :aria-pressed="monthDetailViewMode === 'economic'"
             :class="[
-              'px-2.5 py-1 text-xs font-semibold rounded-md transition-colors',
+              'flex-1 sm:flex-none px-2.5 py-1 text-xs font-semibold rounded-md transition-colors',
               monthDetailViewMode === 'economic' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'
             ]"
           >
@@ -234,7 +234,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             @click="monthDetailViewMode = 'cash'"
             :aria-pressed="monthDetailViewMode === 'cash'"
             :class="[
-              'px-2.5 py-1 text-xs font-semibold rounded-md transition-colors',
+              'flex-1 sm:flex-none px-2.5 py-1 text-xs font-semibold rounded-md transition-colors',
               monthDetailViewMode === 'cash' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'
             ]"
           >
