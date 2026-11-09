@@ -12,7 +12,6 @@ import type { SelectionAction } from '@/utils/selectionActions'
 import { t } from '@/i18n'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
@@ -43,7 +42,6 @@ import { getLastDismountInfo } from '@/utils/tires'
 // The page owns the tire list, the selection and which modal is open; each modal owns its form and
 // its API call and reports back with "saved".
 const vehicleStore = useVehicleStore()
-const { showAlert } = useConfirm()
 const {
   tires,
   loading,
@@ -169,10 +167,7 @@ useRefreshHandler(() => loadTires(true))
 
 function openPackSwapModal() {
   if (!vehicleStore.activeVehicle) return
-  if (storageTires.value.length === 0) {
-    void showAlert(t('tires.tiresView.changeSetNeedsStorage'), t('tires.tiresView.changeSet'), 'info')
-    return
-  }
+  if (storageTires.value.length === 0) return
   showPackSwapModal.value = true
 }
 
@@ -259,7 +254,8 @@ async function onLogSaved() {
       <div v-if="vehicleStore.canEdit" class="flex items-center gap-2 flex-wrap">
         <button
           @click="openPackSwapModal()"
-          :class="{ 'opacity-60': storageTires.length === 0 }"
+          :disabled="storageTires.length === 0"
+          :aria-describedby="storageTires.length === 0 ? 'change-set-reason' : undefined"
           class="btn btn-lg btn-secondary"
           :title="$t('tires.tiresView.swapTheFittedSetWith')"
         >
@@ -278,6 +274,7 @@ async function onLogSaved() {
     
       </template>
     </PageHeader>
+    <p v-if="vehicleStore.canEdit && ready && storageTires.length === 0" id="change-set-reason" class="-mt-3 text-xs text-slate-400">{{ $t('tires.tiresView.changeSetNoStorage') }}</p>
 
     <!-- Viewer mode banner -->
     <div
@@ -336,7 +333,7 @@ async function onLogSaved() {
           @select-tire="close(); openTimelineTire($event)"
         />
       </SheetRow>
-      <TireQuickRotationBar v-if="vehicleStore.canEdit" :has-mounted-tires="hasMountedTires" @rotated="loadTires" />
+      <TireQuickRotationBar v-if="vehicleStore.canEdit" :has-mounted-tires="hasMountedTires" :tires="tires" @layout="tires = $event" @rotated="loadTires" />
 
       <!-- On a phone the wheels are tiles: a long press starts the selection there -->
       <div v-if="vehicleStore.canEdit && currentTabTireIds.length > 0" class="flex items-center justify-between text-xs text-slate-400 px-2 max-sm:hidden">
