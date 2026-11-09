@@ -235,6 +235,12 @@ export function summarizeFittedTires(mounted: Record<string, any | null>): TireS
   return { fitted, mostWorn, nextReplacement }
 }
 
+/** The wear of a tire as two whole percentages that add up to 100: what is used and what is left. */
+export function wearAndRemaining(pct: number): { worn: number; left: number } {
+  const worn = Math.min(100, Math.max(0, Math.round(pct)))
+  return { worn, left: 100 - worn }
+}
+
 /** What the fitted tires have in common: one set (same brand, model and dimension on every fitted wheel) or a mix. */
 export function describeFittedSet(mounted: Record<string, any | null>): { uniform: boolean; name: string; dimension: string } {
   const fitted = Object.values(mounted).filter(Boolean)

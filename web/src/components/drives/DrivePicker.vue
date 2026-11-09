@@ -161,7 +161,7 @@ const place = (address?: string) => (address || '').split(',')[0]
                     <span class="shrink-0 tabular-nums text-slate-400">{{ formatDriveClock(d.start_time) }}</span>
                     <span class="truncate">{{ (d.start_address || $t('drives.driveCostModal.start')).split(',')[0] }} → {{ (d.end_address || $t('drives.driveCostModal.end')).split(',')[0] }}</span>
                   </span>
-                  <span class="flex shrink-0 items-center gap-2 font-mono">
+                  <span class="flex shrink-0 items-center gap-2">
                     <span class="text-slate-400">{{ formatDistance(Number(d.distance_km)) }}</span>
                     <span class="w-14 text-right font-semibold text-slate-200">{{ d.costs?.has_estimates ? '~' : '' }}{{ money(d.costs?.total_cost) }}</span>
                   </span>
@@ -199,7 +199,7 @@ const place = (address?: string) => (address || '').split(',')[0]
         </span>
         <span class="flex items-center gap-2 shrink-0">
           <span v-if="d.carpools?.length" class="px-1.5 py-0.5 rounded-full text-[0.65rem] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">{{ $t('drives.drivePicker.alreadyCarpooled') }}</span>
-          <span class="font-mono text-xs text-slate-400">{{ formatDistance(Number(d.distance_km)) }}</span>
+          <span class="text-xs text-slate-400">{{ formatDistance(Number(d.distance_km)) }}</span>
         </span>
       </label>
     </div>

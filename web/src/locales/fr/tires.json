@@ -384,7 +384,7 @@
   "tireSetSummary": {
     "fitted": "Roues équipées",
     "mostWorn": "Pneu le plus usé",
-    "ofLifespan": "de sa durée de vie",
+    "wornAndLeft": "Usé à {worn} · reste {left}",
     "nextReplacement": "Prochain remplacement"
   },
   "overview": {

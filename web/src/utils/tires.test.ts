@@ -12,6 +12,7 @@ import {
   lastUsedDay,
   positionLabel,
   summarizeFittedTires,
+  wearAndRemaining,
   positionOnTire,
   sessionFormFromCopy,
   sessionFormFromSession,
@@ -297,5 +298,20 @@ describe('describeFittedSet', () => {
     expect(describeFittedSet({ FL: stat('A', 'Sport'), FR: stat('A', 'Sport', '245/40 R19') }).uniform).toBe(false)
     expect(describeFittedSet({ FL: stat('A', 'Sport'), FR: stat('B', 'Sport') }).uniform).toBe(false)
     expect(describeFittedSet({ FL: null, FR: null }).uniform).toBe(false)
+  })
+})
+
+describe('wearAndRemaining', () => {
+  it('rounds to whole percentages that add up to 100', () => {
+    expect(wearAndRemaining(22)).toEqual({ worn: 22, left: 78 })
+    expect(wearAndRemaining(22.4)).toEqual({ worn: 22, left: 78 })
+    expect(wearAndRemaining(22.6)).toEqual({ worn: 23, left: 77 })
+  })
+
+  it('stays within 0 and 100', () => {
+    expect(wearAndRemaining(0)).toEqual({ worn: 0, left: 100 })
+    expect(wearAndRemaining(100)).toEqual({ worn: 100, left: 0 })
+    expect(wearAndRemaining(137)).toEqual({ worn: 100, left: 0 })
+    expect(wearAndRemaining(-5)).toEqual({ worn: 0, left: 100 })
   })
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import RowLeading from '@/components/RowLeading.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowMenu from '@/components/RowMenu.vue'
 import ListSummary from '@/components/ListSummary.vue'
@@ -10,7 +11,7 @@ import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { computed, ref } from 'vue'
-import { Repeat, Plus, Trash2, Paperclip, FileDown, Landmark, Wrench, BookOpen } from 'lucide-vue-next'
+import { Repeat, Plus, Trash2, Paperclip, FileDown, Landmark, Wrench, BookOpen, ShieldCheck } from 'lucide-vue-next'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { saveBlob } from '@/utils/download'
@@ -66,6 +67,9 @@ const ofKind = computed(() => expensesOfKind(props.maintenanceExpenses, props.ki
 const categories = computed(() => [...new Set(ofKind.value.map((m) => m.category as string))])
 const years = computed(() => maintenanceYears(ofKind.value))
 const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
+
+// What a row stands for: the cover, the tax or the loan of a fixed cost, the spanner of everything else
+const categoryIcon = (category: string) => (category === 'INSURANCE' ? ShieldCheck : ['TAX', 'FINANCING'].includes(category) ? Landmark : category === 'SUBSCRIPTION' ? Repeat : Wrench)
 </script>
 
 <template>
@@ -125,8 +129,8 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
       <EmptyState v-if="!visible.length">{{ $t('expenses.maintenancePanel.noMatch') }}</EmptyState>
       <SwipeToDelete v-for="m in visible" :key="m.id" :disabled="!vehicleStore.canEdit || selectedIds.length > 0" @delete="emit('delete', m)">
       <div
-        class="relative hover:border-slate-700/90 border-l-4 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
-        :class="[categoryStyle(m.category).accent, { '!border-rose-500/40 bg-slate-800/40': isSelected(m) }]"
+        class="relative hover:border-slate-700/90 p-4 card flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+        :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(m) }"
       >
         <CardOpenButton
           v-if="vehicleStore.canEdit"
@@ -138,6 +142,7 @@ const visible = computed(() => filterMaintenance(ofKind.value, filter.value))
           @pointercancel="press.onPointercancel"
           @contextmenu="press.onContextmenu"
         />
+        <RowLeading :icon="categoryIcon(m.category)" :selected="isSelected(m)" :tint="categoryStyle(m.category).tint" />
         <RowSelectBox v-if="showBox" :id="m.id" :checked="isSelected(m)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(m)" />
         <div class="space-y-1 min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">

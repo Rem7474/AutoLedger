@@ -127,7 +127,7 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
             </div>
             <div class="flex items-center gap-3 shrink-0">
               <span class="text-xs font-bold text-rose-400">{{ formatDistance(leg.distance_km, 1) }}</span>
-              <span class="text-xs font-mono font-bold text-white">{{ fmt(leg.total_cost) }}</span>
+              <span class="text-xs font-bold text-white">{{ fmt(leg.total_cost) }}</span>
               <ChevronRight v-if="leg.drive_id" class="w-4 h-4 text-slate-400" />
             </div>
           </component>

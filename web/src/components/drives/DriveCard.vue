@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
-import { Navigation, Clock, Users, Pencil, Trash2, ExternalLink } from 'lucide-vue-next'
+import { Navigation, Clock, Users, Briefcase, User, Pencil, Trash2, ExternalLink } from 'lucide-vue-next'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowLeading from '@/components/RowLeading.vue'
 import RowMenu from '@/components/RowMenu.vue'
@@ -12,7 +12,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
 import { hasTeslaMate } from '@/utils/vehicles'
 import { needsTollQualification, summarizeDriveCarpools, teslamateDriveUrl } from '@/utils/drives'
-import { formatDayTime } from '@/utils/dates'
+import { formatDayTime, formatTimeOfDay } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistance, formatPerDistanceValue } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
@@ -46,6 +46,13 @@ function onRowClick() {
 // A vehicle fed by TeslaMate mixes synced and manual drives: the badge tells them apart. Without TeslaMate every drive is manual.
 const showManualBadge = computed(() => hasTeslaMate(vehicleStore.activeVehicle))
 const carpoolSummary = computed(() => summarizeDriveCarpools(props.d.carpools))
+// The glyph says what is particular to the drive (carpooled, work, personal); an ordinary drive keeps the plain trip glyph.
+const leadingIcon = computed(() => {
+  if (carpoolSummary.value) return Users
+  if (prefs.proPersoEnabled && props.d.tags?.includes('Pro')) return Briefcase
+  if (prefs.proPersoEnabled && props.d.tags?.includes('Perso')) return User
+  return Navigation
+})
 
 // One carpool opens it directly; several open the drive's cost breakdown, which lists them
 function openCarpool() {
@@ -70,7 +77,7 @@ function openCarpool() {
       @contextmenu="press.onContextmenu"
     />
     <!-- Phone: the glyph of the row, the check once it is selected -->
-    <RowLeading :icon="carpoolSummary ? Users : Navigation" :selected="selected" />
+    <RowLeading :icon="leadingIcon" :selected="selected" />
     <!-- Selection checkbox (desktop; on a phone it stays for screen readers only) -->
     <label
       v-if="showBox"
@@ -93,19 +100,18 @@ function openCarpool() {
         </div>
         <div class="shrink-0 text-right" :title="$t('drives.driveCard.actualCostPriceCalculatedFor')">
           <div class="text-sm font-extrabold text-white">{{ d.costs?.has_estimates ? '~' : '' }}{{ formatAmount(d.costs?.total_cost || 0, vehicleStore.currency) }}</div>
-          <div class="text-xs font-mono text-slate-400">{{ formatCostPerDistance(d.costs?.cost_per_km, vehicleStore.currency, 3, true) }}</div>
+          <div class="text-xs text-slate-400">{{ formatCostPerDistance(d.costs?.cost_per_km, vehicleStore.currency, 3, true) }}</div>
         </div>
       </div>
 
       <!-- The rest, in one quiet line: when, how far, how long, how much energy, and the tags that apply -->
       <div class="mt-1 flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-slate-400">
-        <span class="font-semibold">{{ formatDate(d.start_time) }}</span>
+        <span class="font-semibold">{{ formatTimeOfDay(d.start_time) }}</span>
         <span class="px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60">{{ formatDistance(d.distance_km, 1) }}</span>
         <span v-if="d.duration_min" class="flex items-center gap-1"><Clock class="w-3 h-3" />{{ $t('drives.driveCard.min', { duration_min: d.duration_min }) }}</span>
         <span
           v-if="d.consumption_kwh_100km"
-          class="font-mono"
-          :class="d.energy_estimated ? 'text-slate-400' : 'text-info-400'"
+          class="text-slate-400"
           :title="d.energy_estimated ? $t('drives.driveCard.estimatedConsumption') : undefined"
         >
           {{ $t(d.energy_estimated ? 'drives.driveCard.kwh100kmEstimated' : 'drives.driveCard.kwh100km', { unit: distanceUnit(), consumption_kwh_100km: formatPerDistanceValue(d.consumption_kwh_100km) }) }}
@@ -128,7 +134,7 @@ function openCarpool() {
         >
           <Users class="w-3 h-3" />
           {{ $t('drives.driveCard.carpooledSummary', { passengers: carpoolSummary.passengers }, carpoolSummary.passengers) }}
-          <span class="font-mono text-success-400">+{{ formatAmount(carpoolSummary.revenue, vehicleStore.currency) }}</span>
+          <span class="text-success-400">+{{ formatAmount(carpoolSummary.revenue, vehicleStore.currency) }}</span>
         </button>
       </div>
 

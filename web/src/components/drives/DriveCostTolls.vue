@@ -301,7 +301,7 @@ watch(
             <span v-if="exp.trip_group_id && !selectedCostDrive.is_trip_group" class="text-sky-400"> {{ $t('drives.driveCostModal.shareOfATripCosting', { amount: formatAmount(exp.amount, exp.currency || vehicleCurrency) }) }}</span>
           </span>
           <span class="flex items-center gap-1.5">
-            <span class="font-mono text-theme-tolls">{{ formatAmount(exp.allocated_amount ?? exp.amount, vehicleCurrency) }}</span>
+            <span class="text-theme-tolls">{{ formatAmount(exp.allocated_amount ?? exp.amount, vehicleCurrency) }}</span>
             <button v-if="!selectedCostDrive.is_suggestion" @click="startEditExpense(exp)" class="p-0.5 text-slate-400 hover:text-white" :title="$t('drives.driveCostModal.editThisCost')" :aria-label="$t('drives.driveCostModal.editThisCost')">
               <Pencil class="w-3 h-3" />
             </button>
@@ -354,7 +354,7 @@ watch(
           </button>
           <span v-if="tollDetectionEstimatedTotal != null" class="flex flex-wrap items-center justify-end gap-x-2 gap-y-1.5 ml-auto">
             <span class="text-slate-400">{{ $t('drives.driveCostModal.totalEstimate') }}</span>
-            <span class="text-theme-tolls font-mono font-semibold" :title="$t('drives.driveCostModal.class1LightVehicle')">{{ formatAmount(tollDetectionEstimatedTotal, 'EUR') }}</span>
+            <span class="text-theme-tolls font-semibold" :title="$t('drives.driveCostModal.class1LightVehicle')">{{ formatAmount(tollDetectionEstimatedTotal, 'EUR') }}</span>
             <button
               v-if="canApplyTollEstimate && !estimateMatchesExistingToll"
               type="button"
@@ -379,7 +379,7 @@ watch(
               </span>
               <span v-else-if="seg.type === 'close'">{{ $t('drives.driveCostModal.entryDetectedExitNotIdentified', { entry: seg.entry }) }}</span>
               <span v-else>{{ $t('drives.driveCostModal.tollGate', { entry: seg.entry }) }}</span>
-              <span v-if="seg.estimated_price != null" class="text-theme-tolls font-mono shrink-0">{{ formatAmount(seg.estimated_price, 'EUR') }}</span>
+              <span v-if="seg.estimated_price != null" class="text-theme-tolls shrink-0">{{ formatAmount(seg.estimated_price, 'EUR') }}</span>
             </div>
           </div>
         </div>

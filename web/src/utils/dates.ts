@@ -40,6 +40,11 @@ const clock = (d: Date) => d.toLocaleTimeString(intlLocale(), { hour: '2-digit',
 
 /** A session window: "02 mai 2026, 22:00 → 05:30", the end repeating its day only when it differs; just the start when the end is missing or not after it.
  * `withYear: false` gives "02 mai, 22:00 → 05:30" for a list that already says the year (a month heading). */
+// The time of day alone, for a row listed under its day heading.
+export function formatTimeOfDay(dateStr: string) {
+  return new Date(dateStr).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
+}
+
 export function formatChargeWindow(start: string, end?: string | null, withYear = true): string {
   const s = new Date(start)
   const head = `${day(s, withYear)}, ${clock(s)}`

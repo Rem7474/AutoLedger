@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { setLocale } from '@/i18n'
-import { formatDayTime, formatMonthLabel, formatChargeWindow, todayIso, toIsoDay, toLocalDateTimeInput } from './dates'
+import { formatDayTime, formatTimeOfDay, formatMonthLabel, formatChargeWindow, todayIso, toIsoDay, toLocalDateTimeInput } from './dates'
 
 describe('dates', () => {
   it('gives the UTC day of a date', () => {
@@ -37,6 +37,12 @@ describe('dates', () => {
     const s = formatDayTime('2026-05-02T08:30:00')
     expect(s).toContain('02')
     expect(s).toContain('08:30')
+  })
+
+  it('formats the time of day alone, without the date', () => {
+    const s = formatTimeOfDay('2026-05-02T08:30:00')
+    expect(s).toContain('08:30')
+    expect(s).not.toContain('02')
   })
 })
 

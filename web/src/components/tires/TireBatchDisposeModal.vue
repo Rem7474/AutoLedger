@@ -92,7 +92,7 @@ async function handleBatchDisposeSubmit() {
           <span class="font-bold text-white">{{ t.tire.brand }} {{ t.tire.model }}</span>
           <span class="text-xs text-slate-400 ml-1.5">({{ t.tire.dimension }})</span>
         </div>
-        <span class="text-xs px-2 py-0.5 rounded font-mono bg-slate-800 text-slate-300">
+        <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300">
           {{ ['FL', 'FR', 'RL', 'RR'].includes(t.tire.current_position) ? $t('tires.wheel', { position: t.tire.current_position }) : $t('tires.garage') }}
         </span>
       </div>

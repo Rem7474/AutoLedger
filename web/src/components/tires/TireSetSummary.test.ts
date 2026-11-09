@@ -19,7 +19,13 @@ describe('TireSetSummary', () => {
   it('flags a missing wheel and a tire worn past 80 % of its lifespan', async () => {
     const html = await render({ ...full, RR: null, FL: stat(85) })
     expect(html).toContain('border-warning-500/30')
-    expect(html).toContain('border-danger-500/30')
+    expect(html).toContain('bg-danger-500')
+  })
+
+  it('says the wear once in words, with what is left, and draws what is left as the gauge', async () => {
+    const html = await render({ ...full, FL: stat(22) })
+    expect(html.replace(/\u00a0|\u202f/g, ' ')).toContain('Usé à 22 % · reste 78 %')
+    expect(html).toContain('width:78%')
   })
 
   it('leaves the figures plain with no tire fitted', async () => {
