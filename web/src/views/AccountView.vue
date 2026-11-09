@@ -6,7 +6,6 @@ import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import DistanceUnitSwitcher from '@/components/DistanceUnitSwitcher.vue'
 import VolumeUnitSwitcher from '@/components/VolumeUnitSwitcher.vue'
 import ApiTokensSection from '@/components/account/ApiTokensSection.vue'
-import TariffPlansPanel from '@/components/tariffs/TariffPlansPanel.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useRoute, useRouter } from 'vue-router'
@@ -278,8 +277,6 @@ useRefreshHandler(() => load(true))
         <p class="text-xs text-slate-400">{{ $t('account.accountView.otherDevicesAreSignedOut') }}</p>
       </form>
     </section>
-
-    <TariffPlansPanel />
 
     <ApiTokensSection />
 

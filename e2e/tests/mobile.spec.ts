@@ -292,6 +292,22 @@ test('battery, resale value and contract are on the vehicle sheet, and the home 
   }
 })
 
+test('the tariff plans are a row of the vehicle sheet for a vehicle that charges, no longer on the account page', async ({ page, request }) => {
+  await useVehicle(page, ev.id, '/vehicle')
+  await page.getByRole('main').getByRole('button', { name: /Home charging/ }).click()
+  const sheet = page.getByRole('dialog', { name: 'Electricity tariff plans' })
+  await expect(sheet.getByRole('button', { name: 'New plan' })).toBeVisible()
+  await page.goBack()
+  await expect(sheet).toHaveCount(0)
+  await page.goto('/account')
+  await expect(page.getByRole('main').getByText('Electricity tariff plans')).toHaveCount(0)
+  const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')
+  if (ice) {
+    await useVehicle(page, ice.id, '/vehicle')
+    await expect(page.getByRole('main').getByRole('button', { name: /Home charging/ })).toHaveCount(0)
+  }
+})
+
 // The keyboard itself cannot be tested headless: the attribute that picks it can. A whole-kilometre field has no comma key.
 test('the vehicle sheet lists the screens of the vehicle, each opens and Back returns to the sheet', async ({ page }) => {
   await useVehicle(page, ev.id, '/vehicle')
