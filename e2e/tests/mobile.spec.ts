@@ -203,21 +203,12 @@ test('the Back gesture leaves the selection instead of the page', async ({ page 
   expect(new URL(page.url()).pathname).not.toBe('/drives')
 })
 
-test('on the home page every headline figure leads somewhere you can see', async ({ page }) => {
+test('on the home page the month figure leads to the journal, and the cost per distance explains itself', async ({ page }) => {
   await useVehicle(page, ev.id, '/')
-  // The cost per distance opens the totals in a sheet rather than unfolding a block below the fold
-  await page.getByRole('button', { name: 'Cost details' }).first().click()
-  await expect(page.getByRole('dialog', { name: 'Cost details' })).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
-
-  const figures = page.getByRole('main')
-  await figures.getByRole('link', { name: /^Cash paid/ }).click()
+  const hero = page.getByTestId('today-hero')
+  await expect(hero.getByTestId('today-per-km')).toContainText(/\/km/)
+  await hero.getByRole('link').first().click()
   await expect(page).toHaveURL(/\/costs(\?period=\w+)?$/)
-
-  await page.goBack()
-  await figures.getByRole('link', { name: /^Energy/ }).click()
-  await expect(page).toHaveURL(/\/costs\?theme=energy/)
 })
 
 test('a tire opens from its wheel tile, and the fitted set is one card instead of four', async ({ page }) => {
@@ -681,9 +672,8 @@ test('the selection bar counter is not cut on a phone, and the sheet ends with D
 })
 
 test('the chart hint says "Tap" on a touch screen', async ({ page }) => {
-  await useVehicle(page, ev.id, '/')
-  await page.getByRole('button', { name: /^Mileage and cost/ }).first().tap()
-  await expect(page.getByText(/^Tap a bar of the chart/)).toBeVisible()
+  await useVehicle(page, ev.id, '/costs')
+  await expect(page.getByText(/^Tap a bar of the chart/).first()).toBeVisible()
   await expect(page.getByText(/^Click a bar of the chart/)).toBeHidden()
 })
 
@@ -897,7 +887,7 @@ test('"Change set" is disabled with its reason when no tire is in storage, and o
 
 test('a definition opens on touch, and Back closes it', async ({ page }) => {
   await useVehicle(page, ev.id, '/')
-  const tip = page.getByRole('main').getByRole('button', { name: /^Economic cost: / }).first()
+  const tip = page.getByTestId('today-per-km').getByRole('button', { name: /^Cash paid: / })
   await tip.scrollIntoViewIfNeeded()
   const box = (await tip.boundingBox())!
   // The button is the size of its glyph; the finger's 44 px hit area is around it
@@ -909,11 +899,11 @@ test('a definition opens on touch, and Back closes it', async ({ page }) => {
   }
   const before = page.url()
   await tip.tap()
-  const sheet = page.getByRole('dialog', { name: 'Economic cost' })
+  const sheet = page.getByRole('dialog', { name: 'Cash paid' })
   await expect(sheet).toBeVisible()
-  await expect(sheet).toContainText('Costs spread over the period they cover')
+  await expect(sheet).toContainText('Amounts actually paid')
   // Above the bottom bar, not stacked under it by the card that holds the tip
-  const definition = sheet.getByText('Costs spread over')
+  const definition = sheet.getByText('Amounts actually paid')
   await expect
     .poll(() =>
       definition.evaluate((el) => {
@@ -961,8 +951,8 @@ test('the authorization page has no tab bar or vehicle picker, and its buttons s
 })
 
 test('in the month detail the two modes share the track, and the fixed/variable line has no stray bullet', async ({ page }) => {
-  await useVehicle(page, ev.id, '/')
-  await page.getByRole('main').getByRole('button', { name: /spent so far/ }).first().tap()
+  await useVehicle(page, ev.id, '/costs')
+  await page.getByRole('main').getByRole('button', { name: /Last month's detail/ }).first().tap()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   const modes = dialog.locator('button[aria-pressed]')
@@ -975,11 +965,11 @@ test('in the month detail the two modes share the track, and the fixed/variable 
   await expect(dialog.getByText('•', { exact: true })).toBeHidden()
 })
 
-test.describe('the period bar of the home page', () => {
+test.describe('the period bar of the costs page', () => {
   const bar = (page: Page) => page.getByTestId('period-bar')
 
   test('an arrow goes to the neighbouring period, the URL follows without a history entry, and a reload keeps it', async ({ page }) => {
-    await useVehicle(page, ev.id, '/')
+    await useVehicle(page, ev.id, '/costs')
     await expect(bar(page)).toBeVisible()
     await expect(page).toHaveURL(/period=12M/)
     const before = await page.evaluate(() => history.length)
@@ -993,7 +983,7 @@ test.describe('the period bar of the home page', () => {
   })
 
   test('the system Back closes the sheet and leaves the URL as it was', async ({ page }) => {
-    await useVehicle(page, ev.id, '/')
+    await useVehicle(page, ev.id, '/costs')
     const url = page.url()
     await bar(page).getByRole('button', { name: /Choose the period/ }).tap()
     const dialog = page.getByRole('dialog')
@@ -1004,7 +994,7 @@ test.describe('the period bar of the home page', () => {
   })
 
   test('a preset closes the sheet and changes the period; "Custom" shows labelled From and To fields with 44px targets', async ({ page }) => {
-    await useVehicle(page, ev.id, '/')
+    await useVehicle(page, ev.id, '/costs')
     await bar(page).getByRole('button', { name: /Choose the period/ }).tap()
     const dialog = page.getByRole('dialog')
     await dialog.getByRole('button', { name: 'Last 3 months' }).tap()
@@ -1026,7 +1016,7 @@ test.describe('the period bar of the home page', () => {
   })
 
   test('the bar gives way while the page is read downwards and comes back upwards, above the tab bar', async ({ page }) => {
-    await useVehicle(page, ev.id, '/')
+    await useVehicle(page, ev.id, '/costs')
     const nav = (await page.locator('nav[aria-label]').last().boundingBox())!
     const shown = (await bar(page).boundingBox())!
     expect(shown.y + shown.height).toBeLessThanOrEqual(nav.y)
@@ -1039,7 +1029,7 @@ test.describe('the period bar of the home page', () => {
   for (const width of [360, 430]) {
     test(`no horizontal overflow at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 844 })
-      await useVehicle(page, ev.id, '/')
+      await useVehicle(page, ev.id, '/costs')
       await expect(bar(page)).toBeVisible()
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
     })

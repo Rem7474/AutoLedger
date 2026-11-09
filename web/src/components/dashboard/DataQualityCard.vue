@@ -140,11 +140,14 @@ const actions = computed<Action[]>(() => {
 const hasOdometerIssues = computed(() => (props.tco?.completeness?.odometer_gaps ?? 0) > 0 || (props.tco?.completeness?.odometer_anomalies ?? 0) > 0)
 const todoCount = computed(() => actions.value.length + (hasOdometerIssues.value ? 1 : 0))
 const showTodo = ref(false)
+// The card is for what needs a look: it stays out of the page while the figures are complete and no entry looks mistyped
+const needsAttention = computed(() => !!props.tco?.completeness && (!props.tco.completeness.is_complete || alertLines.value.length > 0))
 </script>
 
 <template>
+  <section v-if="needsAttention" aria-labelledby="today-to-check" data-testid="to-check">
+    <h2 id="today-to-check" class="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $t('dashboard.today.toCheck') }}</h2>
   <div
-    v-if="tco?.completeness"
     class="p-4 rounded-2xl space-y-2 border"
     :class="tco.completeness.is_complete && scored ? 'bg-emerald-500/5 border-emerald-500/20' : low ? 'bg-amber-500/10 border-amber-500/30' : 'bg-slate-900 border-slate-800'"
   >
@@ -226,4 +229,5 @@ const showTodo = ref(false)
       </div>
     </div>
   </div>
+</section>
 </template>

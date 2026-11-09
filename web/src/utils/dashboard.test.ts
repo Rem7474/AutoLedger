@@ -3,8 +3,6 @@ import { formatAmount } from '@/currency'
 import {
   buildLeaseSummary,
   buildMonthBreakdown,
-  countFollowUpItems,
-  followUpItems,
   computeMonthFixedVariable,
   currentMonthStats,
   rollingWindowStats,
@@ -14,7 +12,6 @@ import {
   nextDueReminder,
   reminderProgress,
   sortRemindersByUrgency,
-  summarizeUrgentReminders,
   groupRemindersByDue,
 } from './dashboard'
 
@@ -59,26 +56,6 @@ describe('currentMonthStats', () => {
     expect(currentMonthStats(list, new Date('2026-04-10T10:00:00Z'))!.prevDistance).toBeNull()
     expect(currentMonthStats([], new Date())).toBeNull()
     expect(currentMonthStats(undefined, new Date())).toBeNull()
-  })
-})
-
-describe('summarizeUrgentReminders', () => {
-  const r = (title: string, status: string) => ({ title, status })
-
-  it('lists overdue and due-soon reminders and flags overdue ones', () => {
-    const s = summarizeUrgentReminders([r('A', 'OVERDUE'), r('B', 'DUE_SOON'), r('C', 'OK')])
-    expect(s.urgent.map((x) => x.title)).toEqual(['A', 'B'])
-    expect(s.hasOverdue).toBe(true)
-    expect(s.summary).toBe('A, B')
-  })
-
-  it('names two and counts the others', () => {
-    const s = summarizeUrgentReminders([r('A', 'OVERDUE'), r('B', 'DUE_SOON'), r('C', 'DUE_SOON'), r('D', 'DUE_SOON')])
-    expect(s.summary).toBe('A, B et 2 autre(s)')
-  })
-
-  it('is empty when nothing is urgent', () => {
-    expect(summarizeUrgentReminders([r('A', 'OK')])).toEqual({ urgent: [], hasOverdue: false, summary: '' })
   })
 })
 
@@ -372,27 +349,6 @@ describe('groupRemindersByDue', () => {
   })
 })
 
-describe('countFollowUpItems', () => {
-  const soon = { status: 'DUE_SOON', interval_km: 10000, remaining_km: 500 }
-  const overdue = { status: 'OVERDUE', interval_km: 10000, remaining_km: -100 }
-
-  it('counts data left to complete and a maintenance coming due', () => {
-    expect(countFollowUpItems({ is_complete: false }, [soon], true)).toBe(2)
-  })
-  it('counts nothing when the data is complete and the next maintenance is far or planned', () => {
-    expect(countFollowUpItems({ is_complete: true }, [], true)).toBe(0)
-  })
-  it('invites to plan a schedule when none exists', () => {
-    expect(countFollowUpItems({ is_complete: true }, [], false)).toBe(1)
-  })
-  it('leaves overdue reminders to their own banner', () => {
-    expect(countFollowUpItems({ is_complete: true }, [overdue], true)).toBe(0)
-  })
-  it('ignores a missing completeness block', () => {
-    expect(countFollowUpItems(null, [soon], true)).toBe(1)
-  })
-})
-
 describe('currentMonthStats with the month named by the server', () => {
   const list = [
     { month: '2026-09', distance_km: 300, total: 100 },
@@ -518,16 +474,3 @@ describe('monthlyCostSeries', () => {
   })
 })
 
-describe('followUpItems', () => {
-  const base = { interval_km: 10000, remaining_km: 1000 }
-  it('names the data to complete and the maintenance coming due', () => {
-    expect(followUpItems({ is_complete: false }, [{ ...base, status: 'DUE_SOON' }], true)).toEqual({ data: true, maintenance: 'soon' })
-  })
-  it('invites to plan a maintenance when nothing is scheduled', () => {
-    expect(followUpItems({ is_complete: true }, [], false)).toEqual({ data: false, maintenance: 'plan' })
-  })
-  it('has nothing to say when the data is complete and only overdue reminders remain', () => {
-    expect(followUpItems({ is_complete: true }, [{ ...base, status: 'OVERDUE', remaining_km: -5 }], true)).toEqual({ data: false, maintenance: null })
-    expect(followUpItems(null, [], true)).toEqual({ data: false, maintenance: null })
-  })
-})

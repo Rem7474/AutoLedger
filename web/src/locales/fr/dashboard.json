@@ -1,6 +1,5 @@
 {
   "dashboardView": {
-    "expense": "+ Dépense",
     "subtitle": "Coût réel de possession et coût au {unit} pour {name}",
     "yourVehicle": "votre véhicule"
   },
@@ -275,26 +274,10 @@
     "depreciationMissingAction": "La renseigner",
     "tollsAndParking": "Péages & parkings",
     "chargeSWithoutACost": "{charges_without_cost} recharge(s) sans coût",
-    "fullCostPerKm": "Coût complet / {unit}",
     "totalCost": "Décaissé depuis l'achat",
-    "fuel": "Carburant (pleins)",
-    "energy": "Énergie (charges)",
-    "ofWhichEstimatedEnergy": "dont {amount} d'énergie estimée",
-    "energyPanelLink": "Efficacité énergétique",
-    "energyHybrid": "Énergie (charges + pleins)",
     "hybridSplit": "Électricité {electricity} · carburant {fuel}",
-    "cashPaid": "Décaissé",
-    "viewExpenses": "Voir les dépenses",
     "economicWindow": "Coût économique : {amount} · {cost_per_km}/{unit}",
-    "sincePurchase": "Depuis {month} : {amount}",
-    "economicPerKm": "Coût économique / {unit}",
-    "windowMonths": "dernier mois | {months} derniers mois",
-    "sincePurchasePerKm": "Coût complet depuis l'achat : {amount}/{unit}",
-    "currentMonth": "{month}",
-    "currentMonthShort": "Mois en cours",
     "monthDistance": "{distance_km} {unit}",
-    "viewTheBreakdown": "Voir le détail",
-    "details": "Détail des coûts",
     "fullCostLabel": "Coût complet depuis l'achat",
     "depreciationLabel": "dont décote",
     "economicWindowLabel": "Coût économique · dernier mois | Coût économique · {months} derniers mois",
@@ -304,19 +287,7 @@
     "avgPrice": "Prix moyen",
     "kwhLabel": "Énergie rechargée",
     "hybridSplitLabel": "Répartition",
-    "spentSoFar": "dépensé à ce jour",
     "alreadyScheduled": "+ {amount} déjà programmé"
-  },
-  "nextDueCard": {
-    "title": "Prochain entretien",
-    "empty": "Aucune échéance planifiée",
-    "create": "Créer un rappel",
-    "viewReminders": "Voir les rappels",
-    "othersSoon": "+{count} autre à prévoir | +{count} autres à prévoir"
-  },
-  "urgentRemindersBanner": {
-    "viewTheReminders": "Consulter les rappels",
-    "overdue": "Entretien(s) en retard"
   },
   "donut": {
     "energy": "Énergie",
@@ -333,9 +304,6 @@
     "hintFull": "Coût économique : usure des pneus amortie et décote incluses.",
     "hintCash": "Sommes réellement payées : pneus au moment de l'achat, sans décote.",
     "cashTitle": "Répartition des dépenses décaissées"
-  },
-  "urgentReminders": {
-    "andOthers": "{titles} et {count} autre(s)"
   },
   "lease": {
     "inProgress": "En cours",
@@ -359,12 +327,6 @@
     "financing": "Financement & location",
     "financingNote": "Lissé : {smoothed} (mensualité réglée : {paid})",
     "other": "Abonnements, taxes & autres"
-  },
-  "followUp": {
-    "title": "À suivre",
-    "toComplete": "données à compléter",
-    "maintenanceSoon": "entretien à prévoir",
-    "maintenanceToPlan": "échéance à planifier"
   },
   "batteryHealth": {
     "title": "Santé de la batterie",
@@ -418,18 +380,27 @@
     "advancedHint": "La valeur combine l’âge, le kilométrage et la santé de la batterie. Ces poids règlent la part de chacun : laissez les valeurs par défaut si vous hésitez."
   },
   "sheets": {
-    "breakdown": "Répartition des coûts",
-    "breakdownHint": "Part de chaque poste de coût",
-    "mileageLast": "{month} : {distance} parcourus",
     "batteryNow": "État de santé : {pct}",
     "resaleNow": "Vaut environ {value} aujourd’hui",
-    "mileage": "Kilométrage et coût par distance",
-    "mileageHint": "Distance et coût par distance, mois par mois",
     "battery": "Santé de la batterie",
     "batteryHint": "Relevés de capacité et état de santé",
     "resale": "Valeur de revente",
     "vehicleSheetHint": "Batterie, valeur de revente et contrat",
     "vehicleSheet": "Fiche du véhicule",
-    "resaleHint": "Valeur estimée aujourd’hui et en fin de contrat"
+    "resaleHint": "Valeur estimée aujourd’hui et en fin de contrat",
+    "totals": "Totaux depuis l'achat",
+    "totalsHint": "Coût complet, dépréciation, énergie et distance"
+  },
+  "today": {
+    "upcoming": "À venir",
+    "toCheck": "À vérifier",
+    "tireTitle": "Pneus : {name}",
+    "nothingPlanned": "Aucun entretien n'est encore planifié.",
+    "nothingSoon": "Rien à prévoir prochainement.",
+    "planOne": "En planifier un",
+    "spentIn": "Dépensé en {month}",
+    "themesLabel": "Ce dont se compose la dépense du mois",
+    "perKm": "Coût au {unit}",
+    "wholeMonth": "Le mois entier, programmé compris"
   }
 }

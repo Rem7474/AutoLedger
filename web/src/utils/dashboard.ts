@@ -39,14 +39,6 @@ export function currentMonthStats(monthlyCosts: any[] | undefined, now = new Dat
   }
 }
 
-/** Reminders that are overdue or due soon, with a short sentence naming the first two. */
-export function summarizeUrgentReminders(reminders: { title: string; status: string }[]) {
-  const urgent = reminders.filter((r) => r.status === 'OVERDUE' || r.status === 'DUE_SOON')
-  const titles = urgent.map((r) => r.title)
-  const summary = !titles.length ? '' : titles.length <= 2 ? titles.join(', ') : t('dashboard.urgentReminders.andOthers', { titles: titles.slice(0, 2).join(', '), count: titles.length - 2 })
-  return { urgent, hasOverdue: reminders.some((r) => r.status === 'OVERDUE'), summary }
-}
-
 interface ScheduledReminder {
   status: string
   interval_km?: number | null
@@ -112,23 +104,6 @@ export function nextDueReminder<T extends ScheduledReminder>(reminders: T[]): { 
     if (progress !== null && (!best || progress > best.progress)) best = { reminder, progress }
   }
   return best
-}
-
-/**
- * What the follow-up zone of the dashboard asks for: data left to complete in the TCO, and a maintenance coming due
- * (or, with no schedule planned yet, an invitation to plan one).
- */
-export function followUpItems(completeness: { is_complete?: boolean } | null | undefined, reminders: ScheduledReminder[], hasSchedule: boolean): { data: boolean; maintenance: 'soon' | 'plan' | null } {
-  return {
-    data: !!completeness && !completeness.is_complete,
-    maintenance: nextDueReminder(reminders) ? 'soon' : !hasSchedule ? 'plan' : null,
-  }
-}
-
-/** How many things the follow-up zone waits for. */
-export function countFollowUpItems(completeness: { is_complete?: boolean } | null | undefined, reminders: ScheduledReminder[], hasSchedule: boolean): number {
-  const items = followUpItems(completeness, reminders, hasSchedule)
-  return (items.data ? 1 : 0) + (items.maintenance ? 1 : 0)
 }
 
 /** Follow-up figures of a lease (LOA / LLD) contract: elapsed time, mileage against the allowance, status. */
