@@ -7,8 +7,9 @@ import type { Period } from '@/utils/period'
 
 // The period of a page: its label opens the sheet, the arrows go to the neighbouring period. On a phone the bar sits
 // just above the tab bar and gives way while the page is read downwards; from `md` it is part of the page.
-defineProps<{ period: Period; label: string; rounded?: boolean; canPrevious: boolean; canNext: boolean }>()
+defineProps<{ period?: Period; label: string; rounded?: boolean; canPrevious: boolean; canNext: boolean }>()
 const emit = defineEmits<{ step: [dir: -1 | 1]; pick: [period: Period] }>()
+// A page whose period is not a `Period` (Trajets) brings its own sheet in the `sheet` slot
 
 const sheet = ref(false)
 const hidden = ref(false)
@@ -47,5 +48,7 @@ onBeforeUnmount(() => scroller?.removeEventListener('scroll', onScroll))
     </div>
   </div>
   <!-- Outside the bar: a transformed ancestor would become the containing block of the fixed sheet -->
-  <PeriodSheet v-model:open="sheet" :period="period" @pick="emit('pick', $event)" />
+  <slot name="sheet" :open="sheet" :set-open="(v: boolean) => (sheet = v)">
+    <PeriodSheet v-if="period" v-model:open="sheet" :period="period" @pick="emit('pick', $event)" />
+  </slot>
 </template>

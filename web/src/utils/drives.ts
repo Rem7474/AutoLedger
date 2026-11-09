@@ -316,10 +316,9 @@ export function buildTripCostDrive(tg: any, tgDrives: any[]) {
 }
 
 /** How many filters narrow the list. On a phone they sit behind a button, which shows this number. */
-export function countActiveDriveFilters(f: { mode: 'DRIVES' | 'TRIPS'; periodMode: string; unqualifiedOnly: boolean; hasTollOnly: boolean; selectedTag: string; tripQualifyOnly: boolean; carpoolFilter?: string }): number {
-  const period = f.periodMode !== 'ALL' ? 1 : 0
-  if (f.mode === 'TRIPS') return period + (f.tripQualifyOnly ? 1 : 0)
-  return period + (f.unqualifiedOnly ? 1 : 0) + (f.hasTollOnly ? 1 : 0) + (f.selectedTag ? 1 : 0) + (f.carpoolFilter ? 1 : 0)
+export function countActiveDriveFilters(f: { mode: 'DRIVES' | 'TRIPS'; unqualifiedOnly: boolean; hasTollOnly: boolean; selectedTag: string; tripQualifyOnly: boolean; carpoolFilter?: string }): number {
+  if (f.mode === 'TRIPS') return f.tripQualifyOnly ? 1 : 0
+  return (f.unqualifiedOnly ? 1 : 0) + (f.hasTollOnly ? 1 : 0) + (f.selectedTag ? 1 : 0) + (f.carpoolFilter ? 1 : 0)
 }
 
 /** The carpools a drive is part of, as the drives list returns them. */
@@ -333,4 +332,44 @@ export function summarizeDriveCarpools(refs: DriveCarpoolRef[] | null | undefine
     passengers: refs.reduce((sum, c) => sum + (c.passenger_count || 0), 0),
     revenue: refs.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0),
   }
+}
+
+type PeriodState = { mode: PeriodMode; anchor: string; month: string; from: string; to: string }
+
+const unitOf = (mode: PeriodMode): PeriodUnit | null => (mode === 'ALL' || mode === 'CUSTOM' ? null : mode)
+// The day a unit is read from: the month picker keeps its own value for MONTH
+const referenceOf = (f: PeriodState) => (f.mode === 'MONTH' ? `${f.month}-01` : f.anchor)
+
+/** The period in a few words for the phone's bar; empty for "all", which the page words itself. */
+export function drivesPeriodLabel(f: PeriodState): string {
+  const day = (iso: string, withYear: boolean) => dayOf(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) })
+  const unit = unitOf(f.mode)
+  if (unit) {
+    const r = unitRange(unit, referenceOf(f))
+    if (unit === 'DAY') return day(r.from, true)
+    if (unit === 'WEEK') return `${day(r.from, false)} – ${day(r.to, true)}`
+    if (unit === 'MONTH') return formatMonthLabel(f.month)
+    return r.from.slice(0, 4)
+  }
+  if (f.mode === 'CUSTOM') {
+    if (!f.from && !f.to) return ''
+    return `${f.from ? day(f.from, true) : '…'} – ${f.to ? day(f.to, true) : '…'}`
+  }
+  return ''
+}
+
+/** The anchor and month one unit before (-1) or after (+1); null when the period is not a stepping unit. */
+export function stepDrivesPeriod(f: PeriodState, dir: -1 | 1): { anchor: string; month: string } | null {
+  const unit = unitOf(f.mode)
+  if (!unit) return null
+  const anchor = shiftAnchor(unit, referenceOf(f), dir)
+  return { anchor, month: anchor.slice(0, 7) }
+}
+
+/** Whether the arrow in that direction leads somewhere: a unit steps back freely and forward up to the one holding today. */
+export function canStepDrivesPeriod(f: PeriodState, dir: -1 | 1, today: Date = new Date()): boolean {
+  const unit = unitOf(f.mode)
+  if (!unit) return false
+  if (dir === -1) return true
+  return unitRange(unit, referenceOf(f)).to < todayIso(today)
 }

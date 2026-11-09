@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { intlLocale, t } from '@/i18n'
+import { t } from '@/i18n'
 import { formatDistance } from '@/units'
 import { computed, ref } from 'vue'
-import { X, Search, SlidersHorizontal, Calendar } from 'lucide-vue-next'
+import { X, Search, SlidersHorizontal } from 'lucide-vue-next'
 import ModalShell from '@/components/ModalShell.vue'
 import ListSummary from '@/components/ListSummary.vue'
 import DrivesPeriodControls from '@/components/drives/DrivesPeriodControls.vue'
+import DrivesPeriodBar from '@/components/drives/DrivesPeriodBar.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
-import { formatMonthLabel, periodBounds, type PeriodMode } from '@/utils/drives'
+import { formatMonthLabel, type PeriodMode } from '@/utils/drives'
 
 // One bar for the list filters: the period, the address search, and the quick filters of the page in the `filters`
-// slot. On a phone the bar is a summary of the period and a Filters button; the period and the quick filters are
-// edited in a sheet. Also shows what is listed: the count and, in trip mode, the distance.
+// slot. On a phone the bar is the search and a Filters button, the quick filters are edited in a sheet and the
+// period is a bar above the tab bar. Also shows what is listed: the count and, in trip mode, the distance.
 // Every change of a filter is reported with change so the page reloads from the first page.
 const props = withDefaults(defineProps<{ total: number; loading: boolean; drives: any[]; mode?: 'DRIVES' | 'TRIPS'; activeCount?: number }>(), { mode: 'DRIVES', activeCount: 0 })
 const emit = defineEmits<{ change: [] }>()
@@ -38,17 +39,6 @@ function clearSearch() {
 }
 
 const formattedSelectedMonth = computed(() => formatMonthLabel(selectedMonth.value))
-
-// What the period is, in a few words, for the phone's summary button
-const periodSummary = computed(() => {
-  const b = periodBounds({ mode: periodMode.value, anchor: anchorDay.value, month: selectedMonth.value, from: customFrom.value, to: customTo.value })
-  if (!b.from && !b.to) return t('drives.drivesToolbar.units.ALL')
-  const fmt = (iso?: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : '…')
-  if (b.from === b.to) return fmt(b.from)
-  if (periodMode.value === 'MONTH') return formattedSelectedMonth.value
-  if (periodMode.value === 'YEAR') return (b.from ?? '').slice(0, 4)
-  return `${fmt(b.from)} – ${fmt(b.to)}`
-})
 
 // The drives list is paged and the API returns the count of the filter, not its totals: the distance, energy and
 // cost of a page would read as the filter's, so only trips (not paged) carry a total. A selection has its own summary.
@@ -84,29 +74,25 @@ const summaryChips = computed(() =>
           <X class="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <button type="button" class="btn btn-secondary max-w-[40%] shrink-0 rounded-full" @click="sheetOpen = true">
-        <Calendar class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-        <span class="truncate">{{ periodSummary }}</span>
-      </button>
       <button type="button" class="tap btn btn-secondary relative shrink-0 rounded-full !px-0 w-11" :aria-label="$t('drives.drivesView.filters')" @click="sheetOpen = true">
         <SlidersHorizontal class="h-4 w-4" aria-hidden="true" />
         <span v-if="activeCount > 0" class="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-rose-600 px-1 text-center text-xs font-bold leading-5 text-white">{{ activeCount }}</span>
       </button>
     </div>
 
+    <DrivesPeriodBar
+      v-if="isMobile"
+      v-model:period-mode="periodMode"
+      v-model:selected-month="selectedMonth"
+      v-model:anchor-day="anchorDay"
+      v-model:custom-from="customFrom"
+      v-model:custom-to="customTo"
+      :total="total"
+      @change="emit('change')"
+    />
+
     <ModalShell v-if="isMobile" v-model:open="sheetOpen" :title="$t('drives.drivesView.filters')" :icon="SlidersHorizontal" icon-class="text-slate-300" size="sm">
       <div class="space-y-5">
-        <section class="space-y-2">
-          <h4 class="text-xs font-semibold text-slate-400">{{ $t('drives.drivesToolbar.period') }}</h4>
-          <DrivesPeriodControls
-            v-model:period-mode="periodMode"
-            v-model:selected-month="selectedMonth"
-            v-model:anchor-day="anchorDay"
-            v-model:custom-from="customFrom"
-            v-model:custom-to="customTo"
-            @change="emit('change')"
-          />
-        </section>
         <section v-if="$slots.filters" class="space-y-2">
           <h4 class="text-xs font-semibold text-slate-400">{{ $t('drives.drivesView.quickFilters') }}</h4>
           <div class="flex flex-wrap items-center gap-2"><slot name="filters" /></div>

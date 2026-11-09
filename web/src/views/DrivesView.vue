@@ -246,7 +246,7 @@ const viewMode = ref<DrivesTab>(parseDrivesTab(route.query.tab))
 const tripQualifyOnly = ref(false)
 
 // On a phone the filters sit behind one button, so the first drive is not pushed below the fold; a wide screen shows them
-const activeFilterCount = computed(() => countActiveDriveFilters({ mode: viewMode.value, periodMode: periodMode.value, unqualifiedOnly: unqualifiedOnly.value, hasTollOnly: hasTollOnly.value, selectedTag: selectedTag.value, tripQualifyOnly: tripQualifyOnly.value, carpoolFilter: carpoolFilter.value }))
+const activeFilterCount = computed(() => countActiveDriveFilters({ mode: viewMode.value, unqualifiedOnly: unqualifiedOnly.value, hasTollOnly: hasTollOnly.value, selectedTag: selectedTag.value, tripQualifyOnly: tripQualifyOnly.value, carpoolFilter: carpoolFilter.value }))
 const {
   tripGroups,
   tripSuggestions,
@@ -442,7 +442,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 max-md:pb-16">
     <!-- Drives informational banner when no telemetry is linked -->
     <div v-if="vehicleStore.activeVehicle && !vehicleStore.hasTeslaMate && total === 0 && !loading && loadError === null" class="rounded-2xl border border-info-500/30 bg-info-500/10 p-4 text-sm text-info-200">
       <span>{{ $t('drives.drivesView.noTelemetryBanner') }}</span>

@@ -40,7 +40,7 @@ const footer = computed(() => modalFooterClass(props.footerClass))
 <template>
   <div
     v-if="open"
-    class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
+    class="fixed inset-0 m-0 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
     :class="layer"
     @click.self="open = false"
   >

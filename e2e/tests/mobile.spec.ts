@@ -317,7 +317,7 @@ test('saving a charge deep in the list keeps the page where it was', async ({ pa
 
 test('a sheet never scrolls sideways, whichever control it holds', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
-  await page.getByRole('button', { name: /Filters/ }).first().click()
+  await page.getByTestId('period-bar').getByRole('button', { name: /Choose the period/ }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   // The sheet sits in a backdrop: a hidden control wider than the screen would make the whole sheet slide left
@@ -1022,4 +1022,40 @@ test('the Analysis sheet of the charges shares the period of the home page and c
   // The home page reads the same choice
   await page.goto('/')
   await expect(page).toHaveURL(/period=3M/)
+})
+
+test.describe('the period bar of the drives list', () => {
+  const bar = (page: Page) => page.getByTestId('period-bar')
+
+  test('the period is a bar above the tab bar, the Filters sheet no longer holds it, and the sheet reaches the screen edge', async ({ page }) => {
+    await useVehicle(page, ev.id, '/drives')
+    await expect(bar(page)).toBeVisible()
+    await expect(bar(page)).toContainText('All')
+    await expect(bar(page).getByRole('button', { name: 'Previous period' })).toBeDisabled()
+
+    await page.getByRole('button', { name: 'Filters' }).first().tap()
+    const filters = page.getByRole('dialog', { name: 'Filters' })
+    await expect(filters).toBeVisible()
+    await expect(filters.getByRole('group', { name: 'Period' })).toHaveCount(0)
+    // The layer covers the whole screen: no strip of the tab bar shows under the sheet
+    const overlay = filters.locator('xpath=..')
+    const box = (await overlay.boundingBox())!
+    expect(Math.round(box.y + box.height)).toBe(page.viewportSize()!.height)
+  })
+
+  test('a unit chosen in the sheet is stepped with the arrows and the list reloads', async ({ page }) => {
+    await useVehicle(page, ev.id, '/drives')
+    await bar(page).getByRole('button', { name: /Choose the period/ }).tap()
+    const sheet = page.getByRole('dialog', { name: 'Period' })
+    await sheet.getByRole('button', { name: 'Month', exact: true }).tap()
+    await expect(sheet.getByRole('button', { name: 'Month', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await page.goBack()
+    await expect(sheet).toBeHidden()
+    await expect(bar(page).getByRole('button', { name: 'Next period' })).toBeDisabled()
+
+    const reload = page.waitForRequest((req) => /\/api\/vehicles\/[^/]+\/drives\?.*from=/.test(req.url()))
+    await bar(page).getByRole('button', { name: 'Previous period' }).tap()
+    await reload
+    await expect(bar(page).getByRole('button', { name: 'Next period' })).toBeEnabled()
+  })
 })
