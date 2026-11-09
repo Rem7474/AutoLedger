@@ -262,7 +262,7 @@
   },
   "tagBreakdown": {
     "ofTollsAndParking": "{value} de péages & parkings",
-    "breakdownByDriveCategoryWork": "Ventilation par Catégorie de Trajets (Pro / Perso)",
+    "breakdownByDriveCategoryWork": "Ventilation par catégorie de trajets (Pro / Perso)",
     "kmKwh": "{distance_km} {unit} ({energy_kwh} kWh)",
     "untagged": "Non tagué",
     "costBasis": "Coût des trajets de chaque étiquette : énergie, usure, part d'assurance et péages, comme dans la liste des trajets.",
@@ -276,7 +276,7 @@
     "fullCostPerKm": "Coût complet / {unit}",
     "totalCost": "Décaissé depuis l'achat",
     "fuel": "Carburant (pleins)",
-    "energy": "Énergie (Charges)",
+    "energy": "Énergie (charges)",
     "ofWhichEstimatedEnergy": "dont {amount} d'énergie estimée",
     "energyPanelLink": "Efficacité énergétique",
     "energyHybrid": "Énergie (charges + pleins)",

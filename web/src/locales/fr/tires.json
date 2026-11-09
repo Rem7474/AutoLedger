@@ -10,7 +10,7 @@
     "youCanRecordYourWinter": "Vous pouvez enregistrer vos packs de pneus hiver ou de rechange pour suivre précisément leur kilométrage même démontés.",
     "noTireInGarageStorage": "Aucun pneu stocké au garage",
     "scrapped": "Mis au rebut ({length})",
-    "catalogueAndGarageStock": "Catalogue & Stock au garage ({length})",
+    "catalogueAndGarageStock": "Catalogue & stock au garage ({length})",
     "tiresFittedOnTheVehicle": "Pneus montés sur le véhicule",
     "tireSInThisView": "{length} pneu(s) dans cette vue",
     "scrap": "Mettre au rebut",
@@ -28,7 +28,7 @@
     "wearTrackingInMmEstimated": "Suivi de l'usure en mm, durée de vie estimée, permutations en 1 clic et historique complet des montages",
     "deselectAll": "Tout désélectionner",
     "selectAll": "Tout sélectionner",
-    "rotateFrontBack": "Avant ⇄ Arrière (FL ⇄ RL, FR ⇄ RR)",
+    "rotateFrontBack": "Avant ⇄ arrière (FL ⇄ RL, FR ⇄ RR)",
     "rotateCross": "Croisée (FL ⇄ RR, FR ⇄ RL)",
     "rotate": "Permuter",
     "rotationError": "Erreur lors de la permutation : {message}",
@@ -274,7 +274,7 @@
     "frontRightFr": "Avant droit (FR)",
     "frontLeftFl": "Avant gauche (FL)",
     "odometerAtTheSwapKm": "Odomètre de la permutation ({unit})",
-    "seasonalSwapFullSetChange": "Permutation saisonnière (Changement de pack complet)",
+    "seasonalSwapFullSetChange": "Permutation saisonnière (changement de pack complet)",
     "selectFour": "Veuillez sélectionner 4 pneus distincts du garage pour remplacer les pneus montés.",
     "selectionRequired": "Sélection requise"
   },
@@ -288,7 +288,7 @@
     "thisSessionIsOverTire": "Cette session est terminée (pneu démonté)",
     "odometerAtFittingKm": "Odomètre montage ({unit})",
     "fittingDate": "Date de montage",
-    "inStorageUnspecified": "Au garage / Non spécifié",
+    "inStorageUnspecified": "Au garage / non spécifié",
     "rearRightRr": "Arrière droit (RR)",
     "rearLeftRl": "Arrière gauche (RL)",
     "frontRightFr": "Avant droit (FR)",
@@ -333,7 +333,7 @@
   },
   "season": {
     "winter": "Hiver",
-    "allSeason": "4 Saisons",
+    "allSeason": "4 saisons",
     "summer": "Été"
   },
   "timeline": {
