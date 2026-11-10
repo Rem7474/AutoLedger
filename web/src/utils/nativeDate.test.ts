@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { enGB, fr } from 'date-fns/locale'
+import { monthLabel } from './nativeDate'
 
 async function load() {
   vi.resetModules()
@@ -102,5 +104,17 @@ describe('toRange', () => {
     expect(toRange('2026-01-01', '2026-01-31')).toEqual(['2026-01-01', '2026-01-31'])
     expect(toRange('2026-01-31', '2026-01-01')).toEqual(['2026-01-01', '2026-01-31'])
     expect(toRange('2026-01-05', '2026-01-05')).toEqual(['2026-01-05', '2026-01-05'])
+  })
+})
+
+describe('monthLabel', () => {
+  it('writes the month in the language asked, with a capital', () => {
+    expect(monthLabel('2026-11', fr)).toBe('Novembre 2026')
+    expect(monthLabel('2026-11', enGB)).toBe('November 2026')
+  })
+
+  it('is empty when there is no month', () => {
+    expect(monthLabel('', fr)).toBe('')
+    expect(monthLabel('soon', fr)).toBe('')
   })
 })

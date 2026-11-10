@@ -5,7 +5,7 @@ import { Disc } from '@/icons'
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useSelectableRow } from '@/composables/useSelectableRow'
-import { forecastMonthLabel, getConditionBadge, isForecastDue, WEAR_TONE_TEXT, wearTone } from '@/utils/tires'
+import { forecastMonthLabel, getConditionBadge, isForecastDue, WEAR_TONE_TEXT, wearAndRemaining, wearTone } from '@/utils/tires'
 import { formatPercent } from '@/utils/numbers'
 import { t } from '@/i18n'
 
@@ -22,6 +22,10 @@ const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
 })
 const wear = computed(() => Number(props.stat?.life_progress_pct) || 0)
 const tone = computed(() => WEAR_TONE_TEXT[wearTone(wear.value, props.stat?.condition)])
+const figures = computed(() => {
+  const { worn, left } = wearAndRemaining(wear.value)
+  return { left: t('tires.overview.left', { left: formatPercent(left, 0) }), worn: t('tires.overview.wornCaption', { worn: formatPercent(worn, 0) }) }
+})
 const due = computed(() => {
   const date = props.stat?.replacement_forecast?.replacement_date as string | undefined
   if (!date) return null
@@ -49,11 +53,12 @@ const due = computed(() => {
       <span class="truncate">{{ label }}</span>
     </label>
     <p v-if="showModel" class="truncate text-xs text-slate-400">{{ stat.tire.brand }} {{ stat.tire.model }}</p>
-    <p class="text-2xl font-extrabold tabular-nums" :class="tone">
-      {{ formatPercent(wear) }}
+    <p class="text-xl font-extrabold tabular-nums" :class="tone">
+      {{ figures.left }}
       <span class="sr-only">{{ getConditionBadge(stat.condition).label }}</span>
     </p>
-    <TireWearBar :pct="stat.life_progress_pct" :condition="stat.condition" />
+    <TireWearBar remaining :pct="stat.life_progress_pct" :condition="stat.condition" />
+    <p class="text-xs tabular-nums text-slate-400">{{ figures.worn }}</p>
     <p class="truncate text-xs text-slate-400">{{ due ? $t('tires.overview.due', { date: due }) : getConditionBadge(stat.condition).label }}</p>
   </div>
   <div v-else class="flex min-h-32 flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-3 text-center text-xs text-slate-400">

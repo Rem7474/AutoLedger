@@ -352,7 +352,8 @@
   },
   "sessionCount": "{count} session | {count} sessions",
   "wearBar": {
-    "label": "Usure estimée"
+    "label": "Usure estimée",
+    "remaining": "Gomme restante"
   },
   "openTire": "Ouvrir {name}",
   "forecast": {
@@ -390,6 +391,8 @@
   "overview": {
     "mixed": "Pneus différents selon les roues",
     "partlyFitted": "{count} roues sur {total} équipées",
-    "due": "À changer {date}"
+    "due": "À changer {date}",
+    "left": "reste {left}",
+    "wornCaption": "usé à {worn}"
   }
 }

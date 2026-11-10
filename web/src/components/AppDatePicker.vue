@@ -2,11 +2,10 @@
 import { computed } from 'vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { enGB, fr } from 'date-fns/locale'
-import { format } from 'date-fns'
-import { X } from '@/icons'
+import { CalendarDays, X } from '@/icons'
 import { currentLocale, t } from '@/i18n'
 import { useIsMobile } from '@/composables/useIsMobile'
-import { nativeKind, supportsNativeInput, toNativeValue } from '@/utils/nativeDate'
+import { monthLabel, nativeKind, supportsNativeInput, toNativeValue } from '@/utils/nativeDate'
 
 const props = withDefaults(
   defineProps<{
@@ -43,7 +42,11 @@ const emit = defineEmits<{
 const isMobile = useIsMobile()
 const kind = computed(() => nativeKind(props))
 const native = computed(() => isMobile.value && supportsNativeInput(kind.value))
+const dateLocale = computed(() => (currentLocale() === 'fr' ? fr : enGB))
 const nativeValue = computed(() => toNativeValue(props.modelValue, kind.value))
+// A native month field writes the month in the language of the browser: the app draws the label, the field stays on top
+// and transparent so that a tap still opens the wheels of the phone
+const monthText = computed(() => (kind.value === 'month' ? monthLabel(nativeValue.value, dateLocale.value) : ''))
 
 function onNativeChange(e: Event) {
   const value = (e.target as HTMLInputElement).value
@@ -56,7 +59,6 @@ function clearNative() {
   emit('change', '')
 }
 
-const dateLocale = computed(() => (currentLocale() === 'fr' ? fr : enGB))
 
 const internalValue = computed({
   get: () => {
@@ -116,14 +118,8 @@ const displayFormat = computed(() => {
 const formatsConfig = computed(() => {
   if (props.monthPicker) {
     return {
-      input: (d: Date) => {
-        const str = format(d, 'MMMM yyyy', { locale: dateLocale.value })
-        return str.charAt(0).toUpperCase() + str.slice(1)
-      },
-      preview: (d: Date) => {
-        const str = format(d, 'MMMM yyyy', { locale: dateLocale.value })
-        return str.charAt(0).toUpperCase() + str.slice(1)
-      },
+      input: (d: Date) => monthLabel(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, dateLocale.value),
+      preview: (d: Date) => monthLabel(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, dateLocale.value),
     }
   }
   const fmt = props.enableTimePicker ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy'
@@ -149,7 +145,15 @@ const actionRowConfig = computed(() => ({
 
 <template>
   <div v-if="native" class="flex items-center gap-1">
+    <div v-if="kind === 'month'" class="relative min-w-0 flex-1">
+      <div class="field app-native-date flex items-center" :class="{ 'text-slate-500': !monthText }" aria-hidden="true">
+        <span class="min-w-0 flex-1 truncate">{{ monthText || $t('shell.datePicker.selectMonth') }}</span>
+        <CalendarDays class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+      </div>
+      <input :id="id" type="month" :value="nativeValue" :disabled="disabled" class="absolute inset-0 h-full w-full opacity-0" @change="onNativeChange" />
+    </div>
     <input
+      v-else
       :id="id"
       :type="kind"
       :value="nativeValue"
