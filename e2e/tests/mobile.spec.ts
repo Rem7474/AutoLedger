@@ -507,9 +507,9 @@ test('a fill-up dragged to the left is deleted with an Undo', async ({ page, req
   }
 })
 
-test('the drives come under a header per day and the next ones load while scrolling, without pages', async ({ page }) => {
+test('the drives come under a header per month and per day and the next ones load while scrolling, without pages', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
-  const headers = page.locator('main section > h2')
+  const headers = page.locator('main section h3')
   await expect(headers.first()).toBeVisible()
   // The days are named, not numbered pages
   await expect(page.getByText(/^Page \d+ of \d+$/)).toHaveCount(0)
