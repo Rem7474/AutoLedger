@@ -262,8 +262,8 @@
     "cashHint": "What was paid in each month.",
     "month": "Month",
     "total": "Total",
-    "tollsShort": "Tolls",
-    "otherShort": "Other"
+    "otherShort": "Other",
+    "othersGroup": "Tolls, subscriptions, taxes & other"
   },
   "tagBreakdown": {
     "ofTollsAndParking": "{value} of tolls and parking",

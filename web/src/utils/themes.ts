@@ -59,3 +59,18 @@ const EXPENSE_THEMES: Record<string, Theme> = {
   ACCESSORY: 'accessories',
 }
 export const themeOfExpense = (category: string): Theme => EXPENSE_THEMES[category] ?? 'other'
+
+/**
+ * The series of a stacked chart. Seven hues side by side do not stay apart on a dark surface, so a chart draws the five
+ * costs that weigh most, each in its own theme colour, and folds the others (tolls, subscriptions, taxes, accessories,
+ * other) into one neutral series. Repairs belong to maintenance. The order is the stacking order: each series is a
+ * different hue from its neighbours (`themes.test.ts` checks the pairs).
+ */
+export const CHART_GROUPS = ['energy', 'tires', 'maintenance', 'financing', 'insurance', 'other'] as const
+export type ChartGroup = (typeof CHART_GROUPS)[number]
+
+/** The chart series a theme is drawn in: its own for the five main costs, "other" for the rest. */
+export function chartGroupOf(theme: Theme): ChartGroup {
+  if (theme === 'repairs') return 'maintenance'
+  return (CHART_GROUPS as readonly string[]).includes(theme) ? (theme as ChartGroup) : 'other'
+}

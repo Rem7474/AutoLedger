@@ -476,6 +476,13 @@ describe('monthlyCostSeries', () => {
     expect(cash.totals).toEqual([1200, 90])
   })
 
+  it('folds the tolls and the other costs into one series and leaves out a group with nothing in it', () => {
+    const { series, totals } = monthlyCostSeries([{ month: '2026-08', distance_km: 500, total: 130, energy: 100, tolls: 20, other: 10 }], 'cash')
+    expect(series.map((s) => s.key)).toEqual(['energy', 'other'])
+    expect(series.find((s) => s.key === 'other')!.data).toEqual([30])
+    expect(totals).toEqual([130])
+  })
+
   it('is empty without months', () => {
     expect(monthlyCostSeries([], 'cash')).toEqual({ series: [], totals: [], nets: [], netPerKm: [] })
   })

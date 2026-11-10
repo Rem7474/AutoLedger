@@ -687,7 +687,7 @@ test('the selection bar counter is not cut on a phone, and the sheet ends with D
 })
 
 test('the chart hint says "Tap" on a touch screen', async ({ page }) => {
-  await useVehicle(page, ev.id, '/costs')
+  await useVehicle(page, ev.id, '/costs?tab=ANALYSIS')
   await expect(page.getByText(/^Tap a bar of the chart/).first()).toBeVisible()
   await expect(page.getByText(/^Click a bar of the chart/)).toBeHidden()
 })
@@ -967,7 +967,7 @@ test('the authorization page has no tab bar or vehicle picker, and its buttons s
 })
 
 test('in the month detail the two modes share the track, and the fixed/variable line has no stray bullet', async ({ page }) => {
-  await useVehicle(page, ev.id, '/costs')
+  await useVehicle(page, ev.id, '/costs?tab=ANALYSIS')
   await page.getByRole('main').getByRole('button', { name: /Last month's detail/ }).first().tap()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
@@ -1107,6 +1107,27 @@ test('the costs page lists the cost lines of the period under their figures, and
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
+test('the costs page starts with the journal and keeps the charts behind an Analysis tab in the address', async ({ page }) => {
+  await useVehicle(page, ev.id, '/costs?period=12M')
+  const first = page.getByTestId('cost-entry').first()
+  await expect(first).toBeVisible()
+  // The first line is on the first screen, not under three charts
+  expect((await first.boundingBox())!.y).toBeLessThan(500)
+  await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toHaveCount(0)
+
+  await page.getByRole('tab', { name: 'Analysis' }).click()
+  await expect(page).toHaveURL(/tab=ANALYSIS/)
+  await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toBeVisible()
+  // The chart opens on what was paid
+  await expect(page.getByRole('button', { name: 'Cash paid' }).first()).toHaveAttribute('aria-pressed', 'true')
+
+  // A theme without an analysis is the journal alone
+  await page.getByTestId('costs-filter-tolls').click()
+  await expect(page.getByRole('tab', { name: 'Analysis' })).toHaveCount(0)
+  await expect(page.getByTestId('cost-entry').first()).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
 test('a line of the costs page opens the form of its record, read from the server', async ({ page }) => {
   await useVehicle(page, ev.id, '/costs?theme=tolls')
   const row = page.getByTestId('cost-entry').first()
@@ -1123,6 +1144,10 @@ test('the energy theme of the costs page adds the figures by month and by place,
   await useVehicle(page, ev.id, '/costs')
   await expect(page.getByRole('heading', { name: 'Charging by place' })).toHaveCount(0)
   await page.getByTestId('costs-filter-energy').click()
+  // The journal comes first; the figures by month and by place are behind the Analysis tab
+  await expect(page.getByRole('region', { name: 'Charging by place' })).toHaveCount(0)
+  await page.getByRole('tab', { name: 'Analysis' }).click()
+  await expect(page).toHaveURL(/tab=ANALYSIS/)
   const analysis = page.getByRole('region', { name: 'Charging by place' })
   await expect(analysis).toBeVisible()
   // The period is the bar of the page, not a second control in the analysis
@@ -1134,7 +1159,7 @@ test('the energy theme of the costs page adds the figures by month and by place,
 })
 
 test('the costs page draws the monthly charts for the whole cost, and only for the whole cost', async ({ page }) => {
-  await useVehicle(page, ev.id, '/costs')
+  await useVehicle(page, ev.id, '/costs?tab=ANALYSIS')
   await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toBeVisible()
   // A theme is a subset of the cost: the charts of the whole cost are not shown under it
   await page.getByTestId('costs-filter-tolls').click()
@@ -1143,7 +1168,7 @@ test('the costs page draws the monthly charts for the whole cost, and only for t
 })
 
 test('the month detail is titled by its month alone and a swipe moves between months', async ({ page }) => {
-  await useVehicle(page, ev.id, '/costs')
+  await useVehicle(page, ev.id, '/costs?tab=ANALYSIS')
   await page.getByRole('button', { name: /Last month/ }).click()
   const dialog = page.getByRole('dialog')
   const title = dialog.getByRole('heading', { level: 3 })

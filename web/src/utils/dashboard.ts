@@ -1,5 +1,6 @@
 import { intlLocale, t } from '@/i18n'
 import { COST_COLORS } from '@/utils/costBreakdown'
+import { CHART_GROUPS, THEME_HEX, chartGroupOf, type Theme } from '@/utils/themes'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
 export function formatMonthName(monthStr: string) {
@@ -450,16 +451,19 @@ export function plottedCostPerKm(m: { distance_km?: number | null; cost_per_km?:
   return m.cost_per_km == null ? null : m.cost_per_km
 }
 
-/** The stacked monthly bars: one series per cost item, in the economic view (spread) or the cash view (what was paid). */
+/**
+ * The stacked monthly bars: one series per chart group (`chartGroupOf`: five themes and "other", which also holds the
+ * tolls), in the economic view (spread) or the cash view (what was paid). A group with nothing in the range is left out.
+ */
 export function monthlyCostSeries(months: any[], mode: MonthDetailMode) {
   const rows = months.map((m) => buildMonthBreakdown(m, mode))
-  const keys = rows[0]?.items.map((it) => it.key) ?? []
+  const series = CHART_GROUPS.map((key) => ({
+    key,
+    color: THEME_HEX[key],
+    data: rows.map((r) => r.items.filter((it) => chartGroupOf(it.key as Theme) === key).reduce((sum, it) => sum + it.displayAmount, 0)),
+  })).filter((s) => s.data.some((v) => v !== 0))
   return {
-    series: keys.map((key, i) => ({
-      key,
-      color: rows[0].items[i].color,
-      data: rows.map((r) => r.items[i].displayAmount),
-    })),
+    series,
     totals: rows.map((r) => r.activeTotal),
     // What the month cost once the passengers of the carpools paid, null for a month without any: the bars stay gross
     nets: rows.map((r) => (r.carpoolRevenue > 0 ? r.netTotal : null)),
