@@ -18,6 +18,8 @@ import { chargeDeletable } from '@/utils/chargeProvenance'
 import { teslamateChargeUrl } from '@/utils/teslamateCharges'
 import { t } from '@/i18n'
 import { groupChargesByMonth } from '@/utils/expenses'
+import { monthHeader } from '@/utils/dayGroups'
+import { toLocalDay } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { formatNumber } from '@/utils/numbers'
 import { distanceUnit, formatPerDistanceValue, perDistance } from '@/units'
@@ -63,9 +65,15 @@ const actions = computed<SelectionAction[]>(() => {
   return list
 })
 
-// The charges loaded so far, which is the whole list until "load more" is needed.
-const months = computed(() => groupChargesByMonth(props.charges, vehicleStore.currency))
-const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocale(), { month: 'long', year: 'numeric' })
+// The charges loaded so far, which is the whole list until "load more" is needed. A month shows its figures once it is
+// complete: the newest-loaded month still lacks its older charges while more pages remain.
+const months = computed(() => {
+  const today = toLocalDay()
+  const format = (date: Date, withYear: boolean) => date.toLocaleDateString(intlLocale(), { month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
+  const grouped = groupChargesByMonth(props.charges, vehicleStore.currency)
+  const more = props.charges.length < props.chargesTotal
+  return grouped.map((m, i) => ({ ...m, label: monthHeader(m.key, today, format), complete: !(more && i === grouped.length - 1) }))
+})
 </script>
 
 <template>
@@ -114,8 +122,8 @@ const monthLabel = (date: string) => new Date(date).toLocaleDateString(intlLocal
     <div v-else-if="charges.length" class="space-y-3">
       <section v-for="month in months" :key="month.key" class="space-y-2">
         <header class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-2">
-          <h3 class="text-sm font-bold capitalize text-white">{{ monthLabel(month.date) }}</h3>
-          <p class="text-xs text-slate-400">
+          <h3 class="text-sm font-bold capitalize text-white">{{ month.label }}</h3>
+          <p v-if="month.complete" class="text-xs text-slate-400">
             {{ $t('expenses.chargesPanel.monthSummary', { count: $t('expenses.chargesPanel.monthCount', { count: month.charges.length }, month.charges.length), kwh: formatNumber(month.kwh, 1), cost: formatAmount(month.cost, vehicleStore.currency) }) }}
             <template v-if="month.pricePerKwh !== null"> · {{ $t('expenses.chargesPanel.averagePrice', { price: formatAmount(month.pricePerKwh, vehicleStore.currency, 3) }) }}</template>
           </p>
