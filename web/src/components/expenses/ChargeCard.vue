@@ -47,8 +47,8 @@ const toComplete = computed(() => vehicleStore.canEdit && review.value)
 const reviewLabel = computed(() => (props.c.cost === null || props.c.cost === undefined ? 'expenses.chargesPanel.missingCost' : 'expenses.costReview.toConfirm'))
 const subtitle = computed(() =>
   [
-    formatChargeWindow(props.c.date, props.c.end_date),
     t('expenses.chargesPanel.kwh2', { kwh_added: formatNumber(props.c.kwh_added, 2) }),
+    formatChargeWindow(props.c.date, props.c.end_date),
     t(chargeOriginKey(props.c)),
     chargeOrigin(props.c) === 'TESLAMATE' && props.c.cost_source === 'MANUAL' ? t('expenses.chargesPanel.correctedCost') : null,
   ]
@@ -64,6 +64,7 @@ const costInTeslaMate = computed(() => (toComplete.value ? teslamateCostEditUrl(
 <template>
   <div class="space-y-1.5">
     <ListItem
+      wrap-subtitle
       data-testid="charge-card"
       class="max-sm:select-none max-sm:[-webkit-touch-callout:none]"
       :class="selected ? 'border-rose-500/40 bg-slate-800/40' : review ? 'border-warning-500/40' : ''"
