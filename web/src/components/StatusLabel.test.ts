@@ -33,6 +33,29 @@ describe('StatusLabel', () => {
     }
   })
 
+  it('n’affiche ni icône ni point par défaut', async () => {
+    const html = await render({ tone: 'danger' })
+    expect(html).not.toContain('<svg')
+    expect(html).not.toContain('rounded-full')
+  })
+
+  it.each([
+    ['attention', 'bg-warning-400'],
+    ['info', 'bg-info-300'],
+    ['danger', 'bg-critical-400'],
+    ['neutral', 'bg-slate-400'],
+  ])('le point du ton %s est plein, de couleur %s et masqué aux lecteurs d’écran', async (tone, cls) => {
+    const html = await render({ tone, dot: true })
+    expect(html).toContain(cls)
+    expect(html).toContain('rounded-full')
+    expect(html).toContain('aria-hidden="true"')
+    expect(html.indexOf('rounded-full')).toBeLessThan(html.indexOf('Coût manquant'))
+  })
+
+  it('le point ne double pas une icône fournie', async () => {
+    expect(await render({ dot: true, icon: Icon })).not.toContain('rounded-full')
+  })
+
   it('utilise le ton neutre et la taille sm par défaut', async () => {
     const html = await render({})
     expect(html).toContain('text-slate-400')
