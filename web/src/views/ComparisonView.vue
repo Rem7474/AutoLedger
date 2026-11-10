@@ -174,11 +174,11 @@ async function saveAdjusted(adjusted: ComparisonForm, asNew: boolean) {
   try {
     const payload = buildComparisonPayload(adjusted, vehicleStore.activeVehicle?.id)
     const saved = asNew ? await api.createComparisonScenario(payload) : await api.updateComparisonScenario(id, { ...payload, expected_version: currentScenario.value?.version })
-    await loadScenarios()
+    await loadScenarios(true)
     await openResult(saved)
   } catch (err: any) {
     if (await explainStaleWrite(err)) {
-      await loadScenarios()
+      await loadScenarios(true)
       view.value = 'list'
       return
     }
@@ -212,11 +212,11 @@ async function saveAndCompute() {
     const saved = editingId.value
       ? await api.updateComparisonScenario(editingId.value, { ...payload, expected_version: scenarios.value.find((s: any) => s.id === editingId.value)?.version })
       : await api.createComparisonScenario(payload)
-    await loadScenarios()
+    await loadScenarios(true)
     await openResult(saved)
   } catch (err: any) {
     if (await explainStaleWrite(err)) {
-      await loadScenarios()
+      await loadScenarios(true)
       view.value = 'list'
       return
     }
@@ -254,7 +254,7 @@ async function removeScenario(sc: any) {
   if (!ok) return
   try {
     await api.deleteComparisonScenario(sc.id)
-    await loadScenarios()
+    await loadScenarios(true)
   } catch (err: any) {
     await showAlert(err?.message || t('comparison.errors.deleteFailed'), t('comparison.comparisonView.deletion'), 'danger')
   }
