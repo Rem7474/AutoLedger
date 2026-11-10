@@ -1,3 +1,6 @@
+import { format } from 'date-fns'
+import type { Locale } from 'date-fns'
+
 // The date fields of a phone use the browser's own pickers (the wheels of iOS, the dialog of Android) instead of the
 // floating calendar of the desktop. These helpers turn the values of the app into what a native input accepts.
 export type NativeDateKind = 'date' | 'datetime-local' | 'month'
@@ -50,4 +53,12 @@ export function supportsNativeInput(kind: NativeDateKind, doc: Pick<Document, 'c
 export function toRange(from: string, to: string): [string, string] | null {
   if (!from || !to) return null
   return from <= to ? [from, to] : [to, from]
+}
+
+/** "Novembre 2026" / "November 2026": the month of a `yyyy-MM` value in the language of the app, '' when there is none. */
+export function monthLabel(value: string, locale: Locale): string {
+  const match = /^(\d{4})-(\d{2})/.exec(value)
+  if (!match) return ''
+  const text = format(new Date(Number(match[1]), Number(match[2]) - 1, 1), 'MMMM yyyy', { locale })
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }

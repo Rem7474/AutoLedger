@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import TireWearBar from '@/components/tires/TireWearBar.vue'
 import TireWheelTile from '@/components/tires/TireWheelTile.vue'
-import { MOUNTED_POSITIONS, describeFittedSet, forecastMonthLabel, isForecastDue, positionLabel, summarizeFittedTires, WEAR_TONE_TEXT } from '@/utils/tires'
+import { MOUNTED_POSITIONS, describeFittedSet, forecastMonthLabel, isForecastDue, positionLabel, summarizeFittedTires, WEAR_TONE_TEXT, wearAndRemaining } from '@/utils/tires'
 import { formatPercent } from '@/utils/numbers'
 import { t } from '@/i18n'
 
@@ -17,6 +18,12 @@ const emit = defineEmits<{ open: [stat: any]; toggle: [tireId: string]; mount: [
 
 const summary = computed(() => summarizeFittedTires(props.mounted))
 const set = computed(() => describeFittedSet(props.mounted))
+const figures = computed(() => {
+  const worn = summary.value.mostWorn
+  if (!worn) return { left: '', worn: '' }
+  const { worn: used, left } = wearAndRemaining(worn.pct)
+  return { left: t('tires.overview.left', { left: formatPercent(left, 0) }), worn: t('tires.overview.wornCaption', { worn: formatPercent(used, 0) }) }
+})
 const nextDue = computed(() => {
   const date = summary.value.nextReplacement
   if (!date) return null
@@ -36,8 +43,11 @@ const nextDue = computed(() => {
       <dl class="mt-3 grid grid-cols-2 gap-3">
         <div v-if="summary.mostWorn">
           <dt class="text-xs font-semibold text-slate-400">{{ $t('tires.tireSetSummary.mostWorn') }}</dt>
-          <dd class="text-lg font-bold tabular-nums" :class="WEAR_TONE_TEXT[summary.mostWorn.tone]">{{ formatPercent(summary.mostWorn.pct) }}</dd>
-          <dd class="text-xs text-slate-400">{{ positionLabel(summary.mostWorn.position) }}</dd>
+          <dd>
+            <p class="text-lg font-bold tabular-nums" :class="WEAR_TONE_TEXT[summary.mostWorn.tone]">{{ figures.left }}</p>
+            <TireWearBar remaining class="mt-1.5" :pct="summary.mostWorn.pct" />
+            <p class="mt-1 text-xs tabular-nums text-slate-400">{{ figures.worn }} · {{ positionLabel(summary.mostWorn.position) }}</p>
+          </dd>
         </div>
         <div v-if="nextDue">
           <dt class="text-xs font-semibold text-slate-400">{{ $t('tires.tireSetSummary.nextReplacement') }}</dt>

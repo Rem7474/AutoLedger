@@ -352,7 +352,8 @@
   },
   "sessionCount": "{count} session | {count} sessions",
   "wearBar": {
-    "label": "Estimated wear"
+    "label": "Estimated wear",
+    "remaining": "Tread left"
   },
   "openTire": "Open {name}",
   "forecast": {
@@ -390,6 +391,8 @@
   "overview": {
     "mixed": "Different tires on the wheels",
     "partlyFitted": "{count} of {total} wheels fitted",
-    "due": "Replace {date}"
+    "due": "Replace {date}",
+    "left": "{left} left",
+    "wornCaption": "{worn} worn"
   }
 }
