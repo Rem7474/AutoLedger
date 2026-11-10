@@ -123,7 +123,7 @@ async function saveAction() {
     }
     formOpen.value = false
     resetForm()
-    await load()
+    await load(true)
     // A reading raises the odometer of a combustion vehicle and reshapes the monthly smoothing
     await vehicleStore.fetchVehicles()
     vehicleStore.lastSyncTimestamp = Date.now()
@@ -131,7 +131,7 @@ async function saveAction() {
     if (await explainStaleWrite(err)) {
       formOpen.value = false
       resetForm()
-      await load()
+      await load(true)
       return
     }
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
@@ -176,7 +176,7 @@ async function removeMany(items: any[]) {
   } catch (err: any) {
     void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
   }
-  await load()
+  await load(true)
   vehicleStore.lastSyncTimestamp = Date.now()
 }
 
