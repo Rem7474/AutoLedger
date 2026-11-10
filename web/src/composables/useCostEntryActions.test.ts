@@ -4,6 +4,8 @@ import { useCostEntryActions } from './useCostEntryActions'
 
 const api = vi.hoisted(() => ({
   getCharge: vi.fn(),
+  getFuelLogs: vi.fn(),
+  deleteFuelLog: vi.fn(),
   getDriveExpense: vi.fn(),
   getMaintenanceExpense: vi.fn(),
   getMaintenance: vi.fn(),
@@ -154,5 +156,43 @@ describe('useCostEntryActions', () => {
     await a.remove(entry('drive_expenses', 'e1'), 'row3')
     expect(deleteWithUndo).not.toHaveBeenCalled()
     expect(showAlert).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens a fill-up in its sheet, found by id among the fill-ups of the vehicle', async () => {
+    api.getFuelLogs.mockResolvedValue({ logs: [{ id: 'f0' }, { id: 'f1', version: 2 }] })
+    const a = useCostEntryActions(hooks())
+    await a.open(entry('fuel_logs', 'f1'))
+    expect(a.showFuel.value).toBe(true)
+    expect(a.editing.value).toEqual({ id: 'f1', version: 2 })
+    expect([a.showToll.value, a.showMaintenance.value, a.showCharge.value]).toEqual([false, false, false])
+  })
+
+  it('says so when the fill-up is gone, and opens nothing', async () => {
+    api.getFuelLogs.mockResolvedValue({ logs: [{ id: 'f0' }] })
+    const a = useCostEntryActions(hooks())
+    await a.open(entry('fuel_logs', 'f1'))
+    expect(a.showFuel.value).toBe(false)
+    expect(showAlert).toHaveBeenCalledTimes(1)
+  })
+
+  it('deletes a fill-up with a way back, from a swipe or from the sheet, and reads the journal again', async () => {
+    api.getFuelLogs.mockResolvedValue({ logs: [{ id: 'f1', version: 2 }] })
+    const h = hooks()
+    const a = useCostEntryActions(h)
+    await a.remove(entry('fuel_logs', 'f1'), 'row1')
+    const swipe = deleteWithUndo.mock.calls[0][0]
+    expect(swipe.message).toBe('manual.fuelLogsPanel.fillUpDeleted')
+    await swipe.commit()
+    expect(api.deleteFuelLog).toHaveBeenCalledWith('v1', 'f1')
+    swipe.committed()
+    expect(h.reload).toHaveBeenCalled()
+
+    await a.open(entry('fuel_logs', 'f1'))
+    a.removeOpenedFuel({ id: 'f1' })
+    expect(a.showFuel.value).toBe(false)
+    const sheet = deleteWithUndo.mock.calls[1][0]
+    sheet.hide()
+    sheet.restore()
+    expect(h.hide.mock.calls[0][0]).toBe(h.restore.mock.calls[0][0])
   })
 })

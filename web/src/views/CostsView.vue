@@ -10,6 +10,7 @@ import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import TollModal from '@/components/expenses/TollModal.vue'
 import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
 import ChargeModal from '@/components/expenses/ChargeModal.vue'
+import FuelFillUpModal from '@/components/manual/FuelFillUpModal.vue'
 import MonthlyCostChart from '@/components/dashboard/MonthlyCostChart.vue'
 import CostBreakdownDonut from '@/components/dashboard/CostBreakdownDonut.vue'
 import TagBreakdown from '@/components/dashboard/TagBreakdown.vue'
@@ -107,7 +108,7 @@ const actions = useCostEntryActions({
   },
   reload: () => load(true),
 })
-const { showToll, showMaintenance, showCharge, editing, documents, maintenanceExpenses, onDocumentAdded } = actions
+const { showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, editing, documents, maintenanceExpenses, onDocumentAdded } = actions
 // The quick entry sheet sends a maintenance entry here: the form opens on arrival and the parameter is dropped
 watch(
   () => [route.query.add, vehicleStore.canEdit] as const,
@@ -310,6 +311,7 @@ const chipClass = (key: CostFilterKey) => {
       @view-document="viewOrDownloadDocument"
     />
     <ChargeModal v-model:open="showCharge" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" :current-odometer="currentOdometer" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
+    <FuelFillUpModal v-model:open="showFuel" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :can-edit="vehicleStore.canEdit" @saved="load(true)" @delete="removeOpenedFuel" />
     <MonthDetailModal v-model:month="selectedMonth" :monthly-costs="monthlyCosts || []" />
     <ChargingPlacesModal v-model:open="showPlaces" :vehicle-id="vehicleStore.activeVehicle.id" :can-edit="vehicleStore.canEdit" @changed="onPlacesChanged" />
     <DocumentPreviewModal :preview-doc="previewDoc" @close="closeDocPreview" />

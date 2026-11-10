@@ -59,6 +59,7 @@
     "dateRequired": "Enter the date of the fill-up.",
     "saveFailed": "Could not save the fill-up.",
     "fillUpDeleted": "Fill-up deleted",
+    "notFound": "This fill-up no longer exists.",
     "deleteFailed": "Could not delete.",
     "fillUpsDeleted": "{count} fill-ups deleted",
     "saving": "Saving…",
