@@ -5,13 +5,18 @@ import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useOfflineStore } from '@/stores/offline'
 import { RefreshCw, Car, Gauge, Plus, AlertCircle, AlertTriangle, X, CheckCircle2, WifiOff, CloudUpload } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { t } from '@/i18n'
 import { apiMessageText } from '@/services/apiError'
+import { ALL_VEHICLES, scopeFromQuery, selectorValue } from '@/utils/vehicleScope'
 
 const vehicleStore = useVehicleStore()
 const offlineStore = useOfflineStore()
 const router = useRouter()
+const route = useRoute()
+// The household view is the home page with every vehicle; the selector shows it only there
+const scope = computed(() => (route.name === 'dashboard' ? scopeFromQuery(route.query.scope, vehicleStore.vehicles.length) : 'vehicle'))
+const selected = computed(() => selectorValue(scope.value, vehicleStore.activeVehicle?.id))
 
 const syncSummary = computed(() => {
   const res = vehicleStore.syncResult
@@ -33,8 +38,11 @@ function onVehicleChange(event: Event) {
     router.push({ path: '/vehicles', query: { add: '1' } })
   } else if (target.value === 'manage') {
     router.push('/vehicles')
+  } else if (target.value === ALL_VEHICLES) {
+    router.push({ path: '/', query: { scope: ALL_VEHICLES } })
   } else {
     vehicleStore.setActiveVehicle(target.value)
+    if (scope.value === 'all') void router.replace({ path: '/' })
   }
 }
 </script>
@@ -51,10 +59,11 @@ function onVehicleChange(event: Event) {
         <div v-if="vehicleStore.vehicles.length" class="flex min-w-0 flex-1 items-center gap-2">
           <label for="topbar-active-vehicle" class="sr-only">{{ $t('shell.topBar.activeVehicle') }}</label>
           <select id="topbar-active-vehicle"
-            :value="vehicleStore.activeVehicle?.id"
+            :value="selected"
             @change="onVehicleChange"
             class="field font-semibold flex-1 sm:flex-none max-w-[220px] md:max-w-xs truncate"
           >
+            <option v-if="vehicleStore.vehicles.length > 1" :value="ALL_VEHICLES">{{ $t('fleet.today.allVehicles') }}</option>
             <option v-for="v in vehicleStore.vehicles" :key="v.id" :value="v.id">
               {{ v.name }}
             </option>

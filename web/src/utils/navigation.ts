@@ -7,7 +7,7 @@ export interface NavSection<T> {
 /** The sections of the desktop sidebar, each listing the names of its pages in order. */
 export const NAV_SECTIONS: { headingKey?: string; names: string[] }[] = [
   { names: ['dashboard'] },
-  { headingKey: 'shell.navSections.tracking', names: ['fleet', 'drives', 'carpools', 'odometer', 'energy'] },
+  { headingKey: 'shell.navSections.tracking', names: ['drives', 'carpools', 'odometer', 'energy'] },
   { headingKey: 'shell.navSections.costs', names: ['expenses', 'maintenance', 'tires', 'comparison'] },
   { headingKey: 'shell.navSections.management', names: ['vehicle', 'vehicles', 'account'] },
 ]

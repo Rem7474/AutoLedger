@@ -12,7 +12,7 @@ test.beforeAll(async ({ request }) => {
   expect(ev && ice).toBeTruthy()
 })
 
-const routes = ['/', '/fleet', '/drives', '/carpools', '/odometer', '/energy', '/comparison', '/tires', '/expenses', '/maintenance', '/vehicles', '/account']
+const routes = ['/', '/?scope=all', '/drives', '/carpools', '/odometer', '/energy', '/comparison', '/tires', '/expenses', '/maintenance', '/vehicles', '/account']
 
 for (const width of [1280, 375]) {
   test(`no WCAG 2.1 AA violation at ${width}px`, async ({ page }) => {
