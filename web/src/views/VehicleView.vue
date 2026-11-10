@@ -21,7 +21,8 @@ import { formatDistance } from '@/units'
 import { formatAmount } from '@/currency'
 import { formatPercent } from '@/utils/numbers'
 import { fmt, perUnit } from '@/components/dashboard/energyStats'
-import { distanceUnit } from '@/units'
+import { distanceUnit, formatFuelConsumptionValue, fuelConsumptionUnit, perDistance } from '@/units'
+import { fuelConsumptionFigures } from '@/utils/fuelConsumption'
 import { summarizeFittedTires, wearAndRemaining } from '@/utils/tires'
 import { useTireList } from '@/composables/useTireList'
 import { nextDueReminder } from '@/utils/dashboard'
@@ -37,6 +38,7 @@ const reminders = ref<any[]>([])
 const ownership = ref<any | null>(null)
 const tco = ref<any | null>(null)
 const consumption = ref<number | null>(null)
+const fuelFigures = ref<ReturnType<typeof fuelConsumptionFigures>>(null)
 const batteryPercent = ref<number | null>(null)
 const resaleValue = ref<number | null>(null)
 // Bumped when a battery reading changes: the resale estimate depends on the health
@@ -46,13 +48,14 @@ async function load() {
   const v = vehicle.value
   if (!v) return
   void loadTires(true)
-  const [r, o, c, health, residual, energy] = await Promise.all([
+  const [r, o, c, health, residual, energy, fuel] = await Promise.all([
     api.getReminders(v.id).catch(() => []),
     isOwner.value ? api.getOwnership(v.id).catch(() => null) : Promise.resolve(null),
     api.getTCO(v.id).catch(() => null),
     vehicleStore.canCharge ? api.getBatteryHealth(v.id).catch(() => null) : Promise.resolve(null),
     api.getResidualValue(v.id, { km_share: 0.5, health_weight: 1 }).catch(() => null),
     vehicleStore.canCharge ? api.getEnergyStats(v.id).catch(() => null) : Promise.resolve(null),
+    !vehicleStore.canCharge && vehicleStore.canRefuel ? api.getFuelLogs(v.id).catch(() => null) : Promise.resolve(null),
   ])
   if (v.id !== vehicle.value?.id) return
   reminders.value = r
@@ -60,6 +63,7 @@ async function load() {
   tco.value = c
   const kwh100 = perUnit(energy?.summary?.consumption_kwh_100km)
   consumption.value = typeof kwh100 === 'number' && kwh100 > 0 ? kwh100 : null
+  fuelFigures.value = fuelConsumptionFigures(fuel)
   batteryPercent.value = typeof health?.health_percent === 'number' ? health.health_percent : null
   resaleValue.value = typeof residual?.current_value === 'number' ? residual.current_value : null
 }
@@ -85,7 +89,16 @@ const tiresDetail = computed(() => {
   const { worn: used, left } = wearAndRemaining(worn.pct)
   return t('tires.tireSetSummary.wornAndLeft', { worn: formatPercent(used, 0), left: formatPercent(left, 0) })
 })
-const consumptionDetail = computed(() => (consumption.value === null ? null : `${fmt(consumption.value, 1)} kWh/100 ${distanceUnit()}`))
+// An electric or hybrid vehicle says its kWh per 100; a combustion one its litres per 100 and what they cost, from the fill-ups
+const consumptionDetail = computed(() => {
+  if (vehicleStore.canCharge) return consumption.value === null ? null : `${fmt(consumption.value, 1)} kWh/100 ${distanceUnit()}`
+  const figures = fuelFigures.value
+  if (!figures) return t('vehicles.vehicleView.consumptionFuelEmpty')
+  const consumptionText = `${formatFuelConsumptionValue(figures.litresPer100, 1)} ${fuelConsumptionUnit()}`
+  if (figures.costPer100 === null) return consumptionText
+  const cost = `${formatAmount(perDistance(figures.costPer100), vehicleStore.currency, 2)} / 100 ${distanceUnit()}`
+  return t('vehicles.vehicleView.consumptionFuel', { consumption: consumptionText, cost })
+})
 const batteryHint = computed(() => (batteryPercent.value === null ? t('dashboard.sheets.batteryHint') : t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })))
 const resaleHint = computed(() => (resaleValue.value === null ? t('dashboard.sheets.resaleHint') : t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })))
 
@@ -115,8 +128,7 @@ async function onSaved() {
 
     <div class="space-y-2">
       <VehicleTile :icon="Bell" :title="$t('vehicles.vehicleView.maintenance')" :detail="nextService" to="/maintenance?tab=REMINDERS" />
-      <VehicleTile v-if="vehicleStore.canCharge" :icon="Activity" :title="$t('vehicles.vehicleView.consumption')" :detail="consumptionDetail" to="/energy" />
-      <VehicleTile v-if="vehicleStore.canCharge" :icon="Users" :title="$t('shell.nav.carpools')" to="/carpools" />
+      <VehicleTile v-if="vehicleStore.canCharge || vehicleStore.canRefuel" :icon="Activity" :title="$t('vehicles.vehicleView.consumption')" :detail="consumptionDetail" to="/consumption" />
       <VehicleTile :icon="Disc" :title="$t('shell.nav.tires')" :detail="tiresDetail" to="/tires" />
       <VehicleTile :icon="ClipboardList" :title="$t('vehicles.vehicleView.readings')" to="/odometer" />
       <VehicleTile :icon="Scale" :title="$t('shell.nav.comparison')" to="/comparison" />

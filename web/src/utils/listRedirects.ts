@@ -1,6 +1,6 @@
 import type { LocationQueryRaw } from 'vue-router'
 
-type Section = 'expenses' | 'maintenance' | 'energy'
+type Section = 'expenses' | 'maintenance' | 'consumption'
 
 // The lists of tolls, maintenance and fixed expenses, and of charges, are read on the Costs page. The tool pages keep
 // their own tabs (receipts, reminders, charges to complete, efficiency, estimate, fill-ups); an address that named a
@@ -8,7 +8,7 @@ type Section = 'expenses' | 'maintenance' | 'energy'
 const LIST_TABS: Record<Section, Record<string, string | null>> = {
   expenses: { TOLLS: 'tolls', FIXED: null },
   maintenance: { MAINTENANCE: 'maintenance' },
-  energy: {},
+  consumption: {},
 }
 
 // The tab a page opened on before the lists moved: it is a list for these two pages
@@ -21,4 +21,18 @@ export function listRedirect(section: Section, rawTab: unknown): { path: string;
   if (!Object.hasOwn(lists, tab)) return null
   const theme = lists[tab]
   return { path: '/costs', query: theme ? { theme } : {} }
+}
+
+const CONSUMPTION_TABS = ['EFFICIENCY', 'ESTIMATE', 'FUEL', 'CHARGES']
+
+/**
+ * Where the former energy page goes: a tool tab (efficiency, estimate, fill-ups, charges to complete) to the consumption
+ * page with the query kept, anything else (the charges list it opened on) to the energy theme of the Costs page.
+ */
+export function energyRedirect(query: LocationQueryRaw): { path: string; query: LocationQueryRaw } {
+  const raw = query.tab
+  const tab = String(Array.isArray(raw) ? raw[0] : (raw ?? '')).toUpperCase()
+  if (CONSUMPTION_TABS.includes(tab)) return { path: '/consumption', query }
+  const { tab: _tab, ...rest } = query
+  return { path: '/costs', query: { ...rest, theme: 'energy' } }
 }

@@ -21,6 +21,12 @@
     "recalcSelectedDone": "{count} carpool(s) recalculated.",
     "deleteManyMessage": "Delete these {count} carpools?"
   },
+  "shareSuggestions": {
+    "title": "Recent drives to share",
+    "hint": "Drives that no carpool covers yet",
+    "share": "Share",
+    "shareAria": "Share the drive of {date} as a carpool"
+  },
   "carpoolSummaryGrid": {
     "driverSFairShare": "Driver's fair share: {total_driver_share}",
     "driverSNetCost": "Driver's net cost",

@@ -109,7 +109,7 @@ const actions = computed<Action[]>(() => {
   const c = props.tco?.completeness
   if (!c) return []
   const list: (Action & { show: boolean })[] = [
-    { key: 'charges', to: '/energy?tab=CHARGES', label: t('dashboard.dataQualityCard.completeTheCharges'), show: c.charges_without_cost > 0 },
+    { key: 'charges', to: '/consumption?tab=CHARGES', label: t('dashboard.dataQualityCard.completeTheCharges'), show: c.charges_without_cost > 0 },
     { key: 'drives', to: '/drives', label: t('dashboard.dataQualityCard.qualifyTheDrives'), show: c.unqualified_drives > 0 },
     { key: 'insurance', to: '/maintenance', label: t('dashboard.dataQualityCard.enterTheInsurance'), show: !!c.insurance_missing },
     { key: 'acquisition', to: '/vehicles', label: acquisitionLabel(c.acquisition_missing_fields ?? []), show: !!c.acquisition_missing },
@@ -122,14 +122,14 @@ const actions = computed<Action[]>(() => {
     },
     {
       key: 'unconverted',
-      to: c.unconverted_target === 'expenses' ? '/expenses' : '/energy?tab=CHARGES',
+      to: c.unconverted_target === 'expenses' ? '/expenses' : '/consumption?tab=CHARGES',
       label: t('dashboard.dataQualityCard.enterTheExchangeRate'),
       show: c.unconverted_expenses > 0,
     },
-    { key: 'fillUp', to: '/energy?tab=FUEL', label: t('dashboard.dataQualityCard.enterAFillUp'), show: canRefuel(props.tco.powertrain) && !props.tco.fuel_fill_ups },
+    { key: 'fillUp', to: '/consumption?tab=FUEL', label: t('dashboard.dataQualityCard.enterAFillUp'), show: canRefuel(props.tco.powertrain) && !props.tco.fuel_fill_ups },
     {
       key: 'consumption',
-      to: '/energy?tab=ESTIMATE',
+      to: '/consumption?tab=ESTIMATE',
       label: t('dashboard.dataQualityCard.enterAverageConsumption'),
       hint: t('dashboard.dataQualityCard.enterAverageConsumptionHint'),
       show: isElectricOnly(props.tco.powertrain) && c.untracked_distance_km > 0 && !props.tco.estimated_energy_cost,

@@ -20,7 +20,7 @@ export interface DataAlertLine {
   text: string
 }
 
-const PRICE_PAGES: Record<string, string> = { CHARGE: '/costs?theme=energy', FUEL: '/energy?tab=FUEL' }
+const PRICE_PAGES: Record<string, string> = { CHARGE: '/costs?theme=energy', FUEL: '/consumption?tab=FUEL' }
 
 // One line per alert: what is odd, in the vehicle's currency, and where to correct it
 export function dataAlertLine(alert: DataAlert, currency: string): DataAlertLine {

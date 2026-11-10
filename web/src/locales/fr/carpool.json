@@ -21,6 +21,12 @@
     "recalcSelectedDone": "{count} covoiturage(s) recalculé(s) avec succès.",
     "deleteManyMessage": "Supprimer ces {count} covoiturages ?"
   },
+  "shareSuggestions": {
+    "title": "Trajets récents à partager",
+    "hint": "Trajets qu'aucun covoiturage ne couvre encore",
+    "share": "Partager",
+    "shareAria": "Partager le trajet du {date} en covoiturage"
+  },
   "carpoolSummaryGrid": {
     "driverSFairShare": "Part équitable conducteur : {total_driver_share}",
     "driverSNetCost": "Coût net conducteur",

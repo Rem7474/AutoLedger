@@ -87,7 +87,7 @@ async function backToTrip() {
 
 function openCarpool(carpoolId: string) {
   open.value = false
-  router.push({ path: '/carpools', query: { open: carpoolId } })
+  router.push({ path: '/drives', query: { tab: 'CARPOOLS', open: carpoolId } })
 }
 
 // The carpools the drive takes part in, as the drives list returns them

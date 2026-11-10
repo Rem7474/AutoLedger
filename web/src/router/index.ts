@@ -5,7 +5,7 @@ import { installViewTransitions } from '@/utils/viewTransition'
 import { backEntryHeld, releaseBackEntry } from '@/composables/useEscapeToClose'
 import { replaceOverHeldEntry } from '@/utils/backEntryNavigation'
 import { installScrollMemory } from '@/utils/scrollMemory'
-import { listRedirect } from '@/utils/listRedirects'
+import { energyRedirect, listRedirect } from '@/utils/listRedirects'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
 // A page that needs a signed-in session; `needsVehicle` marks the pages about a vehicle: without one the shell shows a
@@ -32,15 +32,16 @@ const router = createRouter({
     // Former address of the household fleet page: it is the home page with every vehicle
     { path: '/fleet', redirect: { path: '/', query: { scope: 'all' } } },
     authRoute('/drives', 'drives', () => import('@/views/DrivesView.vue'), true),
-    authRoute('/carpools', 'carpools', () => import('@/views/CarpoolView.vue'), true),
+    // Former address of the carpools: a segment of the trips page
+    { path: '/carpools', redirect: (to) => ({ path: '/drives', query: { ...to.query, tab: 'CARPOOLS' } }) },
     authRoute('/odometer', 'odometer', () => import('@/views/ManualTrackingView.vue'), true),
     {
-      // Former address of the odometer page; the energy estimate and the fill-ups moved to the energy page
+      // Former address of the odometer page; the energy estimate and the fill-ups moved to the consumption page
       path: '/manual',
       redirect: (to) => {
         const tab = String(to.query.tab ?? '').toUpperCase()
-        if (tab === 'ENERGY') return { path: '/energy', query: { tab: 'ESTIMATE' } }
-        if (tab === 'FUEL') return { path: '/energy', query: { tab: 'FUEL' } }
+        if (tab === 'ENERGY') return { path: '/consumption', query: { tab: 'ESTIMATE' } }
+        if (tab === 'FUEL') return { path: '/consumption', query: { tab: 'FUEL' } }
         return { path: '/odometer' }
       },
     },
@@ -55,7 +56,7 @@ const router = createRouter({
       beforeEnter: (to) => {
         const tab = String(to.query.tab ?? '').toUpperCase()
         if (tab === 'MAINTENANCE' || tab === 'REMINDERS') return { name: 'maintenance', query: to.query, replace: true }
-        if (tab === 'CHARGES') return { name: 'energy', query: to.query, replace: true }
+        if (tab === 'CHARGES') return { name: 'consumption', query: to.query, replace: true }
         const list = listRedirect('expenses', to.query.tab)
         if (list) return { ...list, replace: true }
       },
@@ -68,17 +69,22 @@ const router = createRouter({
       beforeEnter: (to) => {
         const tab = String(to.query.tab ?? '').toUpperCase()
         if (['TOLLS', 'DOCUMENTS'].includes(tab)) return { name: 'expenses', query: to.query, replace: true }
-        if (['CHARGES', 'EFFICIENCY', 'ESTIMATE', 'FUEL'].includes(tab)) return { name: 'energy', query: to.query, replace: true }
+        if (['CHARGES', 'EFFICIENCY', 'ESTIMATE', 'FUEL'].includes(tab)) return { name: 'consumption', query: to.query, replace: true }
         // The maintenance list is read on the Costs page; `add` (the quick entry) goes with it
         const list = listRedirect('maintenance', to.query.tab)
         if (list) return { ...list, query: { ...list.query, ...(to.query.add ? { add: to.query.add } : {}) }, replace: true }
       },
     },
     {
-      path: '/energy',
-      name: 'energy',
+      path: '/consumption',
+      name: 'consumption',
       component: () => import('@/views/ExpensesView.vue'),
-      meta: { requiresAuth: true, needsVehicle: true, section: 'energy' },
+      meta: { requiresAuth: true, needsVehicle: true, section: 'consumption' },
+    },
+    // Former address of the energy page: its tools moved to the consumption page, its lists to the Costs page
+    {
+      path: '/energy',
+      redirect: (to) => energyRedirect(to.query),
     },
     authRoute('/costs', 'costs', () => import('@/views/CostsView.vue'), true),
     authRoute('/vehicle', 'vehicle', () => import('@/views/VehicleView.vue'), true),

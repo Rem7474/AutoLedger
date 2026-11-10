@@ -86,7 +86,7 @@ export function entryTarget(e: Pick<CostEntryLine, 'source' | 'source_id'>): Ent
     case 'maintenance_expenses':
       return { type: 'edit', modal: 'maintenance', id: e.source_id }
     case 'fuel_logs':
-      return { type: 'link', to: '/energy?tab=FUEL' }
+      return { type: 'link', to: '/consumption?tab=FUEL' }
     case 'tires':
       return { type: 'link', to: '/tires' }
     default:

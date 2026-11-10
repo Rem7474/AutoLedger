@@ -9,6 +9,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
+import CarpoolShareSuggestions from '@/components/carpool/CarpoolShareSuggestions.vue'
 import CarpoolSummaryGrid from '@/components/carpool/CarpoolSummaryGrid.vue'
 import CarpoolTripList from '@/components/carpool/CarpoolTripList.vue'
 import CarpoolTripModal from '@/components/carpool/CarpoolTripModal.vue'
@@ -26,7 +27,15 @@ import { useInfiniteList } from '@/composables/useInfiniteList'
 
 // The page reads the trips page by page (the latest first) and the totals apart, and owns the selection and which trip
 // the modal edits; the summary, the list and the form are components. Other pages open it with a drive, drives or a trip group in the query string.
+// `embedded`: the segment of the trips page, which brings the header
+defineProps<{ embedded?: boolean }>()
 const vehicleStore = useVehicleStore()
+// Bumped when a carpool is saved: the drives still to share are read again
+const shareRefresh = ref(0)
+function onSaved() {
+  shareRefresh.value++
+  void loadData(true)
+}
 const { showConfirm, showAlert } = useConfirm()
 const route = useRoute()
 const router = useRouter()
@@ -391,8 +400,14 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <PageHeader :title="$t('carpool.carpoolView.carpooling')" :icon="PageIcon">
+    <!-- The page's own header, or inside the trips page the one action of the segment -->
+    <div v-if="embedded" class="flex justify-end">
+      <button v-if="vehicleStore.canEdit" type="button" class="btn btn-lg btn-primary" @click="openCreateModal()">
+        <Plus class="w-4 h-4" />
+        {{ $t('carpool.carpoolView.newCarpool') }}
+      </button>
+    </div>
+    <PageHeader v-else :title="$t('carpool.carpoolView.carpooling')" :icon="PageIcon">
       {{ $t('carpool.carpoolView.multiLegTripsPassengersGetting') }}
       <template #actions>
       <button
@@ -403,7 +418,7 @@ onMounted(async () => {
         <Plus class="w-4 h-4" />
         {{ $t('carpool.carpoolView.newCarpool') }}
       </button>
-    
+
       </template>
     </PageHeader>
 
@@ -418,6 +433,8 @@ onMounted(async () => {
 
     <!-- KPI Summary Grid: totals of the trips below, nothing to total before the first one -->
     <CarpoolSummaryGrid v-if="trips.length > 0" :summary="summary" />
+
+    <CarpoolShareSuggestions v-if="vehicleId" :vehicle-id="vehicleId" :can-edit="vehicleStore.canEdit" :refresh-key="shareRefresh" @share="(id) => openCreateModal({ driveIds: [id] })" />
 
     <!-- Loading -->
     <div v-if="loading" class="space-y-4 animate-pulse">
@@ -498,7 +515,7 @@ onMounted(async () => {
       :create-options="createOptions"
       :open-token="openToken"
       :recent-names="recentNames"
-      @saved="loadData(true)"
+      @saved="onSaved"
     />
   </div>
 </template>

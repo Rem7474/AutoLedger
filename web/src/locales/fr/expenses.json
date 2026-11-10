@@ -36,8 +36,8 @@
     "maintenanceSubtitle": "Ce qui est à faire sur le véhicule, et quand",
     "efficiency": "Efficacité",
     "estimate": "Estimation",
-    "energyTitle": "Énergie",
-    "energySubtitle": "Consommation, recharges et pleins",
+    "consumptionTitle": "Consommation",
+    "consumptionSubtitle": "Comment le véhicule utilise l'énergie, pleins et recharges à compléter",
     "fixedCosts": "Frais fixes",
     "fillUps": "Pleins",
     "deleteManyMessage": "Supprimer ces {count} éléments ?"

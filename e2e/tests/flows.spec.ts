@@ -147,7 +147,7 @@ const toast = (page: import('@playwright/test').Page) =>
   page.locator('[role="status"]:not([aria-busy="true"])').filter({ hasText: /\S/ })
 
 test('quick-add records a charge typed with its cost', async ({ page }) => {
-  await useVehicle(page, ev.id, '/energy')
+  await useVehicle(page, ev.id, '/consumption')
   await page.getByRole('button', { name: 'Quick add' }).first().click()
   await page.fill('#qc-kwh', '37.5')
   await page.fill('#qc-cost', '9.80')
@@ -156,7 +156,7 @@ test('quick-add records a charge typed with its cost', async ({ page }) => {
 })
 
 test('quick-add records a fill-up on a combustion vehicle', async ({ page }) => {
-  await useVehicle(page, ice.id, '/energy')
+  await useVehicle(page, ice.id, '/consumption')
   await page.getByRole('button', { name: 'Quick add' }).first().click()
   await page.fill('#qf-liters', '40')
   await page.fill('#qf-amount', '72')
@@ -164,13 +164,13 @@ test('quick-add records a fill-up on a combustion vehicle', async ({ page }) => 
   await expect(toast(page)).toContainText('72')
 })
 
-test('energy tabs follow the powertrain and the legacy fuel URL redirects', async ({ page }) => {
+test('consumption tabs follow the powertrain and the legacy fuel URL redirects', async ({ page }) => {
   await useVehicle(page, ice.id, '/manual?tab=FUEL')
-  await expect(page).toHaveURL(/\/energy\?tab=FUEL/)
+  await expect(page).toHaveURL(/\/consumption\?tab=FUEL/)
   await expect(page.getByRole('button', { name: 'New fill-up' })).toBeVisible()
   await expect(page.getByRole('tab', { name: 'Charges' })).toHaveCount(0)
 
-  await useVehicle(page, ev.id, '/energy')
+  await useVehicle(page, ev.id, '/consumption')
   await expect(page.getByRole('tab', { name: 'Charges' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'New fill-up' })).toHaveCount(0)
 })
@@ -178,7 +178,7 @@ test('energy tabs follow the powertrain and the legacy fuel URL redirects', asyn
 for (const width of [320, 360, 375, 390, 414]) {
   test(`no horizontal scroll at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 })
-    for (const route of ['/', '/energy', '/expenses', '/maintenance', '/account']) {
+    for (const route of ['/', '/consumption', '/drives?tab=CARPOOLS', '/expenses', '/maintenance', '/account']) {
       await useVehicle(page, ev.id, route)
       await expectNoHorizontalScroll(page)
     }
@@ -330,7 +330,7 @@ test('the odometer page lists the mileage typed on fill-ups, read-only', async (
   await expect(page.getByText('Fill-up', { exact: true }).first()).toBeVisible()
   const row = page.locator('div.rounded-2xl', { has: page.getByText('Fill-up', { exact: true }) }).first()
   await expect(row.getByRole('button')).toHaveCount(0)
-  await expect(row.getByRole('link', { name: 'See the fill-ups' })).toHaveAttribute('href', /\/energy\?tab=FUEL/)
+  await expect(row.getByRole('link', { name: 'See the fill-ups' })).toHaveAttribute('href', /\/consumption\?tab=FUEL/)
 })
 
 test('an electric vehicle lists no fill-up on the odometer page', async ({ page }) => {
@@ -408,7 +408,7 @@ test('the drive filters sit in a sheet on a phone and in the bar on a wide scree
 
 test('a modal covers the bottom bar of a phone', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 700 })
-  await useVehicle(page, ice.id, '/energy?tab=FUEL')
+  await useVehicle(page, ice.id, '/consumption?tab=FUEL')
   await page.getByRole('button', { name: 'New fill-up' }).click()
   await expect(page.getByRole('dialog', { name: 'New fill-up' })).toBeVisible()
   const barIsReachable = await page.evaluate(() => {
@@ -439,7 +439,7 @@ test.describe('the tire modals share one frame', () => {
 })
 
 test('the expense and vehicle modals open named and close on Escape', async ({ page }) => {
-  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+  await useVehicle(page, ev.id, '/consumption?tab=CHARGES')
   await page.getByRole('button', { name: 'Add a charge' }).click()
   const charge = page.getByRole('dialog').first()
   await expect(charge).toBeVisible()
@@ -500,7 +500,7 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
     await request.delete(`/api/vehicles/${ev.id}/carpools/${trip.id}`, { headers })
   }
 
-  await useVehicle(page, ev.id, '/carpools')
+  await useVehicle(page, ev.id, '/drives?tab=CARPOOLS')
   await page.getByRole('button', { name: 'New carpool' }).first().click()
   const dialog = page.getByRole('dialog', { name: 'New carpool' })
   await dialog.locator('#carpool-title').fill('E2E carpool')
@@ -562,7 +562,7 @@ test('carpools are listed 30 at a time and the totals cover all of them', async 
     const summaryAfter = await (await request.get(`/api/vehicles/${ev.id}/carpools/summary`, { headers })).json()
     expect(summaryAfter.total_trips - summaryBefore.total_trips).toBe(count)
 
-    await useVehicle(page, ev.id, '/carpools')
+    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS')
     const rows = page.getByText(/^E2E paged \d\d$/)
     await expect(rows).toHaveCount(30)
     await expect(page.getByText('E2E paged 34')).toHaveCount(0)
@@ -587,7 +587,7 @@ test('a charges CSV is previewed, imported, then undone from the import history'
   // A run that stopped half way must not leave its batch behind for the next one
   await undoLeftovers()
 
-  await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+  await useVehicle(page, ev.id, '/consumption?tab=CHARGES')
   await page.getByRole('button', { name: 'Import CSV' }).first().click()
   const dialog = page.getByRole('dialog', { name: 'Import data (CSV)' })
   await dialog.locator('#csv-file-input').setInputFiles({
@@ -658,7 +658,7 @@ test.describe('a charge priced from a tariff plan', () => {
 
       // The form starts at 23:00 on 4 March 2020
       await page.clock.setFixedTime(new Date('2020-03-04T23:00:00+01:00'))
-      await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+      await useVehicle(page, ev.id, '/consumption?tab=CHARGES')
       await page.getByRole('button', { name: 'Add a charge' }).first().click()
       const dialog = page.getByRole('dialog', { name: 'New charge' })
       await expect(dialog.locator('input[aria-label="Datepicker input"]').first()).toHaveValue('04/03/2020 23:00')
@@ -722,7 +722,7 @@ test('a session from a shared charger is qualified onto a vehicle', async ({ pag
     })
     expect((await sent.json()).status).toBe('pending_qualification')
 
-    await useVehicle(page, ev.id, '/energy?tab=CHARGES')
+    await useVehicle(page, ev.id, '/consumption?tab=CHARGES')
     await page.getByRole('button', { name: 'Qualify' }).click()
     const dialog = page.getByRole('dialog', { name: 'Charges to Qualify' })
     await expect(dialog.getByText('17.25 kWh')).toBeVisible()
