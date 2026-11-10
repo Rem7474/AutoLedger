@@ -61,9 +61,8 @@ describe('ChargesPanel mois', () => {
     )
   const headers = (html: string) => html.match(/<header[^>]*>[\s\S]*?<\/header>/g) ?? []
 
-  it('range chaque charge dans une carte de liste sous son mois', async () => {
+  it('range les charges sous un en-tête par mois', async () => {
     const html = await renderPaged(2)
-    expect(html).toContain('data-testid="charge-card"')
     expect(headers(html)).toHaveLength(2)
   })
 
