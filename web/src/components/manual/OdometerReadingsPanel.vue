@@ -2,13 +2,12 @@
 import { intlLocale, t } from '@/i18n'
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { Fuel, Gauge, Lock, Plus, Trash2 } from '@/icons'
+import { Fuel, Gauge, Lock, Plus } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import OdometerReadingForm from '@/components/manual/OdometerReadingForm.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
 import EmptyState from '@/components/EmptyState.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
-import RowMenu from '@/components/RowMenu.vue'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import RowSelectBox from '@/components/RowSelectBox.vue'
 import RowLeading from '@/components/RowLeading.vue'
@@ -189,6 +188,14 @@ const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPoin
 )
 const actions = computed<SelectionAction[]>(() => editDeleteActions(selected.value, { edit: (r) => startEdit(r), remove: removeMany }))
 
+// The detail's own Delete (the form in edit mode): the form closes and the reading goes with the same Undo
+function removeEditing() {
+  const r = readings.value.find((x) => x.id === editingId.value)
+  formOpen.value = false
+  resetForm()
+  if (r) remove(r)
+}
+
 // Dismissing the sheet drops an edit in progress, so the next "Add" starts from a clean form
 watch(formOpen, (open) => {
   if (!open) resetForm()
@@ -242,8 +249,10 @@ useRefreshHandler(() => load(true))
       v-model:notes="form.notes"
       :editing="!!editingId"
       :submitting="submitting"
+      :can-edit="canEdit"
       @submit="save"
       @cancel="resetForm"
+      @delete="removeEditing"
     />
     <Teleport v-if="canEdit && isMobile" to="body">
       <ModalShell v-model:open="formOpen" :title="editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new')" size="sm">
@@ -255,8 +264,10 @@ useRefreshHandler(() => load(true))
           in-sheet
           :editing="!!editingId"
           :submitting="submitting"
+          :can-edit="canEdit"
           @submit="save"
           @cancel="formOpen = false"
+          @delete="removeEditing"
         />
       </ModalShell>
     </Teleport>
@@ -321,11 +332,6 @@ useRefreshHandler(() => load(true))
           <router-link v-if="r.kind === 'FUEL'" to="/consumption?tab=FUEL" class="relative z-10 tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">
             <Fuel class="w-4 h-4" />
           </router-link>
-          <RowMenu v-else-if="canEdit" :label="$t('common.moreActions')" :heading="new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' })">
-            <button type="button" role="menuitem" class="menu-item menu-item-danger" :aria-label="$t('manual.odometerReadingsPanel.deleteReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })" @click="remove(r)">
-              <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
-            </button>
-          </RowMenu>
         </div>
         </SwipeToDelete>
       </div>

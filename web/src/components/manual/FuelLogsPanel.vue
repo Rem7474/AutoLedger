@@ -2,7 +2,7 @@
 import NumberInput from '@/components/NumberInput.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
-import RowMenu from '@/components/RowMenu.vue'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import RowSelectBox from '@/components/RowSelectBox.vue'
 import SelectionHint from '@/components/SelectionHint.vue'
@@ -11,7 +11,7 @@ import { editDeleteActions, type SelectionAction } from '@/utils/selectionAction
 import { intlLocale, t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
-import { Fuel, Plus, Trash2 } from '@/icons'
+import { Fuel, Plus } from '@/icons'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
@@ -200,6 +200,13 @@ function remove(log: any) {
   })
 }
 
+// The detail's own Delete: the sheet closes and the fill-up goes with the same Undo
+function removeEditing() {
+  const log = logs.value.find((l: any) => l.id === editingId.value)
+  showForm.value = false
+  if (log) remove(log)
+}
+
 // A selection goes at once under one Undo, the server is asked when that time is over
 const logsList = computed({
   get: () => stats.value?.logs ?? [],
@@ -314,11 +321,6 @@ useRefreshHandler(() => load(true))
             <template v-if="log.cost_per_km"> · {{ fmtMoney(perDistance(log.cost_per_km), 3) }}/{{ distanceUnit() }}</template>
           </div>
         </div>
-        <RowMenu v-if="canEdit" :label="$t('common.moreActions')" :heading="fmtDate(log.date)">
-          <button type="button" role="menuitem" class="menu-item menu-item-danger" :aria-label="$t('manual.fuelLogsPanel.deleteFillUp', { date: fmtDate(log.date) })" @click="remove(log)">
-            <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
-          </button>
-        </RowMenu>
       </div>
       </SwipeToDelete>
       </li>
@@ -382,6 +384,7 @@ useRefreshHandler(() => load(true))
       </form>
 
       <template #footer>
+        <DetailDeleteButton v-if="editingId" class="mr-auto" :can-edit="canEdit" @delete="removeEditing" />
         <button type="button" class="btn btn-lg btn-secondary" @click="showForm = false">{{ $t('common.cancel') }}</button>
         <button type="submit" form="fuel-log-form" :disabled="saving" class="btn btn-lg btn-primary">
           {{ saving ? $t('manual.fuelLogsPanel.saving') : $t('common.save') }}

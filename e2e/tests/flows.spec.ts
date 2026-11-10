@@ -387,6 +387,60 @@ test('the readings of the odometer list line up whether or not they can be selec
   }
 })
 
+test('a fill-up is deleted from its detail with Undo, without a row menu', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const notes = `Detail delete fill-up ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ice.id}/fuel-logs`, { headers, data: { date: '2026-01-01T12:00:00Z', amount: 17, liters: 10, fuel_type: 'SP95_E10', notes } })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, ice.id, '/consumption?tab=FUEL')
+    const open = page.getByRole('button', { name: /^Edit the fill-up of 01 Jan 2026/ })
+    await expect(open).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'More actions' })).toHaveCount(0)
+    await open.click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(open).toHaveCount(0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(open).toHaveCount(1)
+    await open.click()
+    const deleted = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().includes(`/fuel-logs/${id}`))
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
+    expect((await deleted).ok()).toBeTruthy()
+    await expect(open).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${ice.id}/fuel-logs/${id}`, { headers })
+  }
+})
+
+test('an odometer reading is deleted from its form with Undo, without a row menu', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const notes = `Detail delete reading ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ice.id}/odometer-checkpoints`, { headers, data: { date: new Date().toISOString().slice(0, 10), odometer: 876544, notes } })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, ice.id, '/odometer')
+    const open = page.getByRole('button', { name: /^Edit the .*876,544/ })
+    await expect(open).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'More actions' })).toHaveCount(0)
+    await open.click()
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(open).toHaveCount(0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(open).toHaveCount(1)
+    await open.click()
+    const deleted = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().includes(`/odometer-checkpoints/${id}`))
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    expect((await deleted).ok()).toBeTruthy()
+    await expect(open).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${ice.id}/odometer-checkpoints/${id}`, { headers })
+  }
+})
+
 test('the drive filters sit in a sheet on a phone and in the bar on a wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await useVehicle(page, ev.id, '/drives')

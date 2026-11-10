@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import DistanceInput from '@/components/DistanceInput.vue'
 import AppDatePicker from '@/components/AppDatePicker.vue'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import { distanceUnit } from '@/units'
 
 // The form of an odometer reading, to add one or to edit one: a card on the page on a wide screen, the body of a sheet on a phone
-defineProps<{ editing: boolean; submitting: boolean; inSheet?: boolean }>()
-const emit = defineEmits<{ submit: []; cancel: [] }>()
+defineProps<{ editing: boolean; submitting: boolean; inSheet?: boolean; canEdit?: boolean }>()
+const emit = defineEmits<{ submit: []; cancel: []; delete: [] }>()
 const date = defineModel<string>('date', { required: true })
 const odometer = defineModel<string>('odometer', { required: true })
 const notes = defineModel<string>('notes', { required: true })
@@ -52,7 +53,8 @@ const notes = defineModel<string>('notes', { required: true })
     </div>
   </div>
 
-  <div class="flex justify-end pt-1">
+  <div class="flex items-center justify-end pt-1 max-sm:flex-col-reverse max-sm:items-stretch max-sm:gap-2">
+    <DetailDeleteButton v-if="editing" class="sm:mr-auto max-sm:justify-center" :can-edit="canEdit" @delete="emit('delete')" />
     <button type="submit" :disabled="submitting" class="btn btn-lg btn-primary max-sm:w-full">
       <span>{{ editing ? $t('manual.odometerReadingsPanel.update') : $t('manual.odometerReadingsPanel.add') }}</span>
     </button>
