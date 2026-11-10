@@ -190,6 +190,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
 
 <template>
   <ModalShell
+    pane
     v-model:open="open"
     :title="editingTollId ? $t('expenses.tollModal.edit') : $t('expenses.tollModal.add')"
     :icon="Receipt"

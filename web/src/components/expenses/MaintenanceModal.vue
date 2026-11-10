@@ -236,6 +236,7 @@ const handleCreateMaint = () => runOnce(handleCreateMaintAction)
 
 <template>
   <ModalShell
+    pane
     v-model:open="open"
     :title="editingMaintId ? $t('expenses.maintenanceModal.edit') : $t('expenses.maintenanceModal.add')"
     :icon="Wrench"

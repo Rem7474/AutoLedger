@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, type Component } from 'vue'
+import { computed, onScopeDispose, ref, watch, type Component } from 'vue'
 import { X } from '@/icons'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import SheetGrabber from '@/components/SheetGrabber.vue'
@@ -24,13 +24,25 @@ const props = withDefaults(
     footerClass?: string
     /** Names the scrolling body as a region and makes it reachable by keyboard: for content with nothing to focus in it. */
     bodyLabel?: string
+    /** A form that edits a record: on a wide screen it is a panel on the right edge, beside the list that stays usable; on a phone it is the sheet. */
+    pane?: boolean
   }>(),
-  { size: 'md', nested: false, bodyClass: 'space-y-4', footerClass: 'justify-end gap-2' },
+  { size: 'md', nested: false, pane: false, bodyClass: 'space-y-4', footerClass: 'justify-end gap-2' },
 )
 const open = defineModel<boolean>('open', { required: true })
 useEscapeToClose(open, () => (open.value = false))
 const panel = ref<HTMLElement | null>(null)
 useSheetSwipe(panel, () => (open.value = false))
+
+// The page leaves room for the panel on a wide screen (see .has-pane in main.css).
+const PANE_CLASS = 'has-pane'
+const releasePane = () => typeof document !== 'undefined' && document.documentElement.classList.remove(PANE_CLASS)
+watch(
+  () => props.pane && open.value,
+  (on) => (on && typeof document !== 'undefined' ? document.documentElement.classList.add(PANE_CLASS) : releasePane()),
+  { immediate: true },
+)
+onScopeDispose(releasePane)
 
 const layer = computed(() => modalLayerClass(props.nested))
 const width = computed(() => modalWidthClass(props.size))
@@ -41,10 +53,10 @@ const footer = computed(() => modalFooterClass(props.footerClass))
   <div
     v-if="open"
     class="fixed inset-0 m-0 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
-    :class="layer"
+    :class="[layer, pane && 'pane-layer']"
     @click.self="open = false"
   >
-    <div ref="panel" v-dialog v-bind="$attrs" class="modal-panel bg-slate-900 border border-slate-800 max-sm:border-b-0 rounded-t-2xl sm:rounded-2xl w-full max-sm:max-w-none max-h-[92dvh] sm:max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden sm:my-auto" :class="width">
+    <div ref="panel" v-dialog v-bind="$attrs" class="modal-panel bg-slate-900 border border-slate-800 max-sm:border-b-0 rounded-t-2xl sm:rounded-2xl w-full max-sm:max-w-none max-h-[92dvh] sm:max-h-[calc(100dvh-2rem)] flex flex-col shadow-2xl overflow-hidden sm:my-auto" :class="[width, pane && 'pane-panel']">
       <SheetGrabber class="pt-2 pb-1 sm:hidden bg-slate-900/95" />
       <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between gap-3 shrink-0 bg-slate-900/95 max-sm:touch-none">
         <slot name="title">

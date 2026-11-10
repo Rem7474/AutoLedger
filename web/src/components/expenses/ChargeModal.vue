@@ -176,7 +176,7 @@ const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicl
 </script>
 
 <template>
-  <ModalShell v-model:open="open" size="md">
+  <ModalShell pane v-model:open="open" size="md">
     <template #title>
         <div class="min-w-0 pr-2">
           <h3 class="text-base font-bold text-white flex items-center gap-2 truncate">
