@@ -68,7 +68,7 @@ const handlePackSwapSubmit = () => runOnce(handlePackSwapSubmitAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="$t('tires.tirePackSwapModal.seasonalSwapFullSetChange')"
     :icon="Snowflake"

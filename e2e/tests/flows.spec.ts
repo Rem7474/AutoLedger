@@ -189,6 +189,8 @@ const modal = (page: import('@playwright/test').Page) => page.getByRole('dialog'
 
 test.describe('a modal with edits does not close on a backdrop click', () => {
   test.beforeEach(async ({ page }) => {
+    // Below 1024 px the form is a sheet over a backdrop; from there up it is a panel with none
+    await page.setViewportSize({ width: 800, height: 900 })
     await useVehicle(page, ev.id, '/tires')
     await page.getByRole('button', { name: 'Add tires' }).first().click()
     await expect(modal(page)).toBeVisible()

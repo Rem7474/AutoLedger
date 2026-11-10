@@ -64,7 +64,7 @@ const handleDisposeTire = () => runOnce(handleDisposeTireAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-if="selectedTire"
     v-model:open="open"
     :title="$t('tires.tireDisposeModal.scrap')"

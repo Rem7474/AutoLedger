@@ -133,7 +133,7 @@ async function handleSaveBatchSession() {
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="$t('tires.tireBatchSessionModal.addAPastSessionOn')"
     :icon="History"

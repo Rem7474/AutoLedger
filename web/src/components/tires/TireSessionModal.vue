@@ -122,7 +122,7 @@ const handleSaveSession = () => runOnce(handleSaveSessionAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="editingSessionId ? $t('tires.tireSessionModal.edit') : $t('tires.tireSessionModal.add')"
     size="sm"
