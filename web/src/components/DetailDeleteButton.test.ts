@@ -10,7 +10,7 @@ describe('DetailDeleteButton', () => {
   it('affiche « Supprimer » en texte discret, sans rose', async () => {
     const html = await render({})
     expect(html).toContain('Supprimer')
-    expect(html).toContain('text-red-300')
+    expect(html).toContain('text-critical-400')
     expect(html).not.toContain('rose')
   })
 

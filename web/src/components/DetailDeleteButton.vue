@@ -10,7 +10,7 @@ const emit = defineEmits<{ delete: [] }>()
   <button
     v-if="deletable && canEdit"
     type="button"
-    class="tap-text rounded-lg px-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10 hover:text-red-200"
+    class="tap-text rounded-lg px-2 text-xs font-semibold text-critical-400 transition-colors hover:bg-critical-500/10 hover:text-critical-300"
     @click="emit('delete')"
   >
     {{ $t('common.delete') }}
