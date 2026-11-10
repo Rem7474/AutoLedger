@@ -607,9 +607,9 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       </div>
 
       <section v-for="month in driveMonths" :key="month.month" class="space-y-2">
-        <div class="flex items-baseline justify-between gap-3 px-1 pt-2">
+        <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-2">
           <h2 class="text-sm font-bold capitalize text-white">{{ month.label }}</h2>
-          <DriveTotalsLine :totals="month.totals" />
+          <DriveTotalsLine :totals="month.totals" show-net />
         </div>
         <div v-for="group in month.days" :key="group.day" class="space-y-2">
           <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-1">

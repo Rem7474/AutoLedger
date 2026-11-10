@@ -19,6 +19,15 @@ describe('driveTotals', () => {
     expect(t.net).toBeCloseTo(5.6)
   })
 
+  it('compte une fois au mois le covoiturage qui couvre deux jours, alors que chaque jour le porte en entier', () => {
+    const ref = { id: 'c1', title: '', passenger_count: 1, total_revenue: 4.2 }
+    const monday = [drive(15, 4, [ref])]
+    const tuesday = [drive(21, 5.8, [ref])]
+    expect(driveTotals(monday).net).toBeCloseTo(-0.2)
+    expect(driveTotals(tuesday).net).toBeCloseTo(1.6)
+    expect(driveTotals([...monday, ...tuesday]).net).toBeCloseTo(5.6)
+  })
+
   it('signale un coût inconnu et additionne seulement les coûts connus', () => {
     expect(driveTotals([drive(10, 3), drive(5, null)])).toMatchObject({ gross: 3, distanceKm: 15, incomplete: true })
   })
