@@ -3,7 +3,7 @@ import { api, type CostEntryLine, type ExpenseDocumentHeader } from '@/services/
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { deleteWithUndo } from '@/composables/useUndoableDelete'
-import { chargeDeletable } from '@/utils/chargeProvenance'
+import { useRecordDeletion } from '@/composables/useRecordDeletion'
 import { entryKey, entryTarget } from '@/utils/costEntries'
 import { t } from '@/i18n'
 
@@ -15,6 +15,7 @@ import { t } from '@/i18n'
 export function useCostEntryActions(hooks: { hide: (id: string) => void; restore: (id: string) => void; reload: () => unknown }) {
   const vehicleStore = useVehicleStore()
   const { showAlert } = useConfirm()
+  const { removeRecords } = useRecordDeletion()
   const showToll = ref(false)
   const showMaintenance = ref(false)
   const showCharge = ref(false)
@@ -83,29 +84,17 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     }
   }
 
-  /** A charge reported by TeslaMate would come back with the next synchronisation: it is not deleted. */
+  /** A charge reported by TeslaMate is refused by the shared deletion; the line is hidden and restored by its journal id. */
   async function remove(entry: CostEntryLine, id: string) {
     const vehicle = vehicleStore.activeVehicle
     const target = entryTarget(entry)
     if (!vehicle || target.type !== 'edit') return
-    if (target.modal === 'charge') {
-      try {
-        if (!chargeDeletable(await api.getCharge(vehicle.id, target.id))) {
-          void showAlert(t('expenses.chargesPanel.syncedCannotDelete'), t('shell.confirm.error'), 'warning')
-          return
-        }
-      } catch (err) {
-        fail(err)
-        return
-      }
+    if (target.modal === 'charge' || target.modal === 'fuel') {
+      return removeFromJournal(target.modal === 'charge' ? 'charge' : 'fuel_log', target.id, id)
     }
-    if (target.modal === 'fuel') {
-      removeFuel(vehicle.id, target.id, id)
-      return
-    }
-    const erase = target.modal === 'charge' ? api.deleteCharge : target.modal === 'toll' ? api.deleteDriveExpense : api.deleteMaintenance
+    const erase = target.modal === 'toll' ? api.deleteDriveExpense : api.deleteMaintenance
     deleteWithUndo({
-      message: t(target.modal === 'charge' ? 'expenses.expensesView.chargeDeleted' : 'expenses.expensesView.costDeleted'),
+      message: t('expenses.expensesView.costDeleted'),
       hide: () => hooks.hide(id),
       restore: () => hooks.restore(id),
       commit: () => erase(vehicle.id, target.id),
@@ -114,23 +103,14 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     })
   }
 
-  /** A fill-up goes at once and comes back with Undo, the server is asked when that time is over. */
-  function removeFuel(vehicleId: string, logId: string, id: string) {
-    deleteWithUndo({
-      message: t('manual.fuelLogsPanel.fillUpDeleted'),
-      hide: () => hooks.hide(id),
-      restore: () => hooks.restore(id),
-      commit: () => api.deleteFuelLog(vehicleId, logId),
-      committed: () => void hooks.reload(),
-      onError: fail,
-    })
+  function removeFromJournal(kind: 'charge' | 'fuel_log', recordId: string, id: string) {
+    return removeRecords({ kind, items: [{ id: recordId }], place: { hide: () => hooks.hide(id), restore: () => hooks.restore(id) }, reload: hooks.reload })
   }
 
   /** The Delete of the fill-up sheet: the sheet closes and the line goes with the same Undo. */
   function removeOpenedFuel(log: { id: string }) {
-    const vehicle = vehicleStore.activeVehicle
     showFuel.value = false
-    if (vehicle && fuelEntryId) removeFuel(vehicle.id, log.id, fuelEntryId)
+    if (fuelEntryId) return removeFromJournal('fuel_log', log.id, fuelEntryId)
   }
 
   function onDocumentAdded(doc: ExpenseDocumentHeader) {
