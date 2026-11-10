@@ -1,5 +1,4 @@
 import { intlLocale, t } from '@/i18n'
-import { THEME_STYLES, themeOfExpense } from '@/utils/themes'
 
 // A curated shortlist for the currency pickers (a vehicle's own currency, or a manual expense's
 // foreign currency); the backend accepts any ISO-4217-shaped code, so this is a convenience.
@@ -195,44 +194,10 @@ export function findCloseCandidate(maintenances: any[] | null | undefined, editi
   )
 }
 
-interface MaintenanceLike {
-  category: string
-  date: string
-  amount: number | string
-  currency?: string | null
-  fx_rate?: number | string | null
-}
-
-/** Colour classes of an expense category: the badge and the tonal glyph of its row, from the category's theme. */
-export function categoryStyle(category: string): { badge: string; tint: string } {
-  return THEME_STYLES[themeOfExpense(category)]
-}
-
 /** Recurring costs of owning the car, listed apart from servicing and repairs. */
 export const FIXED_COST_CATEGORIES = ['INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING']
 
 export const isFixedCost = (category: string): boolean => FIXED_COST_CATEGORIES.includes(category)
-
-/** The expenses of one kind: servicing (maintenance, repairs, accessories, other) or fixed costs. */
-export const expensesOfKind = <T extends { category: string }>(items: T[], kind: 'service' | 'fixed'): T[] =>
-  items.filter((m) => isFixedCost(m.category) === (kind === 'fixed'))
-
-export interface MaintenanceFilter {
-  category: string
-  year: string
-}
-
-/** Maintenance and fixed expenses matching a category and a year; an empty value means "any". */
-export function filterMaintenance<T extends MaintenanceLike>(items: T[], filter: MaintenanceFilter): T[] {
-  return items.filter(
-    (m) => (!filter.category || m.category === filter.category) && (!filter.year || new Date(m.date).getUTCFullYear() === Number(filter.year))
-  )
-}
-
-/** Years that hold at least one expense, most recent first. */
-export function maintenanceYears(items: MaintenanceLike[]): number[] {
-  return [...new Set(items.map((m) => new Date(m.date).getUTCFullYear()))].sort((a, b) => b - a)
-}
 
 export interface LinkableMaintenance {
   id: string
