@@ -838,3 +838,23 @@ test('the account button of the top bar is for a phone: the sidebar carries the 
   await expect(page.getByRole('link', { name: 'Account' })).toBeVisible()
   await expect(page.getByTestId('account-button')).toBeHidden()
 })
+
+test('on a wide screen a cost opens as a panel beside the journal, which stays visible and usable', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await useVehicle(page, ev.id, '/costs')
+  const row = page.getByRole('button', { name: /^A\d+ / }).first()
+  await row.click()
+  const pane = page.getByRole('dialog')
+  await expect(pane).toBeVisible()
+  const box = (await pane.boundingBox())!
+  expect(box.x + box.width).toBeGreaterThan(1270)
+  expect(box.width).toBeLessThan(500)
+  expect(box.height).toBeGreaterThan(700)
+  // The journal is not covered: the row is left of the panel and a click on another row reaches it
+  const rowBox = (await row.boundingBox())!
+  expect(rowBox.x + rowBox.width).toBeLessThanOrEqual(box.x + 1)
+  await expectNoHorizontalScroll(page)
+  await page.keyboard.press('Escape')
+  await expect(pane).toHaveCount(0)
+  await expect(row).toBeVisible()
+})

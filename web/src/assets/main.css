@@ -236,6 +236,42 @@
   }
 }
 
+/* A record's form as a panel on the right edge of a wide screen: no backdrop, the list beside it stays usable. */
+@media (min-width: 1024px) {
+  .pane-layer {
+    inset: 0 0 0 auto;
+    width: var(--pane-width);
+    padding: 0;
+    background: transparent;
+    backdrop-filter: none;
+    overflow: visible;
+    align-items: stretch;
+    pointer-events: none;
+  }
+  .pane-panel {
+    pointer-events: auto;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+    border-width: 0 0 0 1px;
+    animation: pane-in 0.18s ease-out;
+  }
+  .has-pane .app-scroll {
+    padding-right: var(--pane-width);
+  }
+}
+:root {
+  --pane-width: 28rem;
+}
+@keyframes pane-in {
+  from {
+    transform: translateX(1.5rem);
+    opacity: 0;
+  }
+}
+
 /* Icon buttons and row checkboxes: 36px hit area with a mouse, 44px on touch screens. */
 .tap {
   min-width: 2.25rem;
