@@ -12,7 +12,7 @@ describe('groupNavItems', () => {
   })
 
   it('drops the pages the account cannot open and the sections left empty', () => {
-    const noDrives = all.filter((i) => !['drives', 'carpools', 'fleet', 'odometer', 'energy'].includes(i.name))
+    const noDrives = all.filter((i) => !['drives', 'carpools', 'odometer', 'energy'].includes(i.name))
     const grouped = groupNavItems(noDrives)
     expect(grouped.map((g) => g.headingKey)).not.toContain('shell.navSections.tracking')
     expect(grouped.flatMap((g) => g.items.map((i) => i.name))).not.toContain('drives')

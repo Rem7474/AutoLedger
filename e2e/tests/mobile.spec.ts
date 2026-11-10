@@ -920,7 +920,7 @@ test('a definition opens on touch, and Back closes it', async ({ page }) => {
 
 test('an account without a vehicle sees one "Add a vehicle first" state on every page about a vehicle', async ({ page }) => {
   await page.route(/\/api\/vehicles$/, (route) => (route.request().method() === 'GET' ? route.fulfill({ json: [] }) : route.continue()))
-  for (const route of ['/', '/drives', '/carpools', '/odometer', '/tires', '/expenses', '/maintenance', '/energy', '/fleet', '/comparison']) {
+  for (const route of ['/', '/drives', '/carpools', '/odometer', '/tires', '/expenses', '/maintenance', '/energy', '/?scope=all', '/comparison']) {
     await page.goto(route)
     await expect(page.getByRole('heading', { name: 'Add a vehicle first' }), route).toBeVisible()
     await expect(page.getByRole('main').getByRole('link', { name: 'Add a vehicle' }), route).toHaveAttribute('href', '/vehicles')

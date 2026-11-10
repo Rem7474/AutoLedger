@@ -1,18 +1,4 @@
 {
-  "title": "Household Fleet",
-  "subtitle": "Consolidated overview and multi-vehicle comparison for your household",
-  "refresh": "Refresh",
-  "kpi": {
-    "vehicles": "Vehicles",
-    "activeVehicles": "Active in household",
-    "currentMonthTotal": "Total monthly spending",
-    "fleetTravelled": "Total distance traveled",
-    "energyDelivered": "Delivered charging energy",
-    "perCurrency": "One total per currency",
-    "cost": "Cost",
-    "distance": "Distance",
-    "energy": "Energy"
-  },
   "chart": {
     "monthlyCostHistory": "Fleet Monthly Cost History",
     "stackedBreakdown": "Energy vs. other expenses",
@@ -57,7 +43,12 @@
     "footnote": "Cash paid covers energy, upkeep, insurance and financing, estimated energy included; full cost adds depreciation and amortized tires. Annual cost extrapolates the full cost over the observed history (three months minimum). Energy is charged energy at the plug. A vehicle under 60% completeness is shown but not ranked.",
     "energyCost": "Energy cost / 100 {unit}",
     "monthDistance": "Distance this month",
-    "monthCost": "Cost this month",
-    "moreFigures": "More figures"
+    "monthCost": "Cost this month"
+  },
+  "today": {
+    "spentIn": "Household spending in {month}",
+    "vehicleCount": "{count} vehicle | {count} vehicles",
+    "allVehicles": "All vehicles",
+    "subtitle": "The vehicles of the account side by side"
   }
 }

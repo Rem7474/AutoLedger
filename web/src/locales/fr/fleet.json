@@ -1,18 +1,4 @@
 {
-  "title": "Flotte Foyer",
-  "subtitle": "Vue consolidée et comparaison multi-véhicules du foyer",
-  "refresh": "Actualiser",
-  "kpi": {
-    "vehicles": "Véhicules",
-    "activeVehicles": "Actifs dans le foyer",
-    "currentMonthTotal": "Dépenses mensuelles globales",
-    "fleetTravelled": "Distance totale parcourue",
-    "energyDelivered": "Énergie de recharge délivrée",
-    "perCurrency": "Un total par devise",
-    "cost": "Coût",
-    "distance": "Distance",
-    "energy": "Énergie"
-  },
   "chart": {
     "monthlyCostHistory": "Historique des coûts de la flotte",
     "stackedBreakdown": "Énergie vs autres dépenses",
@@ -57,7 +43,12 @@
     "footnote": "Le décaissé couvre l'énergie, l'entretien, l'assurance et le financement, énergie estimée comprise ; le coût complet ajoute la dépréciation et les pneus amortis. Le coût annuel extrapole le coût complet sur l'historique observé (trois mois minimum). L'énergie est l'énergie chargée à la prise. Un véhicule sous 60 % de complétude est affiché mais pas classé.",
     "energyCost": "Coût énergie / 100 {unit}",
     "monthDistance": "Distance ce mois",
-    "monthCost": "Coût du mois",
-    "moreFigures": "Plus de chiffres"
+    "monthCost": "Coût du mois"
+  },
+  "today": {
+    "spentIn": "Dépenses du foyer en {month}",
+    "vehicleCount": "{count} véhicule | {count} véhicules",
+    "allVehicles": "Tous les véhicules",
+    "subtitle": "Les véhicules du compte côte à côte"
   }
 }

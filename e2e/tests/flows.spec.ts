@@ -283,6 +283,48 @@ test('the home hero leads to the journal of costs on a wide screen too', async (
   await expect(page).toHaveURL(/\/costs/)
 })
 
+test('the old fleet address lands on the home page with every vehicle, one line per currency', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  // A vehicle in another currency with one cost: the household view gives it its own line
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Pound reference', powertrain: 'EV', currency: 'GBP' } })
+  expect(created.ok()).toBeTruthy()
+  const pound = await created.json()
+  try {
+    const now = new Date().toISOString()
+    const charge = await request.post(`/api/vehicles/${pound.id}/charges`, { headers, data: { date: now, kwh_added: 10, cost: 2, currency: 'GBP' } })
+    expect(charge.ok()).toBeTruthy()
+    await useVehicle(page, ev.id, '/fleet')
+    await expect(page).toHaveURL(/\/\?scope=all$/)
+    await expect(page.getByRole('heading', { name: 'All vehicles' })).toBeVisible()
+    const totals = page.getByTestId('fleet-currency-total')
+    // Nothing is added across currencies: the euros and the pounds are two lines
+    await expect(totals).toHaveCount(2)
+    await expect(totals.first()).toContainText('€')
+    await expect(totals.nth(1)).toContainText('£')
+    await expect(page.getByTestId('fleet-overview').getByRole('heading', { name: 'Vehicles side by side' })).toBeVisible()
+    await expect(page.getByRole('navigation').getByRole('link', { name: 'Household Fleet' })).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${pound.id}`, { headers })
+  }
+})
+
+test('the vehicle selector opens the household view and a vehicle leaves it', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  const select = page.getByLabel('Active vehicle')
+  await select.selectOption({ label: 'All vehicles' })
+  await expect(page).toHaveURL(/\/\?scope=all$/)
+  await expect(page.getByTestId('fleet-overview')).toBeVisible()
+  await page.reload()
+  await expect(page.getByTestId('fleet-overview')).toBeVisible()
+  await expect(select).toHaveValue('all')
+  await select.selectOption(ev.id)
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByTestId('today-hero')).toBeVisible()
+  // Another page shows the vehicle, never the household entry
+  await useVehicle(page, ev.id, '/drives')
+  await expect(select).toHaveValue(ev.id)
+})
+
 test('the odometer page lists the mileage typed on fill-ups, read-only', async ({ page }) => {
   await useVehicle(page, ice.id, '/odometer')
   await expect(page.getByText('Fill-up', { exact: true }).first()).toBeVisible()

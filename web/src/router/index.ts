@@ -29,7 +29,8 @@ const router = createRouter({
       component: () => import('@/views/OAuthAuthorizeView.vue'),
       meta: { requiresAuth: true, resumeAfterLogin: true, bare: true },
     },
-    authRoute('/fleet', 'fleet', () => import('@/views/FleetView.vue'), true),
+    // Former address of the household fleet page: it is the home page with every vehicle
+    { path: '/fleet', redirect: { path: '/', query: { scope: 'all' } } },
     authRoute('/drives', 'drives', () => import('@/views/DrivesView.vue'), true),
     authRoute('/carpools', 'carpools', () => import('@/views/CarpoolView.vue'), true),
     authRoute('/odometer', 'odometer', () => import('@/views/ManualTrackingView.vue'), true),
