@@ -17,7 +17,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['lcov', 'text-summary'],
-      include: ['src/units.ts', 'src/currency.ts', 'src/utils/**/*.ts', 'src/composables/**/*.ts', 'src/stores/**/*.ts', 'src/services/**/*.ts', 'src/directives/**/*.ts'],
+      include: ['src/units.ts', 'src/currency.ts', 'src/utils/**/*.ts', 'src/composables/**/*.ts', 'src/stores/**/*.ts', 'src/services/**/*.ts', 'src/directives/**/*.ts', 'src/icons/**/*.ts'],
       exclude: ['**/*.test.ts'],
     },
   },
