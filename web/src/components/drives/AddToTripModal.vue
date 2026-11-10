@@ -4,7 +4,7 @@ import { ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useStaleWrite } from '@/composables/useStaleWrite'
-import { Plus } from 'lucide-vue-next'
+import { Plus } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 
 // Adds the selected drives to an existing trip group.

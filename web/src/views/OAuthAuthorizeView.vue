@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { AlertCircle, Check, ShieldCheck, X } from 'lucide-vue-next'
+import { AlertCircle, Check, ShieldCheck, X } from '@/icons'
 import { api, type OAuthAuthorizeParams, type OAuthAuthorizePreview } from '@/services/api'
 import { t } from '@/i18n'
 import { canApproveGrant, grantedVehicleIds, toggleVehicle, type GrantVehicleMode } from '@/utils/oauthVehicles'

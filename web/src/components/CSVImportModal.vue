@@ -11,7 +11,7 @@ import { profileColumns, profileMapping, type CSVDateOrder, type CSVDecimalSepar
 import { apiErrorMessage } from '@/services/apiError'
 import { distanceUnit } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
-import { UploadCloud, CheckCircle2, XCircle, ArrowRight } from 'lucide-vue-next'
+import { UploadCloud, CheckCircle2, XCircle, ArrowRight } from '@/icons'
 
 const props = defineProps<{
   open: boolean

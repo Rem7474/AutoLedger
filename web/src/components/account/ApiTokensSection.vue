@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import ModalShell from '@/components/ModalShell.vue'
-import { Key, Plus, Trash2, Copy, Check, ExternalLink, ShieldAlert, Sparkles } from 'lucide-vue-next'
+import { Key, Plus, Trash2, Copy, Check, ExternalLink, ShieldAlert, Sparkles } from '@/icons'
 import { api, type APITokenInfo, type APITokenCreatedResponse, type APITokenScope } from '@/services/api'
 import { describeRelativeTime } from '@/utils/userAgent'
 import { useConfirm } from '@/composables/useConfirm'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Lightbulb } from 'lucide-vue-next'
+import { Lightbulb } from '@/icons'
 import { useIsMobile } from '@/composables/useIsMobile'
 import { useSelectionHint } from '@/composables/useSelectionHint'
 

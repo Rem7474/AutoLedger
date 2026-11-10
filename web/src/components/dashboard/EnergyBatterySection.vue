@@ -2,7 +2,7 @@
 import { t } from '@/i18n'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
-import { BatteryMedium } from 'lucide-vue-next'
+import { BatteryMedium } from '@/icons'
 import KpiCard from '@/components/KpiCard.vue'
 import { AXIS_TEXT, GRID_COLOR, fmt, type EnergyStats } from './energyStats'
 

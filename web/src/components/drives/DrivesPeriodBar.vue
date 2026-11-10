@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CalendarDays } from 'lucide-vue-next'
+import { CalendarDays } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import PeriodBar from '@/components/period/PeriodBar.vue'
 import DrivesPeriodControls from '@/components/drives/DrivesPeriodControls.vue'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CalendarClock, ChevronRight, Disc } from 'lucide-vue-next'
+import { CalendarClock, ChevronRight, Disc } from '@/icons'
 import type { MaintenanceReminder } from '@/services/api'
 import type { TireSetSummary } from '@/utils/tires'
 import { needsFirstReminder, upcomingItems, type UpcomingItem } from '@/utils/upcoming'

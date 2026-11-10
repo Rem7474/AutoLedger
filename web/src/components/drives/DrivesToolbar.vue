@@ -2,7 +2,7 @@
 import { t } from '@/i18n'
 import { formatDistance } from '@/units'
 import { computed, ref } from 'vue'
-import { X, Search, SlidersHorizontal } from 'lucide-vue-next'
+import { X, Search, SlidersHorizontal } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import ListSummary from '@/components/ListSummary.vue'
 import DrivesPeriodControls from '@/components/drives/DrivesPeriodControls.vue'

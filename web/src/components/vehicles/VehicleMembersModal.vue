@@ -6,7 +6,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { useAuthStore } from '@/stores/auth'
 import { api, type VehiclePerson } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
-import { Trash2, RefreshCw, Users, UserPlus, ShieldCheck, LogOut, Star } from 'lucide-vue-next'
+import { Trash2, RefreshCw, Users, UserPlus, ShieldCheck, LogOut, Star } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 
 // Who can access a vehicle: the owner adds members and changes their role, a member can leave.

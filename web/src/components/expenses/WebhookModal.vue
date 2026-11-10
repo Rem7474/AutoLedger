@@ -4,7 +4,7 @@ import { t } from '@/i18n'
 import { computed, ref, watch } from 'vue'
 import { api, type VehicleWebhook } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
-import { AlertTriangle, Loader2, CheckCircle2, Radio } from 'lucide-vue-next'
+import { AlertTriangle, Loader2, CheckCircle2, Radio } from '@/icons'
 
 // The vehicle's notification webhook. `webhook` is the saved one (null when none); changes are reported through update:webhook.
 const props = defineProps<{ vehicleId: string; webhook: VehicleWebhook | null }>()

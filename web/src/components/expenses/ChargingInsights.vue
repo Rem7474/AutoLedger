@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
-import { MapPin, PiggyBank, ChevronDown } from 'lucide-vue-next'
+import { MapPin, PiggyBank, ChevronDown } from '@/icons'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import KpiCard from '@/components/KpiCard.vue'
 import { api } from '@/services/api'

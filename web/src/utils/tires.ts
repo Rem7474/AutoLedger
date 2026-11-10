@@ -1,6 +1,6 @@
 import { intlLocale, t } from '@/i18n'
 import { formatDistance } from '@/units'
-import { CloudSun, Snowflake, Sun } from 'lucide-vue-next'
+import { CloudSun, Snowflake, Sun } from '@/icons'
 import { todayIso, toIsoDay } from '@/utils/dates'
 
 export const MOUNTED_POSITIONS = ['FL', 'FR', 'RL', 'RR'] as const

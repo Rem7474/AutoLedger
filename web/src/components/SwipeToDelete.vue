@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2 } from '@/icons'
 import { useIsMobile } from '@/composables/useIsMobile'
 import { createSwipeGesture } from '@/utils/swipeRow'
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { Plus, Ban, ExternalLink } from 'lucide-vue-next'
+import { Plus, Ban, ExternalLink } from '@/icons'
 
 // The two taps that qualify an item of a "to qualify" queue: accept it (enter the toll, create the trip)
 // or rule it out (no toll, not a trip).

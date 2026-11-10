@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RefreshCw } from 'lucide-vue-next'
+import { RefreshCw } from '@/icons'
 import { PULL_THRESHOLD } from '@/utils/pullRefresh'
 
 // The round badge that comes down from under the top bar while the page is pulled, and spins while it reloads.

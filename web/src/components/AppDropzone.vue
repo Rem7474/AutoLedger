@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, useId } from 'vue'
-import { UploadCloud, FileText, Image as ImageIcon, X, AlertCircle } from 'lucide-vue-next'
+import { UploadCloud, FileText, Image as ImageIcon, X, AlertCircle } from '@/icons'
 import { t } from '@/i18n'
 
 const props = withDefaults(

@@ -7,7 +7,7 @@ import { defaultDriver } from '@/utils/vehicles'
 import { usePreferencesStore } from '@/stores/preferences'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import ModalShell from '@/components/ModalShell.vue'
-import { Receipt, Layers, Users, Plus, Download, Pencil, Trash2, ExternalLink, ListChecks, Briefcase, House, UserRound } from 'lucide-vue-next'
+import { Receipt, Layers, Users, Plus, Download, Pencil, Trash2, ExternalLink, ListChecks, Briefcase, House, UserRound } from '@/icons'
 import type { SelectionAction } from '@/utils/selectionActions'
 import { teslamateDriveUrl } from '@/utils/drives'
 

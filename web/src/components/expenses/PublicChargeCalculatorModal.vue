@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import NumberInput from '@/components/NumberInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
-import { Calculator, Sparkles, Check, BookmarkPlus, Info } from 'lucide-vue-next'
+import { Calculator, Sparkles, Check, BookmarkPlus, Info } from '@/icons'
 import { api, type PublicChargingPreset, type PublicChargingBreakdown } from '@/services/api'
 import { formatAmount } from '@/currency'
 import { t } from '@/i18n'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { X, MoreVertical } from 'lucide-vue-next'
+import { X, MoreVertical } from '@/icons'
 import { barActions, phoneShortcuts, sheetOrder, type SelectionAction } from '@/utils/selectionActions'
 import { hasOpenEscapeLayer, useEscapeToClose } from '@/composables/useEscapeToClose'
 import { useIsMobile } from '@/composables/useIsMobile'

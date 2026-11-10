@@ -2,7 +2,7 @@
 import { t } from '@/i18n'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CheckCircle2, X } from 'lucide-vue-next'
+import { CheckCircle2, X } from '@/icons'
 import { api } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useOfflineStore } from '@/stores/offline'

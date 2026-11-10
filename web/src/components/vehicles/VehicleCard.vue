@@ -7,7 +7,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import RowMenu from '@/components/RowMenu.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import { api } from '@/services/api'
-import { Car, Plus, Trash2, Edit2, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database, Check } from 'lucide-vue-next'
+import { Car, Plus, Trash2, Edit2, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database, Check } from '@/icons'
 import { canCharge, hasEnergyEstimate, isElectricOnly, ownershipSummary, roleLabel } from '@/utils/vehicles'
 
 // One vehicle of the list, with its contract summary and a TeslaMate connection test of its own

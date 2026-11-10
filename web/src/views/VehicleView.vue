@@ -1,7 +1,6 @@
 <script setup lang="ts">
+import { Bell, BatteryCharging, ClipboardList, Coins, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users, Zap, Activity, Car } from '@/icons'
 import { computed, onMounted, ref, watch } from 'vue'
-import { Bell, BatteryCharging, ClipboardList, Coins, Disc, FileText, Gauge, Pencil, Plug, Scale, TrendingDown, Users, Zap, Activity } from 'lucide-vue-next'
-import { Car } from '@/icons'
 import PageHeader from '@/components/PageHeader.vue'
 import VehicleTile from '@/components/vehicle/VehicleTile.vue'
 import SheetRow from '@/components/SheetRow.vue'

@@ -28,7 +28,7 @@ describe('ChargesPanel', () => {
   it('opens a charge from the whole row, with no pencil button', async () => {
     const html = await render()
     expect(html).toContain('inset-0')
-    expect(html).not.toContain('lucide-pencil')
+    expect(html).not.toContain('data-icon="edit"')
   })
 
   it('keeps the menu for the actions the row does not carry', async () => {

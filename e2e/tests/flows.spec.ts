@@ -804,3 +804,9 @@ test('the TeslaMate connection is set, edited and removed from Data sources', as
     await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
   }
 })
+
+test('the account button of the top bar is for a phone: the sidebar carries the account on a desktop', async ({ page }) => {
+  await useVehicle(page, ev.id, '/')
+  await expect(page.getByRole('link', { name: 'Account' })).toBeVisible()
+  await expect(page.getByTestId('account-button')).toBeHidden()
+})

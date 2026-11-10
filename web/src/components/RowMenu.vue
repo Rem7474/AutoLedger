@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import { MoreHorizontal } from 'lucide-vue-next'
+import { MoreHorizontal } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
 import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Users, MapPin, Navigation, Pencil, RotateCw, Link2, Lock, LockOpen, ChevronRight, Zap, Disc, Wrench, Shield, Receipt } from 'lucide-vue-next'
+import { Users, MapPin, Navigation, Pencil, RotateCw, Link2, Lock, LockOpen, ChevronRight, Zap, Disc, Wrench, Shield, Receipt } from '@/icons'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { buildCarpoolBreakdown } from '@/utils/costBreakdown'

@@ -29,7 +29,7 @@ import {
   type WhatIfKey,
   type WhatIfSliderKey,
 } from '@/utils/comparisonWhatIf'
-import { RotateCcw, SlidersHorizontal } from 'lucide-vue-next'
+import { RotateCcw, SlidersHorizontal } from '@/icons'
 
 // Explore other annual distance, fuel and electricity prices on a projection without editing the saved scenario:
 // the explored result comes from the server's comparison engine, nothing is stored and recorded costs are untouched.

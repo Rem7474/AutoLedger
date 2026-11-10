@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Car } from 'lucide-vue-next'
+import { Car } from '@/icons'
 import EmptyState from '@/components/EmptyState.vue'
 
 // What every page about a vehicle shows when the account has none.

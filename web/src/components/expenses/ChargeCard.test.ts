@@ -67,7 +67,7 @@ describe('ChargeCard', () => {
   it('keeps the details link and the delete in the menu, and opens the charge from the whole card', async () => {
     const html = await render(charge)
     expect(html).toContain('inset-0')
-    expect(html).not.toContain('lucide-pencil')
+    expect(html).not.toContain('data-icon="edit"')
     expect(html).toContain('aria-haspopup="menu"')
   })
 

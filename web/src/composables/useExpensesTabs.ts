@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { t } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { TabItem } from '@/components/TabBar.vue'
-import { Receipt, Fuel, Wrench, Zap, Gauge, Calculator, Paperclip, Bell } from 'lucide-vue-next'
+import { Receipt, Fuel, Wrench, Zap, Gauge, Calculator, Paperclip, Bell } from '@/icons'
 
 export type ExpensesTab = 'REMINDERS' | 'CHARGES' | 'FUEL' | 'DOCUMENTS' | 'EFFICIENCY' | 'ESTIMATE'
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Car } from 'lucide-vue-next'
+import { Car } from '@/icons'
 import { euros, passengerLabel, type PassengerForm } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 

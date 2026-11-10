@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Car as PageIcon, Plus } from '@/icons'
 import PageHeader from '@/components/PageHeader.vue'
-import { Car as PageIcon } from '@/icons'
 import { t } from '@/i18n'
 import { ref, onMounted, watch } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
@@ -13,7 +13,6 @@ import VehicleFormModal from '@/components/vehicles/VehicleFormModal.vue'
 import OwnershipWizardModal from '@/components/vehicles/OwnershipWizardModal.vue'
 import VehicleMembersModal from '@/components/vehicles/VehicleMembersModal.vue'
 import VehicleDataSourcesModal from '@/components/vehicles/VehicleDataSourcesModal.vue'
-import { Plus } from 'lucide-vue-next'
 
 // The page owns the vehicle list, the acquisition contracts and which modal is open; each modal owns its form
 // and its API calls and reports back.

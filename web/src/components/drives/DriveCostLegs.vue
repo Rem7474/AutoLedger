@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRight, Layers } from 'lucide-vue-next'
+import { ChevronRight, Layers } from '@/icons'
 import { formatDayTime } from '@/utils/dates'
 import { formatDistance } from '@/units'
 import { formatAmount } from '@/currency'

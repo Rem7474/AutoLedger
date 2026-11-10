@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { intlLocale } from '@/i18n'
 import { computed } from 'vue'
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight } from '@/icons'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import {
   currentYearMonth,

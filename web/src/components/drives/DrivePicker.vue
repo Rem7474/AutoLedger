@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { formatDistance } from '@/units'
-import { ChevronLeft, ChevronRight, Link2, Check } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Link2, Check } from '@/icons'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'

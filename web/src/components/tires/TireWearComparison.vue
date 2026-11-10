@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Info } from 'lucide-vue-next'
+import { Info } from '@/icons'
 import { distanceUnit, formatDistanceValue } from '@/units'
 import { formatPercent } from '@/utils/numbers'
 import { MIN_CONFIDENCE_FOR_TONE, tireWearComparison, tireWearComparisonTone } from '@/utils/tireWearComparison'

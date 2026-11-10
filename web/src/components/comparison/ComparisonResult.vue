@@ -13,7 +13,7 @@ import ComparisonCharts from '@/components/comparison/ComparisonCharts.vue'
 import ComparisonWhatIf from '@/components/comparison/ComparisonWhatIf.vue'
 import { breakEvenReasonKey } from '@/utils/comparisonBreakEven'
 import type { ComparisonForm } from '@/utils/comparisonForm'
-import { ArrowLeft, Download, Info, Pencil, Printer, TrendingDown, TrendingUp } from 'lucide-vue-next'
+import { ArrowLeft, Download, Info, Pencil, Printer, TrendingDown, TrendingUp } from '@/icons'
 
 // The outcome of one scenario: verdict, savings, cost breakdown, charts and the CSV / print exports.
 const props = defineProps<{ result: any | null; scenario: any | null; side: TrackedSide; currency: string; referenceVehicleId?: string; saving?: boolean; saveError?: string }>()

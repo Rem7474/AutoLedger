@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { MaintenanceReminder } from '@/services/api'
-import { Pencil, Trash2, CheckCircle2, Radio, CircleDashed, ChevronDown } from 'lucide-vue-next'
+import { Pencil, Trash2, CheckCircle2, Radio, CircleDashed, ChevronDown } from '@/icons'
 import { formatDate, formatCalendarDay, hasReminderSchedule, reminderDaysLabel, reminderDaysOver, reminderDueTile } from '@/utils/expenses'
 import { distanceUnit, formatDistanceValue } from '@/units'
 

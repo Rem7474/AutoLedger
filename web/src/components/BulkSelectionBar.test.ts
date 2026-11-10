@@ -3,7 +3,7 @@ import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import BulkSelectionBar from './BulkSelectionBar.vue'
-import { Pencil, Trash2 } from 'lucide-vue-next'
+import { Pencil, Trash2 } from '@/icons'
 
 const render = (props: Record<string, unknown>) =>
   renderToString(createSSRApp({ render: () => h(BulkSelectionBar as any, props, { default: () => h('button', { class: 'btn' }, 'Act') }) }).use(i18n))

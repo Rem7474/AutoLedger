@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import { Pencil, Trash2 } from 'lucide-vue-next'
+import { Pencil, Trash2 } from '@/icons'
 import { t } from '@/i18n'
 
 // One action of the contextual bar that opens when rows are selected. An action that does not apply to the current

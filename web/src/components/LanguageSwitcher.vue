@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Languages } from 'lucide-vue-next'
+import { Languages } from '@/icons'
 import { currentLocale, setLocale, SUPPORTED_LOCALES, type AppLocale } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/services/api'

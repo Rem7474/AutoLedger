@@ -1,8 +1,7 @@
 <script setup lang="ts">
+import { ClipboardList as PageIcon, UploadCloud, Download } from '@/icons'
 import PageHeader from '@/components/PageHeader.vue'
-import { ClipboardList as PageIcon } from '@/icons'
 import { ref } from 'vue'
-import { UploadCloud, Download } from 'lucide-vue-next'
 import RowMenu from '@/components/RowMenu.vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import OdometerReadingsPanel from '@/components/manual/OdometerReadingsPanel.vue'

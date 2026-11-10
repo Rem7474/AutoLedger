@@ -2,7 +2,7 @@
 import { formatPercent } from '@/utils/numbers'
 import { intlLocale } from '@/i18n'
 import { computed } from 'vue'
-import { Coins, Gauge, Calendar, FileText, CheckCircle2, ChevronDown } from 'lucide-vue-next'
+import { Coins, Gauge, Calendar, FileText, CheckCircle2, ChevronDown } from '@/icons'
 import { buildLeaseSummary } from '@/utils/dashboard'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'

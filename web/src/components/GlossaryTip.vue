@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Info } from 'lucide-vue-next'
+import { Info } from '@/icons'
 import { t } from '@/i18n'
 import ModalShell from '@/components/ModalShell.vue'
 

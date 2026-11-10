@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { ChevronRight } from 'lucide-vue-next'
+import { ChevronRight } from '@/icons'
 
 // One line of the vehicle sheet: a glyph, what it opens, one quiet detail, a chevron. A link opens a screen of its own,
 // a button opens a sheet over the sheet.

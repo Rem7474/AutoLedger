@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { RefreshCw, CheckCircle2, AlertCircle, Link2, Copy } from 'lucide-vue-next'
+import { RefreshCw, CheckCircle2, AlertCircle, Link2, Copy } from '@/icons'
 import { api } from '@/services/api'
 import { t } from '@/i18n'
 import { distanceUnit, formatDistanceValue } from '@/units'

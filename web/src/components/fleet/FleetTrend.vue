@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { Users } from 'lucide-vue-next'
+import { Users } from '@/icons'
 import { Chart, registerables } from 'chart.js'
 import ChartTable from '@/components/charts/ChartTable.vue'
 import type { FleetSummaryResponse } from '@/services/api'

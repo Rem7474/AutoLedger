@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
 import { ref } from 'vue'
-import { Camera, FileText, X } from 'lucide-vue-next'
+import { Camera, FileText, X } from '@/icons'
 import { api } from '@/services/api'
 import { useOfflineStore } from '@/stores/offline'
 

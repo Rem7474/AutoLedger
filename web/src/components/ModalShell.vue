@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue'
-import { X } from 'lucide-vue-next'
+import { X } from '@/icons'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import SheetGrabber from '@/components/SheetGrabber.vue'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'

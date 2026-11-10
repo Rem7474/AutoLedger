@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ChevronUp } from 'lucide-vue-next'
+import { ChevronUp } from '@/icons'
 import { euros } from '@/utils/carpool'
 import { recapFigures } from '@/utils/carpoolEditor'
 import { formatAmount } from '@/currency'

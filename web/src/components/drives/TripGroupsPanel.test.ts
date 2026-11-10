@@ -22,7 +22,7 @@ describe('TripGroupsPanel', () => {
     const html = await render()
     expect(html).toContain('inset-0')
     expect(html).toContain('aria-haspopup="menu"')
-    expect(html).not.toContain('lucide-pencil')
+    expect(html).not.toContain('data-icon="edit"')
   })
 
   it('keeps the legs toggle above the open button so it still works', async () => {

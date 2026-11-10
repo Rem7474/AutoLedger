@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { CalendarDays, ChevronLeft, ChevronRight } from '@/icons'
 import PeriodSheet from '@/components/period/PeriodSheet.vue'
 import { initialScrollHide, stepScrollHide } from '@/utils/scrollHide'
 import type { Period } from '@/utils/period'

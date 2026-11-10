@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import GlossaryTip from '@/components/GlossaryTip.vue'
 import ModalShell from '@/components/ModalShell.vue'
-import { Award, ChevronRight, TrendingDown } from 'lucide-vue-next'
+import { Award, ChevronRight, TrendingDown } from '@/icons'
 import type { FleetSummaryResponse } from '@/services/api'
 import { formatAmount, formatAmountOrUnknown } from '@/currency'
 import { formatPercent } from '@/utils/numbers'

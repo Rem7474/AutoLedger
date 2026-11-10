@@ -11,7 +11,7 @@ import { editDeleteActions, type SelectionAction } from '@/utils/selectionAction
 import { intlLocale, t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
-import { Fuel, Plus, Trash2 } from 'lucide-vue-next'
+import { Fuel, Plus, Trash2 } from '@/icons'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'

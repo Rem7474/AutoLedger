@@ -6,7 +6,7 @@ import { distanceUnit, formatDistanceValue } from '@/units'
 import { downloadCsv } from '@/utils/csv'
 import { csvTemplate, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
 import { supportsTeslaMate, teslaMateCarId, teslaMateCredentials, type emptyTeslaMateForm, type Powertrain } from '@/utils/onboarding'
-import { AlertCircle, ArrowRight, CheckCircle2, Download, FileSpreadsheet, KeyRound, Link2, RefreshCw, Webhook } from 'lucide-vue-next'
+import { AlertCircle, ArrowRight, CheckCircle2, Download, FileSpreadsheet, KeyRound, Link2, RefreshCw, Webhook } from '@/icons'
 
 // Optional last step of the wizard: the TeslaMate link, a Home Assistant webhook and CSV templates.
 // The form is edited in place; the wizard reads it when it creates the vehicle.

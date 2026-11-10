@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { MapPin, Trash2 } from 'lucide-vue-next'
+import { MapPin, Trash2 } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import { api } from '@/services/api'
 import { apiErrorMessage } from '@/services/apiError'
