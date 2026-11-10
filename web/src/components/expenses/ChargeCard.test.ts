@@ -35,7 +35,7 @@ describe('ChargeCard', () => {
     expect(html).toContain('href="http://tm.local/charge-cost/158"')
     expect(html).toContain('Gratuite')
     expect(html).not.toContain('Saisir le coût')
-    expect(html).toContain('aria-haspopup="menu"')
+    expect(html).not.toContain('aria-haspopup="menu"')
   })
 
   it('keeps entering the cost in AutoLedger when TeslaMate cannot give it back', async () => {
@@ -64,15 +64,34 @@ describe('ChargeCard', () => {
     expect(html).not.toContain('Gratuite')
   })
 
-  it('keeps the details link and the delete in the menu, and opens the charge from the whole card', async () => {
-    const html = await render(charge)
-    expect(html).toContain('inset-0')
-    expect(html).not.toContain('data-icon="edit"')
-    expect(html).toContain('aria-haspopup="menu"')
+  it('opens the charge from the whole card and has no row menu, whatever the charge', async () => {
+    for (const c of [charge, { ...charge, origin: 'MANUAL', teslamate_charge_id: null, cost: 4, cost_to_review: false }]) {
+      const html = await render(c)
+      expect(html).toContain('inset-0')
+      expect(html).not.toContain('aria-haspopup="menu"')
+      expect(html).not.toContain('Détails dans TeslaMate')
+    }
   })
 
-  it('offers the menu on a manual charge, which can be deleted', async () => {
-    expect(await render({ ...charge, origin: 'MANUAL', teslamate_charge_id: null, cost: 4, cost_to_review: false })).toContain('aria-haspopup="menu"')
+  it('writes the states as text (StatusLabel), not as pills', async () => {
+    const html = await render({ ...charge, cost: null })
+    expect(html).toMatch(/data-tone="attention"[^>]*>[\s\S]*?Coût manquant/)
+    expect(html).not.toContain('bg-warning-500/10 border border-warning-500/30')
+    const corrected = await render({ ...charge, cost: 5, cost_to_review: false, cost_source: 'MANUAL' })
+    expect(corrected).toMatch(/data-tone="info"[^>]*>[\s\S]*?Coût corrigé/)
+  })
+
+  it('does not say where the charge comes from on the row', async () => {
+    for (const origin of ['TESLAMATE', 'MANUAL', 'CSV', 'WEBHOOK']) {
+      const html = await render({ ...charge, origin, cost: 4, cost_to_review: false })
+      expect(html).not.toContain('Home Assistant / script')
+      expect(html).not.toContain('Import CSV')
+      expect(html).not.toContain('Manuelle')
+    }
+  })
+
+  it('shows the energy as plain text, not as a pill', async () => {
+    expect(await render({ ...charge, cost: 4, cost_to_review: false })).not.toContain('rounded-full border border-slate-700/60 bg-slate-800')
   })
 
   it('has a selection box on the row, checked and highlighted once the charge is selected', async () => {
@@ -91,7 +110,7 @@ describe('ChargeCard', () => {
     expect(await render(charge, 'VIEWER')).not.toContain('charge-select-')
   })
 
-  it('offers neither the open area nor the menu to a viewer', async () => {
+  it('offers no open area to a viewer', async () => {
     const html = await render(charge, 'VIEWER')
     expect(html).not.toContain('inset-0')
     expect(html).not.toContain('aria-haspopup="menu"')

@@ -370,6 +370,7 @@ function openUploadDocumentModal() {
       :documents="documents"
       :current-odometer="currentOdometer"
       @saved="refreshData"
+      @delete="handleDeleteCharge"
       @document-added="onDocumentAdded"
       @view-document="viewOrDownloadDocument"
     />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chargeDeletable, chargeFieldAccess, chargeOrigin, chargeOriginKey } from './chargeProvenance'
+import { chargeDeletable, chargeFieldAccess, chargeOrigin } from './chargeProvenance'
 
 describe('chargeOrigin', () => {
   it('uses the reported origin', () => {
@@ -10,9 +10,6 @@ describe('chargeOrigin', () => {
     expect(chargeOrigin({ is_manual: true })).toBe('MANUAL')
     expect(chargeOrigin({ is_manual: false })).toBe('TESLAMATE')
     expect(chargeOrigin({ origin: 'SOMETHING' })).toBe('TESLAMATE')
-  })
-  it('names the badge key after the origin', () => {
-    expect(chargeOriginKey({ origin: 'WEBHOOK' })).toBe('expenses.chargeOrigin.WEBHOOK')
   })
 })
 

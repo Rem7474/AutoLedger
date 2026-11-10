@@ -14,11 +14,6 @@ export function chargeOrigin(c: ChargeLike): ChargeOrigin {
   return c.is_manual ? 'MANUAL' : 'TESLAMATE'
 }
 
-/** Catalog key of the badge naming the source of a charge. */
-export function chargeOriginKey(c: ChargeLike): string {
-  return `expenses.chargeOrigin.${chargeOrigin(c)}`
-}
-
 /**
  * What can be changed on a charge. The facts a synchronised source reports (start, end, energy, place, odometer)
  * are read-only: the next synchronisation would overwrite them. Everything else belongs to AutoLedger.

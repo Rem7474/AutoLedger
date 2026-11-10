@@ -77,9 +77,12 @@
     "editCharge": "Edit the charge",
     "start": "Charge start",
     "endOptional": "Charge end (optional)",
-    "sourceLocked": "Reported by TeslaMate and read-only; the cost and the notes are yours and survive synchronisations.",
-    "sourceLockedCostInTeslaMate": "Reported by TeslaMate and read-only. The cost is set in TeslaMate and read again by the next synchronisation; the notes are yours.",
-    "costInTeslaMate": "Set in TeslaMate"
+    "costInTeslaMate": "Set in TeslaMate",
+    "originTeslaMate": "Synchronised from {link}: the date, energy, place and odometer are read-only; the cost and the notes are yours.",
+    "originTeslaMateCost": "Synchronised from {link}: the date, energy, place and odometer are read-only. The cost is set in TeslaMate and read again by the next synchronisation; the notes are yours.",
+    "originManual": "Entered manually.",
+    "originCsv": "Imported from a CSV file.",
+    "originAutomatic": "Imported automatically."
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} charge(s) shown out of {chargesTotal}",
@@ -433,12 +436,6 @@
     "calipers": "Caliper cleaning and greasing",
     "winterTires": "Winter tires (Nov 1)",
     "summerTires": "Summer tires (Apr 1)"
-  },
-  "chargeOrigin": {
-    "TESLAMATE": "TeslaMate",
-    "WEBHOOK": "Home Assistant / script",
-    "CSV": "CSV import",
-    "MANUAL": "Manual"
   },
   "chargingPlaces": {
     "title": "Charging places",

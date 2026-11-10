@@ -77,9 +77,12 @@
     "editCharge": "Modifier la recharge",
     "start": "Début de la charge",
     "endOptional": "Fin de la charge (optionnel)",
-    "sourceLocked": "Données remontées par TeslaMate, en lecture seule ; le coût et les notes sont à vous et survivent aux synchronisations.",
-    "sourceLockedCostInTeslaMate": "Données remontées par TeslaMate, en lecture seule. Le coût se saisit dans TeslaMate et est relu à la prochaine synchronisation ; les notes sont à vous.",
-    "costInTeslaMate": "À saisir dans TeslaMate"
+    "costInTeslaMate": "À saisir dans TeslaMate",
+    "originTeslaMate": "Synchronisée depuis {link} : la date, l'énergie, le lieu et le compteur sont en lecture seule ; le coût et les notes sont à vous.",
+    "originTeslaMateCost": "Synchronisée depuis {link} : la date, l'énergie, le lieu et le compteur sont en lecture seule. Le coût se saisit dans TeslaMate et est relu à la prochaine synchronisation ; les notes sont à vous.",
+    "originManual": "Saisie manuellement.",
+    "originCsv": "Importée depuis un fichier CSV.",
+    "originAutomatic": "Importée automatiquement."
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} recharge(s) affichée(s) sur {chargesTotal}",
@@ -433,12 +436,6 @@
     "calipers": "Nettoyage & graissage des étriers",
     "winterTires": "Pneus hiver (1er novembre)",
     "summerTires": "Pneus été (1er avril)"
-  },
-  "chargeOrigin": {
-    "TESLAMATE": "TeslaMate",
-    "WEBHOOK": "Home Assistant / script",
-    "CSV": "Import CSV",
-    "MANUAL": "Manuelle"
   },
   "chargingPlaces": {
     "title": "Lieux de recharge",

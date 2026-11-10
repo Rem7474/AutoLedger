@@ -107,6 +107,11 @@ const actions = useCostEntryActions({
   },
   reload: () => load(true),
 })
+// The delete of the charge detail goes through the same path as the swipe on its line
+function removeCharge(charge: { id: string }) {
+  const line = items.value.find((e) => e.source === 'charge_logs' && e.source_id === charge.id)
+  if (line) void actions.remove(line, line.id)
+}
 const { showToll, showMaintenance, showCharge, editing, documents, maintenanceExpenses, onDocumentAdded } = actions
 // The quick entry sheet sends a maintenance entry here: the form opens on arrival and the parameter is dropped
 watch(
@@ -309,7 +314,7 @@ const chipClass = (key: CostFilterKey) => {
       @document-added="onDocumentAdded"
       @view-document="viewOrDownloadDocument"
     />
-    <ChargeModal v-model:open="showCharge" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" :current-odometer="currentOdometer" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
+    <ChargeModal v-model:open="showCharge" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" :current-odometer="currentOdometer" @saved="load(true)" @delete="removeCharge" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
     <MonthDetailModal v-model:month="selectedMonth" :monthly-costs="monthlyCosts || []" />
     <ChargingPlacesModal v-model:open="showPlaces" :vehicle-id="vehicleStore.activeVehicle.id" :can-edit="vehicleStore.canEdit" @changed="onPlacesChanged" />
     <DocumentPreviewModal :preview-doc="previewDoc" @close="closeDocPreview" />
