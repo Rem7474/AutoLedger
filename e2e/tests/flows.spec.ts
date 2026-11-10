@@ -283,17 +283,29 @@ test('the home hero leads to the journal of costs on a wide screen too', async (
   await expect(page).toHaveURL(/\/costs/)
 })
 
-test('the old fleet address lands on the home page with every vehicle, one line per currency', async ({ page }) => {
-  await useVehicle(page, ev.id, '/fleet')
-  await expect(page).toHaveURL(/\/\?scope=all$/)
-  await expect(page.getByRole('heading', { name: 'All vehicles' })).toBeVisible()
-  const totals = page.getByTestId('fleet-currency-total')
-  // The demo account has vehicles in two currencies: each has its own line, nothing is added across them
-  await expect(totals).toHaveCount(2)
-  await expect(totals.first()).toContainText('€')
-  await expect(totals.nth(1)).toContainText('£')
-  await expect(page.getByTestId('fleet-overview').getByRole('heading', { name: 'Vehicles side by side' })).toBeVisible()
-  await expect(page.getByRole('navigation').getByRole('link', { name: 'Household Fleet' })).toHaveCount(0)
+test('the old fleet address lands on the home page with every vehicle, one line per currency', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  // A vehicle in another currency with one cost: the household view gives it its own line
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Pound reference', powertrain: 'EV', currency: 'GBP' } })
+  expect(created.ok()).toBeTruthy()
+  const pound = await created.json()
+  try {
+    const now = new Date().toISOString()
+    const charge = await request.post(`/api/vehicles/${pound.id}/charges`, { headers, data: { date: now, kwh_added: 10, cost: 2, currency: 'GBP' } })
+    expect(charge.ok()).toBeTruthy()
+    await useVehicle(page, ev.id, '/fleet')
+    await expect(page).toHaveURL(/\/\?scope=all$/)
+    await expect(page.getByRole('heading', { name: 'All vehicles' })).toBeVisible()
+    const totals = page.getByTestId('fleet-currency-total')
+    // Nothing is added across currencies: the euros and the pounds are two lines
+    await expect(totals).toHaveCount(2)
+    await expect(totals.first()).toContainText('€')
+    await expect(totals.nth(1)).toContainText('£')
+    await expect(page.getByTestId('fleet-overview').getByRole('heading', { name: 'Vehicles side by side' })).toBeVisible()
+    await expect(page.getByRole('navigation').getByRole('link', { name: 'Household Fleet' })).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${pound.id}`, { headers })
+  }
 })
 
 test('the vehicle selector opens the household view and a vehicle leaves it', async ({ page }) => {
