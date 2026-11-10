@@ -18,7 +18,7 @@ import { todayIso, toIsoDay } from '@/utils/dates'
 // that edit them. The modals own their API calls; this owns what they are opened with.
 export function useTireHistory(options: {
   tires: Ref<any[]>
-  loadTires: () => Promise<void>
+  loadTires: (silent?: boolean) => Promise<void>
   selectedTireIds: Ref<string[]>
   // Opens the scrap form of the selected tire
   openDispose: () => void
