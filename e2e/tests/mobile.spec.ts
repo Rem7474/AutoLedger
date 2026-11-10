@@ -583,12 +583,12 @@ test('the account sheet opens from the top bar, with sign out last and set apart
 test('the bottom bar has four tabs and the quick add button, and the second tab follows the vehicle', async ({ page, request }) => {
   await useVehicle(page, ev.id, '/')
   const bar = page.getByRole('navigation', { name: 'Main navigation' }).last()
-  await expect(bar.getByRole('link')).toHaveText(['Today', 'Drives', 'Expenses', 'Vehicle'])
-  await expect(bar.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page')
+  await expect(bar.getByRole('link')).toHaveText(['Home', 'Drives', 'Expenses', 'Vehicle'])
+  await expect(bar.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
   await expect(bar.getByRole('button', { name: 'Quick add' })).toBeVisible()
   const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')!
   await useVehicle(page, ice.id, '/')
-  await expect(bar.getByRole('link')).toHaveText(['Today', 'Energy', 'Expenses', 'Vehicle'])
+  await expect(bar.getByRole('link')).toHaveText(['Home', 'Energy', 'Expenses', 'Vehicle'])
 })
 
 test('controls of the interface are not selectable text, values are', async ({ page }) => {
