@@ -36,3 +36,27 @@ export function dayLabel(day: string, today: string, labels: DayLabels, format: 
   if (toLocalDay(yesterday) === day) return labels.yesterday
   return format(date, y !== ty)
 }
+
+export interface MonthGroup<G extends { day: string }> {
+  /** The local calendar month, YYYY-MM. */
+  month: string
+  days: G[]
+}
+
+/** Gathers day groups, sorted by time, into runs of the same local month, keeping the order. */
+export function groupDaysByMonth<G extends { day: string }>(days: G[]): MonthGroup<G>[] {
+  const months: MonthGroup<G>[] = []
+  for (const g of days) {
+    const month = g.day.slice(0, 7)
+    const last = months[months.length - 1]
+    if (last && last.month === month) last.days.push(g)
+    else months.push({ month, days: [g] })
+  }
+  return months
+}
+
+/** The header of a month: its name, with the year once it is not this one. `today` is a local YYYY-MM-DD. */
+export function monthHeader(month: string, today: string, format: (date: Date, withYear: boolean) => string): string {
+  const [y, m] = month.split('-').map(Number)
+  return format(new Date(y, m - 1, 1), y !== Number(today.slice(0, 4)))
+}
