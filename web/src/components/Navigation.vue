@@ -33,7 +33,7 @@ const vehicleStore = useVehicleStore()
 const quickAdd = useQuickAddStore()
 
 const allNavItems = [
-  { name: 'dashboard', labelKey: 'shell.nav.dashboard', mobileLabelKey: 'shell.nav.today', path: '/', icon: LayoutDashboard },
+  { name: 'dashboard', labelKey: 'shell.nav.dashboard', mobileLabelKey: 'shell.nav.home', path: '/', icon: LayoutDashboard },
   { name: 'drives', labelKey: 'shell.nav.drives', path: '/drives', icon: NavIcon },
   { name: 'carpools', labelKey: 'shell.nav.carpools', path: '/carpools', icon: Users },
   { name: 'tires', labelKey: 'shell.nav.tires', path: '/tires', icon: Disc },
