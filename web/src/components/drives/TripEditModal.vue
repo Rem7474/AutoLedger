@@ -67,7 +67,7 @@ async function handleSave() {
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="$t('drives.tripEditModal.editTheTrip')"
     :icon="Layers"
