@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dayLabel, groupByDay } from './dayGroups'
+import { dayLabel, groupByDay, groupDaysByMonth, monthHeader } from './dayGroups'
 
 const at = (iso: string) => ({ start: new Date(iso).toISOString() })
 // Local times, so the groups do not depend on the zone the tests run in
@@ -50,5 +50,23 @@ describe('dayLabel', () => {
 
   it('does not call tomorrow yesterday', () => {
     expect(dayLabel('2026-11-05', '2026-11-04', labels, format)).toBe('5/11')
+  })
+})
+
+describe('groupDaysByMonth', () => {
+  it('gathers consecutive days of a month and keeps the order', () => {
+    const days = [{ day: '2026-11-07' }, { day: '2026-11-02' }, { day: '2026-10-30' }, { day: '2026-10-01' }, { day: '2025-12-31' }]
+    expect(groupDaysByMonth(days).map((m) => [m.month, m.days.length])).toEqual([['2026-11', 2], ['2026-10', 2], ['2025-12', 1]])
+  })
+  it('gives nothing for no days', () => {
+    expect(groupDaysByMonth([])).toEqual([])
+  })
+})
+
+describe('monthHeader', () => {
+  const format = (date: Date, withYear: boolean) => `${date.getMonth() + 1}${withYear ? `/${date.getFullYear()}` : ''}`
+  it('shows the year only when it is not this one', () => {
+    expect(monthHeader('2026-10', '2026-11-10', format)).toBe('10')
+    expect(monthHeader('2025-12', '2026-11-10', format)).toBe('12/2025')
   })
 })

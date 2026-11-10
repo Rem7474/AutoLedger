@@ -32,7 +32,7 @@ import { useCostEntryActions } from '@/composables/useCostEntryActions'
 import { useDocumentPreview } from '@/composables/useDocumentPreview'
 import { COST_FILTERS, amountValue, categoriesOfFilter, costPerKm, entryKey, entryTarget, isCostFilterKey, type CostFilterKey } from '@/utils/costEntries'
 import { costsTabQuery, parseCostsTab, type CostsTab } from '@/utils/costsTab'
-import { dayLabel, groupByDay } from '@/utils/dayGroups'
+import { dayLabel, groupByDay, groupDaysByMonth, monthHeader } from '@/utils/dayGroups'
 import { toLocalDay } from '@/utils/dates'
 import { THEME_STYLES } from '@/utils/themes'
 import { formatAmount } from '@/currency'
@@ -151,12 +151,22 @@ const onPlacesChanged = () => {
 const currentOdometer = computed(() => vehicleStore.activeVehicle?.current_odometer || 0)
 const swipeable = (e: { source: string; source_id: string }) => vehicleStore.canEdit && entryTarget(e).type === 'edit'
 
-const groups = computed(() => {
+// The lines under their month, each month under its days. A month's subtotal is shown once the month is complete: the
+// newest month still lists only what is loaded while there are more pages, and the oldest month is complete once nothing
+// older follows.
+const months = computed(() => {
   const today = toLocalDay()
   const labels = { today: t('costs.list.today'), yesterday: t('costs.list.yesterday') }
   const format = (date: Date, withYear: boolean) =>
     date.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
-  return groupByDay(items.value, (e) => e.date).map((g) => ({ ...g, label: dayLabel(g.day, today, labels, format) }))
+  const monthFormat = (date: Date, withYear: boolean) => date.toLocaleDateString(intlLocale(), { month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
+  const days = groupByDay(items.value, (e) => e.date).map((g) => ({ ...g, label: dayLabel(g.day, today, labels, format) }))
+  const grouped = groupDaysByMonth(days)
+  return grouped.map((m, i) => {
+    const complete = !(hasMore.value && i === grouped.length - 1)
+    const subtotal = m.days.reduce((sum, d) => sum + d.items.reduce((s, e) => s + amountValue(e.amount), 0), 0)
+    return { ...m, label: monthHeader(m.month, today, monthFormat), subtotal: complete ? subtotal : null }
+  })
 })
 
 // The headline is the net of what the passengers paid when the whole cost is listed; under a filter the lines are
@@ -269,11 +279,17 @@ const chipClass = (key: CostFilterKey) => {
       <EmptyState v-else-if="!items.length" :icon="Wallet" :title="$t('costs.empty.title')">{{ $t('costs.empty.body') }}</EmptyState>
       <div v-else class="space-y-3">
         <p v-if="hasMore" class="px-1 text-xs text-slate-400">{{ $t('costs.list.shownOf', { count: items.length, total }) }}</p>
-        <section v-for="group in groups" :key="group.day" class="space-y-2">
-          <h2 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h2>
-          <SwipeToDelete v-for="e in group.items" :key="e.id" :disabled="!swipeable(e)" @delete="actions.remove(e, e.id)">
-            <CostEntryRow :entry="e" :currency="currency" :readonly="!vehicleStore.canEdit" @open="actions.open" />
-          </SwipeToDelete>
+        <section v-for="month in months" :key="month.month" class="space-y-2">
+          <div class="flex items-baseline justify-between gap-3 px-1 pt-2">
+            <h2 class="text-sm font-bold capitalize text-white">{{ month.label }}</h2>
+            <p v-if="month.subtotal !== null" class="text-xs font-semibold tabular-nums text-slate-300">{{ formatAmount(month.subtotal, currency) }}</p>
+          </div>
+          <div v-for="group in month.days" :key="group.day" class="space-y-2">
+            <h3 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h3>
+            <SwipeToDelete v-for="e in group.items" :key="e.id" :disabled="!swipeable(e)" @delete="actions.remove(e, e.id)">
+              <CostEntryRow :entry="e" :currency="currency" :readonly="!vehicleStore.canEdit" @open="actions.open" />
+            </SwipeToDelete>
+          </div>
         </section>
         <InfiniteSentinel v-if="hasMore" :loading="loadingMore" :error="moreError" :label="$t('costs.list.loadMore')" @more="loadMore" />
         <p v-if="filter === 'all'" class="px-1 text-xs text-slate-500">{{ $t('costs.estimateNote') }}</p>
