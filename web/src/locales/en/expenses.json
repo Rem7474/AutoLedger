@@ -482,7 +482,6 @@
     "title": "Charging by place",
     "places": "Places",
     "energy": "Energy",
-    "spent": "Spent",
     "price": "Average price",
     "pricePerKwh": "{price}/kWh",
     "kwh": "{value} kWh",
@@ -523,7 +522,7 @@
     "monthlyCost": "Spend per month ({cur})",
     "estimated": "Estimated before tracking",
     "estimatedPart": "of which {kwh} kWh estimated over {distance} driven before tracking",
-    "estimatedCost": "of which {amount} estimated before tracking",
+    "estimatedCost": "Not in the cash out above: {amount} of energy estimated before tracking",
     "emptyPeriod": "No charge in this period.",
     "analysisHint": "Period, charts and places"
   },

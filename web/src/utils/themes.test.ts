@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { THEMES, THEME_HEX, THEME_STYLES, themeOfExpense, type Theme } from './themes'
+import { CHART_GROUPS, THEMES, THEME_HEX, THEME_STYLES, chartGroupOf, themeOfExpense, type Theme } from './themes'
 
 const read = (path: string) => readFileSync(join(__dirname, path), 'utf8')
 const mainCss = read('../assets/main.css')
@@ -139,5 +139,20 @@ describe('themes', () => {
     expect(themeOfExpense('TAX')).toBe('taxes')
     expect(themeOfExpense('REPAIR')).toBe('repairs')
     expect(themeOfExpense('OTHER')).toBe('other')
+  })
+  it('draws five themes and one neutral series in a chart, repairs with maintenance', () => {
+    expect(CHART_GROUPS).toHaveLength(6)
+    expect(chartGroupOf('energy')).toBe('energy')
+    expect(chartGroupOf('repairs')).toBe('maintenance')
+    for (const theme of ['tolls', 'subscriptions', 'taxes', 'accessories', 'depreciation', 'other'] as const) expect(chartGroupOf(theme)).toBe('other')
+  })
+
+  it('keeps stacked neighbours apart in a chart, energy beside tires included', () => {
+    for (const [i, a] of CHART_GROUPS.entries()) {
+      const b = CHART_GROUPS[i + 1]
+      if (!b) continue
+      expect(deltaE(THEME_HEX[a], THEME_HEX[b]), `${a}/${b}`).toBeGreaterThanOrEqual(15)
+      for (const vision of ['deuteranopia', 'protanopia'] as const) expect(deltaE(THEME_HEX[a], THEME_HEX[b], vision), `${a}/${b} ${vision}`).toBeGreaterThanOrEqual(8)
+    }
   })
 })

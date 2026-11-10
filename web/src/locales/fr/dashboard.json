@@ -258,8 +258,8 @@
     "cashHint": "Ce qui a été payé chaque mois.",
     "month": "Mois",
     "total": "Total",
-    "tollsShort": "Péages",
-    "otherShort": "Autres"
+    "otherShort": "Autres",
+    "othersGroup": "Péages, abonnements, taxes & autres"
   },
   "tagBreakdown": {
     "ofTollsAndParking": "{value} de péages & parkings",

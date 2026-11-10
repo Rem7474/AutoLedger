@@ -482,7 +482,6 @@
     "title": "Recharges par lieu",
     "places": "Lieux",
     "energy": "Énergie",
-    "spent": "Dépensé",
     "price": "Prix moyen",
     "pricePerKwh": "{price}/kWh",
     "kwh": "{value} kWh",
@@ -523,7 +522,7 @@
     "monthlyCost": "Dépense par mois ({cur})",
     "estimated": "Estimé avant le suivi",
     "estimatedPart": "dont {kwh} kWh estimés sur {distance} roulés avant le suivi",
-    "estimatedCost": "dont {amount} estimés avant le suivi",
+    "estimatedCost": "Hors décaissé : {amount} d'énergie estimée avant le suivi",
     "emptyPeriod": "Aucune recharge sur cette période.",
     "analysisHint": "Période, graphiques et lieux"
   },

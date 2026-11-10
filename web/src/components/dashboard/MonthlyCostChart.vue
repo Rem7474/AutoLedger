@@ -24,19 +24,18 @@ const periodStore = usePeriodStore()
 const filteredMonthlyCosts = computed(() => filterMonthsByPeriod(props.monthlyCosts || [], periodStore.costs))
 let monthlyChartInstance: Chart | null = null
 
-// Economic: each cost spread over the period it covers, so a one-off purchase does not crush the other months.
-// Cash: what was paid in the month.
-const mode = ref<MonthDetailMode>('economic')
+// Cash: what was paid in the month, the view the page's headline reads. Economic: each cost spread over the period it
+// covers, so a one-off purchase does not crush the other months.
+const mode = ref<MonthDetailMode>('cash')
 // The legend takes the short names so that it stays on two lines on a phone; the table and the tooltips keep the full ones
 const seriesLabel = (key: string, short = false): string => {
   const labels: Record<string, string> = {
     energy: t('dashboard.donut.energy'),
-    tolls: short ? t('dashboard.monthlyCostChart.tollsShort') : t('dashboard.donut.tolls'),
     tires: t('dashboard.monthlyCostChart.tires'),
     maintenance: t('dashboard.monthlyCostChart.maintenance'),
     insurance: t('dashboard.donut.insurance'),
     financing: t('dashboard.monthlyCostChart.financing'),
-    other: short ? t('dashboard.monthlyCostChart.otherShort') : t('dashboard.donut.other'),
+    other: short ? t('dashboard.monthlyCostChart.otherShort') : t('dashboard.monthlyCostChart.othersGroup'),
   }
   return labels[key] ?? key
 }
@@ -189,7 +188,7 @@ onUnmounted(() => {
       </h3>
       <div class="flex items-center gap-1 bg-slate-800/60 rounded-lg p-0.5 self-start" role="group" :aria-label="$t('dashboard.monthlyCostChart.view')">
         <button
-          v-for="opt in (['economic', 'cash'] as const)"
+          v-for="opt in (['cash', 'economic'] as const)"
           :key="opt"
           type="button"
           :aria-pressed="mode === opt"

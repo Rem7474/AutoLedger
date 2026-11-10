@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Wallet } from '@/icons'
+import { ChartColumn, List, Wallet } from '@/icons'
 import PageHeader from '@/components/PageHeader.vue'
+import TabBar, { type TabItem } from '@/components/TabBar.vue'
 import PeriodBar from '@/components/period/PeriodBar.vue'
 import CostEntryRow from '@/components/costs/CostEntryRow.vue'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
@@ -30,6 +31,7 @@ import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useCostEntryActions } from '@/composables/useCostEntryActions'
 import { useDocumentPreview } from '@/composables/useDocumentPreview'
 import { COST_FILTERS, amountValue, categoriesOfFilter, costPerKm, entryKey, entryTarget, isCostFilterKey, type CostFilterKey } from '@/utils/costEntries'
+import { costsTabQuery, parseCostsTab, type CostsTab } from '@/utils/costsTab'
 import { dayLabel, groupByDay } from '@/utils/dayGroups'
 import { toLocalDay } from '@/utils/dates'
 import { THEME_STYLES } from '@/utils/themes'
@@ -165,6 +167,26 @@ const headline = computed(() => (filter.value === 'all' ? amountValue(summary.va
 const perKm = computed(() => costPerKm(headline.value, summary.value?.distance_km ?? 0))
 const headlineLabel = computed(() => (filter.value === 'all' ? t('costs.headline.net') : t('costs.headline.paidTheme', { theme: t(`costs.filters.${filter.value}`) })))
 const showBreakdown = computed(() => filter.value === 'all' && received.value > 0)
+// Journal first, the charts behind a second tab kept in the address (`?tab=ANALYSIS`) so that a reload and Back find it.
+// Only the whole cost and the energy theme have an analysis: under another theme the page is the journal alone.
+const requestedTab = ref<CostsTab>(parseCostsTab(route.query.tab))
+const hasAnalysis = computed(() => filter.value === 'all' || (filter.value === 'energy' && vehicleStore.canCharge))
+const tab = computed<CostsTab>(() => (hasAnalysis.value ? requestedTab.value : 'JOURNAL'))
+const tabs = computed<TabItem[]>(() => [
+  { key: 'JOURNAL', label: t('costs.tabs.journal'), icon: List },
+  { key: 'ANALYSIS', label: t('costs.tabs.analysis'), icon: ChartColumn },
+])
+function switchTab(next: CostsTab) {
+  requestedTab.value = next
+  void router.replace({ query: costsTabQuery(route.query, next) })
+}
+// The address changed under the page (Back, a link): the tab follows it
+watch(
+  () => route.query.tab,
+  (value) => {
+    requestedTab.value = parseCostsTab(value)
+  },
+)
 const filterTheme = (key: CostFilterKey) => COST_FILTERS.find((f) => f.key === key)?.theme ?? null
 const chipClass = (key: CostFilterKey) => {
   if (filter.value === key) return 'border-rose-500 bg-rose-600 text-white'
@@ -183,15 +205,19 @@ const chipClass = (key: CostFilterKey) => {
     <!-- The figures of the lines kept by the filter -->
     <div class="card space-y-1 px-4 py-4" data-testid="costs-headline">
       <p class="text-xs font-semibold text-slate-400">{{ headlineLabel }}</p>
-      <p class="text-3xl font-extrabold tabular-nums text-white">{{ formatAmount(headline, currency) }}</p>
-      <p v-if="perKm !== null" class="text-sm tabular-nums text-slate-300">
-        {{ $t('costs.headline.perKm', { value: formatAmount(perDistance(perKm), currency, 3), unit: distanceUnit() }) }}
-      </p>
+      <div class="flex items-baseline justify-between gap-3">
+        <p class="text-3xl font-extrabold tabular-nums text-white">{{ formatAmount(headline, currency) }}</p>
+        <p v-if="perKm !== null" class="shrink-0 text-sm tabular-nums text-slate-300">
+          {{ $t('costs.headline.perKm', { value: formatAmount(perDistance(perKm), currency, 3), unit: distanceUnit() }) }}
+        </p>
+      </div>
       <p v-if="showBreakdown" class="text-xs tabular-nums text-slate-400">
         {{ $t('costs.headline.paidLine', { amount: formatAmount(paid, currency) }) }} · {{ $t('costs.headline.receivedLine', { amount: formatAmount(received, currency) }) }}
       </p>
     </div>
 
+    <!-- The theme chips and, under them, the tabs of the page: one block, the journal starts right under it -->
+    <div class="space-y-1">
     <div ref="chips" class="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" :aria-label="$t('costs.filtersLabel')">
       <div class="flex w-max gap-2">
         <button
@@ -210,39 +236,49 @@ const chipClass = (key: CostFilterKey) => {
       </div>
     </div>
 
-    <!-- The month-by-month charts, for the whole cost -->
-    <template v-if="filter === 'all' && monthlyCosts && monthlyCosts.length > 0">
-      <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
-      <CostBreakdownDonut :tco="tco" />
-      <MileageCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
-      <!-- Shows itself only once a drive carries a tag -->
-      <TagBreakdown v-if="prefs.proPersoEnabled" :tco="tco" />
+    <TabBar v-if="hasAnalysis" :model-value="tab" :tabs="tabs" :label="$t('costs.tabsLabel')" id-prefix="costs-tab" @update:model-value="switchTab($event as CostsTab)" />
+    </div>
+
+    <!-- Analysis: the month-by-month charts for the whole cost, the places for the energy theme -->
+    <template v-if="tab === 'ANALYSIS'">
+      <template v-if="filter === 'all'">
+        <ListSkeleton v-if="monthlyCosts === null" :rows="3" />
+        <p v-else-if="monthlyCosts.length === 0" class="px-1 py-6 text-center text-sm text-slate-400">{{ $t('costs.analysisEmpty') }}</p>
+        <template v-else>
+          <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
+          <CostBreakdownDonut :tco="tco" />
+          <MileageCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
+          <!-- Shows itself only once a drive carries a tag -->
+          <TagBreakdown v-if="prefs.proPersoEnabled" :tco="tco" />
+        </template>
+      </template>
+      <ChargingInsights
+        v-else
+        :vehicle-id="vehicleStore.activeVehicle.id"
+        :currency="currency"
+        :has-charges="(summary?.count ?? 0) > 0"
+        :sync-key="insightsKey"
+        :with-period="false"
+        @manage-places="showPlaces = true"
+      />
     </template>
 
-    <ChargingInsights
-      v-if="filter === 'energy' && vehicleStore.canCharge"
-      :vehicle-id="vehicleStore.activeVehicle.id"
-      :currency="currency"
-      :has-charges="(summary?.count ?? 0) > 0"
-      :sync-key="insightsKey"
-      :with-period="false"
-      @manage-places="showPlaces = true"
-    />
-
-    <ListSkeleton v-if="loading" :rows="6" />
-    <LoadError v-else-if="error !== null" :message="error" @retry="load()" />
-    <EmptyState v-else-if="!items.length" :icon="Wallet" :title="$t('costs.empty.title')">{{ $t('costs.empty.body') }}</EmptyState>
-    <div v-else class="space-y-3">
-      <p class="px-1 text-xs text-slate-400">{{ $t('costs.list.shownOf', { count: items.length, total }) }}</p>
-      <section v-for="group in groups" :key="group.day" class="space-y-2">
-        <h2 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h2>
-        <SwipeToDelete v-for="e in group.items" :key="e.id" :disabled="!swipeable(e)" @delete="actions.remove(e, e.id)">
-          <CostEntryRow :entry="e" :currency="currency" :readonly="!vehicleStore.canEdit" @open="actions.open" />
-        </SwipeToDelete>
-      </section>
-      <InfiniteSentinel v-if="hasMore" :loading="loadingMore" :error="moreError" :label="$t('costs.list.loadMore')" @more="loadMore" />
-      <p v-if="filter === 'all'" class="px-1 text-xs text-slate-500">{{ $t('costs.estimateNote') }}</p>
-    </div>
+    <template v-else>
+      <ListSkeleton v-if="loading" :rows="6" />
+      <LoadError v-else-if="error !== null" :message="error" @retry="load()" />
+      <EmptyState v-else-if="!items.length" :icon="Wallet" :title="$t('costs.empty.title')">{{ $t('costs.empty.body') }}</EmptyState>
+      <div v-else class="space-y-3">
+        <p v-if="hasMore" class="px-1 text-xs text-slate-400">{{ $t('costs.list.shownOf', { count: items.length, total }) }}</p>
+        <section v-for="group in groups" :key="group.day" class="space-y-2">
+          <h2 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h2>
+          <SwipeToDelete v-for="e in group.items" :key="e.id" :disabled="!swipeable(e)" @delete="actions.remove(e, e.id)">
+            <CostEntryRow :entry="e" :currency="currency" :readonly="!vehicleStore.canEdit" @open="actions.open" />
+          </SwipeToDelete>
+        </section>
+        <InfiniteSentinel v-if="hasMore" :loading="loadingMore" :error="moreError" :label="$t('costs.list.loadMore')" @more="loadMore" />
+        <p v-if="filter === 'all'" class="px-1 text-xs text-slate-500">{{ $t('costs.estimateNote') }}</p>
+      </div>
+    </template>
 
     <TollModal v-model:open="showToll" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
     <MaintenanceModal

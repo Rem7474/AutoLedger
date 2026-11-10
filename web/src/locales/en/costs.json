@@ -1,6 +1,12 @@
 {
   "title": "Costs",
   "subtitle": "Everything the vehicle cost over the period",
+  "tabsLabel": "Costs view",
+  "tabs": {
+    "journal": "Journal",
+    "analysis": "Analysis"
+  },
+  "analysisEmpty": "No monthly figures yet.",
   "filtersLabel": "Cost theme",
   "filters": {
     "all": "All",

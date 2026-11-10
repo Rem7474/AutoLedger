@@ -183,14 +183,10 @@ onBeforeUnmount(() => {
 
     <p v-if="empty" class="text-xs text-slate-400 py-6 text-center">{{ $t('expenses.chargingInsights.emptyPeriod') }}</p>
     <template v-else-if="stats">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 items-start">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-2.5 items-start">
       <KpiCard compact :label="$t('expenses.chargingInsights.energy')" :value="formatNumber(totals?.kwh ?? 0, 0)" unit=" kWh">
         <p class="mt-1 text-xs text-slate-400">{{ $t('expenses.chargingInsights.sessionsCount', { count: stats.summary.sessions }, stats.summary.sessions) }}</p>
         <p v-if="totals && totals.estimatedKwh > 0" class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.estimatedPart', { kwh: formatNumber(totals.estimatedKwh, 0), distance: formatDistance(totals.estimatedKm) }) }}</p>
-      </KpiCard>
-      <KpiCard compact :label="$t('expenses.chargingInsights.spent')" :value="formatAmount(totals?.cost ?? 0, currency)">
-        <p v-if="totals && totals.estimatedCost > 0" class="mt-1 text-xs text-slate-400">{{ $t('expenses.chargingInsights.estimatedCost', { amount: formatAmount(totals.estimatedCost, currency) }) }}</p>
-        <p v-if="stats.summary.unknown_sessions" class="mt-1 text-xs text-warning-400">{{ $t('expenses.chargingInsights.unknownCost', { count: stats.summary.unknown_sessions, kwh: formatNumber(stats.summary.unknown_kwh, 0) }) }}</p>
       </KpiCard>
       <KpiCard
         compact
@@ -249,6 +245,9 @@ onBeforeUnmount(() => {
 
     <div class="space-y-2">
       <h4 class="text-xs font-bold text-white">{{ $t('expenses.chargingInsights.breakdown') }}</h4>
+      <!-- The page headline is the one total (what was paid); what the places leave out is told here -->
+      <p v-if="totals && totals.estimatedCost > 0" class="text-xs text-slate-400">{{ $t('expenses.chargingInsights.estimatedCost', { amount: formatAmount(totals.estimatedCost, currency) }) }}</p>
+      <p v-if="stats.summary.unknown_sessions" class="text-xs text-warning-400">{{ $t('expenses.chargingInsights.unknownCost', { count: stats.summary.unknown_sessions, kwh: formatNumber(stats.summary.unknown_kwh, 0) }) }}</p>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
         <div class="md:col-span-2 h-56 relative">
           <CostDonut

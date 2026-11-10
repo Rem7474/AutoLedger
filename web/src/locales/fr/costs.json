@@ -1,6 +1,12 @@
 {
   "title": "Dépenses",
   "subtitle": "Tout ce que le véhicule a coûté sur la période",
+  "tabsLabel": "Vue des dépenses",
+  "tabs": {
+    "journal": "Journal",
+    "analysis": "Analyse"
+  },
+  "analysisEmpty": "Pas encore de chiffres par mois.",
   "filtersLabel": "Thème de dépense",
   "filters": {
     "all": "Tout",
