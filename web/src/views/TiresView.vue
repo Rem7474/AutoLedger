@@ -214,7 +214,7 @@ function openBatchDisposeModal() {
 
 async function onBatchDisposed() {
   selectedTireIds.value = []
-  await loadTires()
+  await loadTires(true)
 }
 
 function openCopyHistoryModal() {

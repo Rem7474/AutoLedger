@@ -18,7 +18,7 @@ import { todayIso, toIsoDay } from '@/utils/dates'
 // that edit them. The modals own their API calls; this owns what they are opened with.
 export function useTireHistory(options: {
   tires: Ref<any[]>
-  loadTires: () => Promise<void>
+  loadTires: (silent?: boolean) => Promise<void>
   selectedTireIds: Ref<string[]>
   // Opens the scrap form of the selected tire
   openDispose: () => void
@@ -90,21 +90,21 @@ export function useTireHistory(options: {
 
   /** Reload the list, then the open history so it shows the change. */
   async function refreshAfterHistoryChange() {
-    await loadTires()
+    await loadTires(true)
     if (showHistoryModal.value && selectedTire.value) await openHistoryModal({ tire: selectedTire.value })
   }
 
   /** Reload the open history and the list after a session or reading was added, changed or removed. */
   async function reloadHistoryAndList() {
     await openHistoryModal({ tire: selectedTire.value })
-    await loadTires()
+    await loadTires(true)
   }
 
   // Dispose (worn out, damaged, sold) keeps history and cost; delete removes an erroneous entry
   async function onTireDisposed(tireId: string) {
     showHistoryModal.value = false
     selectedTireIds.value = selectedTireIds.value.filter((id) => id !== tireId)
-    await loadTires()
+    await loadTires(true)
   }
 
   async function handleDeleteTire(tire: any) {
@@ -127,7 +127,7 @@ export function useTireHistory(options: {
       await api.deleteTire(vehicleStore.activeVehicle.id, tire.id)
       showHistoryModal.value = false
       selectedTireIds.value = selectedTireIds.value.filter((id) => id !== tire.id)
-      await loadTires()
+      await loadTires(true)
     } catch (err: any) {
       void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
     }
