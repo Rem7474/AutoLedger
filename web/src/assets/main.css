@@ -29,6 +29,9 @@
   --color-danger-600: var(--color-rose-600);
   --color-danger-900: var(--color-rose-900);
 
+  /* The figure a screen is read for: one per screen, never a cost theme and never a judgement */
+  --color-hero: var(--color-rose-400);
+
   /* The hue of a cost theme (see utils/themes.ts, which holds the same colours as hex for the charts) */
   --color-theme-energy: var(--color-sky-400);
   --color-theme-tolls: var(--color-orange-500);

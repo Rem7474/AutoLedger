@@ -186,6 +186,13 @@ describe('buildMonthBreakdown', () => {
     expect(buildMonthBreakdown({ ...month, distance_km: 0, carpool_revenue: 10 }, 'economic').netCostPerKm).toBeNull()
   })
 
+  it('reads the headline cost per km on the cash paid net of the carpools, whatever the mode', () => {
+    expect(buildMonthBreakdown(month, 'economic').paidPerKm).toBeCloseTo(0.825, 6)
+    expect(buildMonthBreakdown({ ...month, carpool_revenue: 100 }, 'economic').paidPerKm).toBeCloseTo(0.725, 6)
+    expect(buildMonthBreakdown({ ...month, distance_km: 0 }, 'cash').paidPerKm).toBeNull()
+    expect(buildMonthBreakdown({ ...month, carpool_revenue: 900 }, 'cash').paidPerKm).toBeNull()
+  })
+
   it('explains estimates, cash outlays and smoothing in the item notes', () => {
     const eco = buildMonthBreakdown(month, 'economic', 'EUR')
     expect(eco.items.find((i) => i.key === 'energy')!.note).toContain(`${formatAmount(5, 'EUR')} estimés`)
