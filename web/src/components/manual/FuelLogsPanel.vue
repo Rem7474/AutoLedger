@@ -23,7 +23,7 @@ import { distanceUnit, formatDistance, formatFuelConsumptionValue, formatVolumeV
 import LoadError from '@/components/LoadError.vue'
 import { toLocalDay } from '@/utils/dates'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 
 const props = defineProps<{
@@ -200,21 +200,24 @@ function remove(log: any) {
   })
 }
 
-async function removeMany(items: any[]) {
+// A selection goes at once under one Undo, the server is asked when that time is over
+const logsList = computed({
+  get: () => stats.value?.logs ?? [],
+  set: (logs: any[]) => {
+    stats.value = { ...stats.value, logs }
+  },
+})
+function removeMany(items: any[]) {
   if (items.length === 1) return remove(items[0])
-  const ok = await showConfirm({
-    title: t('manual.fuelLogsPanel.deleteTitle'),
-    message: t('manual.fuelLogsPanel.deleteManyMessage', { count: items.length }),
-    confirmText: t('common.delete'),
-    type: 'danger',
+  deleteRowsWithUndo({
+    list: logsList,
+    items,
+    key: (l) => l.id,
+    message: t('manual.fuelLogsPanel.fillUpsDeleted', { count: items.length }),
+    remove: (l) => api.deleteFuelLog(props.vehicleId, l.id),
+    committed: () => void load(true),
+    onError: (err: any) => void showAlert(err?.message || t('manual.fuelLogsPanel.deleteFailed'), t('shell.confirm.error'), 'danger'),
   })
-  if (!ok) return
-  try {
-    for (const item of items) await api.deleteFuelLog(props.vehicleId, item.id)
-  } catch (err: any) {
-    await showAlert(err?.message || t('manual.fuelLogsPanel.deleteFailed'), t('shell.confirm.error'), 'danger')
-  }
-  await load()
 }
 
 const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(

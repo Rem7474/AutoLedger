@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { useTireHistory } from './useTireHistory'
+import { flushPendingDeletes, UNDO_MS } from './useUndoableDelete'
 
 const api = vi.hoisted(() => ({
   getTireHistory: vi.fn(),
@@ -95,19 +96,29 @@ describe('useTireHistory', () => {
     expect(loadTires).not.toHaveBeenCalled()
   })
 
-  it('deletes sessions and readings of the selected tire and reloads', async () => {
-    const { h, loadTires } = setup()
-    await h.handleDeleteSession({ id: 's1' })
-    expect(api.deleteTireSession).not.toHaveBeenCalled() // no tire selected yet
-    await h.openHistoryModal({ tire: { id: 't1' } })
-    await h.handleDeleteSession({ id: 's1' })
-    expect(api.deleteTireSession).toHaveBeenCalledWith('v1', 't1', 's1')
-    await h.handleDeleteLog({ id: 'l1', depth_mm: 5, date: '2026-01-02T00:00:00Z' })
-    expect(api.deleteTireLog).toHaveBeenCalledWith('v1', 't1', 'l1')
-    expect(loadTires).toHaveBeenCalledTimes(2)
-    api.deleteTireLog.mockRejectedValue(new Error('x'))
-    await h.handleDeleteLog({ id: 'l1', depth_mm: 5, date: '2026-01-02T00:00:00Z' })
-    expect(confirm.showAlert).toHaveBeenCalled()
+  it('hides a session and a reading at once, deletes them once the time to undo is over, and reloads', async () => {
+    vi.useFakeTimers()
+    try {
+      const { h, loadTires } = setup()
+      h.handleDeleteSession({ id: 's1' })
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(api.deleteTireSession).not.toHaveBeenCalled() // no tire selected yet
+      await h.openHistoryModal({ tire: { id: 't1' } })
+      h.handleDeleteSession({ id: 's1' })
+      h.handleDeleteLog({ id: 'l1', depth_mm: 5, date: '2026-01-02T00:00:00Z' })
+      expect(api.deleteTireSession).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(api.deleteTireSession).toHaveBeenCalledWith('v1', 't1', 's1')
+      expect(api.deleteTireLog).toHaveBeenCalledWith('v1', 't1', 'l1')
+      expect(loadTires).toHaveBeenCalledTimes(2)
+      api.deleteTireLog.mockRejectedValue(new Error('x'))
+      h.handleDeleteLog({ id: 'l1', depth_mm: 5, date: '2026-01-02T00:00:00Z' })
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(confirm.showAlert).toHaveBeenCalled()
+    } finally {
+      await flushPendingDeletes()
+      vi.useRealTimers()
+    }
   })
 
   it('prefills the reading form from the tire, or from the reading being edited', () => {

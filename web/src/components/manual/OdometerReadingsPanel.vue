@@ -22,7 +22,7 @@ import { api } from '@/services/api'
 import { useStaleWrite } from '@/composables/useStaleWrite'
 import { distanceUnit, formatDistance, formatDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
-import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { canRefuel } from '@/utils/vehicles'
 import { mergeOdometerHistory } from '@/utils/odometerHistory'
@@ -162,22 +162,21 @@ function remove(r: any) {
   })
 }
 
-async function removeMany(items: any[]) {
+// A selection goes at once under one Undo, the server is asked when that time is over
+function removeMany(items: any[]) {
   if (items.length === 1) return remove(items[0])
-  const ok = await showConfirm({
-    title: t('manual.odometerReadingsPanel.deleteTitle'),
-    message: t('manual.odometerReadingsPanel.deleteManyMessage', { count: items.length }),
-    confirmText: t('common.delete'),
-    type: 'danger',
+  deleteRowsWithUndo({
+    list: readings,
+    items,
+    key: (r) => r.id,
+    message: t('manual.odometerReadingsPanel.readingsDeleted', { count: items.length }),
+    remove: (r) => api.deleteOdometerCheckpoint(props.vehicle.id, r.id),
+    committed: () => {
+      void load(true)
+      vehicleStore.lastSyncTimestamp = Date.now()
+    },
+    onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
   })
-  if (!ok) return
-  try {
-    for (const item of items) await api.deleteOdometerCheckpoint(props.vehicle.id, item.id)
-  } catch (err: any) {
-    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
-  await load(true)
-  vehicleStore.lastSyncTimestamp = Date.now()
 }
 
 // Only the manual readings can be edited or deleted: fill-ups and Home Assistant readings are listed for context

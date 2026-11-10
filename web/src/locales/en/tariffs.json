@@ -76,8 +76,7 @@
     "duplicate": "Duplicate",
     "duplicateOf": "Duplicate {name}",
     "deletePlan": "Delete {name}",
-    "deleteTitle": "Delete plan",
-    "deleteMessage": "Delete \"{name}\"? Charges already recorded keep their cost.",
+    "planDeleted": "Plan deleted",
     "problem": {
       "name": "Enter a name.",
       "flatRate": "Enter the price per kWh.",

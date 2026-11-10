@@ -42,7 +42,7 @@ import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useInfiniteList } from '@/composables/useInfiniteList'
 import { groupByDay, dayLabel } from '@/utils/dayGroups'
 import { toLocalDay } from '@/utils/dates'
-import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import {
   filterTrips,
@@ -130,25 +130,24 @@ function handleDeleteManualDrive(drive: any) {
   })
 }
 
-// The delete of the contextual bar: one confirmation for the whole selection, the drives entered by hand only
-async function handleDeleteManualDrives(list: any[]) {
+// The delete of the contextual bar: the drives entered by hand of the selection go at once under one Undo
+function handleDeleteManualDrives(list: any[]) {
   const vehicle = vehicleStore.activeVehicle
   const manual = list.filter((d) => d.is_manual)
   if (!vehicle || manual.length === 0) return
-  const ok = await showConfirm({
-    title: t('drives.drivesView.deleteDriveTitle'),
-    message: manual.length === 1 ? t('drives.drivesView.deleteDriveMessage') : t('drives.drivesView.deleteDrivesMessage', { count: manual.length }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-  try {
-    for (const d of manual) await api.deleteDrive(vehicle.id, d.id)
-  } catch (err: any) {
-    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
+  if (manual.length === 1) return handleDeleteManualDrive(manual[0])
   clearSelection()
-  await loadDrives(true)
+  deleteRowsWithUndo({
+    list: drives,
+    items: manual,
+    key: (d) => d.id,
+    message: t('drives.drivesView.drivesDeleted', { count: manual.length }),
+    remove: (d) => api.deleteDrive(vehicle.id, d.id),
+    onHide: (n) => (total.value = Math.max(0, total.value - n)),
+    onRestore: (n) => (total.value += n),
+    committed: () => void loadDrives(true),
+    onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
+  })
 }
 
 // Period / month and address filters (edited in the toolbar)

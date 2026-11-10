@@ -66,8 +66,7 @@
     "evLess": "electric −{amount}",
     "evMore": "electric +{amount}",
     "title": "Comparison",
-    "deleteTitle": "Delete the comparison",
-    "deleteMessage": "Delete “{name}”? Your actual data is not affected.",
+    "scenarioDeleted": "Comparison deleted",
     "deletion": "Deletion",
     "next": "Next",
     "kmPerYear": "{km} {unit}/year"

@@ -1,3 +1,4 @@
+import type { Ref } from 'vue'
 import { t } from '@/i18n'
 import { useToast } from '@/composables/useToast'
 
@@ -69,5 +70,56 @@ export function flushPendingDeletes(): Promise<unknown[]> {
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') void flushPendingDeletes()
+  })
+}
+
+export interface UndoableListDelete<T> {
+  /** The list the rows are shown from: the rows leave it at once and come back at their place. */
+  list: Ref<T[]>
+  items: T[]
+  /** What tells one row from another. */
+  key: (item: T) => string | number
+  message: string
+  /** The deletion of one row, asked of the server one after the other once the time to take it back is over. */
+  remove: (item: T) => Promise<unknown>
+  /** A count shown elsewhere follows the list: called with the number of rows that left it, and with the number that came back. */
+  onHide?: (count: number) => void
+  onRestore?: (count: number) => void
+  /** The server has deleted every row. */
+  committed?: () => void
+  /** The server refused or could not be reached for one row: the rows it did not delete are back on the screen. */
+  onError: (err: unknown) => void
+}
+
+/** `deleteWithUndo` for rows of a list held in a ref (one row or a selection, a single snackbar for all of them). */
+export function deleteRowsWithUndo<T>(d: UndoableListDelete<T>): void {
+  const keys = new Set(d.items.map(d.key))
+  const places = d.items.map((item) => ({ item, index: d.list.value.findIndex((row) => d.key(row) === d.key(item)) })).sort((x, y) => x.index - y.index)
+  const deleted = new Set<string | number>()
+  deleteWithUndo({
+    message: d.message,
+    hide: () => {
+      const left = d.list.value.filter((row) => !keys.has(d.key(row)))
+      d.onHide?.(d.list.value.length - left.length)
+      d.list.value = left
+    },
+    restore: () => {
+      // Each row goes back to the place it had, among the rows that are on the screen now
+      const next = [...d.list.value]
+      for (const { item, index } of places) {
+        if (deleted.has(d.key(item)) || next.some((row) => d.key(row) === d.key(item))) continue
+        next.splice(Math.min(Math.max(index, 0), next.length), 0, item)
+      }
+      d.onRestore?.(next.length - d.list.value.length)
+      d.list.value = next
+    },
+    commit: async () => {
+      for (const item of d.items) {
+        await d.remove(item)
+        deleted.add(d.key(item))
+      }
+    },
+    committed: d.committed,
+    onError: d.onError,
   })
 }

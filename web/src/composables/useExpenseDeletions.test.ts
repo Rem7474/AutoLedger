@@ -64,21 +64,29 @@ describe('useExpenseDeletions', () => {
       expect(reload).not.toHaveBeenCalled()
     })
 
-    it(`asks once for a selection of ${label}, deletes them one by one and reloads`, async () => {
-      const { h, reload } = setup()
+    it(`takes a selection of ${label} off the list at once under one snackbar, deletes them one by one once the time is over and reloads`, async () => {
+      const { h, reload, lists } = setup()
+      const list = lists[listOf[label]]
+      list.value = [{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }, { id: 'keep' }]
       await h[handler]([{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }])
-      expect(confirm.showConfirm).toHaveBeenCalledTimes(1)
-      expect(confirm.showConfirm.mock.calls[0][0].message).toBe(t('expenses.expensesView.deleteManyMessage', { count: 3 }))
+      expect(confirm.showConfirm).not.toHaveBeenCalled()
+      expect(list.value.map((r) => r.id)).toEqual(['keep'])
+      expect(toasts.value).toHaveLength(1)
+      expect(api[call]).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
       expect(api[call].mock.calls).toEqual([['v1', 'x1'], ['v1', 'x2'], ['v1', 'x3']])
       expect(reload).toHaveBeenCalledTimes(1)
     })
 
-    it(`deletes nothing from a selection of ${label} that is not confirmed`, async () => {
-      confirm.showConfirm.mockResolvedValue(false)
-      const { h, reload } = setup()
+    it(`puts a selection of ${label} back when undone`, async () => {
+      const { h, lists } = setup()
+      const list = lists[listOf[label]]
+      list.value = [{ id: 'x1' }, { id: 'x2' }, { id: 'keep' }]
       await h[handler]([{ id: 'x1' }, { id: 'x2' }])
+      toasts.value.at(-1)!.action!.run()
+      expect(list.value.map((r) => r.id)).toEqual(['x1', 'x2', 'keep'])
+      await vi.advanceTimersByTimeAsync(UNDO_MS * 2)
       expect(api[call]).not.toHaveBeenCalled()
-      expect(reload).not.toHaveBeenCalled()
     })
 
     it(`brings a single one of the ${label} back and reports it when the server refuses the delete`, async () => {
@@ -92,13 +100,17 @@ describe('useExpenseDeletions', () => {
       expect(reload).not.toHaveBeenCalled()
     })
 
-    it(`reloads a selection of ${label} even when one delete fails, and stops at the failure`, async () => {
+    it(`stops at the failure of a selection of ${label} and brings back the rows the server did not delete`, async () => {
       api[call].mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('boom'))
-      const { h, reload } = setup()
+      const { h, reload, lists } = setup()
+      const list = lists[listOf[label]]
+      list.value = [{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }]
       await h[handler]([{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }])
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
       expect(api[call]).toHaveBeenCalledTimes(2)
+      expect(list.value.map((r) => r.id)).toEqual(['x2', 'x3'])
       expect(confirm.showAlert).toHaveBeenCalledWith(t('common.deleteError', { message: 'boom' }), t('shell.confirm.error'), 'danger')
-      expect(reload).toHaveBeenCalledTimes(1)
+      expect(reload).not.toHaveBeenCalled()
     })
   }
 
@@ -113,23 +125,27 @@ describe('useExpenseDeletions', () => {
     expect(reload).not.toHaveBeenCalled()
   })
 
-  it('removes a deleted receipt from the list, confirms it and reloads', async () => {
+  it('hides a deleted receipt at once, deletes it once the time to undo is over and reloads', async () => {
     const { h, documents, reload } = setup()
-    await h.handleDeleteDocument(documents.value[0])
-    expect(api.deleteDocument).toHaveBeenCalledWith('v1', 'doc1')
+    h.handleDeleteDocument(documents.value[0])
     expect(documents.value.map((d) => d.id)).toEqual(['doc2'])
-    expect(confirm.showAlert).toHaveBeenCalledWith(t('expenses.expensesView.receiptDeleted'), t('common.success'), 'success')
+    expect(api.deleteDocument).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(UNDO_MS)
+    expect(api.deleteDocument).toHaveBeenCalledWith('v1', 'doc1')
+    expect(confirm.showConfirm).not.toHaveBeenCalled()
     expect(reload).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps the receipt and reports the error when its delete fails, and does not delete when declined', async () => {
+  it('brings the receipt back when undone or when its delete fails', async () => {
     const { h, documents } = setup()
-    confirm.showConfirm.mockResolvedValueOnce(false)
-    await h.handleDeleteDocument(documents.value[0])
-    expect(api.deleteDocument).not.toHaveBeenCalled()
+    const first = documents.value[0]
+    h.handleDeleteDocument(first)
+    toasts.value.at(-1)!.action!.run()
+    expect(documents.value.map((d) => d.id)).toEqual(['doc1', 'doc2'])
     api.deleteDocument.mockRejectedValueOnce(new Error('nope'))
-    await h.handleDeleteDocument(documents.value[0])
-    expect(documents.value).toHaveLength(2)
+    h.handleDeleteDocument(first)
+    await vi.advanceTimersByTimeAsync(UNDO_MS)
+    expect(documents.value.map((d) => d.id)).toEqual(['doc1', 'doc2'])
     expect(confirm.showAlert).toHaveBeenCalledWith(t('common.errorWithMessage', { message: 'nope' }), t('shell.confirm.error'), 'danger')
   })
 })

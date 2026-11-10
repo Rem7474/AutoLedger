@@ -20,15 +20,10 @@
     "deleteExpenseTitle": "Supprimer la dépense",
     "deleteTollMessage": "Supprimer ce péage / parking de {amount} ?",
     "deleteExpenseMessage": "Supprimer la dépense \"{description}\" de {amount} ?",
-    "deleteChargeTitle": "Supprimer la recharge",
     "deleteChargeMessage": "Supprimer cette recharge manuelle de {kwh} kWh ?",
-    "deleteReceiptTitle": "Supprimer le justificatif",
-    "deleteReceiptMessage": "Supprimer le justificatif « {filename} » ? Les dépenses associées seront conservées mais ne pointeront plus vers ce document.",
     "receiptDeleted": "Justificatif supprimé",
     "costDeleted": "Dépense supprimée",
     "chargeDeleted": "Recharge supprimée",
-    "deleteReminderTitle": "Supprimer le rappel",
-    "deleteReminderMessage": "Êtes-vous sûr de vouloir supprimer le rappel d'entretien « {title} » ?",
     "reminderDeleted": "Rappel supprimé",
     "expensesTitle": "Justificatifs",
     "expensesSubtitle": "Les factures et reçus rattachés à vos coûts",
@@ -40,7 +35,7 @@
     "consumptionSubtitle": "Comment le véhicule utilise l'énergie, pleins et recharges à compléter",
     "fixedCosts": "Frais fixes",
     "fillUps": "Pleins",
-    "deleteManyMessage": "Supprimer ces {count} éléments ?"
+    "chargesDeleted": "{count} recharges supprimées"
   },
   "costReview": {
     "confirmFree": "Confirmer 0 €",

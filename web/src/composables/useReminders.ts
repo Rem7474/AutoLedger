@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { t } from '@/i18n'
 import { api, type MaintenanceReminder, type VehicleWebhook } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
@@ -59,22 +60,19 @@ export function useReminders(options: UseRemindersOptions) {
     showReminderModal.value = true
   }
 
-  async function handleDeleteReminder(r: MaintenanceReminder) {
-    if (!vehicleStore.activeVehicle) return
-    const ok = await showConfirm({
-      title: t('expenses.expensesView.deleteReminderTitle'),
-      message: t('expenses.expensesView.deleteReminderMessage', { title: r.title }),
-      confirmText: t('common.delete'),
-      type: 'danger',
+  // The reminder goes at once and comes back with Undo, the server is asked when that time is over
+  function handleDeleteReminder(r: MaintenanceReminder) {
+    const vehicle = vehicleStore.activeVehicle
+    if (!vehicle) return
+    deleteRowsWithUndo({
+      list: reminders,
+      items: [r],
+      key: (x) => x.id,
+      message: t('expenses.expensesView.reminderDeleted'),
+      remove: (x) => api.deleteReminder(vehicle.id, x.id),
+      committed: () => void loadReminders(),
+      onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
     })
-    if (!ok) return
-    try {
-      await api.deleteReminder(vehicleStore.activeVehicle.id, r.id)
-      void showAlert(t('expenses.expensesView.reminderDeleted'), t('common.success'), 'success')
-      await loadReminders()
-    } catch (err: any) {
-      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
   }
 
   function openCompleteReminder(r: MaintenanceReminder) {
