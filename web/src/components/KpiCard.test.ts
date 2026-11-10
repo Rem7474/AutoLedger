@@ -41,6 +41,11 @@ describe('KpiCard', () => {
     expect(await render({ label: 'Economic cost', value: '0,142' })).not.toContain('text-4xl')
   })
 
+  it('sets the hero figure in the hero colour, and only that one', async () => {
+    expect(await render({ label: 'Cost per km', value: '0,416', tone: 'hero' })).toContain('text-hero')
+    expect(await render({ label: 'Cost per km', value: '0,416' })).not.toContain('text-hero')
+  })
+
   it('tints a tile with the danger tone', async () => {
     const html = await render({ label: 'Most worn', value: '85 %', tone: 'danger', tinted: true })
     expect(html).toContain('bg-danger-500/5')
