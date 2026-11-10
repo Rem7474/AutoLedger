@@ -22,7 +22,7 @@ import { toggleTag } from '@/utils/drives'
 import { carpoolCsvHeaders, carpoolCsvRows, driveCostGapCents, recentPassengerNames } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import EmptyState from '@/components/EmptyState.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
 import { useInfiniteList } from '@/composables/useInfiniteList'
@@ -223,25 +223,21 @@ function handleDelete(trip: any) {
   })
 }
 
-// The delete of the contextual bar: one confirmation for the whole selection
-async function handleDeleteMany(list: any[]) {
+// The delete of the contextual bar: the whole selection goes at once under one Undo
+function handleDeleteMany(list: any[]) {
   const vehicle = vehicleStore.activeVehicle
   if (!vehicle || list.length === 0) return
   if (list.length === 1) return handleDelete(list[0])
-  const ok = await showConfirm({
-    title: t('carpool.carpoolView.deleteTitle'),
-    message: t('carpool.carpoolView.deleteManyMessage', { count: list.length }),
-    confirmText: t('common.delete'),
-    type: 'danger',
-  })
-  if (!ok) return
-  try {
-    for (const trip of list) await api.deleteCarpool(vehicle.id, trip.id)
-  } catch (err: any) {
-    void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-  }
   clearTripSelection()
-  await loadData(true)
+  deleteRowsWithUndo({
+    list: trips,
+    items: list,
+    key: (trip) => trip.id,
+    message: t('carpool.carpoolView.carpoolsDeleted', { count: list.length }),
+    remove: (trip) => api.deleteCarpool(vehicle.id, trip.id),
+    committed: () => void loadData(true),
+    onError: (err: any) => void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger'),
+  })
 }
 
 async function handleRecalculateSingle(trip: any) {

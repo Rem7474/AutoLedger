@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { computed, onMounted, ref } from 'vue'
 import { CalendarPlus, Copy, Pencil, Plus, Trash2 } from '@/icons'
 import { api, type TariffPlan } from '@/services/api'
@@ -55,20 +56,16 @@ function validity(p: TariffPlan): string {
   return t('tariffs.editor.validAlways')
 }
 
-async function remove(p: TariffPlan) {
-  const ok = await showConfirm({
-    title: t('tariffs.editor.deleteTitle'),
-    message: t('tariffs.editor.deleteMessage', { name: p.name }),
-    confirmText: t('common.delete'),
-    type: 'danger',
+// The plan goes at once and comes back with Undo, the server is asked when that time is over
+function remove(p: TariffPlan) {
+  deleteRowsWithUndo({
+    list: plans,
+    items: [p],
+    key: (x) => x.id,
+    message: t('tariffs.editor.planDeleted'),
+    remove: (x) => api.deleteTariffPlan(x.id),
+    onError: (e) => (loadError.value = e instanceof Error ? e.message : ''),
   })
-  if (!ok) return
-  try {
-    await api.deleteTariffPlan(p.id)
-    plans.value = plans.value.filter((x) => x.id !== p.id)
-  } catch (e) {
-    loadError.value = e instanceof Error ? e.message : ''
-  }
 }
 
 onMounted(load)

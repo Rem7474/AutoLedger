@@ -3,17 +3,17 @@ import { t } from '@/i18n'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
-import { deleteWithUndo } from '@/composables/useUndoableDelete'
+import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 
 export interface ExpenseLists {
   charges: Ref<any[]>
 }
 
-// Delete handlers of the expenses page; `reload` refreshes the list on screen afterwards. A single row is deleted
-// without a question and can be taken back for a few seconds; a selection and a receipt still ask first.
+// Delete handlers of the expenses page; `reload` refreshes the list on screen afterwards. A row, a selection and a
+// receipt are deleted without a question and can be taken back for a few seconds.
 export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, reload: () => Promise<void> | void, lists: ExpenseLists) {
   const vehicleStore = useVehicleStore()
-  const { showConfirm, showAlert } = useConfirm()
+  const { showAlert } = useConfirm()
 
   function deleteRow(list: Ref<any[]>, row: any, message: string, remove: (vehicleId: string, id: string) => Promise<unknown>) {
     const vehicle = vehicleStore.activeVehicle
@@ -40,41 +40,36 @@ export function useExpenseDeletions(documents: Ref<ExpenseDocumentHeader[]>, rel
     deleteRow(lists.charges, row, t('expenses.expensesView.chargeDeleted'), (v, id) => api.deleteCharge(v, id))
   }
 
-  async function handleDeleteDocument(doc: ExpenseDocumentHeader) {
-    if (!vehicleStore.activeVehicle) return
-    const ok = await showConfirm({
-      title: t('expenses.expensesView.deleteReceiptTitle'),
-      message: t('expenses.expensesView.deleteReceiptMessage', { filename: doc.filename }),
-      confirmText: t('common.delete'),
-      type: 'danger',
+  // The receipt goes at once and comes back with Undo, the server is asked when that time is over
+  function handleDeleteDocument(doc: ExpenseDocumentHeader) {
+    const vehicle = vehicleStore.activeVehicle
+    if (!vehicle) return
+    deleteRowsWithUndo({
+      list: documents,
+      items: [doc],
+      key: (d) => d.id,
+      message: t('expenses.expensesView.receiptDeleted'),
+      remove: (d) => api.deleteDocument(vehicle.id, d.id),
+      committed: () => void reload(),
+      onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
     })
-    if (!ok) return
-    try {
-      await api.deleteDocument(vehicleStore.activeVehicle.id, doc.id)
-      documents.value = documents.value.filter((d) => d.id !== doc.id)
-      void showAlert(t('expenses.expensesView.receiptDeleted'), t('common.success'), 'success')
-      await reload()
-    } catch (err: any) {
-      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
   }
 
-  // One confirmation for a selection, then the rows are deleted one by one; the list reloads even when one fails
-  async function deleteMany(items: any[], title: string, message: string, remove: (vehicleId: string, id: string) => Promise<unknown>) {
+  // A selection goes at once under one Undo, the server is asked when that time is over
+  function handleDeleteCharges(items: any[]) {
     const vehicle = vehicleStore.activeVehicle
     if (!vehicle || items.length === 0) return
-    const ok = await showConfirm({ title, message, confirmText: t('common.delete'), type: 'danger' })
-    if (!ok) return
-    try {
-      for (const item of items) await remove(vehicle.id, item.id)
-    } catch (err: any) {
-      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
-    await reload()
+    if (items.length === 1) return handleDeleteCharge(items[0])
+    deleteRowsWithUndo({
+      list: lists.charges,
+      items,
+      key: (c) => c.id,
+      message: t('expenses.expensesView.chargesDeleted', { count: items.length }),
+      remove: (c) => api.deleteCharge(vehicle.id, c.id),
+      committed: () => void reload(),
+      onError: (err: any) => void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger'),
+    })
   }
-  const deleteManyMessage = (count: number) => t('expenses.expensesView.deleteManyMessage', { count })
-  const handleDeleteCharges = (items: any[]) =>
-    items.length === 1 ? handleDeleteCharge(items[0]) : deleteMany(items, t('expenses.expensesView.deleteChargeTitle'), deleteManyMessage(items.length), (v, id) => api.deleteCharge(v, id))
 
   return { handleDeleteCharges, handleDeleteCharge, handleDeleteDocument }
 }

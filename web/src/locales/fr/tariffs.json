@@ -76,8 +76,7 @@
     "duplicate": "Dupliquer",
     "duplicateOf": "Dupliquer {name}",
     "deletePlan": "Supprimer {name}",
-    "deleteTitle": "Supprimer la grille",
-    "deleteMessage": "Supprimer « {name} » ? Les recharges déjà enregistrées gardent leur coût.",
+    "planDeleted": "Grille supprimée",
     "problem": {
       "name": "Indiquez un nom.",
       "flatRate": "Indiquez le prix du kWh.",

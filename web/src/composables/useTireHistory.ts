@@ -1,4 +1,5 @@
 import { ref, watch, type Ref } from 'vue'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -147,22 +148,20 @@ export function useTireHistory(options: {
     showSessionModal.value = true
   }
 
-  async function handleDeleteSession(session: any) {
-    if (!vehicleStore.activeVehicle || !selectedTire.value) return
-    const ok = await showConfirm({
-      title: t('tires.tiresView.deleteSessionTitle'),
-      message: t('tires.tiresView.deleteSessionMessage'),
-      confirmText: t('common.delete'),
-      type: 'danger',
+  // The session goes at once and comes back with Undo, the server is asked when that time is over
+  function handleDeleteSession(session: any) {
+    const vehicle = vehicleStore.activeVehicle
+    const tire = selectedTire.value
+    if (!vehicle || !tire) return
+    deleteRowsWithUndo({
+      list: tireSessions,
+      items: [session],
+      key: (x) => x.id,
+      message: t('tires.tiresView.sessionDeleted'),
+      remove: (x) => api.deleteTireSession(vehicle.id, tire.id, x.id),
+      committed: () => void reloadHistoryAndList(),
+      onError: (err: any) => void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger'),
     })
-    if (!ok) return
-
-    try {
-      await api.deleteTireSession(vehicleStore.activeVehicle.id, selectedTire.value.id, session.id)
-      await reloadHistoryAndList()
-    } catch (err: any) {
-      void showAlert(t('common.deleteError', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
   }
 
   // Copy a session, paste it on another tire, or duplicate it onto several
@@ -202,22 +201,20 @@ export function useTireHistory(options: {
     openLogModal(selectedTireStats.value || { tire: selectedTire.value }, log)
   }
 
-  async function handleDeleteLog(l: any) {
-    if (!vehicleStore.activeVehicle || !selectedTire.value) return
-    const ok = await showConfirm({
-      title: t('tires.tiresView.deleteReadingTitle'),
-      message: t('tires.tiresView.deleteReadingMessage', { depth: l.depth_mm, date: formatDate(l.date) }),
-      confirmText: t('common.delete'),
-      type: 'danger',
+  // The reading goes at once and comes back with Undo, the server is asked when that time is over
+  function handleDeleteLog(l: any) {
+    const vehicle = vehicleStore.activeVehicle
+    const tire = selectedTire.value
+    if (!vehicle || !tire) return
+    deleteRowsWithUndo({
+      list: tireLogs,
+      items: [l],
+      key: (x) => x.id,
+      message: t('tires.tiresView.readingDeleted'),
+      remove: (x) => api.deleteTireLog(vehicle.id, tire.id, x.id),
+      committed: () => void reloadHistoryAndList(),
+      onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
     })
-    if (!ok) return
-
-    try {
-      await api.deleteTireLog(vehicleStore.activeVehicle.id, selectedTire.value.id, l.id)
-      await reloadHistoryAndList()
-    } catch (err: any) {
-      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
   }
 
   return {

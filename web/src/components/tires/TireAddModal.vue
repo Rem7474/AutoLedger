@@ -119,7 +119,7 @@ const handleCreateTires = () => runOnce(handleCreateTiresAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="$t('tires.tireAddModal.addTires')"
     :icon="Plus"

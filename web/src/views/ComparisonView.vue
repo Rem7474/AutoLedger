@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { Scale as PageIcon, Plus, Trash2, Pencil, ArrowLeft, ArrowRight, Info, ChevronDown, GitCompare } from '@/icons'
 import NumberInput from '@/components/NumberInput.vue'
 import LoadError from '@/components/LoadError.vue'
@@ -244,20 +245,17 @@ async function openResult(sc: any) {
   }
 }
 
-async function removeScenario(sc: any) {
-  const ok = await showConfirm({
-    title: t('comparison.comparisonView.deleteTitle'),
-    message: t('comparison.comparisonView.deleteMessage', { name: sc.name }),
-    confirmText: t('common.delete'),
-    type: 'danger',
+// The comparison goes at once and comes back with Undo, the server is asked when that time is over
+function removeScenario(sc: any) {
+  deleteRowsWithUndo({
+    list: scenarios,
+    items: [sc],
+    key: (x) => x.id,
+    message: t('comparison.comparisonView.scenarioDeleted'),
+    remove: (x) => api.deleteComparisonScenario(x.id),
+    committed: () => void loadScenarios(true),
+    onError: (err: any) => void showAlert(err?.message || t('comparison.errors.deleteFailed'), t('comparison.comparisonView.deletion'), 'danger'),
   })
-  if (!ok) return
-  try {
-    await api.deleteComparisonScenario(sc.id)
-    await loadScenarios(true)
-  } catch (err: any) {
-    await showAlert(err?.message || t('comparison.errors.deleteFailed'), t('comparison.comparisonView.deletion'), 'danger')
-  }
 }
 
 // --- Compare several scenarios ---

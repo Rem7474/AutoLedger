@@ -131,7 +131,7 @@ const handleSaveTireEdit = () => runOnce(handleSaveTireEditAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="tireEditIds.length > 1 ? $t('tires.tireEditModal.editMany', { count: tireEditIds.length }) : $t('tires.tireEditModal.editOne')"
     :icon="Pencil"

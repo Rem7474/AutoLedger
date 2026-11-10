@@ -181,7 +181,7 @@ const handleSaveReminder = () => runOnce(handleSaveReminderAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="editingReminderId ? $t('expenses.reminderModal.edit') : $t('expenses.reminderModal.new')"
     :icon="Bell"

@@ -20,15 +20,10 @@
     "deleteExpenseTitle": "Delete the expense",
     "deleteTollMessage": "Delete this toll / parking fee of {amount}?",
     "deleteExpenseMessage": "Delete the expense \"{description}\" of {amount}?",
-    "deleteChargeTitle": "Delete the charge",
     "deleteChargeMessage": "Delete this manual charge of {kwh} kWh?",
-    "deleteReceiptTitle": "Delete the receipt",
-    "deleteReceiptMessage": "Delete the receipt “{filename}”? The linked expenses are kept but will no longer point to this document.",
     "receiptDeleted": "Receipt deleted",
     "costDeleted": "Cost deleted",
     "chargeDeleted": "Charge deleted",
-    "deleteReminderTitle": "Delete the reminder",
-    "deleteReminderMessage": "Are you sure you want to delete the maintenance reminder “{title}”?",
     "reminderDeleted": "Reminder deleted",
     "expensesTitle": "Receipts",
     "expensesSubtitle": "The invoices and receipts attached to your costs",
@@ -40,7 +35,7 @@
     "consumptionSubtitle": "How the vehicle uses energy, fill-ups and charges to complete",
     "fixedCosts": "Fixed costs",
     "fillUps": "Fill-ups",
-    "deleteManyMessage": "Delete these {count} entries?"
+    "chargesDeleted": "{count} charges deleted"
   },
   "costReview": {
     "confirmFree": "Confirm €0",

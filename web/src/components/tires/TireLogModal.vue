@@ -73,7 +73,7 @@ const handleAddLog = () => runOnce(handleAddLogAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="editingLogId ? $t('tires.tireLogModal.edit') : $t('tires.tireLogModal.new')"
     :icon="Ruler"

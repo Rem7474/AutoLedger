@@ -1,7 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import { api } from '@/services/api'
 import { useReminders } from './useReminders'
+import { useToast } from './useToast'
+import { flushPendingDeletes, UNDO_MS } from './useUndoableDelete'
 
 vi.mock('@/services/api', () => ({
   api: { getReminders: vi.fn(), deleteReminder: vi.fn(), getVehicleWebhook: vi.fn() },
@@ -88,31 +90,51 @@ describe('useReminders', () => {
     expect(r.reminderPreset.value).toBeNull()
   })
 
-  it('deletes a reminder after confirmation and reloads the list', async () => {
-    showConfirm.mockResolvedValue(true)
-    vi.mocked(api.deleteReminder).mockResolvedValue(undefined as any)
-    vi.mocked(api.getReminders).mockResolvedValue([] as any)
-    const { r } = setup()
-    await r.handleDeleteReminder(reminder('7', 'OK') as any)
-    expect(api.deleteReminder).toHaveBeenCalledWith('v1', '7')
-    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'success')
-    expect(api.getReminders).toHaveBeenCalledTimes(1)
-  })
+  describe('deleting a reminder', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+    afterEach(async () => {
+      await flushPendingDeletes()
+      vi.useRealTimers()
+    })
 
-  it('keeps the reminder when the confirmation is refused', async () => {
-    showConfirm.mockResolvedValue(false)
-    const { r } = setup()
-    await r.handleDeleteReminder(reminder('7', 'OK') as any)
-    expect(api.deleteReminder).not.toHaveBeenCalled()
-  })
+    it('hides it at once, asks the server once the time to undo is over, then reloads the list', async () => {
+      vi.mocked(api.deleteReminder).mockResolvedValue(undefined as any)
+      vi.mocked(api.getReminders).mockResolvedValue([] as any)
+      const { r } = setup()
+      const target = reminder('7', 'OK') as any
+      r.reminders.value = [target]
+      r.handleDeleteReminder(target)
+      expect(r.reminders.value).toEqual([])
+      expect(api.deleteReminder).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(api.deleteReminder).toHaveBeenCalledWith('v1', '7')
+      expect(api.getReminders).toHaveBeenCalledTimes(1)
+      expect(showConfirm).not.toHaveBeenCalled()
+    })
 
-  it('shows an error dialog when the deletion fails', async () => {
-    showConfirm.mockResolvedValue(true)
-    vi.mocked(api.deleteReminder).mockRejectedValue(new Error('nope'))
-    const { r } = setup()
-    await r.handleDeleteReminder(reminder('7', 'OK') as any)
-    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'danger')
-    expect(api.getReminders).not.toHaveBeenCalled()
+    it('puts the reminder back, without calling the server, when undone', async () => {
+      const { r } = setup()
+      const target = reminder('7', 'OK') as any
+      r.reminders.value = [target]
+      r.handleDeleteReminder(target)
+      useToast().toasts.value.at(-1)!.action!.run()
+      expect(r.reminders.value).toEqual([target])
+      await vi.advanceTimersByTimeAsync(UNDO_MS * 2)
+      expect(api.deleteReminder).not.toHaveBeenCalled()
+    })
+
+    it('puts the reminder back and shows an error dialog when the deletion fails', async () => {
+      vi.mocked(api.deleteReminder).mockRejectedValue(new Error('nope'))
+      const { r } = setup()
+      const target = reminder('7', 'OK') as any
+      r.reminders.value = [target]
+      r.handleDeleteReminder(target)
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(r.reminders.value).toEqual([target])
+      expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'danger')
+    })
   })
 
   it('reloads after a completion and refreshes the expenses only when one was logged', async () => {
