@@ -100,7 +100,7 @@ test.describe('sheets opened on a phone', () => {
   })
 
   test('the carpool detail sheet has no violation', async ({ page }) => {
-    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS')
+    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS&period=all')
     await page.getByRole('main').getByRole('button', { name: /^Open / }).first().tap()
     await expect(page.getByRole('dialog')).toBeVisible()
     expect(await violationsOf(page, 'carpool detail')).toEqual([])

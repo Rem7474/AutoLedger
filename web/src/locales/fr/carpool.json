@@ -19,7 +19,9 @@
     "recalcDoneTitle": "Recalcul terminé",
     "recalcError": "Erreur lors du recalcul : {message}",
     "recalcSelectedDone": "{count} covoiturage(s) recalculé(s) avec succès.",
-    "deleteManyMessage": "Supprimer ces {count} covoiturages ?"
+    "deleteManyMessage": "Supprimer ces {count} covoiturages ?",
+    "noCarpoolInPeriod": "Aucun covoiturage sur cette période",
+    "pickAnotherPeriod": "Choisissez une autre période dans la barre ci-dessus, ou ajoutez un covoiturage."
   },
   "shareSuggestions": {
     "title": "Trajets récents à partager",

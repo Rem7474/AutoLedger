@@ -544,7 +544,7 @@ test('a carpool dragged to the left is deleted with an Undo', async ({ page, req
   const count = async () => (await listed()).length
 
   try {
-    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS')
+    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS&period=all')
     const rowOf = () => page.locator('div.rounded-2xl', { hasText: title }).last()
     await rowOf().scrollIntoViewIfNeeded()
     const box = (await rowOf().boundingBox())!

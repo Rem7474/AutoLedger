@@ -562,7 +562,7 @@ test('carpools are listed 30 at a time and the totals cover all of them', async 
     const summaryAfter = await (await request.get(`/api/vehicles/${ev.id}/carpools/summary`, { headers })).json()
     expect(summaryAfter.total_trips - summaryBefore.total_trips).toBe(count)
 
-    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS')
+    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS&period=all')
     const rows = page.getByText(/^E2E paged \d\d$/)
     await expect(rows).toHaveCount(30)
     await expect(page.getByText('E2E paged 34')).toHaveCount(0)
@@ -575,6 +575,34 @@ test('carpools are listed 30 at a time and the totals cover all of them', async 
     await expectNoHorizontalScroll(page)
   } finally {
     for (const trip of await mine()) await request.delete(`/api/vehicles/${ev.id}/carpools/${trip.id}`, { headers })
+  }
+})
+
+test('the carpools open on the current month and follow the period bar', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const title = `E2E dated ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/carpools`, {
+    headers,
+    data: { title, date: '2019-05-10', legs: [{ distance_km: 10, electricity_cost: 1 }], passengers: [{ passenger_name: 'Old', seats: 1, amount_paid: 0.5 }] },
+  })
+  expect(created.ok()).toBeTruthy()
+  const id = (await created.json()).id
+  try {
+    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS')
+    const bar = page.getByTestId('period-bar')
+    await expect(bar).toBeVisible()
+    await expect(page).toHaveURL(/period=1M/)
+    // A carpool of 2019 is outside the month: the list says so and offers the other periods
+    await expect(page.getByText('No carpool in this period')).toBeVisible()
+    await expect(page.getByText(title)).toHaveCount(0)
+
+    await bar.getByRole('button', { name: /Choose the period/ }).click()
+    const sheet = page.getByRole('dialog')
+    await sheet.getByRole('button', { name: 'All time' }).click()
+    await expect(page.getByText(title)).toBeVisible()
+    await expect(page).toHaveURL(/period=all/)
+  } finally {
+    await request.delete(`/api/vehicles/${ev.id}/carpools/${id}`, { headers })
   }
 })
 

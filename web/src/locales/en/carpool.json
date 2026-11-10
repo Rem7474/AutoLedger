@@ -19,7 +19,9 @@
     "recalcDoneTitle": "Recalculation done",
     "recalcError": "Recalculation failed: {message}",
     "recalcSelectedDone": "{count} carpool(s) recalculated.",
-    "deleteManyMessage": "Delete these {count} carpools?"
+    "deleteManyMessage": "Delete these {count} carpools?",
+    "noCarpoolInPeriod": "No carpool in this period",
+    "pickAnotherPeriod": "Pick another period on the bar above, or add a carpool."
   },
   "shareSuggestions": {
     "title": "Recent drives to share",

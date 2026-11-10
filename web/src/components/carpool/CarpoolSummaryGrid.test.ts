@@ -68,4 +68,14 @@ describe('carpool summary grid', () => {
     expect(await render({ coverage_rate_pct: 100 })).toContain('border-success-500/30')
     expect(await render({ coverage_rate_pct: null })).not.toContain('border-success-500/30')
   })
+
+  it('names the period the totals cover, and all trips when none is given', async () => {
+    const pinia = createPinia()
+    const app = createSSRApp(CarpoolSummaryGrid, { summary, periodLabel: 'Novembre 2026' }).use(pinia).use(i18n)
+    useVehicleStore(pinia).vehicles = [{ id: 'v1', currency: 'EUR' }]
+    const html = await renderToString(app)
+    expect(html).toContain('Novembre 2026')
+    expect(html).not.toContain('Tous les trajets')
+    expect(await render({})).toContain('Tous les trajets')
+  })
 })

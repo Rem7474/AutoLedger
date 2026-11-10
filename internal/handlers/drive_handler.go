@@ -264,6 +264,27 @@ func parseCarpoolFilter(v string) string {
 	return ""
 }
 
+// parseTimeRange reads the optional `from` and `to` query values, RFC 3339 or a plain date. A plain `to` date covers
+// the whole day; an unreadable value means no bound.
+func parseTimeRange(r *http.Request) (from, to *time.Time) {
+	if fromStr := r.URL.Query().Get("from"); fromStr != "" {
+		if t, err := time.Parse(time.RFC3339, fromStr); err == nil {
+			from = &t
+		} else if t, err := time.Parse("2006-01-02", fromStr); err == nil {
+			from = &t
+		}
+	}
+	if toStr := r.URL.Query().Get("to"); toStr != "" {
+		if t, err := time.Parse(time.RFC3339, toStr); err == nil {
+			to = &t
+		} else if t, err := time.Parse("2006-01-02", toStr); err == nil {
+			tEnd := t.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+			to = &tEnd
+		}
+	}
+	return from, to
+}
+
 func parseDriveFilter(r *http.Request) database.DriveFilter {
 	filter := database.DriveFilter{
 		Tag:             r.URL.Query().Get("tag"),
@@ -281,21 +302,6 @@ func parseDriveFilter(r *http.Request) database.DriveFilter {
 		filter.HasToll = true
 	}
 
-	if fromStr := r.URL.Query().Get("from"); fromStr != "" {
-		if t, err := time.Parse(time.RFC3339, fromStr); err == nil {
-			filter.From = &t
-		} else if t, err := time.Parse("2006-01-02", fromStr); err == nil {
-			filter.From = &t
-		}
-	}
-
-	if toStr := r.URL.Query().Get("to"); toStr != "" {
-		if t, err := time.Parse(time.RFC3339, toStr); err == nil {
-			filter.To = &t
-		} else if t, err := time.Parse("2006-01-02", toStr); err == nil {
-			tEnd := t.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
-			filter.To = &tEnd
-		}
-	}
+	filter.From, filter.To = parseTimeRange(r)
 	return filter
 }
