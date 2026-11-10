@@ -7,12 +7,13 @@ import { computed } from 'vue'
 // carries the state alone.
 const props = withDefaults(defineProps<{
   tone?: 'attention' | 'info' | 'danger' | 'neutral'
-  // Rare: an isolated banner or alert. A list row shows the text alone, or the dot.
+  // Rare: an isolated banner or alert. A list row shows the text, with the dot for a state to watch.
   icon?: Component
-  // A small filled dot of the tone's colour before the text.
-  dot?: boolean
   size?: 'sm' | 'md'
-}>(), { tone: 'neutral', size: 'sm', dot: false })
+}>(), { tone: 'neutral', size: 'sm' })
+
+// The states to watch (attention, danger) carry a small filled dot before the text; info and neutral are text only.
+const showDot = computed(() => !props.icon && (props.tone === 'attention' || props.tone === 'danger'))
 
 const TONES = {
   attention: 'text-warning-400',
@@ -22,9 +23,7 @@ const TONES = {
 } as const
 const DOTS = {
   attention: 'bg-warning-400',
-  info: 'bg-info-300',
   danger: 'bg-critical-400',
-  neutral: 'bg-slate-400',
 } as const
 
 const classes = computed(() => [
@@ -37,7 +36,7 @@ const iconClass = computed(() => (props.size === 'md' ? 'h-4 w-4' : 'h-3.5 w-3.5
 
 <template>
   <span :class="classes" :data-tone="tone">
-    <span v-if="dot && !icon" :class="['h-1.5 w-1.5 shrink-0 rounded-full', DOTS[tone]]" aria-hidden="true" />
+    <span v-if="showDot" :class="['h-1.5 w-1.5 shrink-0 rounded-full', DOTS[tone as 'attention' | 'danger']]" aria-hidden="true" />
     <component :is="icon" v-if="icon" :class="['shrink-0', iconClass]" aria-hidden="true" />
     <span class="truncate"><slot /></span>
   </span>
