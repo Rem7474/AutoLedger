@@ -59,6 +59,7 @@
     "dateRequired": "Indiquez la date du plein.",
     "saveFailed": "Impossible d'enregistrer le plein.",
     "fillUpDeleted": "Plein supprimé",
+    "notFound": "Ce plein n'existe plus.",
     "deleteFailed": "Suppression impossible.",
     "fillUpsDeleted": "{count} pleins supprimés",
     "saving": "Enregistrement…",
