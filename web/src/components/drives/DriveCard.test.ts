@@ -32,12 +32,31 @@ describe('DriveCard', () => {
     expect(await render({ ...drive, is_manual: false })).not.toContain('Manuel')
   })
 
-  it('laisse de côté la case de sélection et le menu dans une liste en lecture seule', async () => {
+  it('laisse de côté la case de sélection dans une liste en lecture seule', async () => {
     expect(await render()).toContain('drive-select-')
     vehicleStore.canEdit = false
-    const readOnly = await render()
-    expect(readOnly).not.toContain('drive-select-')
-    expect(readOnly).not.toContain('aria-haspopup="menu"')
+    expect(await render()).not.toContain('drive-select-')
+  })
+
+  it('n\'a plus de menu de ligne : modifier, supprimer et le lien TeslaMate sont dans le détail', async () => {
+    const html = await render()
+    expect(html).not.toContain('aria-haspopup="menu"')
+    expect(html).not.toContain('role="menuitem"')
+  })
+
+  it('garde le raccourci covoiturage comme seul bouton de la ligne, en plus du bouton d\'ouverture', async () => {
+    const carpooled = { ...drive, carpools: [{ id: 'c1', title: '', passenger_count: 2, total_revenue: 12 }] }
+    const html = await render(carpooled)
+    expect(html).toContain('Ouvrir le covoiturage de ce trajet')
+    expect((await render()).match(/<button/g)).toHaveLength(1)
+    expect(html.match(/<button/g)).toHaveLength(2)
+  })
+
+  it('met la consommation dans la ligne discrète mais la retire du téléphone', async () => {
+    const html = await render({ ...drive, consumption_kwh_100km: 16.4, duration_min: 30 })
+    expect(html).toContain('kWh/100')
+    expect(html).toMatch(/max-sm:hidden[^>]*>[^<]*kWh\/100/)
+    expect(html).toContain('30 min')
   })
 
   it('ouvre le détail depuis toute la ligne : le coût est sous le bouton d\'ouverture, pas au-dessus', async () => {
