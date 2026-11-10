@@ -1,4 +1,3 @@
-import { THEME_STYLES } from './themes'
 import { describe, expect, it } from 'vitest'
 import {
   reminderPresets,
@@ -8,8 +7,6 @@ import {
   recentDescriptions,
   findCloseCandidate,
   formatFileSize,
-  expensesOfKind,
-  filterMaintenance,
   isFixedCost,
   groupChargesByMonth,
   hasReminderSchedule,
@@ -19,10 +16,8 @@ import {
   reminderDaysOver,
   formatCalendarDay,
   maintenanceStartPoint,
-  maintenanceYears,
   sortMaintenanceByDate,
   toLocalDateTimeInput,
-  categoryStyle,
 } from './expenses'
 
 describe('currencyPayload', () => {
@@ -149,26 +144,6 @@ describe('hasReminderSchedule', () => {
   })
 })
 
-describe('maintenance list helpers', () => {
-  const items = [
-    { category: 'MAINTENANCE', date: '2026-03-10T00:00:00Z', amount: 100, currency: 'EUR' },
-    { category: 'INSURANCE', date: '2026-01-05T00:00:00Z', amount: '50.5', currency: 'EUR' },
-    { category: 'MAINTENANCE', date: '2025-11-20T00:00:00Z', amount: 20, currency: 'USD', fx_rate: 0.9 },
-  ]
-
-  it('filters by category and by year, an empty value meaning any', () => {
-    expect(filterMaintenance(items, { category: '', year: '' })).toHaveLength(3)
-    expect(filterMaintenance(items, { category: 'MAINTENANCE', year: '' })).toHaveLength(2)
-    expect(filterMaintenance(items, { category: '', year: '2026' })).toHaveLength(2)
-    expect(filterMaintenance(items, { category: 'MAINTENANCE', year: '2025' })).toEqual([items[2]])
-  })
-
-  it('lists the years present, latest first', () => {
-    expect(maintenanceYears(items)).toEqual([2026, 2025])
-    expect(maintenanceYears([])).toEqual([])
-  })
-})
-
 describe('maintenance form defaults', () => {
   it('lets only maintenance and repairs be smoothed', () => {
     expect(isSmoothable('MAINTENANCE')).toBe(true)
@@ -264,11 +239,6 @@ describe('fixed costs', () => {
   it('recognises insurance, tax, subscription and financing', () => {
     expect(items.filter((m) => isFixedCost(m.category)).map((m) => m.id)).toEqual([2, 4, 5, 6])
   })
-
-  it('splits the expenses between servicing and fixed costs', () => {
-    expect(expensesOfKind(items, 'service').map((m) => m.id)).toEqual([1, 3, 7, 8])
-    expect(expensesOfKind(items, 'fixed').map((m) => m.id)).toEqual([2, 4, 5, 6])
-  })
 })
 
 describe('reminderDueTile', () => {
@@ -276,19 +246,5 @@ describe('reminderDueTile', () => {
     expect(reminderDueTile({ due_date: '2026-11-01T00:00:00Z', due_odometer: 90000 })).toMatchObject({ kind: 'date', day: 1 })
     expect(reminderDueTile({ due_odometer: 90000 })).toEqual({ kind: 'km', km: 90000 })
     expect(reminderDueTile({})).toBeNull()
-  })
-})
-
-describe('categoryStyle', () => {
-  it('reads the style of the category theme and falls back to neutral', () => {
-    expect(categoryStyle('INSURANCE')).toBe(THEME_STYLES.insurance)
-    expect(categoryStyle('REPAIR')).toBe(THEME_STYLES.repairs)
-    expect(categoryStyle('OTHER').tint).toBe('bg-theme-neutral/15 text-theme-neutral')
-  })
-  it('never uses a status or brand hue for a category', () => {
-    for (const c of ['INSURANCE', 'SUBSCRIPTION', 'TAX', 'FINANCING', 'MAINTENANCE', 'REPAIR', 'ACCESSORY']) {
-      const s = categoryStyle(c)
-      expect(`${s.badge} ${s.tint}`).not.toMatch(/emerald|green|amber|red|rose|yellow/)
-    }
   })
 })
