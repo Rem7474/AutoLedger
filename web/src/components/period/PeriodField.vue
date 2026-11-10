@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { CalendarDays } from 'lucide-vue-next'
+import { CalendarDays } from '@/icons'
 import PeriodSheet from '@/components/period/PeriodSheet.vue'
 import { usePeriodStore } from '@/stores/period'
 import { isRoundedToMonths, periodLabel } from '@/utils/period'

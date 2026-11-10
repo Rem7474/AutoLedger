@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FileText, Image as ImageIcon, Paperclip, Download, ExternalLink } from 'lucide-vue-next'
+import { FileText, Image as ImageIcon, Paperclip, Download, ExternalLink } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 
 export interface DocumentPreviewState {

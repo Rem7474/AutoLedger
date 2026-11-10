@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CalendarClock } from 'lucide-vue-next'
+import { CalendarClock } from '@/icons'
 import { t as translate, intlLocale } from '@/i18n'
 import { distanceUnit, formatDistanceValue } from '@/units'
 import { forecastMonthLabel, isForecastDue } from '@/utils/tires'

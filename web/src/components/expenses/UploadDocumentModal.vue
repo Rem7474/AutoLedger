@@ -4,7 +4,7 @@ import { t } from '@/i18n'
 import { ref, watch } from 'vue'
 import { api, type ExpenseDocumentHeader } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
-import { UploadCloud } from 'lucide-vue-next'
+import { UploadCloud } from '@/icons'
 import AppDropzone from '@/components/AppDropzone.vue'
 
 // Adds a receipt that is not attached to any expense yet

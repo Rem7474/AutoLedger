@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import TireWearBar from '@/components/tires/TireWearBar.vue'
-import { Disc } from 'lucide-vue-next'
+import { Disc } from '@/icons'
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useSelectableRow } from '@/composables/useSelectableRow'

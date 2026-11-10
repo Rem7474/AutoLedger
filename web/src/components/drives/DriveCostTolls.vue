@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import NumberInput from '@/components/NumberInput.vue'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
-import { Receipt, Radar, Plus, Pencil, Trash2, Save, X, ChevronDown } from 'lucide-vue-next'
+import { Receipt, Radar, Plus, Pencil, Trash2, Save, X, ChevronDown } from '@/icons'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
 import { useStaleWrite } from '@/composables/useStaleWrite'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Fuel } from 'lucide-vue-next'
+import { Fuel } from '@/icons'
 import { t } from '@/i18n'
 import { currentVolumeUnit, setVolumeUnit, SUPPORTED_VOLUME_UNITS, type VolumeUnit } from '@/units'
 import { useAuthStore } from '@/stores/auth'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, type Component } from 'vue'
-import { ChartColumn, ChevronRight } from 'lucide-vue-next'
+import { ChartColumn, ChevronRight } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
 

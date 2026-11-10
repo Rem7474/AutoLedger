@@ -6,7 +6,7 @@ import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useConfirm } from '@/composables/useConfirm'
-import { RefreshCw, FileText, ChevronLeft, ChevronRight, Check, Wallet, CreditCard, KeyRound } from 'lucide-vue-next'
+import { RefreshCw, FileText, ChevronLeft, ChevronRight, Check, Wallet, CreditCard, KeyRound } from '@/icons'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import {
   ownershipSteps,

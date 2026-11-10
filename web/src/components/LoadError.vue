@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertTriangle, RefreshCw } from 'lucide-vue-next'
+import { AlertTriangle, RefreshCw } from '@/icons'
 
 defineProps<{ message?: string }>()
 defineEmits<{ retry: [] }>()

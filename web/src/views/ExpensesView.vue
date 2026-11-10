@@ -26,7 +26,7 @@ import CompleteReminderModal from '@/components/expenses/CompleteReminderModal.v
 import WebhookModal from '@/components/expenses/WebhookModal.vue'
 import CSVImportModal from '@/components/CSVImportModal.vue'
 import QualifyChargesModal from '@/components/expenses/QualifyChargesModal.vue'
-import { ChevronRight, Zap, Eye } from 'lucide-vue-next'
+import { ChevronRight, Zap, Eye } from '@/icons'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 
 // The page owns the lists, the active tab and which modal is open; each modal owns its form and its API

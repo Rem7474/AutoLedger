@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import { Zap } from 'lucide-vue-next'
+import { Zap } from '@/icons'
 import { i18n, setLocale } from '@/i18n'
 import CostItemRow from './CostItemRow.vue'
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Calculator } from 'lucide-vue-next'
+import { Calculator } from '@/icons'
 import { euros, passengerLabel, type LegForm, type PassengerForm } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import { formatDistance } from '@/units'

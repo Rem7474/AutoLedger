@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { CheckCircle2, Copy } from 'lucide-vue-next'
+import { CheckCircle2, Copy } from '@/icons'
 
 // Last wizard screen: the webhook credentials when one was requested, and where to go next.
 const props = defineProps<{

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Activity, Check, X } from 'lucide-vue-next'
+import { Activity, Check, X } from '@/icons'
 import { api, type APITokenCall } from '@/services/api'
 import { t } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'

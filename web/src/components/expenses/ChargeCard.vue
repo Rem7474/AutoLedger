@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { MapPin, Coins, Paperclip, Trash2, ExternalLink, AlertTriangle, Zap, Check } from 'lucide-vue-next'
+import { MapPin, Coins, Paperclip, Trash2, ExternalLink, AlertTriangle, Zap, Check } from '@/icons'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import RowLeading from '@/components/RowLeading.vue'
 import RowMenu from '@/components/RowMenu.vue'

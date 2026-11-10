@@ -2,7 +2,7 @@
 import { t } from '@/i18n'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
-import { Snowflake } from 'lucide-vue-next'
+import { Snowflake } from '@/icons'
 import { AXIS_TEXT, GRID_COLOR, fmt, perUnit, type EnergyStats } from './energyStats'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'

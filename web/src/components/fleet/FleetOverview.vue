@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Gauge, Zap } from 'lucide-vue-next'
+import { Gauge, Zap } from '@/icons'
 import LoadError from '@/components/LoadError.vue'
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import FleetBudget from '@/components/fleet/FleetBudget.vue'

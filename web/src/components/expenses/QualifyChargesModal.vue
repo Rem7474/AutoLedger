@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { formatNumber, formatPercent } from '@/utils/numbers'
 import { ref, onMounted, computed, watch } from 'vue'
-import { Zap, Check, Trash2, Car, Calendar, User, ArrowRight, Clock } from 'lucide-vue-next'
+import { Zap, Check, Trash2, Car, Calendar, User, ArrowRight, Clock } from '@/icons'
 import { api, type PendingCharge } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatChargeWindow } from '@/utils/dates'

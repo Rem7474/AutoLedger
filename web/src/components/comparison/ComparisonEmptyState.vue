@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Gauge, Calculator } from 'lucide-vue-next'
+import { Gauge, Calculator } from '@/icons'
 import { currencySymbol } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
 

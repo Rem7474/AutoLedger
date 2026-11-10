@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { intlLocale, t } from '@/i18n'
 import { formatNumber } from '@/utils/numbers'
 import { api } from '@/services/api'
-import { BatteryCharging, ChevronDown, Trash2 } from 'lucide-vue-next'
+import { BatteryCharging, ChevronDown, Trash2 } from '@/icons'
 
 // The battery health of an electric vehicle: the level as a gauge coloured by value, its history as a line,
 // and the readings it is computed from (kept behind a fold, they are entered rarely).

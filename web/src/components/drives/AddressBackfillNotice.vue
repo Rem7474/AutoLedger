@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue'
-import { MapPin } from 'lucide-vue-next'
+import { MapPin } from '@/icons'
 import { api } from '@/services/api'
 import { t } from '@/i18n'
 

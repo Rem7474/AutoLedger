@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ArrowUpDown, RefreshCw, Shuffle } from 'lucide-vue-next'
+import { ArrowUpDown, RefreshCw, Shuffle } from '@/icons'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'

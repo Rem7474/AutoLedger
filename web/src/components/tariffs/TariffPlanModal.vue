@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Plus, Trash2, Zap } from 'lucide-vue-next'
+import { Plus, Trash2, Zap } from '@/icons'
 import { api, type TariffPlan } from '@/services/api'
 import { intlLocale, t } from '@/i18n'
 import { currencySymbol } from '@/currency'

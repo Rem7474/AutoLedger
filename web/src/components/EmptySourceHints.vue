@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { Plus, UploadCloud, Webhook } from 'lucide-vue-next'
+import { Plus, UploadCloud, Webhook } from '@/icons'
 import { useQuickAddStore } from '@/stores/quickAdd'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { QuickKind } from '@/utils/quickAdd'

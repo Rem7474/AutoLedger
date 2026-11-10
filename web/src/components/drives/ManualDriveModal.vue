@@ -11,7 +11,7 @@ import { toLocalDateTimeInput } from '@/utils/dates'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import DistanceInput from '@/components/DistanceInput.vue'
 import ModalShell from '@/components/ModalShell.vue'
-import { Plus, Calendar, MapPin, Gauge, Zap } from 'lucide-vue-next'
+import { Plus, Calendar, MapPin, Gauge, Zap } from '@/icons'
 
 const props = defineProps<{
   open: boolean

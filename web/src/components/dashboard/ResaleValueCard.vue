@@ -6,7 +6,7 @@ import { api } from '@/services/api'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
 import { residualNeeds, type ResidualNeeds } from '@/utils/residual'
-import { ChevronDown, TrendingDown } from 'lucide-vue-next'
+import { ChevronDown, TrendingDown } from '@/icons'
 
 // What the vehicle is worth today and what it should fetch at the end of the holding period, from the purchase
 // price, the expected resale value and the holding period of its ownership.

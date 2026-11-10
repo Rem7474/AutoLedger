@@ -2,7 +2,7 @@
 import { intlLocale, t } from '@/i18n'
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { Fuel, Gauge, Lock, Plus, Trash2 } from 'lucide-vue-next'
+import { Fuel, Gauge, Lock, Plus, Trash2 } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import OdometerReadingForm from '@/components/manual/OdometerReadingForm.vue'
 import { useIsMobile } from '@/composables/useIsMobile'

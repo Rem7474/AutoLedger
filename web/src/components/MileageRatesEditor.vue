@@ -3,7 +3,7 @@ import NumberInput from '@/components/NumberInput.vue'
 import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { api, type MileageRate } from '@/services/api'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2 } from '@/icons'
 
 const emit = defineEmits<{ (e: 'change', labels: string[]): void }>()
 

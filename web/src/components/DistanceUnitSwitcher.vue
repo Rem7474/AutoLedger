@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Ruler } from 'lucide-vue-next'
+import { Ruler } from '@/icons'
 import { t } from '@/i18n'
 import { currentDistanceUnit, setDistanceUnit, SUPPORTED_DISTANCE_UNITS, type DistanceUnit } from '@/units'
 import { useAuthStore } from '@/stores/auth'

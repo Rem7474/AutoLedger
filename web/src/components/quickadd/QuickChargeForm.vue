@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
 import { onMounted, reactive, ref, watch } from 'vue'
-import { ChevronDown } from 'lucide-vue-next'
+import { ChevronDown } from '@/icons'
 import { api } from '@/services/api'
 import ChargeAmountFields from '@/components/charges/ChargeAmountFields.vue'
 import QuickFormShell from './QuickFormShell.vue'

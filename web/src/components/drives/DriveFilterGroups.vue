@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Receipt, Users } from 'lucide-vue-next'
+import { Receipt, Users } from '@/icons'
 import ToQualifyFilter from '@/components/drives/ToQualifyFilter.vue'
 
 // The toll and Work / Personal filters of the drives list, as one group of toggles. The qualification queue and the

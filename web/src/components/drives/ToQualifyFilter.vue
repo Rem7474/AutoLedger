@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertTriangle } from 'lucide-vue-next'
+import { AlertTriangle } from '@/icons'
 
 // Filter toggle showing how many items (drives to qualify, trips detected) still wait for a decision.
 // `label` replaces the drives wording for another list (charges to complete).

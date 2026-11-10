@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import KpiCard from '@/components/KpiCard.vue'
-import { TrendingUp, CreditCard, Receipt } from 'lucide-vue-next'
+import { TrendingUp, CreditCard, Receipt } from '@/icons'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { formatPercentOrUnknown } from '@/utils/numbers'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Zap, Disc, Wrench, Shield } from 'lucide-vue-next'
+import { Zap, Disc, Wrench, Shield } from '@/icons'
 import { formatAmount } from '@/currency'
 import { formatQuantity } from '@/utils/numbers'
 import { distanceUnit, formatDistance, perDistance } from '@/units'

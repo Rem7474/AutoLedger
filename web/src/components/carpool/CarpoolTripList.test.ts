@@ -37,7 +37,7 @@ describe('CarpoolTripList', () => {
     const html = await render()
     expect(html).toContain('inset-0')
     expect(html).toContain('aria-haspopup="menu"')
-    expect(html).not.toContain('lucide-edit')
+    expect(html).not.toContain('data-icon="edit"')
   })
 
   it('shows what is left to the driver, or the surplus once the cost is recovered', async () => {

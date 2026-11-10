@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Paperclip } from 'lucide-vue-next'
+import { Paperclip } from '@/icons'
 import type { CostEntryLine } from '@/services/api'
 import { formatAmount } from '@/currency'
 import { fmt } from '@/components/dashboard/energyStats'

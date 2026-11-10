@@ -2,7 +2,7 @@
 import { intlLocale } from '@/i18n'
 import { displayDistanceToKm, formatDistance, kmToDisplayDistance } from '@/units'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { X } from 'lucide-vue-next'
+import { X } from '@/icons'
 import { buildTireTimeline, groupTimelineTires, tickStep, type TimelineSegment, type TimelineTireInfo } from '../../utils/tireTimeline'
 import { formatDate, getSeasonIcon, positionLabel } from '@/utils/tires'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'

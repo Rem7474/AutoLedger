@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { Check } from 'lucide-vue-next'
+import { Check } from '@/icons'
 
 // The round glyph at the start of a list row on a phone. At rest it says what the row is; once the row is selected it
 // becomes the rose check, in the same place, so starting a selection moves nothing. It is not interactive: the row's

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRight } from 'lucide-vue-next'
+import { ChevronRight } from '@/icons'
 
 // A figure as one row of a list, for the phone: the label and what it covers on the left, the figure on the right, a
 // chevron for the place it opens. The whole row is the target: a link when it goes to a page, a button when it opens

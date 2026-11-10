@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watch, nextTick, ref } from 'vue'
 import { useConfirm } from '@/composables/useConfirm'
-import { Trash2, AlertTriangle, Info, CheckCircle2, X } from 'lucide-vue-next'
+import { Trash2, AlertTriangle, Info, CheckCircle2, X } from '@/icons'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 import SheetGrabber from '@/components/SheetGrabber.vue'

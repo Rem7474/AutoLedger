@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { api, type ReminderTemplate } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2 } from '@/icons'
 
 defineProps<{ hasReminders: boolean }>()
 const emit = defineEmits<{ changed: [] }>()

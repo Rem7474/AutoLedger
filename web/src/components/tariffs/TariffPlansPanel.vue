@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { CalendarPlus, Copy, Pencil, Plus, Trash2 } from 'lucide-vue-next'
+import { CalendarPlus, Copy, Pencil, Plus, Trash2 } from '@/icons'
 import { api, type TariffPlan } from '@/services/api'
 import { t } from '@/i18n'
 import { formatAmount } from '@/currency'

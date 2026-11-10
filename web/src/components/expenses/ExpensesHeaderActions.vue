@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Radio, UploadCloud } from 'lucide-vue-next'
+import { Plus, Radio, UploadCloud } from '@/icons'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { ExpensesTab } from '@/composables/useExpensesTabs'
 

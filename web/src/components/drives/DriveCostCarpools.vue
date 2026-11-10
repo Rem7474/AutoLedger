@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Users, ChevronRight } from 'lucide-vue-next'
+import { Users, ChevronRight } from '@/icons'
 import { formatAmount } from '@/currency'
 
 // The carpools shared on a trip or a drive, each with what it costs, what was received and what is left to the driver; a

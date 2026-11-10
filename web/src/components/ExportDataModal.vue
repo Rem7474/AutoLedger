@@ -5,7 +5,7 @@ import { t } from '@/i18n'
 import { api } from '@/services/api'
 import ModalShell from '@/components/ModalShell.vue'
 import MileageRatesEditor from '@/components/MileageRatesEditor.vue'
-import { Download } from 'lucide-vue-next'
+import { Download } from '@/icons'
 
 const props = defineProps<{ vehicleId: string }>()
 const open = defineModel<boolean>('open', { required: true })

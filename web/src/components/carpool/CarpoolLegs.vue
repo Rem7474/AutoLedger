@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import NumberInput from '@/components/NumberInput.vue'
 import DistanceInput from '@/components/DistanceInput.vue'
-import { Navigation, Plus, Trash2, Calculator, RotateCw, Lock, Undo2, ChevronDown, Link2 } from 'lucide-vue-next'
+import { Navigation, Plus, Trash2, Calculator, RotateCw, Lock, Undo2, ChevronDown, Link2 } from '@/icons'
 import { COST_FIELDS, differsFromDrive, euros, legState, type CostKey, type LegForm } from '@/utils/carpool'
 import { currencySymbol, formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'

@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import { Disc, Landmark, Receipt, Route, Shield, Wrench, Zap } from 'lucide-vue-next'
+import { Disc, Landmark, Receipt, Route, Shield, Wrench, Zap } from '@/icons'
 import type { ApiAmount, CostEntryLine } from '@/services/api'
 import { t } from '@/i18n'
 import type { Theme } from '@/utils/themes'

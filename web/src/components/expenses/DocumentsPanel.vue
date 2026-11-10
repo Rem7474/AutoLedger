@@ -5,7 +5,7 @@ import ListSummary from '@/components/ListSummary.vue'
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { ExpenseDocumentHeader } from '@/services/api'
-import { Trash2, Paperclip, FileText, Download, Eye, UploadCloud, Loader2 } from 'lucide-vue-next'
+import { Trash2, Paperclip, FileText, Download, Eye, UploadCloud, Loader2 } from '@/icons'
 import { formatDate, formatFileSize } from '@/utils/expenses'
 
 const props = defineProps<{ documents: ExpenseDocumentHeader[]; loading: boolean; loadingDocId: string | null }>()

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import LoadError from '@/components/LoadError.vue'
-import { Car, ChevronRight } from 'lucide-vue-next'
+import { Car, ChevronRight } from '@/icons'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { ref, onMounted, watch, computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'

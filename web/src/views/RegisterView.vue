@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Zap, Lock, Mail, AlertCircle, ShieldAlert } from 'lucide-vue-next'
+import { Zap, Lock, Mail, AlertCircle, ShieldAlert } from '@/icons'
 import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ModalShell from '@/components/ModalShell.vue'
 import { intlLocale } from '@/i18n'
-import { Archive, ClipboardPaste, Copy, Edit2, History, Pencil, Plus, Ruler, Shuffle, Trash2, Zap } from 'lucide-vue-next'
+import { Archive, ClipboardPaste, Copy, Edit2, History, Pencil, Plus, Ruler, Shuffle, Trash2, Zap } from '@/icons'
 import { useVehicleStore } from '@/stores/vehicle'
 import { apiMessageText } from '@/services/apiError'
 import { formatAmount } from '@/currency'
