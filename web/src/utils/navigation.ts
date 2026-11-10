@@ -8,12 +8,35 @@ export interface NavSection<T> {
 export const NAV_SECTIONS: { headingKey?: string; names: string[] }[] = [
   { names: ['dashboard'] },
   { headingKey: 'shell.navSections.tracking', names: ['drives', 'carpools', 'odometer', 'energy'] },
-  { headingKey: 'shell.navSections.costs', names: ['expenses', 'maintenance', 'tires', 'comparison'] },
+  { headingKey: 'shell.navSections.costs', names: ['costs', 'maintenance', 'tires', 'comparison'] },
   { headingKey: 'shell.navSections.management', names: ['vehicle', 'vehicles', 'account'] },
 ]
 
-/** Pages the vehicle sheet opens: the phone's "More" sheet does not list them again. */
-export const VEHICLE_SHEET_PAGES = ['odometer', 'tires', 'comparison', 'vehicles']
+/** A tab of the phone's bottom bar, and the pages that keep it lit. */
+export interface PhoneTab {
+  name: string
+  pages: string[]
+}
+
+/**
+ * The four tabs of the phone's bottom bar. The second one is the trips of a vehicle that has some (electric, hybrid) and
+ * the energy of one that has none (combustion); the other pages of the app are reached from these four, from the vehicle
+ * sheet or from the account menu.
+ */
+export function phoneTabs(hasDrives: boolean): PhoneTab[] {
+  return [
+    { name: 'dashboard', pages: ['dashboard'] },
+    hasDrives ? { name: 'drives', pages: ['drives', 'carpools'] } : { name: 'energy', pages: ['energy'] },
+    { name: 'costs', pages: ['costs', 'expenses', 'maintenance'] },
+    { name: 'vehicle', pages: ['vehicle', 'odometer', 'tires', 'comparison', 'vehicles', 'energy'] },
+  ]
+}
+
+/** The tab a page belongs to, or undefined for a page outside the four (the account page). */
+export function activePhoneTab(tabs: PhoneTab[], routeName: unknown): string | undefined {
+  const exact = tabs.find((tab) => tab.name === routeName)
+  return (exact ?? tabs.find((tab) => tab.pages.includes(String(routeName))))?.name
+}
 
 /**
  * Spreads the pages the account can open over the sections, in the order the sections list them. A section left without

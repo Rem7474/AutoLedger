@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 const MONOSPACE_FILES = [
   'components/AppDropzone.vue',
   'components/CSVImportModal.vue',
+  'components/AccountSheet.vue',
   'components/Navigation.vue',
   'components/account/ApiTokensSection.vue',
   'components/account/TokenCallLog.vue',

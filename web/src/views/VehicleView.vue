@@ -116,6 +116,7 @@ async function onSaved() {
     <div class="space-y-2">
       <VehicleTile :icon="Bell" :title="$t('vehicles.vehicleView.maintenance')" :detail="nextService" to="/maintenance?tab=REMINDERS" />
       <VehicleTile v-if="vehicleStore.canCharge" :icon="Activity" :title="$t('vehicles.vehicleView.consumption')" :detail="consumptionDetail" to="/energy" />
+      <VehicleTile v-if="vehicleStore.canCharge" :icon="Users" :title="$t('shell.nav.carpools')" to="/carpools" />
       <VehicleTile :icon="Disc" :title="$t('shell.nav.tires')" :detail="tiresDetail" to="/tires" />
       <VehicleTile :icon="ClipboardList" :title="$t('vehicles.vehicleView.readings')" to="/odometer" />
       <VehicleTile :icon="Scale" :title="$t('shell.nav.comparison')" to="/comparison" />

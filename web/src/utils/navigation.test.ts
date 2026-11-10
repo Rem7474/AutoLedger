@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupNavItems, NAV_SECTIONS, VEHICLE_SHEET_PAGES } from './navigation'
+import { activePhoneTab, groupNavItems, NAV_SECTIONS, phoneTabs } from './navigation'
 
 const item = (name: string) => ({ name })
 const all = NAV_SECTIONS.flatMap((s) => s.names).map(item)
@@ -30,9 +30,32 @@ describe('groupNavItems', () => {
   })
 })
 
-describe('VEHICLE_SHEET_PAGES', () => {
-  it('names pages the sidebar still lists', () => {
+describe('phoneTabs', () => {
+  it('has four tabs, the second one the trips of a vehicle that has some and the energy of one that has none', () => {
+    expect(phoneTabs(true).map((tab) => tab.name)).toEqual(['dashboard', 'drives', 'costs', 'vehicle'])
+    expect(phoneTabs(false).map((tab) => tab.name)).toEqual(['dashboard', 'energy', 'costs', 'vehicle'])
+  })
+
+  it('names only pages of the sidebar, so no page is reachable on a phone alone', () => {
     const named = NAV_SECTIONS.flatMap((s) => s.names)
-    for (const name of VEHICLE_SHEET_PAGES) expect(named).toContain(name)
+    for (const tab of phoneTabs(true)) expect(named).toContain(tab.name)
+  })
+})
+
+describe('activePhoneTab', () => {
+  it('lights the tab a page belongs to', () => {
+    expect(activePhoneTab(phoneTabs(true), 'carpools')).toBe('drives')
+    expect(activePhoneTab(phoneTabs(true), 'maintenance')).toBe('costs')
+    expect(activePhoneTab(phoneTabs(true), 'tires')).toBe('vehicle')
+  })
+
+  it('gives the energy page to the energy tab when it is one, and to the vehicle tab otherwise', () => {
+    expect(activePhoneTab(phoneTabs(false), 'energy')).toBe('energy')
+    expect(activePhoneTab(phoneTabs(true), 'energy')).toBe('vehicle')
+  })
+
+  it('lights no tab for a page outside the four', () => {
+    expect(activePhoneTab(phoneTabs(true), 'account')).toBeUndefined()
+    expect(activePhoneTab(phoneTabs(true), undefined)).toBeUndefined()
   })
 })
