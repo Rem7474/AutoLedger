@@ -22,6 +22,10 @@
   --color-info-500: var(--color-sky-500);
   --color-info-600: var(--color-sky-600);
   --color-info-950: var(--color-sky-950);
+  /* Urgency (tire critical, reminder overdue): red, distinct from the rose of the brand. Read as `text-critical-400`. */
+  --color-critical-300: var(--color-red-400);
+  --color-critical-400: var(--color-red-500);
+  --color-critical-500: var(--color-red-600);
   --color-danger-200: var(--color-rose-200);
   --color-danger-300: var(--color-rose-300);
   --color-danger-400: var(--color-rose-400);
