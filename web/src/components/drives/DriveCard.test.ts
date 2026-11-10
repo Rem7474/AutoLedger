@@ -22,17 +22,17 @@ afterEach(() => {
 })
 
 describe('DriveCard', () => {
-  it('leaves out the manual badge when every drive of the vehicle is manual', async () => {
-    expect(await render()).not.toContain('bg-slate-800 text-slate-300 border border-slate-700/60')
+  it('ne mentionne pas « manuel » quand tous les trajets du véhicule sont manuels', async () => {
+    expect(await render()).not.toContain('Manuel')
   })
 
-  it('shows the manual badge on a vehicle fed by TeslaMate, where it tells the drives apart', async () => {
+  it('mentionne « manuel » sur un véhicule alimenté par TeslaMate, où cela distingue les trajets', async () => {
     vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: 'http://teslamate.local' }
-    expect(await render()).toContain('bg-slate-800 text-slate-300 border border-slate-700/60')
-    expect(await render({ ...drive, is_manual: false })).not.toContain('bg-slate-800 text-slate-300 border border-slate-700/60')
+    expect(await render()).toContain('Manuel')
+    expect(await render({ ...drive, is_manual: false })).not.toContain('Manuel')
   })
 
-  it('leaves the selection box and the menu out of a read-only list', async () => {
+  it('laisse de côté la case de sélection et le menu dans une liste en lecture seule', async () => {
     expect(await render()).toContain('drive-select-')
     vehicleStore.canEdit = false
     const readOnly = await render()
@@ -40,7 +40,7 @@ describe('DriveCard', () => {
     expect(readOnly).not.toContain('aria-haspopup="menu"')
   })
 
-  it('opens the breakdown from the whole row: the cost sits under the open button, not above it', async () => {
+  it('ouvre le détail depuis toute la ligne : le coût est sous le bouton d\'ouverture, pas au-dessus', async () => {
     const html = await render()
     expect(html).toContain('inset-0')
     const cost = html.slice(html.indexOf('€5.26') - 300, html.indexOf('€5.26'))

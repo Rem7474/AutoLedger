@@ -40,7 +40,8 @@ import CSVImportModal from '@/components/CSVImportModal.vue'
 import EmptySourceHints from '@/components/EmptySourceHints.vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useInfiniteList } from '@/composables/useInfiniteList'
-import { groupByDay, dayLabel } from '@/utils/dayGroups'
+import { groupByDay, dayLabel, groupDaysByMonth, monthHeader } from '@/utils/dayGroups'
+import { formatAmount } from '@/currency'
 import { toLocalDay } from '@/utils/dates'
 import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
@@ -206,13 +207,21 @@ const selectedSummaryMetrics = computed(() =>
 
 useRefreshHandler(() => loadDrives(true))
 
-// The drives under a header per day, the newest first as the server sends them
-const driveGroups = computed(() => {
+// The drives under a header per month, each month under its days, the newest first as the server sends them. A month's
+// subtotal is shown once the month is complete: the newest month lists only what is loaded while there are more pages.
+const driveMonths = computed(() => {
   const today = toLocalDay()
   const labels = { today: t('drives.drivesView.today'), yesterday: t('drives.drivesView.yesterday') }
   const format = (date: Date, withYear: boolean) =>
     date.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
-  return groupByDay(drives.value, (d) => d.start_time).map((g) => ({ ...g, label: dayLabel(g.day, today, labels, format) }))
+  const monthFormat = (date: Date, withYear: boolean) => date.toLocaleDateString(intlLocale(), { month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
+  const days = groupByDay(drives.value, (d) => d.start_time).map((g) => ({ ...g, label: dayLabel(g.day, today, labels, format) }))
+  const grouped = groupDaysByMonth(days)
+  return grouped.map((m, i) => {
+    const complete = !(hasMore.value && i === grouped.length - 1)
+    const subtotal = m.days.reduce((sum, g) => sum + g.items.reduce((s, d) => s + (d.costs?.total_cost || 0), 0), 0)
+    return { ...m, label: monthHeader(m.month, today, monthFormat), subtotal: complete ? subtotal : null }
+  })
 })
 
 // One page of the list for the current filters
@@ -583,22 +592,28 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
         <span>{{ $t('drives.drivesView.shownOf', { count: drives.length, total }) }}</span>
       </div>
 
-      <section v-for="group in driveGroups" :key="group.day + group.items[0].id" class="space-y-3">
-        <h2 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h2>
-        <SwipeToDelete v-for="d in group.items" :key="d.id" :disabled="!d.is_manual || selectedDriveIds.length > 0" @delete="handleDeleteManualDrive(d)">
-        <DriveCard
-          :d="d"
-          :selected="selectedDriveIds.includes(d.id)"
-          :selecting="selectedDriveIds.length > 0"
-          @open="openCostModal"
-          @toggle="toggleSelectDrive"
-          @toll-entry="openTollEntry"
-          @no-toll="markNoToll"
-          @edit="openManualDriveModal"
-          @delete="handleDeleteManualDrive"
-          @carpool="(drive) => openCarpoolEditor({ driveIds: [drive.id] })"
-        />
-        </SwipeToDelete>
+      <section v-for="month in driveMonths" :key="month.month" class="space-y-2">
+        <div class="flex items-baseline justify-between gap-3 px-1 pt-2">
+          <h2 class="text-sm font-bold capitalize text-white">{{ month.label }}</h2>
+          <p v-if="month.subtotal !== null" class="text-xs font-semibold tabular-nums text-slate-300">{{ formatAmount(month.subtotal, vehicleStore.currency) }}</p>
+        </div>
+        <div v-for="group in month.days" :key="group.day" class="space-y-2">
+          <h3 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h3>
+          <SwipeToDelete v-for="d in group.items" :key="d.id" :disabled="!d.is_manual || selectedDriveIds.length > 0" @delete="handleDeleteManualDrive(d)">
+            <DriveCard
+              :d="d"
+              :selected="selectedDriveIds.includes(d.id)"
+              :selecting="selectedDriveIds.length > 0"
+              @open="openCostModal"
+              @toggle="toggleSelectDrive"
+              @toll-entry="openTollEntry"
+              @no-toll="markNoToll"
+              @edit="openManualDriveModal"
+              @delete="handleDeleteManualDrive"
+              @carpool="(drive) => openCarpoolEditor({ driveIds: [drive.id] })"
+            />
+          </SwipeToDelete>
+        </div>
       </section>
 
       <InfiniteSentinel
