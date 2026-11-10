@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Navigation as PageIcon, Layers, List, RotateCcw, Plus, UploadCloud } from '@/icons'
+import { Navigation as PageIcon, Layers, List, RotateCcw, Plus, UploadCloud, Users } from '@/icons'
 import LoadError from '@/components/LoadError.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import PageHeader from '@/components/PageHeader.vue'
@@ -24,6 +24,7 @@ import DriveBulkActions from '@/components/drives/DriveBulkActions.vue'
 import DriveCard from '@/components/drives/DriveCard.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
 import AddressBackfillNotice from '@/components/drives/AddressBackfillNotice.vue'
+import CarpoolView from '@/views/CarpoolView.vue'
 import TripGroupsPanel from '@/components/drives/TripGroupsPanel.vue'
 import TripSuggestions from '@/components/drives/TripSuggestions.vue'
 import ToQualifyFilter from '@/components/drives/ToQualifyFilter.vue'
@@ -243,9 +244,11 @@ function loadDrives(silent = false) {
 // View mode: drives list or trip groups ("voyages"), kept in the address (`?tab=TRIPS`) so a reload or Back finds it again
 const viewMode = ref<DrivesTab>(parseDrivesTab(route.query.tab))
 const tripQualifyOnly = ref(false)
+// The toolbar and the filters belong to the lists of drives and trips; the carpools segment brings its own page
+const listMode = computed<'DRIVES' | 'TRIPS'>(() => (viewMode.value === 'TRIPS' ? 'TRIPS' : 'DRIVES'))
 
 // On a phone the filters sit behind one button, so the first drive is not pushed below the fold; a wide screen shows them
-const activeFilterCount = computed(() => countActiveDriveFilters({ mode: viewMode.value, unqualifiedOnly: unqualifiedOnly.value, hasTollOnly: hasTollOnly.value, selectedTag: selectedTag.value, tripQualifyOnly: tripQualifyOnly.value, carpoolFilter: carpoolFilter.value }))
+const activeFilterCount = computed(() => countActiveDriveFilters({ mode: listMode.value, unqualifiedOnly: unqualifiedOnly.value, hasTollOnly: hasTollOnly.value, selectedTag: selectedTag.value, tripQualifyOnly: tripQualifyOnly.value, carpoolFilter: carpoolFilter.value }))
 const {
   tripGroups,
   tripSuggestions,
@@ -375,6 +378,8 @@ function openTollEntry(d: any) {
 const viewTabs = computed<TabItem[]>(() => [
   { key: 'DRIVES', label: t('drives.drivesView.drives'), icon: List },
   { key: 'TRIPS', label: t('drives.drivesView.trips'), icon: Layers },
+  // Carpooling applies to any vehicle that has drives
+  ...(vehicleStore.canCharge ? [{ key: 'CARPOOLS', label: t('drives.drivesView.carpools'), icon: Users }] : []),
 ])
 
 function switchView(mode: DrivesTab) {
@@ -454,7 +459,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       {{ $t('drives.drivesView.subtitle', { unit: distanceUnit() }) }}
       <template #actions>
       <!-- Actions & Tag Filters container -->
-      <div class="flex flex-wrap items-center gap-3 self-start sm:self-center">
+      <div v-if="viewMode !== 'CARPOOLS'" class="flex flex-wrap items-center gap-3 self-start sm:self-center">
         <div v-if="vehicleStore.canEdit" class="flex items-center gap-2">
           <button
             @click="openCSVImportModal"
@@ -482,13 +487,14 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 
     <!-- Filters & Navigation Toolbar (Drives Mode) -->
     <DrivesToolbar
+      v-if="viewMode !== 'CARPOOLS'"
       v-model:period-mode="periodMode"
       v-model:selected-month="selectedMonth"
       v-model:anchor-day="anchorDay"
       v-model:custom-from="customFrom"
       v-model:custom-to="customTo"
       v-model:search-query="searchQuery"
-      :mode="viewMode"
+      :mode="listMode"
       :active-count="activeFilterCount"
       :total="viewMode === 'DRIVES' ? total : shownTrips.length"
       :loading="viewMode === 'DRIVES' ? loading : loadingTrips"
@@ -521,6 +527,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 
     <!-- Sticky Bulk Selection Bar -->
     <DriveBulkActions
+      v-if="viewMode !== 'CARPOOLS'"
       :selected-drive-ids="selectedDriveIds"
       :selected-drives="selectedList"
       :selected-off-page="selectedOffPage"
@@ -604,6 +611,9 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       />
     </div>
     </template>
+
+    <!-- CARPOOLS: the page of the carpools, without its own header -->
+    <CarpoolView v-else-if="viewMode === 'CARPOOLS'" embedded />
 
     <!-- TRIP GROUPS ("VOYAGES") -->
     <template v-else>

@@ -21,10 +21,9 @@ const { t } = useI18n()
 const ROUTE_TITLE_KEYS: Record<string, string> = {
   dashboard: 'shell.nav.dashboard',
   drives: 'shell.nav.drives',
-  carpools: 'shell.nav.carpools',
   tires: 'shell.nav.tires',
   odometer: 'shell.nav.odometer',
-  energy: 'shell.nav.energy',
+  consumption: 'shell.nav.consumption',
   expenses: 'shell.nav.expenses',
   maintenance: 'shell.nav.maintenance',
   comparison: 'shell.nav.comparison',

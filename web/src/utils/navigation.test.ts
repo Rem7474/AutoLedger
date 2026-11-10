@@ -12,7 +12,7 @@ describe('groupNavItems', () => {
   })
 
   it('drops the pages the account cannot open and the sections left empty', () => {
-    const noDrives = all.filter((i) => !['drives', 'carpools', 'odometer', 'energy'].includes(i.name))
+    const noDrives = all.filter((i) => !['drives', 'odometer', 'consumption'].includes(i.name))
     const grouped = groupNavItems(noDrives)
     expect(grouped.map((g) => g.headingKey)).not.toContain('shell.navSections.tracking')
     expect(grouped.flatMap((g) => g.items.map((i) => i.name))).not.toContain('drives')
@@ -31,9 +31,9 @@ describe('groupNavItems', () => {
 })
 
 describe('phoneTabs', () => {
-  it('has four tabs, the second one the trips of a vehicle that has some and the energy of one that has none', () => {
+  it('has four tabs, the second one the trips of a vehicle that has some and the consumption of one that has none', () => {
     expect(phoneTabs(true).map((tab) => tab.name)).toEqual(['dashboard', 'drives', 'costs', 'vehicle'])
-    expect(phoneTabs(false).map((tab) => tab.name)).toEqual(['dashboard', 'energy', 'costs', 'vehicle'])
+    expect(phoneTabs(false).map((tab) => tab.name)).toEqual(['dashboard', 'consumption', 'costs', 'vehicle'])
   })
 
   it('names only pages of the sidebar, so no page is reachable on a phone alone', () => {
@@ -44,14 +44,14 @@ describe('phoneTabs', () => {
 
 describe('activePhoneTab', () => {
   it('lights the tab a page belongs to', () => {
-    expect(activePhoneTab(phoneTabs(true), 'carpools')).toBe('drives')
+    expect(activePhoneTab(phoneTabs(true), 'drives')).toBe('drives')
     expect(activePhoneTab(phoneTabs(true), 'maintenance')).toBe('costs')
     expect(activePhoneTab(phoneTabs(true), 'tires')).toBe('vehicle')
   })
 
-  it('gives the energy page to the energy tab when it is one, and to the vehicle tab otherwise', () => {
-    expect(activePhoneTab(phoneTabs(false), 'energy')).toBe('energy')
-    expect(activePhoneTab(phoneTabs(true), 'energy')).toBe('vehicle')
+  it('gives the consumption page to the consumption tab when it is one, and to the vehicle tab otherwise', () => {
+    expect(activePhoneTab(phoneTabs(false), 'consumption')).toBe('consumption')
+    expect(activePhoneTab(phoneTabs(true), 'consumption')).toBe('vehicle')
   })
 
   it('lights no tab for a page outside the four', () => {

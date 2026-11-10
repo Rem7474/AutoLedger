@@ -258,6 +258,7 @@ func (h *CarpoolHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	limit = min(limit, carpoolPageMax)
 	filter := database.CarpoolFilter{TripGroupID: r.URL.Query().Get("trip_group_id")}
+	filter.From, filter.To = parseTimeRange(r)
 
 	trips, total, err := h.repo.ListCarpoolTripsPage(r.Context(), vehicleID, filter, limit, (page-1)*limit)
 	if err != nil {
@@ -282,7 +283,7 @@ func (h *CarpoolHandler) List(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Summary returns the totals over all the vehicle's carpools, as they are stored.
+// Summary returns the totals over the vehicle's carpools, as they are stored: all of them, or those between `from` and `to`.
 func (h *CarpoolHandler) Summary(w http.ResponseWriter, r *http.Request) {
 	vehicleID := chi.URLParam(r, "vehicleId")
 
@@ -290,12 +291,14 @@ func (h *CarpoolHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	summary, err := h.repo.GetCarpoolSummary(r.Context(), vehicleID)
+	var filter database.CarpoolFilter
+	filter.From, filter.To = parseTimeRange(r)
+	summary, err := h.repo.GetCarpoolSummary(r.Context(), vehicleID, filter)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to summarize carpool trips")
 		return
 	}
-	inputs, err := h.repo.CarpoolShareInputs(r.Context(), vehicleID)
+	inputs, err := h.repo.CarpoolShareInputs(r.Context(), vehicleID, filter)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to summarize carpool trips")
 		return

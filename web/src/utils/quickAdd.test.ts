@@ -334,10 +334,10 @@ describe('quickKindForRoute', () => {
   const hybrid = { canCharge: true, canRefuel: true }
 
   it('opens on the charge or the fill-up from Energy, whichever the vehicle takes', () => {
-    expect(quickKindForRoute('energy', ev)).toBe('CHARGE')
-    expect(quickKindForRoute('energy', fuel)).toBe('FUEL')
-    expect(quickKindForRoute('energy', hybrid)).toBe('CHARGE')
-    expect(quickKindForRoute('energy', { canCharge: false, canRefuel: false })).toBeNull()
+    expect(quickKindForRoute('consumption', ev)).toBe('CHARGE')
+    expect(quickKindForRoute('consumption', fuel)).toBe('FUEL')
+    expect(quickKindForRoute('consumption', hybrid)).toBe('CHARGE')
+    expect(quickKindForRoute('consumption', { canCharge: false, canRefuel: false })).toBeNull()
   })
 
   it('opens on an expense from Expenses and Maintenance', () => {

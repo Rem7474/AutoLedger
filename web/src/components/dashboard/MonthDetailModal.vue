@@ -85,6 +85,15 @@ const selectedMonthBreakdown = computed(() => {
   return { ...breakdown, items: breakdown.items.map((it) => ({ ...it, icon: ITEM_ICONS[it.key] })) }
 })
 
+// The bar follows the view mode, so its per-km figure says which basis it is on
+const barPerKmLabel = computed(() => t(monthDetailViewMode.value === 'economic' ? 'dashboard.monthDetailModal.costPricePerKm' : 'dashboard.monthDetailModal.paidPerKm', { unit: distanceUnit() }))
+
+/** A total over the month's distance; 0 for a month without one. */
+function perKmOf(total: number): number {
+  const km = selectedMonthBreakdown.value?.distanceKm ?? 0
+  return km > 0 ? total / km : 0
+}
+
 function onKeydown(e: KeyboardEvent) {
   if (!selectedMonth.value) return
   if (e.key === 'ArrowLeft') {
@@ -157,20 +166,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         </KpiCard>
         <KpiCard
           compact
-          tone="success"
+          tone="hero"
           :label="$t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() })"
-          :value="formatAmount(perDistance(selectedMonthBreakdown.costPerKm), currency, 3)"
+          :value="selectedMonthBreakdown.paidPerKm == null ? null : formatAmount(perDistance(selectedMonthBreakdown.paidPerKm), currency, 3)"
           :unit="`/${distanceUnit()}`"
         >
-          <span class="mt-0.5 block text-xs text-slate-400">{{ $t('dashboard.monthDetailModal.actualCostPrice') }}</span>
-        </KpiCard>
-        <KpiCard
-          compact
-          term="economicCost"
-          :label="$t('dashboard.monthDetailModal.calculatedRunningCost')"
-          :value="formatAmount(selectedMonthBreakdown.economicTotal, currency)"
-        >
-          <span class="mt-0.5 block text-xs text-slate-400">{{ $t('dashboard.monthDetailModal.costPerKmBasis', { unit: distanceUnit() }) }}</span>
+          <span class="mt-0.5 block text-xs text-slate-400">{{ selectedMonthBreakdown.carpoolRevenue > 0 ? $t('dashboard.monthDetailModal.paidNetOfCarpooling') : $t('dashboard.monthDetailModal.paidBasis') }}</span>
         </KpiCard>
         <KpiCard
           compact
@@ -179,6 +180,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           :value="formatAmount(selectedMonthBreakdown.cashTotal, currency)"
         >
           <span class="mt-0.5 block text-xs text-slate-400">{{ $t('dashboard.monthDetailModal.paymentsThisMonth') }}</span>
+        </KpiCard>
+        <KpiCard
+          compact
+          term="economicCost"
+          :label="$t('dashboard.monthDetailModal.calculatedRunningCost')"
+          :value="formatAmount(selectedMonthBreakdown.economicTotal, currency)"
+        >
+          <span class="mt-0.5 block text-xs text-slate-400">{{ $t('dashboard.monthDetailModal.costPriceLine', { amount: selectedMonthBreakdown.costPerKm == null ? '—' : formatAmount(perDistance(selectedMonthBreakdown.costPerKm), currency, 3), unit: distanceUnit() }) }}</span>
         </KpiCard>
       </div>
 
@@ -331,22 +340,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             />
           </div>
 
-          <!-- Total Row -->
+          <!-- Total Row: the net of the carpools first when there are some, the gross month under it -->
           <CostTotalBar
             class="mt-2"
-            :total-label="$t('dashboard.monthDetailModal.monthTotal')"
-            :total="formatAmount(selectedMonthBreakdown.activeTotal, currency)"
-            :per-distance-label="$t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() })"
-            :per-distance="`${formatAmount(perDistance(selectedMonthBreakdown.distanceKm > 0 ? selectedMonthBreakdown.activeTotal / selectedMonthBreakdown.distanceKm : 0), currency, 3)}/${distanceUnit()}`"
+            :total-label="selectedMonthBreakdown.carpoolRevenue > 0 ? $t('dashboard.monthDetailModal.netOfCarpooling') : $t('dashboard.monthDetailModal.monthTotal')"
+            :total="formatAmount(selectedMonthBreakdown.carpoolRevenue > 0 ? selectedMonthBreakdown.netTotal : selectedMonthBreakdown.activeTotal, currency)"
+            :per-distance-label="barPerKmLabel"
+            :per-distance="`${formatAmount(perDistance(perKmOf(selectedMonthBreakdown.carpoolRevenue > 0 ? selectedMonthBreakdown.netTotal : selectedMonthBreakdown.activeTotal)), currency, 3)}/${distanceUnit()}`"
           >
-            <div v-if="selectedMonthBreakdown.carpoolRevenue > 0" class="flex items-center justify-between gap-3 pt-3 border-t border-slate-700 text-success-400" data-testid="month-net-total">
+            <div v-if="selectedMonthBreakdown.carpoolRevenue > 0" class="flex items-center justify-between gap-3 pt-3 border-t border-slate-700 text-slate-300" data-testid="month-gross-total">
               <div>
-                <span class="text-xs font-semibold">{{ $t('dashboard.monthDetailModal.netOfCarpooling') }}</span>
-                <div class="text-lg font-black tabular-nums">{{ formatAmount(selectedMonthBreakdown.netTotal, currency) }}</div>
+                <span class="text-xs font-semibold">{{ $t('dashboard.monthDetailModal.beforeCarpooling') }}</span>
+                <div class="text-base font-bold tabular-nums">{{ formatAmount(selectedMonthBreakdown.activeTotal, currency) }}</div>
               </div>
-              <div v-if="selectedMonthBreakdown.netCostPerKm !== null" class="text-right">
-                <span class="text-xs font-semibold">{{ $t('dashboard.monthDetailModal.costPerKilometre', { unit: distanceUnit() }) }}</span>
-                <div class="text-base font-extrabold tabular-nums">{{ formatAmount(perDistance(selectedMonthBreakdown.netCostPerKm), currency, 3) }}/{{ distanceUnit() }}</div>
+              <div class="text-right">
+                <span class="text-xs font-semibold">{{ barPerKmLabel }}</span>
+                <div class="text-base font-bold tabular-nums">{{ formatAmount(perDistance(perKmOf(selectedMonthBreakdown.activeTotal)), currency, 3) }}/{{ distanceUnit() }}</div>
               </div>
             </div>
           </CostTotalBar>

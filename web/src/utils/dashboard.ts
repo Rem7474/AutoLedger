@@ -435,6 +435,8 @@ export function buildMonthBreakdown(m: any, mode: MonthDetailMode, currency = ''
     carpoolRevenue,
     netTotal,
     netCostPerKm: carpoolRevenue > 0 && dist > 0 ? netTotal / dist : null,
+    // The month's headline cost per km, whatever the view mode: cash paid net of the carpools over the distance
+    paidPerKm: dist > 0 && cashTotal - carpoolRevenue > 0 ? (cashTotal - carpoolRevenue) / dist : null,
     items: itemsWithStats,
     fixedVar: computeMonthFixedVariable(m, mode),
   }

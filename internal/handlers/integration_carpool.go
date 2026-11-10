@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/teslacost/teslacost/internal/apierror"
+	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/services"
@@ -176,7 +177,7 @@ func (h *IntegrationReadHandler) Carpool(ctx context.Context, userID, vehicleID 
 			return nil, err
 		}
 	}
-	sum, err := h.repo.GetCarpoolSummary(ctx, vehicle.ID)
+	sum, err := h.repo.GetCarpoolSummary(ctx, vehicle.ID, database.CarpoolFilter{})
 	if err != nil {
 		return nil, err
 	}

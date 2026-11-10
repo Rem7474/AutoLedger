@@ -25,28 +25,28 @@ describe('useExpensesTabs', () => {
     expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['DOCUMENTS'])
     route.meta = { section: 'maintenance' }
     expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['REMINDERS'])
-    route.meta = { section: 'energy' }
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['CHARGES', 'EFFICIENCY', 'ESTIMATE'])
+    route.meta = { section: 'consumption' }
+    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['EFFICIENCY', 'ESTIMATE', 'CHARGES'])
     store.canRefuel = true
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['CHARGES', 'EFFICIENCY', 'FUEL'])
+    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['EFFICIENCY', 'FUEL', 'CHARGES'])
     store.canCharge = false
     expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['FUEL'])
   })
 
-  it('opens the energy page on the charges of an electric or hybrid vehicle, and on the fill-ups of a combustion one', () => {
-    route.meta = { section: 'energy' }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('CHARGES')
-    route.query = { tab: 'efficiency' }
+  it('opens the consumption page on the efficiency of an electric or hybrid vehicle, and on the fill-ups of a combustion one', () => {
+    route.meta = { section: 'consumption' }
     expect(useExpensesTabs(() => badges).activeTab.value).toBe('EFFICIENCY')
+    route.query = { tab: 'charges' }
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('CHARGES')
     route.query = {}
     store.canRefuel = true
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('CHARGES')
+    expect(useExpensesTabs(() => badges).activeTab.value).toBe('EFFICIENCY')
     store.canCharge = false
     expect(useExpensesTabs(() => badges).activeTab.value).toBe('FUEL')
   })
 
   it('opens the tab of the query, falling back to the first tab of the section', () => {
-    route.meta = { section: 'energy' }
+    route.meta = { section: 'consumption' }
     route.query = { tab: 'estimate' }
     expect(useExpensesTabs(() => badges).activeTab.value).toBe('ESTIMATE')
     route.meta = {}
@@ -57,7 +57,7 @@ describe('useExpensesTabs', () => {
   })
 
   it('writes the tab to the query and follows the query', async () => {
-    route.meta = { section: 'energy' }
+    route.meta = { section: 'consumption' }
     const { activeTab } = useExpensesTabs(() => badges)
     activeTab.value = 'EFFICIENCY'
     await nextTick()

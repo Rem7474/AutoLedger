@@ -36,8 +36,8 @@
     "maintenanceSubtitle": "What is due on the vehicle, and when",
     "efficiency": "Efficiency",
     "estimate": "Estimate",
-    "energyTitle": "Energy",
-    "energySubtitle": "Consumption, charging sessions and fill-ups",
+    "consumptionTitle": "Consumption",
+    "consumptionSubtitle": "How the vehicle uses energy, fill-ups and charges to complete",
     "fixedCosts": "Fixed costs",
     "fillUps": "Fill-ups",
     "deleteManyMessage": "Delete these {count} entries?"

@@ -18,7 +18,7 @@ describe('dataAlertLine', () => {
     expect(line.text).toMatch(/2,00\s*£/)
     expect(line.text).toContain('kWh')
     const fuel = dataAlertLine({ ...charge, category: 'FUEL' }, 'CHF')
-    expect(fuel.to).toBe('/energy?tab=FUEL')
+    expect(fuel.to).toBe('/consumption?tab=FUEL')
     expect(fuel.text).toContain('CHF')
     expect(fuel.text).not.toContain('kWh')
   })

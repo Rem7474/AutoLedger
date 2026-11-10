@@ -12,7 +12,7 @@ test.beforeAll(async ({ request }) => {
   expect(ev && ice).toBeTruthy()
 })
 
-const routes = ['/', '/?scope=all', '/drives', '/carpools', '/odometer', '/energy', '/comparison', '/tires', '/expenses', '/maintenance', '/vehicles', '/account']
+const routes = ['/', '/?scope=all', '/drives', '/drives?tab=CARPOOLS', '/odometer', '/consumption', '/comparison', '/tires', '/expenses', '/maintenance', '/vehicles', '/account']
 
 for (const width of [1280, 375]) {
   test(`no WCAG 2.1 AA violation at ${width}px`, async ({ page }) => {
@@ -70,7 +70,7 @@ test('a focused field shows a visible ring', async ({ page }) => {
 })
 
 test('the pages of a combustion vehicle have no WCAG 2.1 AA violation', async ({ page }) => {
-  for (const route of ['/', '/odometer', '/energy?tab=FUEL', '/maintenance']) {
+  for (const route of ['/', '/odometer', '/consumption?tab=FUEL', '/maintenance']) {
     await useVehicle(page, ice.id, route)
     const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
     expect(violations.map((v) => `${route} ${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([])
@@ -100,7 +100,7 @@ test.describe('sheets opened on a phone', () => {
   })
 
   test('the carpool detail sheet has no violation', async ({ page }) => {
-    await useVehicle(page, ev.id, '/carpools')
+    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS&period=all')
     await page.getByRole('main').getByRole('button', { name: /^Open / }).first().tap()
     await expect(page.getByRole('dialog')).toBeVisible()
     expect(await violationsOf(page, 'carpool detail')).toEqual([])

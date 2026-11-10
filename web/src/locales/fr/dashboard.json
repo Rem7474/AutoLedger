@@ -209,9 +209,7 @@
     "breakdownCalculationMode": "Mode de calcul de la répartition :",
     "paymentsThisMonth": "Règlements du mois",
     "totalPaidOutCash": "Décaissé",
-    "costPerKmBasis": "Base coût au {unit}",
     "calculatedRunningCost": "Coût économique",
-    "actualCostPrice": "Coût de revient réel",
     "costPerKilometre": "Coût au {unit}",
     "100GpsDrives": "100% trajets GPS",
     "totalDistance": "Distance totale",
@@ -238,7 +236,13 @@
       "recurringMonthly": "Récurrent, mensuel",
       "recurringYearly": "Récurrent, annuel",
       "insuranceNote": "Chaque paiement est compté dans le mois où il est payé ; il n'est pas réparti sur sa période de couverture."
-    }
+    },
+    "paidBasis": "Décaissé",
+    "paidNetOfCarpooling": "Décaissé, net des covoiturages",
+    "costPriceLine": "Coût de revient {amount}/{unit}",
+    "beforeCarpooling": "Avant covoiturage",
+    "costPricePerKm": "Coût de revient au {unit}",
+    "paidPerKm": "Décaissé au {unit}"
   },
   "monthlyCostChart": {
     "monthlyCostTrendByCategory": "Évolution mensuelle du coût par poste",
@@ -396,11 +400,18 @@
     "toCheck": "À vérifier",
     "tireTitle": "Pneus : {name}",
     "nothingPlanned": "Aucun entretien n'est encore planifié.",
-    "nothingSoon": "Rien à prévoir prochainement.",
     "planOne": "En planifier un",
     "spentIn": "Dépensé en {month}",
     "themesLabel": "Ce dont se compose la dépense du mois",
     "perKm": "Coût au {unit}",
-    "wholeMonth": "Le mois entier, programmé compris"
+    "wholeMonth": "Le mois entier, programmé compris",
+    "undatedTitle": "{count} rappel sans échéance | {count} rappels sans échéance",
+    "undatedHint": "Planifier",
+    "carpoolTitle": "Les passagers vous doivent {amount}",
+    "carpoolHint": "Covoiturages pas encore réglés",
+    "leaseTitle": "Fin du contrat",
+    "leaseEnds": "Se termine le {date} · moins d'un mois restant | Se termine le {date} · 1 mois restant | Se termine le {date} · {months} mois restants",
+    "perKmIn": "Coût au {unit} en {month}",
+    "perKmNone": "Coût au {unit}"
   }
 }

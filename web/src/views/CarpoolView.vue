@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Users as PageIcon, Users, Plus } from '@/icons'
 import LoadError from '@/components/LoadError.vue'
+import PeriodBar from '@/components/period/PeriodBar.vue'
+import { usePeriod } from '@/composables/usePeriod'
 import PageHeader from '@/components/PageHeader.vue'
 import { t } from '@/i18n'
 import { APP_NAME } from '@/brand'
@@ -9,6 +11,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
+import CarpoolShareSuggestions from '@/components/carpool/CarpoolShareSuggestions.vue'
 import CarpoolSummaryGrid from '@/components/carpool/CarpoolSummaryGrid.vue'
 import CarpoolTripList from '@/components/carpool/CarpoolTripList.vue'
 import CarpoolTripModal from '@/components/carpool/CarpoolTripModal.vue'
@@ -26,11 +29,21 @@ import { useInfiniteList } from '@/composables/useInfiniteList'
 
 // The page reads the trips page by page (the latest first) and the totals apart, and owns the selection and which trip
 // the modal edits; the summary, the list and the form are components. Other pages open it with a drive, drives or a trip group in the query string.
+// `embedded`: the segment of the trips page, which brings the header
+defineProps<{ embedded?: boolean }>()
 const vehicleStore = useVehicleStore()
+// Bumped when a carpool is saved: the drives still to share are read again
+const shareRefresh = ref(0)
+function onSaved() {
+  shareRefresh.value++
+  void loadData(true)
+}
 const { showConfirm, showAlert } = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
+// The totals and the list cover one period, a month at first, chosen on the common period bar
+const { period, bounds, label: periodLabel, rounded, canPrevious, canNext, set: setPeriod, step: stepPeriod } = usePeriod('carpools')
 
 const PAGE_SIZE = 30
 const {
@@ -116,15 +129,15 @@ useRefreshHandler(() => loadData(true))
 
 async function readTripsPage(page: number) {
   if (!vehicleStore.activeVehicle) return { items: [], total: 0 }
-  const res = await api.getCarpools(vehicleStore.activeVehicle.id, { page, limit: PAGE_SIZE })
+  const res = await api.getCarpools(vehicleStore.activeVehicle.id, { page, limit: PAGE_SIZE, ...bounds.value })
   return { items: (res.trips || []) as any[], total: res.total as number }
 }
 
-// The totals cover every carpool, not only the pages shown; a failed read keeps the figures already there
+// The totals cover every carpool of the period, not only the pages shown; a failed read keeps the figures already there
 async function loadSummary() {
   if (!vehicleStore.activeVehicle) return
   try {
-    summary.value = (await api.getCarpoolSummary(vehicleStore.activeVehicle.id)) || summary.value
+    summary.value = (await api.getCarpoolSummary(vehicleStore.activeVehicle.id, bounds.value)) || summary.value
   } catch (err) {
     console.error('Failed to load carpool summary', err)
   }
@@ -344,8 +357,11 @@ watch(
 )
 
 watch(
-  () => [vehicleStore.activeVehicle?.id, vehicleStore.lastSyncTimestamp],
-  () => loadData()
+  () => [vehicleStore.activeVehicle?.id, vehicleStore.lastSyncTimestamp, bounds.value.from, bounds.value.to],
+  () => {
+    clearTripSelection()
+    void loadData()
+  }
 )
 
 // A link from a drive or a trip (?open=<carpool id>) opens that carpool once the list is there, then leaves the address clean
@@ -391,8 +407,14 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <PageHeader :title="$t('carpool.carpoolView.carpooling')" :icon="PageIcon">
+    <!-- The page's own header, or inside the trips page the one action of the segment -->
+    <div v-if="embedded" class="flex justify-end">
+      <button v-if="vehicleStore.canEdit" type="button" class="btn btn-lg btn-primary" @click="openCreateModal()">
+        <Plus class="w-4 h-4" />
+        {{ $t('carpool.carpoolView.newCarpool') }}
+      </button>
+    </div>
+    <PageHeader v-else :title="$t('carpool.carpoolView.carpooling')" :icon="PageIcon">
       {{ $t('carpool.carpoolView.multiLegTripsPassengersGetting') }}
       <template #actions>
       <button
@@ -403,9 +425,13 @@ onMounted(async () => {
         <Plus class="w-4 h-4" />
         {{ $t('carpool.carpoolView.newCarpool') }}
       </button>
-    
+
       </template>
     </PageHeader>
+
+    <div class="md:sticky md:top-[4.25rem] md:z-30 md:bg-slate-950/90 md:py-2 md:backdrop-blur-md">
+      <PeriodBar :period="period" :label="periodLabel" :rounded="rounded" :can-previous="canPrevious" :can-next="canNext" @step="stepPeriod" @pick="setPeriod" />
+    </div>
 
     <!-- Viewer mode banner -->
     <div
@@ -417,7 +443,9 @@ onMounted(async () => {
     </div>
 
     <!-- KPI Summary Grid: totals of the trips below, nothing to total before the first one -->
-    <CarpoolSummaryGrid v-if="trips.length > 0" :summary="summary" />
+    <CarpoolSummaryGrid v-if="trips.length > 0" :summary="summary" :period-label="periodLabel" />
+
+    <CarpoolShareSuggestions v-if="vehicleId" :vehicle-id="vehicleId" :can-edit="vehicleStore.canEdit" :refresh-key="shareRefresh" @share="(id) => openCreateModal({ driveIds: [id] })" />
 
     <!-- Loading -->
     <div v-if="loading" class="space-y-4 animate-pulse">
@@ -427,12 +455,12 @@ onMounted(async () => {
     <!-- Empty State -->
     <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadData()" />
 
-    <EmptyState v-else-if="trips.length === 0" :icon="Users" :title="$t('carpool.carpoolView.noCarpooledTripYet')">
-      {{ $t('carpool.carpoolView.selectTheLegsOfYour', { APP_NAME }) }}
+    <EmptyState v-else-if="trips.length === 0" :icon="Users" :title="period.kind === 'all' ? $t('carpool.carpoolView.noCarpooledTripYet') : $t('carpool.carpoolView.noCarpoolInPeriod')">
+      {{ period.kind === 'all' ? $t('carpool.carpoolView.selectTheLegsOfYour', { APP_NAME }) : $t('carpool.carpoolView.pickAnotherPeriod') }}
       <template v-if="vehicleStore.canEdit" #actions>
         <button @click="openCreateModal()" class="btn btn-primary">
           <Plus class="w-4 h-4" />
-          {{ $t('carpool.carpoolView.createMyFirstCarpool') }}
+          {{ period.kind === 'all' ? $t('carpool.carpoolView.createMyFirstCarpool') : $t('carpool.carpoolView.newCarpool') }}
         </button>
       </template>
     </EmptyState>
@@ -498,7 +526,7 @@ onMounted(async () => {
       :create-options="createOptions"
       :open-token="openToken"
       :recent-names="recentNames"
-      @saved="loadData(true)"
+      @saved="onSaved"
     />
   </div>
 </template>

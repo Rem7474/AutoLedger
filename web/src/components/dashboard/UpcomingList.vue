@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CalendarClock, ChevronRight, Disc } from '@/icons'
+import { CalendarClock, ChevronRight, Disc, FileText, Users } from '@/icons'
 import type { MaintenanceReminder } from '@/services/api'
 import type { TireSetSummary } from '@/utils/tires'
-import { needsFirstReminder, upcomingItems, type UpcomingItem } from '@/utils/upcoming'
+import { upcomingItems, type UpcomingExtras, type UpcomingItem } from '@/utils/upcoming'
 import { reminderDaysLabel } from '@/utils/expenses'
 import { formatPercent } from '@/utils/numbers'
 import { wearAndRemaining } from '@/utils/tires'
 import { distanceUnit, formatDistanceValue } from '@/units'
-import { t } from '@/i18n'
+import { formatAmount } from '@/currency'
+import { useVehicleStore } from '@/stores/vehicle'
+import { intlLocale, t } from '@/i18n'
 
 // What is coming up for the vehicle: maintenance that is late or due, the next one planned, the tires once worn.
 // A row says its figure in words and opens the page where it is dealt with; amber and red are the judgement, a planned row has none.
-const props = defineProps<{ reminders: MaintenanceReminder[]; tires: TireSetSummary | null; canEdit: boolean }>()
-const items = computed(() => upcomingItems(props.reminders, props.tires))
-const invite = computed(() => needsFirstReminder(props.reminders))
+const props = defineProps<{ reminders: MaintenanceReminder[]; tires: TireSetSummary | null; extras?: UpcomingExtras; canEdit: boolean }>()
+const vehicleStore = useVehicleStore()
+const items = computed(() => upcomingItems(props.reminders, props.tires, props.extras))
 
 const TONE = {
   late: { tint: 'bg-danger-500/15 text-danger-400', text: 'text-danger-400' },
@@ -23,6 +25,9 @@ const TONE = {
 } as const
 
 function detail(item: UpcomingItem): string {
+  if (item.kind === 'undated') return t('dashboard.today.undatedHint')
+  if (item.kind === 'carpool') return t('dashboard.today.carpoolHint')
+  if (item.kind === 'lease') return t('dashboard.today.leaseEnds', { date: item.leaseEnd!.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }), months: item.months }, item.months!)
   if (item.tire) {
     const { worn, left } = wearAndRemaining(item.tire.pct)
     return t('tires.tireSetSummary.wornAndLeft', { worn: formatPercent(worn, 0), left: formatPercent(left, 0) })
@@ -39,7 +44,12 @@ function detail(item: UpcomingItem): string {
   if (r.remaining_days != null) parts.push(reminderDaysLabel({ remaining_days: r.remaining_days, scheduled_date: r.scheduled_date }))
   return parts.join(' · ')
 }
-const title = (item: UpcomingItem) => (item.tire ? t('dashboard.today.tireTitle', { name: item.tire.name }) : item.reminder!.title)
+function title(item: UpcomingItem): string {
+  if (item.kind === 'undated') return t('dashboard.today.undatedTitle', { count: item.count }, item.count!)
+  if (item.kind === 'carpool') return t('dashboard.today.carpoolTitle', { amount: formatAmount(item.amount!, vehicleStore.currency) })
+  if (item.kind === 'lease') return t('dashboard.today.leaseTitle')
+  return item.tire ? t('dashboard.today.tireTitle', { name: item.tire.name }) : item.reminder!.title
+}
 </script>
 
 <template>
@@ -50,6 +60,8 @@ const title = (item: UpcomingItem) => (item.tire ? t('dashboard.today.tireTitle'
         <router-link :to="item.to" class="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors active:bg-slate-800/60">
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="TONE[item.tone].tint">
             <Disc v-if="item.kind === 'tire'" class="h-5 w-5" aria-hidden="true" />
+            <Users v-else-if="item.kind === 'carpool'" class="h-5 w-5" aria-hidden="true" />
+            <FileText v-else-if="item.kind === 'lease'" class="h-5 w-5" aria-hidden="true" />
             <CalendarClock v-else class="h-5 w-5" aria-hidden="true" />
           </span>
           <span class="min-w-0 flex-1">
@@ -61,8 +73,8 @@ const title = (item: UpcomingItem) => (item.tire ? t('dashboard.today.tireTitle'
       </li>
     </ul>
     <div v-else class="card flex items-center justify-between gap-3 p-4" data-testid="upcoming-empty">
-      <p class="min-w-0 text-sm text-slate-300">{{ invite ? $t('dashboard.today.nothingPlanned') : $t('dashboard.today.nothingSoon') }}</p>
-      <router-link v-if="invite && canEdit" to="/maintenance?tab=REMINDERS" class="btn btn-secondary tap-text shrink-0">{{ $t('dashboard.today.planOne') }}</router-link>
+      <p class="min-w-0 text-sm text-slate-300">{{ $t('dashboard.today.nothingPlanned') }}</p>
+      <router-link v-if="canEdit" to="/maintenance?tab=REMINDERS" class="btn btn-secondary tap-text shrink-0">{{ $t('dashboard.today.planOne') }}</router-link>
     </div>
   </section>
 </template>

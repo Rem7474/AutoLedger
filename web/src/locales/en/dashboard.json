@@ -209,9 +209,7 @@
     "breakdownCalculationMode": "Breakdown calculation mode:",
     "paymentsThisMonth": "Payments this month",
     "totalPaidOutCash": "Cash paid",
-    "costPerKmBasis": "Cost-per-{unit} basis",
     "calculatedRunningCost": "Economic cost",
-    "actualCostPrice": "Actual cost price",
     "costPerKilometre": "Cost per {unit}",
     "100GpsDrives": "100% GPS drives",
     "totalDistance": "Total distance",
@@ -238,7 +236,13 @@
       "recurringMonthly": "Recurring, monthly",
       "recurringYearly": "Recurring, yearly",
       "insuranceNote": "Each payment is counted in the month it is paid; it is not spread over its coverage period."
-    }
+    },
+    "paidBasis": "Cash paid",
+    "paidNetOfCarpooling": "Cash paid, net of carpooling",
+    "costPriceLine": "Cost price {amount}/{unit}",
+    "beforeCarpooling": "Before carpooling",
+    "costPricePerKm": "Cost price per {unit}",
+    "paidPerKm": "Cash paid per {unit}"
   },
   "monthlyCostChart": {
     "monthlyCostTrendByCategory": "Monthly cost trend by category",
@@ -396,11 +400,18 @@
     "toCheck": "To check",
     "tireTitle": "Tires: {name}",
     "nothingPlanned": "No maintenance is planned yet.",
-    "nothingSoon": "Nothing is due soon.",
     "planOne": "Plan one",
     "spentIn": "Spent in {month}",
     "themesLabel": "What the month's spending is made of",
     "perKm": "Cost per {unit}",
-    "wholeMonth": "The whole month, scheduled included"
+    "wholeMonth": "The whole month, scheduled included",
+    "undatedTitle": "{count} reminder without a due date | {count} reminders without a due date",
+    "undatedHint": "Plan them",
+    "carpoolTitle": "Passengers owe {amount}",
+    "carpoolHint": "Carpooling not settled yet",
+    "leaseTitle": "End of the contract",
+    "leaseEnds": "Ends {date} · less than a month left | Ends {date} · 1 month left | Ends {date} · {months} months left",
+    "perKmIn": "Cost per {unit} in {month}",
+    "perKmNone": "Cost per {unit}"
   }
 }

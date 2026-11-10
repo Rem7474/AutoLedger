@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useQuickAddStore } from '@/stores/quickAdd'
 import { useVehicleStore } from '@/stores/vehicle'
-import { LayoutDashboard, Navigation as NavIcon, Users, Disc, Receipt, Wrench, Car, LogOut, Zap, Scale, ClipboardList, UserRound, Plus } from '@/icons'
+import { LayoutDashboard, Navigation as NavIcon, Activity, Disc, Receipt, Wrench, Car, LogOut, Zap, Scale, ClipboardList, UserRound, Plus } from '@/icons'
 import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
@@ -21,10 +21,9 @@ const quickAdd = useQuickAddStore()
 const allNavItems = [
   { name: 'dashboard', labelKey: 'shell.nav.dashboard', mobileLabelKey: 'shell.nav.home', path: '/', icon: LayoutDashboard },
   { name: 'drives', labelKey: 'shell.nav.drives', path: '/drives', icon: NavIcon },
-  { name: 'carpools', labelKey: 'shell.nav.carpools', path: '/carpools', icon: Users },
   { name: 'tires', labelKey: 'shell.nav.tires', path: '/tires', icon: Disc },
   { name: 'odometer', labelKey: 'shell.nav.odometer', path: '/odometer', icon: ClipboardList },
-  { name: 'energy', labelKey: 'shell.nav.energy', path: '/energy', icon: Zap },
+  { name: 'consumption', labelKey: 'shell.nav.consumption', path: '/consumption', icon: Activity },
   { name: 'costs', labelKey: 'shell.nav.expenses', path: '/costs', icon: Receipt },
   { name: 'maintenance', labelKey: 'shell.nav.maintenance', path: '/maintenance', icon: Wrench },
   { name: 'comparison', labelKey: 'shell.nav.comparison', path: '/comparison', icon: Scale },
@@ -33,12 +32,11 @@ const allNavItems = [
   { name: 'account', labelKey: 'shell.nav.account', path: '/account', icon: UserRound },
 ]
 
-// Drives and carpooling apply to any non-combustion vehicle (connected or manually tracked)
+// Drives (and the carpools inside them) apply to any non-combustion vehicle (connected or manually tracked)
 const navItems = computed(() =>
   allNavItems.filter((item) => {
     if (item.name === 'drives') return vehicleStore.canCharge
-    if (item.name === 'carpools') return vehicleStore.canCharge
-    if (item.name === 'energy') return vehicleStore.canCharge || vehicleStore.canRefuel
+    if (item.name === 'consumption') return vehicleStore.canCharge || vehicleStore.canRefuel
     return true
   }),
 )

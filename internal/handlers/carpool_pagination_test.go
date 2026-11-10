@@ -103,3 +103,32 @@ func closeTo(a, b float64) bool {
 	d := a - b
 	return d < 0.005 && d > -0.005
 }
+
+// `from` and `to` bound the list and the summary alike; `to` as a plain date covers that whole day
+func TestCarpoolListAndSummaryFollowTheDateRange(t *testing.T) {
+	a := newCarpoolAPI(t, "date-range")
+	for _, day := range []string{"2026-02-28", "2026-03-01", "2026-03-31", "2026-04-01"} {
+		a.expect(http.StatusCreated, "POST", "/carpools", fmt.Sprintf(`{"title":"D%s","date":%q,"distance_km":10,"electricity_cost":1}`, day, day))
+	}
+	march := "from=2026-03-01&to=2026-03-31"
+
+	list := a.expect(http.StatusOK, "GET", "/carpools?"+march, "")
+	if got := carpoolTitles(list); len(got) != 2 || got[0] != "D2026-03-31" || got[1] != "D2026-03-01" || list["total"].(float64) != 2 {
+		t.Fatalf("the carpools of March: %v", list)
+	}
+	sum := a.expect(http.StatusOK, "GET", "/carpools/summary?"+march, "")
+	if sum["total_trips"].(float64) != 2 || sum["total_distance_km"].(float64) != 20 {
+		t.Fatalf("the summary of March: %v", sum)
+	}
+	// One bound alone, and an unreadable bound that means none
+	from := a.expect(http.StatusOK, "GET", "/carpools/summary?from=2026-03-31", "")
+	to := a.expect(http.StatusOK, "GET", "/carpools/summary?to=2026-03-01", "")
+	bad := a.expect(http.StatusOK, "GET", "/carpools/summary?from=soon&to=later", "")
+	if from["total_trips"].(float64) != 2 || to["total_trips"].(float64) != 2 || bad["total_trips"].(float64) != 4 {
+		t.Fatalf("one bound / unreadable bounds: %v %v %v", from, to, bad)
+	}
+	empty := a.expect(http.StatusOK, "GET", "/carpools/summary?from=2027-01-01", "")
+	if empty["total_trips"].(float64) != 0 || empty["total_passengers_share"].(float64) != 0 {
+		t.Fatalf("a range without carpools: %v", empty)
+	}
+}

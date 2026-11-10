@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount, formatAmountOrUnknown } from '@/currency'
-import { distanceUnit, formatDistanceValue, perDistance } from '@/units'
+import { distanceUnit, perDistance } from '@/units'
 import { formatMonthName } from '@/utils/dashboard'
 import type { TodayHero } from '@/utils/todayHero'
 import GlossaryTip from '@/components/GlossaryTip.vue'
@@ -13,7 +13,7 @@ const props = defineProps<{ hero: TodayHero }>()
 const vehicleStore = useVehicleStore()
 const money = (v: number, digits = 2) => formatAmount(v || 0, vehicleStore.currency, digits)
 const headline = computed(() => money(props.hero.spent, Math.abs(props.hero.spent) >= 1000 ? 0 : 2))
-const perUnit = computed(() => formatAmountOrUnknown(props.hero.perKm == null ? null : perDistance(props.hero.perKm), vehicleStore.currency, 3))
+const perUnit = computed(() => formatAmountOrUnknown(props.hero.perKm == null ? null : perDistance(props.hero.perKm.value), vehicleStore.currency, 3))
 </script>
 
 <template>
@@ -22,7 +22,7 @@ const perUnit = computed(() => formatAmountOrUnknown(props.hero.perKm == null ? 
       <p class="text-xs font-semibold text-slate-400">
         {{ $t('dashboard.today.spentIn', { month: formatMonthName(hero.month) }) }}
       </p>
-      <p class="mt-1 text-4xl font-extrabold tabular-nums text-white">{{ headline }}</p>
+      <p class="mt-1 text-4xl font-extrabold tabular-nums text-hero">{{ headline }}</p>
       <p v-if="hero.scheduled > 0" class="mt-1 text-xs text-slate-300">{{ $t('dashboard.tcoMetricsGrid.alreadyScheduled', { amount: money(hero.scheduled) }) }}</p>
     </router-link>
 
@@ -44,13 +44,12 @@ const perUnit = computed(() => formatAmountOrUnknown(props.hero.perKm == null ? 
 
     <p class="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-3 text-sm text-slate-300" data-testid="today-per-km">
       <span class="flex items-center">
-        {{ $t('dashboard.today.perKm', { unit: distanceUnit() }) }}
+        {{ hero.perKm ? $t('dashboard.today.perKmIn', { unit: distanceUnit(), month: formatMonthName(hero.perKm.month) }) : $t('dashboard.today.perKmNone', { unit: distanceUnit() }) }}
         <GlossaryTip term="cashPaid" />
       </span>
       <span class="font-semibold tabular-nums text-white">
         {{ perUnit }}<span v-if="hero.perKm != null" class="text-xs font-normal text-slate-400">/{{ distanceUnit() }}</span>
       </span>
     </p>
-    <p v-if="hero.distanceKm > 0" class="mt-1 text-xs text-slate-400">{{ $t('dashboard.tcoMetricsGrid.monthDistance', { unit: distanceUnit(), distance_km: formatDistanceValue(hero.distanceKm) }) }}</p>
   </section>
 </template>

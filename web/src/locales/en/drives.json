@@ -12,6 +12,7 @@
     "drivesWithATollExpense": "Drives with a toll expense",
     "toQualify": "To qualify ({unqualifiedCount})",
     "motorwayTypeDrivesWithNo": "Motorway-type drives with no toll entered",
+    "carpools": "Carpools",
     "trips": "Trips",
     "drives": "Drives",
     "subtitle": "Actual energy and tolls, wear and fixed costs spread per {unit}",

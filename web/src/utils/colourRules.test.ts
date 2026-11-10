@@ -50,4 +50,16 @@ describe('colour rules', () => {
     }
     expect(found).toEqual([])
   })
+
+  // One figure per screen is read first, in the hero colour (rose-400); a file that sets two of them has two such figures.
+  it('uses the hero colour once per file, and the token names the brand rose', () => {
+    const root = join(__dirname, '..')
+    const found: string[] = []
+    for (const file of sources(root)) {
+      const hits = readFileSync(file, 'utf8').match(/\btext-hero\b|\btone="hero"/g) ?? []
+      if (hits.length > 1) found.push(`${relative(root, file)}: ${hits.length}`)
+    }
+    expect(found).toEqual([])
+    expect(readFileSync(join(root, 'assets/main.css'), 'utf8')).toMatch(/--color-hero:\s*var\(--color-rose-400\)/)
+  })
 })
