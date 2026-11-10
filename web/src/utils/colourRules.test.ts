@@ -34,7 +34,7 @@ const RAW_STATE_ALLOWLIST = new Set([
   'components/expenses/MaintenanceModal.vue', 'components/expenses/PublicChargeCalculatorModal.vue', 'components/expenses/ReminderModal.vue',
   'components/expenses/ReminderRow.vue', 'components/expenses/ReminderTemplatesBar.vue', 'components/expenses/RemindersPanel.vue',
   'components/expenses/TollModal.vue', 'components/expenses/UploadDocumentModal.vue', 'components/expenses/WebhookModal.vue',
-  'components/manual/FuelLogsPanel.vue', 'components/manual/OdometerReadingForm.vue', 'components/manual/OdometerReadingsPanel.vue',
+  'components/manual/OdometerReadingForm.vue', 'components/manual/OdometerReadingsPanel.vue',
   'components/quickadd/QuickOdometerField.vue', 'components/quickadd/QuickPendingCosts.vue', 'components/quickadd/QuickPhotoField.vue',
   'components/tires/TireCopyHistoryModal.vue', 'components/tires/TireDuplicateSessionModal.vue', 'components/tires/TireHistoryModal.vue',
   'components/tires/TireQuickRotationBar.vue', 'components/tires/TireSessionModal.vue', 'components/tires/TireWheelTile.vue',

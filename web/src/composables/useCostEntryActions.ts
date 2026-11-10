@@ -4,7 +4,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { deleteWithUndo } from '@/composables/useUndoableDelete'
 import { chargeDeletable } from '@/utils/chargeProvenance'
-import { entryTarget } from '@/utils/costEntries'
+import { entryKey, entryTarget } from '@/utils/costEntries'
 import { t } from '@/i18n'
 
 /**
@@ -18,6 +18,9 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
   const showToll = ref(false)
   const showMaintenance = ref(false)
   const showCharge = ref(false)
+  const showFuel = ref(false)
+  // The journal line the fill-up sheet was opened from: the sheet's own Delete takes that line off the page
+  let fuelEntryId = ''
   const editing = ref<any | null>(null)
   const documents = ref<ExpenseDocumentHeader[]>([])
   // The earlier maintenance entries, read when a new one is added: they suggest descriptions and close a revision
@@ -47,11 +50,26 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     }
   }
 
+  /** There is no read of one fill-up: it is found in the vehicle's fill-ups, which carry its version. */
+  async function readFuelLog(vehicleId: string, id: string) {
+    const res = await api.getFuelLogs(vehicleId)
+    const log = (res?.logs ?? []).find((l: any) => l.id === id)
+    if (!log) throw new Error(t('manual.fuelLogsPanel.notFound'))
+    return log
+  }
+
   async function open(entry: CostEntryLine) {
     const vehicle = vehicleStore.activeVehicle
     const target = entryTarget(entry)
     if (!vehicle || target.type !== 'edit') return
     try {
+      if (target.modal === 'fuel') {
+        const record = await readFuelLog(vehicle.id, target.id)
+        editing.value = record
+        fuelEntryId = entryKey(entry)
+        showFuel.value = true
+        return
+      }
       const [record] = await Promise.all([
         target.modal === 'charge' ? api.getCharge(vehicle.id, target.id) : target.modal === 'toll' ? api.getDriveExpense(vehicle.id, target.id) : api.getMaintenanceExpense(vehicle.id, target.id),
         loadDocuments(vehicle.id),
@@ -81,6 +99,10 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
         return
       }
     }
+    if (target.modal === 'fuel') {
+      removeFuel(vehicle.id, target.id, id)
+      return
+    }
     const erase = target.modal === 'charge' ? api.deleteCharge : target.modal === 'toll' ? api.deleteDriveExpense : api.deleteMaintenance
     deleteWithUndo({
       message: t(target.modal === 'charge' ? 'expenses.expensesView.chargeDeleted' : 'expenses.expensesView.costDeleted'),
@@ -92,9 +114,28 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     })
   }
 
+  /** A fill-up goes at once and comes back with Undo, the server is asked when that time is over. */
+  function removeFuel(vehicleId: string, logId: string, id: string) {
+    deleteWithUndo({
+      message: t('manual.fuelLogsPanel.fillUpDeleted'),
+      hide: () => hooks.hide(id),
+      restore: () => hooks.restore(id),
+      commit: () => api.deleteFuelLog(vehicleId, logId),
+      committed: () => void hooks.reload(),
+      onError: fail,
+    })
+  }
+
+  /** The Delete of the fill-up sheet: the sheet closes and the line goes with the same Undo. */
+  function removeOpenedFuel(log: { id: string }) {
+    const vehicle = vehicleStore.activeVehicle
+    showFuel.value = false
+    if (vehicle && fuelEntryId) removeFuel(vehicle.id, log.id, fuelEntryId)
+  }
+
   function onDocumentAdded(doc: ExpenseDocumentHeader) {
     documents.value.unshift(doc)
   }
 
-  return { showToll, showMaintenance, showCharge, editing, documents, maintenanceExpenses, open, addMaintenance, remove, onDocumentAdded }
+  return { showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, editing, documents, maintenanceExpenses, open, addMaintenance, remove, onDocumentAdded }
 }

@@ -83,9 +83,9 @@ describe('entryTarget', () => {
     expect(entryTarget({ source: 'charge_logs', source_id: 'c1' })).toEqual({ type: 'edit', modal: 'charge', id: 'c1' })
     expect(entryTarget({ source: 'drive_expenses', source_id: 'e1' })).toEqual({ type: 'edit', modal: 'toll', id: 'e1' })
     expect(entryTarget({ source: 'maintenance_expenses', source_id: 'm1' })).toEqual({ type: 'edit', modal: 'maintenance', id: 'm1' })
+    expect(entryTarget({ source: 'fuel_logs', source_id: 'f1' })).toEqual({ type: 'edit', modal: 'fuel', id: 'f1' })
   })
   it('sends the lines held by another screen there, and leaves the others alone', () => {
-    expect(entryTarget({ source: 'fuel_logs', source_id: 'f1' })).toEqual({ type: 'link', to: '/consumption?tab=FUEL' })
     expect(entryTarget({ source: 'tires', source_id: 't1' })).toEqual({ type: 'link', to: '/tires' })
     expect(entryTarget({ source: 'vehicle_ownership', source_id: 'o1' })).toEqual({ type: 'none' })
   })
