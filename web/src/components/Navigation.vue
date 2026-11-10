@@ -4,21 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useQuickAddStore } from '@/stores/quickAdd'
 import { useVehicleStore } from '@/stores/vehicle'
-import {
-  LayoutDashboard,
-  Navigation as NavIcon,
-  Users,
-  Disc,
-  Receipt,
-  Wrench,
-  Car,
-  LogOut,
-  Zap,
-  Scale,
-  ClipboardList,
-  UserRound,
-  Plus,
-} from 'lucide-vue-next'
+import { LayoutDashboard, Navigation as NavIcon, Users, Disc, Receipt, Wrench, Car, LogOut, Zap, Scale, ClipboardList, UserRound, Plus } from '@/icons'
 import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'

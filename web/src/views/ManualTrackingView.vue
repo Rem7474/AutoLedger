@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeader from '@/components/PageHeader.vue'
-import { ClipboardList as PageIcon } from 'lucide-vue-next'
+import { ClipboardList as PageIcon } from '@/icons'
 import { ref } from 'vue'
 import { UploadCloud, Download } from 'lucide-vue-next'
 import RowMenu from '@/components/RowMenu.vue'
