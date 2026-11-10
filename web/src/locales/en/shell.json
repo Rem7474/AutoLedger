@@ -1,8 +1,6 @@
 {
   "navigation": {
     "signOut": "Sign out",
-    "otherPages": "Other pages",
-    "more": "More",
     "quickAdd": "Quick add",
     "mainNavigation": "Main navigation",
     "version": "Version",
@@ -28,7 +26,8 @@
     "chargeCount": "+{count} charge | +{count} charges",
     "upToDate": "Up to date (no new drive)",
     "syncing": "Syncing...",
-    "sync": "Sync"
+    "sync": "Sync",
+    "account": "Account"
   },
   "appDropzone": {
     "removeThisFile": "Remove this file",
@@ -75,7 +74,8 @@
     "comparison": "Comparison",
     "vehicle": "Vehicle",
     "vehicles": "Vehicles",
-    "account": "Account"
+    "account": "Account",
+    "today": "Today"
   },
   "notFound": {
     "title": "Page not found",

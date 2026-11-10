@@ -1,8 +1,6 @@
 {
   "navigation": {
     "signOut": "Déconnexion",
-    "otherPages": "Autres pages",
-    "more": "Plus",
     "quickAdd": "Saisie rapide",
     "mainNavigation": "Navigation principale",
     "version": "Version",
@@ -28,7 +26,8 @@
     "chargeCount": "+{count} charge | +{count} charges",
     "upToDate": "À jour (aucun nouveau trajet)",
     "syncing": "Synchronisation...",
-    "sync": "Synchroniser"
+    "sync": "Synchroniser",
+    "account": "Compte"
   },
   "appDropzone": {
     "removeThisFile": "Supprimer ce fichier",
@@ -75,7 +74,8 @@
     "comparison": "Comparatif",
     "vehicle": "Véhicule",
     "vehicles": "Véhicules",
-    "account": "Compte"
+    "account": "Compte",
+    "today": "Aujourd'hui"
   },
   "notFound": {
     "title": "Page introuvable",

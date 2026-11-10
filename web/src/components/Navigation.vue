@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useQuickAddStore } from '@/stores/quickAdd'
@@ -18,17 +18,13 @@ import {
   ClipboardList,
   UserRound,
   Plus,
-  Ellipsis,
-  X,
 } from 'lucide-vue-next'
 import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
-import { groupNavItems, VEHICLE_SHEET_PAGES } from '@/utils/navigation'
+import { activePhoneTab, groupNavItems, phoneTabs } from '@/utils/navigation'
 import { quickKindForRoute } from '@/utils/quickAdd'
 import NavBarItem from '@/components/NavBarItem.vue'
-import SheetGrabber from '@/components/SheetGrabber.vue'
-import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,13 +33,13 @@ const vehicleStore = useVehicleStore()
 const quickAdd = useQuickAddStore()
 
 const allNavItems = [
-  { name: 'dashboard', labelKey: 'shell.nav.dashboard', mobileLabelKey: 'shell.nav.home', path: '/', icon: LayoutDashboard },
+  { name: 'dashboard', labelKey: 'shell.nav.dashboard', mobileLabelKey: 'shell.nav.today', path: '/', icon: LayoutDashboard },
   { name: 'drives', labelKey: 'shell.nav.drives', path: '/drives', icon: NavIcon },
   { name: 'carpools', labelKey: 'shell.nav.carpools', path: '/carpools', icon: Users },
   { name: 'tires', labelKey: 'shell.nav.tires', path: '/tires', icon: Disc },
   { name: 'odometer', labelKey: 'shell.nav.odometer', path: '/odometer', icon: ClipboardList },
   { name: 'energy', labelKey: 'shell.nav.energy', path: '/energy', icon: Zap },
-  { name: 'expenses', labelKey: 'shell.nav.expenses', path: '/expenses', icon: Receipt },
+  { name: 'costs', labelKey: 'shell.nav.expenses', path: '/costs', icon: Receipt },
   { name: 'maintenance', labelKey: 'shell.nav.maintenance', path: '/maintenance', icon: Wrench },
   { name: 'comparison', labelKey: 'shell.nav.comparison', path: '/comparison', icon: Scale },
   { name: 'vehicle', labelKey: 'shell.nav.vehicle', path: '/vehicle', icon: Car },
@@ -65,32 +61,15 @@ const currentRouteName = computed(() => route.name)
 const openQuickAdd = () => quickAdd.open(quickKindForRoute(route.name, vehicleStore))
 const navSections = computed(() => groupNavItems(navItems.value))
 
-// Phone bar: the everyday pages, the quick entry button in the middle, everything else behind "Plus".
-const primaryNames = computed(() => (vehicleStore.canCharge ? ['dashboard', 'drives', 'energy'] : ['dashboard', 'energy', 'odometer']))
-const primaryItems = computed(() =>
-  primaryNames.value.map((name) => navItems.value.find((item) => item.name === name)).filter((item) => !!item),
-)
-const secondaryItems = computed(() => navItems.value.filter((item) => !primaryNames.value.includes(item.name)))
-// The vehicle sheet opens these pages: the "More" sheet lists them no more, and stays lit while one of them is open
-const moreItems = computed(() => secondaryItems.value.filter((item) => !VEHICLE_SHEET_PAGES.includes(item.name)))
-// The "More" sheet groups the pages under the same headings as the sidebar
-const moreSections = computed(() => groupNavItems(moreItems.value))
+// Phone bar: four tabs around the quick entry button; the other pages are reached from them (see `phoneTabs`).
+const tabs = computed(() => phoneTabs(vehicleStore.canCharge))
+const primaryItems = computed(() => tabs.value.map((tab) => navItems.value.find((item) => item.name === tab.name)).filter((item) => !!item))
+const activeTab = computed(() => activePhoneTab(tabs.value, currentRouteName.value))
 const leftItems = computed(() => primaryItems.value.slice(0, 2))
 const rightItems = computed(() => primaryItems.value.slice(2))
-const moreActive = computed(() => secondaryItems.value.some((item) => item.name === currentRouteName.value))
 
 const canQuickAdd = computed(() => !!vehicleStore.activeVehicle && vehicleStore.canEdit)
-const showMore = ref(false)
-const moreSheet = ref<HTMLElement | null>(null)
-// The "More" sheet is a bottom sheet below the md breakpoint
-useSheetSwipe(moreSheet, () => (showMore.value = false), 767)
-
-watch(() => route.path, () => {
-  showMore.value = false
-})
-
 function handleLogout() {
-  showMore.value = false
   authStore.logout()
   router.push('/login')
 }
@@ -180,7 +159,7 @@ function handleLogout() {
   <nav :aria-label="$t('shell.navigation.mainNavigation')" class="md:hidden fixed bottom-0 left-0 right-0 z-50 [view-transition-name:bottom-bar] bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-1 safe-area-pb">
     <ul class="flex items-stretch">
       <li v-for="item in leftItems" :key="item.name" class="flex-1">
-        <NavBarItem :to="item.path" :icon="item.icon" :label="$t(item.mobileLabelKey ?? item.labelKey)" :active="currentRouteName === item.name" />
+        <NavBarItem :to="item.path" :icon="item.icon" :label="$t(item.mobileLabelKey ?? item.labelKey)" :active="activeTab === item.name" />
       </li>
 
       <li v-if="canQuickAdd" class="flex flex-1 items-center justify-center">
@@ -195,66 +174,8 @@ function handleLogout() {
       </li>
 
       <li v-for="item in rightItems" :key="item.name" class="flex-1">
-        <NavBarItem :to="item.path" :icon="item.icon" :label="$t(item.mobileLabelKey ?? item.labelKey)" :active="currentRouteName === item.name" />
-      </li>
-
-      <li class="flex-1">
-        <NavBarItem :icon="Ellipsis" :label="$t('shell.navigation.more')" :active="moreActive || showMore" :expanded="showMore" @click="showMore = true" />
+        <NavBarItem :to="item.path" :icon="item.icon" :label="$t(item.mobileLabelKey ?? item.labelKey)" :active="activeTab === item.name" />
       </li>
     </ul>
   </nav>
-
-  <!-- Mobile "Plus" sheet -->
-  <div
-    v-if="showMore"
-    class="md:hidden fixed inset-0 z-modal flex items-end bg-black/70"
-    @click.self="showMore = false"
-  >
-    <div
-      ref="moreSheet"
-      v-dialog="() => (showMore = false)"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="$t('shell.navigation.otherPages')"
-      class="w-full rounded-t-3xl border border-slate-800 bg-slate-900 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl"
-    >
-      <SheetGrabber class="-mt-2 mb-2" />
-      <div class="mb-2 flex items-center justify-between">
-        <p class="truncate text-xs text-slate-400">{{ authStore.user?.email }}</p>
-        <button type="button" class="sr-only" :aria-label="$t('common.close')" @click="showMore = false">
-          <X class="h-5 w-5" aria-hidden="true" />
-        </button>
-      </div>
-      <div
-        v-for="(section, index) in moreSections"
-        :key="section.headingKey ?? index"
-        role="group"
-        :aria-labelledby="section.headingKey ? 'more-section-' + index : undefined"
-      >
-        <p v-if="section.headingKey" :id="'more-section-' + index" class="px-3 pb-1 pt-3 text-xs font-semibold text-slate-400">
-          {{ $t(section.headingKey) }}
-        </p>
-        <ul class="space-y-1">
-          <li v-for="item in section.items" :key="item.name">
-            <router-link
-              :to="item.path"
-              class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-base font-medium"
-              :class="currentRouteName === item.name ? 'bg-rose-500/10 text-rose-300' : 'text-slate-200 hover:bg-slate-800'"
-              :aria-current="currentRouteName === item.name ? 'page' : undefined"
-            >
-              <component :is="item.icon" class="h-5 w-5" aria-hidden="true" />
-              {{ $t(item.labelKey) }}
-            </router-link>
-          </li>
-        </ul>
-      </div>
-      <div class="mt-2 border-t border-slate-800 pt-2">
-        <button type="button" class="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-base font-medium text-danger-300 hover:bg-danger-500/10" @click="handleLogout">
-          <LogOut class="h-5 w-5" aria-hidden="true" />
-          {{ $t('shell.navigation.signOut') }}
-        </button>
-      </div>
-      <p v-if="APP_VERSION !== 'dev'" class="mt-3 text-center font-mono text-xs text-slate-400">{{ APP_NAME }} {{ APP_VERSION }}</p>
-    </div>
-  </div>
 </template>

@@ -280,12 +280,13 @@ test('the vehicle sheet lists the screens of the vehicle, each opens and Back re
   await expect(page).toHaveURL(/\/tires$/)
   await page.goBack()
   await expect(page).toHaveURL(/\/vehicle$/)
-  // The "More" sheet no longer repeats what the sheet opens
-  await page.getByRole('button', { name: 'More' }).click()
-  const more = page.getByRole('dialog')
-  await expect(more.getByRole('link', { name: 'Vehicle' })).toBeVisible()
-  await expect(more.getByRole('link', { name: 'Tires' })).toHaveCount(0)
-  await expect(more.getByRole('link', { name: 'Comparison' })).toHaveCount(0)
+  // The bar has no "More" entry any more: the vehicle tab stays lit on the pages of the sheet
+  const bar = page.getByRole('navigation', { name: 'Main navigation' }).last()
+  await expect(bar.getByRole('button', { name: 'More' })).toHaveCount(0)
+  await expect(bar.getByRole('link', { name: 'Vehicle' })).toHaveAttribute('aria-current', 'page')
+  await main.getByRole('link', { name: 'Carpooling' }).click()
+  await expect(page).toHaveURL(/\/carpools$/)
+  await expect(bar.getByRole('link', { name: 'Drives' })).toHaveAttribute('aria-current', 'page')
 })
 
 test('an odometer field asks for the numeric keyboard, a price for the decimal one', async ({ page }) => {
@@ -567,18 +568,27 @@ test('touching the tab of the page already shown brings it back to the top', asy
   await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(0)
 })
 
-test('the "More" sheet groups the pages, with sign out last and set apart', async ({ page }) => {
+test('the account sheet opens from the top bar, with sign out last and set apart', async ({ page }) => {
   await useVehicle(page, ev.id, '/')
-  await page.getByRole('button', { name: 'More' }).click()
-  const sheet = page.getByRole('dialog', { name: 'Other pages' })
-  await expect(sheet.getByRole('group')).not.toHaveCount(0)
-  const signOut = sheet.getByRole('button', { name: 'Sign out' })
-  // Last control of the sheet, below every page link
-  const lastY = await sheet.getByRole('link').last().boundingBox()
-  const outY = await signOut.boundingBox()
-  expect(outY!.y).toBeGreaterThan(lastY!.y + lastY!.height)
+  await page.getByTestId('account-button').tap()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet.getByRole('button', { name: 'Account' })).toBeVisible()
+  const account = await sheet.getByRole('button', { name: 'Account' }).boundingBox()
+  const outY = await sheet.getByRole('button', { name: 'Sign out' }).boundingBox()
+  expect(outY!.y).toBeGreaterThan(account!.y + account!.height)
   // Never the raw development marker
   await expect(sheet.getByText(/\bdev$/)).toHaveCount(0)
+})
+
+test('the bottom bar has four tabs and the quick add button, and the second tab follows the vehicle', async ({ page, request }) => {
+  await useVehicle(page, ev.id, '/')
+  const bar = page.getByRole('navigation', { name: 'Main navigation' }).last()
+  await expect(bar.getByRole('link')).toHaveText(['Today', 'Drives', 'Expenses', 'Vehicle'])
+  await expect(bar.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page')
+  await expect(bar.getByRole('button', { name: 'Quick add' })).toBeVisible()
+  const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')!
+  await useVehicle(page, ice.id, '/')
+  await expect(bar.getByRole('link')).toHaveText(['Today', 'Energy', 'Expenses', 'Vehicle'])
 })
 
 test('controls of the interface are not selectable text, values are', async ({ page }) => {
@@ -679,11 +689,12 @@ test('the chart hint says "Tap" on a touch screen', async ({ page }) => {
 
 // The system Back (page.goBack) closes the layer on top before it leaves the page.
 const path = (page: import('@playwright/test').Page) => new URL(page.url()).pathname
-const openMore = (page: import('@playwright/test').Page) => page.getByRole('navigation').getByRole('button', { name: 'More' }).tap()
+// dispatchEvent: Playwright scrolls a sticky target into view first, which would move the page the test wants to leave where it is
+const openAccount = (page: import('@playwright/test').Page) => page.getByTestId('account-button').dispatchEvent('click')
 
-test('Back closes the More sheet and stays on the page', async ({ page }) => {
+test('Back closes the account sheet and stays on the page', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
-  await openMore(page)
+  await openAccount(page)
   const sheet = page.getByRole('dialog')
   await expect(sheet).toBeVisible()
   await page.goBack()
@@ -691,12 +702,12 @@ test('Back closes the More sheet and stays on the page', async ({ page }) => {
   expect(path(page)).toBe('/drives')
 })
 
-test('a link of the More sheet opens its page, and Back from there returns to the page before, not to a copy of it', async ({ page }) => {
+test('a link of the account sheet opens its page, and Back from there returns to the page before, not to a copy of it', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
   const before = await page.evaluate(() => history.length)
-  await openMore(page)
-  await page.getByRole('dialog').getByRole('link', { name: 'Carpooling' }).tap()
-  await expect(page).toHaveURL(/\/carpools$/)
+  await openAccount(page)
+  await page.getByRole('dialog').getByRole('button', { name: 'Account' }).tap()
+  await expect(page).toHaveURL(/\/account$/)
   await expect(page.getByRole('dialog')).toHaveCount(0)
   expect(await page.evaluate(() => history.length)).toBe(before + 1)
   await page.goBack()
@@ -757,17 +768,17 @@ const scrollShell = async (page: import('@playwright/test').Page, top: number) =
   await page.evaluate((y) => document.querySelector('.app-scroll')!.scrollTo(0, y), top)
   await expect.poll(() => shellTop(page)).toBeGreaterThan(top - 3)
 }
-const openCarpooling = async (page: import('@playwright/test').Page) => {
-  await openMore(page)
-  await page.getByRole('dialog').getByRole('link', { name: 'Carpooling' }).tap()
-  await expect(page).toHaveURL(/\/carpools$/)
+const openAccountPage = async (page: import('@playwright/test').Page) => {
+  await openAccount(page)
+  await page.getByRole('dialog').getByRole('button', { name: 'Account' }).tap()
+  await expect(page).toHaveURL(/\/account$/)
 }
 
 test('Back puts a page where it was left, and a page opened afresh starts at the top', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
   await scrollShell(page, 800)
   const left = await shellTop(page)
-  await openCarpooling(page)
+  await openAccountPage(page)
   await expect.poll(() => shellTop(page)).toBe(0)
   await page.goBack()
   await expect(page).toHaveURL(/\/drives$/)
@@ -779,11 +790,11 @@ test('going forward again restores the page too, and two visits of a page keep t
   await useVehicle(page, ev.id, '/drives')
   await scrollShell(page, 500)
   const first = await shellTop(page)
-  await openCarpooling(page)
+  await openAccountPage(page)
   await page.goBack()
   await expect.poll(() => shellTop(page)).toBeGreaterThan(first - 3)
   await page.goForward()
-  await expect(page).toHaveURL(/\/carpools$/)
+  await expect(page).toHaveURL(/\/account$/)
   await expect.poll(() => shellTop(page)).toBe(0)
   await page.goBack()
   await expect.poll(() => shellTop(page), { timeout: 5000 }).toBeGreaterThan(first - 3)
@@ -793,7 +804,7 @@ test('a page that loads slowly is put back once it is tall enough', async ({ pag
   await useVehicle(page, ev.id, '/drives')
   await scrollShell(page, 800)
   const left = await shellTop(page)
-  await openCarpooling(page)
+  await openAccountPage(page)
   await page.route(/\/api\/vehicles\/[^/]+\/drives(\?|$)/, async (route) => {
     await new Promise((r) => setTimeout(r, 700))
     await route.continue()
@@ -807,7 +818,7 @@ test('a reload brings the page back to where it was', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
   await scrollShell(page, 800)
   const left = await shellTop(page)
-  await openCarpooling(page)
+  await openAccountPage(page)
   await page.goBack()
   await expect.poll(() => shellTop(page)).toBeGreaterThan(left - 3)
   await page.reload()

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { formatDistance } from '@/units'
 import { intlLocale } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useOfflineStore } from '@/stores/offline'
-import { RefreshCw, Car, Gauge, Plus, AlertCircle, AlertTriangle, X, CheckCircle2, WifiOff, CloudUpload } from 'lucide-vue-next'
+import { RefreshCw, UserRound, Car, Gauge, Plus, AlertCircle, AlertTriangle, X, CheckCircle2, WifiOff, CloudUpload } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { t } from '@/i18n'
 import { apiMessageText } from '@/services/apiError'
@@ -45,6 +45,9 @@ function onVehicleChange(event: Event) {
     if (scope.value === 'all') void router.replace({ path: '/' })
   }
 }
+import AccountSheet from '@/components/AccountSheet.vue'
+
+const showAccount = ref(false)
 </script>
 
 <template>
@@ -137,8 +140,20 @@ function onVehicleChange(event: Event) {
             <X class="w-3 h-3" />
           </button>
         </div>
+
+        <!-- The account, on a phone (the sidebar carries it from md) -->
+        <button
+          type="button"
+          class="tap flex items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-200 md:hidden"
+          :aria-label="$t('shell.topBar.account')"
+          data-testid="account-button"
+          @click="showAccount = true"
+        >
+          <UserRound class="h-5 w-5" aria-hidden="true" />
+        </button>
       </div>
     </header>
+    <AccountSheet v-model:open="showAccount" />
 
     <!-- Offline confirmation -->
     <div
