@@ -51,6 +51,33 @@ describe('ChargesPanel menu', () => {
   })
 })
 
+describe('ChargesPanel mois', () => {
+  const older = { ...manual, id: 'c0', date: '2026-09-12T10:00:00Z' }
+  const renderPaged = (total: number) =>
+    renderToString(
+      createSSRApp({
+        render: () => h(ChargesPanel as any, { charges: [manual, older], chargesTotal: total, chargesWithoutCost: 0, loading: false, loadingMoreCharges: false, missingCostOnly: false }),
+      }).use(i18n),
+    )
+  const headers = (html: string) => html.match(/<header[^>]*>[\s\S]*?<\/header>/g) ?? []
+
+  it('range chaque charge dans une carte de liste sous son mois', async () => {
+    const html = await renderPaged(2)
+    expect(html).toContain('data-testid="charge-card"')
+    expect(headers(html)).toHaveLength(2)
+  })
+
+  it('affiche le résumé des mois complets', async () => {
+    for (const h of headers(await renderPaged(2))) expect(h).toContain('<p')
+  })
+
+  it("n'affiche pas le résumé du dernier mois chargé tant qu'il reste des pages", async () => {
+    const [newest, oldest] = headers(await renderPaged(5))
+    expect(newest).toContain('<p')
+    expect(oldest).not.toContain('<p')
+  })
+})
+
 const renderSync = () =>
   renderToString(
     createSSRApp({
