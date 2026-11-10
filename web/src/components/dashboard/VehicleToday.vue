@@ -10,7 +10,8 @@ import { useTireList } from '@/composables/useTireList'
 import TodayHero from '@/components/dashboard/TodayHero.vue'
 import UpcomingList from '@/components/dashboard/UpcomingList.vue'
 import DataQualityCard from '@/components/dashboard/DataQualityCard.vue'
-import { currentMonthStats } from '@/utils/dashboard'
+import { buildLeaseSummary, currentMonthStats } from '@/utils/dashboard'
+import { carpoolOwed } from '@/utils/upcoming'
 import { todayHero } from '@/utils/todayHero'
 import { summarizeFittedTires } from '@/utils/tires'
 import { formatAmount } from '@/currency'
@@ -29,7 +30,14 @@ const { mountedTires, loadTires } = useTireList()
 const tireSummary = computed(() => summarizeFittedTires(mountedTires.value))
 const hero = computed(() => {
   const month = currentMonthStats(tco.value?.monthly_costs, new Date(), tco.value?.current_month)
-  return todayHero(month?.raw, vehicleStore.currency)
+  return todayHero(month?.raw, vehicleStore.currency, tco.value?.monthly_costs)
+})
+
+// What the coming-up block lists besides the reminders: the carpools passengers have not settled and the end of a lease
+const carpoolSummary = ref<any | null>(null)
+const upcomingExtras = computed(() => {
+  const lease = buildLeaseSummary(tco.value)
+  return { carpoolOwed: carpoolOwed(carpoolSummary.value), lease: lease && { endDate: lease.endDate, remainingMonths: lease.remainingMonths, isEnded: lease.isEnded, isNotStarted: lease.isNotStarted } }
 })
 
 // The battery and the resale value are loaded for the one line that points to the vehicle sheet
@@ -41,13 +49,16 @@ useRefreshHandler(() => Promise.all([loadTCO(true), loadRowFigures(), loadTires(
 async function loadRowFigures() {
   batteryPercent.value = null
   resaleValue.value = null
+  carpoolSummary.value = null
   const id = vehicleId.value
   if (!id) return
-  const [health, residual] = await Promise.all([
+  const [health, residual, carpools] = await Promise.all([
     vehicleStore.canCharge ? api.getBatteryHealth(id).catch(() => null) : null,
     api.getResidualValue(id, { km_share: 0.5, health_weight: 1 }).catch(() => null),
+    api.getCarpoolSummary(id).catch(() => null),
   ])
   if (id !== vehicleId.value) return
+  carpoolSummary.value = carpools
   batteryPercent.value = typeof health?.health_percent === 'number' ? health.health_percent : null
   resaleValue.value = typeof residual?.current_value === 'number' ? residual.current_value : null
 }
@@ -122,7 +133,7 @@ onMounted(() => {
 
     <div v-else class="space-y-4 sm:space-y-6">
       <TodayHero v-if="hero" :hero="hero" />
-      <UpcomingList :reminders="reminders" :tires="tireSummary" :can-edit="vehicleStore.canEdit" />
+      <UpcomingList :reminders="reminders" :tires="tireSummary" :extras="upcomingExtras" :can-edit="vehicleStore.canEdit" />
       <DataQualityCard :tco="tco" :vehicle-id="vehicleId" />
 
       <!-- Battery health, resale value and the contract are on the vehicle sheet; the page keeps one line that says where -->
