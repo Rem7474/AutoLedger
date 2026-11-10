@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { LogOut, UserRound, Settings } from 'lucide-vue-next'
+import { LogOut, UserRound, Settings } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useAuthStore } from '@/stores/auth'

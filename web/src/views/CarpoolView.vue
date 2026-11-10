@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import LoadError from '@/components/LoadError.vue'
 import PageHeader from '@/components/PageHeader.vue'
-import { Users as PageIcon } from 'lucide-vue-next'
+import { Users as PageIcon } from '@/icons'
 import { t } from '@/i18n'
 import { APP_NAME } from '@/brand'
 import { ref, onMounted, watch, computed } from 'vue'

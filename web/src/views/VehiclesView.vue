@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeader from '@/components/PageHeader.vue'
-import { Car as PageIcon } from 'lucide-vue-next'
+import { Car as PageIcon } from '@/icons'
 import { t } from '@/i18n'
 import { ref, onMounted, watch } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'

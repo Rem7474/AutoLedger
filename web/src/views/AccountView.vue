@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeader from '@/components/PageHeader.vue'
-import { UserRound as PageIcon } from 'lucide-vue-next'
+import { UserRound as PageIcon } from '@/icons'
 import { t } from '@/i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import DistanceUnitSwitcher from '@/components/DistanceUnitSwitcher.vue'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Wallet } from 'lucide-vue-next'
+import { Wallet } from '@/icons'
 import PageHeader from '@/components/PageHeader.vue'
 import PeriodBar from '@/components/period/PeriodBar.vue'
 import CostEntryRow from '@/components/costs/CostEntryRow.vue'
