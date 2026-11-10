@@ -8,8 +8,8 @@ import { formatPercentOrUnknown } from '@/utils/numbers'
 import { t } from '@/i18n'
 import { distanceUnit, perDistance } from '@/units'
 
-// Totals of all the carpool trips of the vehicle
-const props = defineProps<{ summary: any }>()
+// Totals of the carpool trips of the vehicle over the period named by `periodLabel`; without one, over all of them
+const props = defineProps<{ summary: any; periodLabel?: string }>()
 
 const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
@@ -21,8 +21,8 @@ const covered = computed(() => props.summary.total_revenue >= props.summary.tota
 // A verdict only when there is something to judge: passengers' shares to cover, a recovery rate that exists
 const receivedTone = computed(() => (props.summary.total_passengers_share > 0 ? (covered.value ? 'success' : 'warning') : 'default'))
 const recoveryTone = computed(() => (props.summary.coverage_rate_pct != null && props.summary.coverage_rate_pct >= 100 ? 'success' : 'default'))
-// The totals cover every trip of the vehicle, whatever the list below shows
-const period = computed(() => t('carpool.carpoolSummaryGrid.allTrips'))
+// The totals cover the whole period, whatever part of the list is shown
+const period = computed(() => props.periodLabel || t('carpool.carpoolSummaryGrid.allTrips'))
 // No distance shared yet: the cost per km is unknown, not free
 const netCostPerDistance = computed(() =>
   Number(props.summary.total_distance_km) > 0

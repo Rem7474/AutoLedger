@@ -450,15 +450,23 @@ export const api = {
 
   // Carpooling
   // One page of carpools, the latest first; `tripGroupId` keeps those of one journey. The totals are `getCarpoolSummary`.
-  getCarpools: (vehicleId: string, params: { page?: number; limit?: number; tripGroupId?: string } = {}) => {
+  getCarpools: (vehicleId: string, params: { page?: number; limit?: number; tripGroupId?: string; from?: string; to?: string } = {}) => {
     const query = new URLSearchParams()
+    if (params.from) query.set('from', params.from)
+    if (params.to) query.set('to', params.to)
     if (params.page) query.set('page', String(params.page))
     if (params.limit) query.set('limit', String(params.limit))
     if (params.tripGroupId) query.set('trip_group_id', params.tripGroupId)
     const qs = query.toString()
     return request<{ trips: any[]; total: number; page: number; limit: number }>(`/vehicles/${vehicleId}/carpools${qs ? `?${qs}` : ''}`)
   },
-  getCarpoolSummary: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/carpools/summary`),
+  getCarpoolSummary: (vehicleId: string, range: { from?: string; to?: string } = {}) => {
+    const query = new URLSearchParams()
+    if (range.from) query.set('from', range.from)
+    if (range.to) query.set('to', range.to)
+    const qs = query.toString()
+    return request<any>(`/vehicles/${vehicleId}/carpools/summary${qs ? `?${qs}` : ''}`)
+  },
   getCarpool: (vehicleId: string, id: string) => request<any>(`/vehicles/${vehicleId}/carpools/${id}`),
   createCarpool: (vehicleId: string, data: any) =>
     request<any>(`/vehicles/${vehicleId}/carpools`, { method: 'POST', body: JSON.stringify(data) }),

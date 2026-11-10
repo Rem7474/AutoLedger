@@ -11,7 +11,7 @@ test.beforeAll(async ({ request }) => {
   expect(ev).toBeTruthy()
 })
 
-for (const route of ['/drives', '/carpools', '/comparison', '/tires', '/maintenance']) {
+for (const route of ['/drives', '/drives?tab=CARPOOLS', '/comparison', '/tires', '/maintenance']) {
   test(`every checkbox has a 44px hit area on ${route}`, async ({ page }) => {
     await useVehicle(page, ev.id, route)
     const small = await page.evaluate(() =>
@@ -47,7 +47,7 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   const headers = await authHeaders(request)
   // The title is unique to the run, so a carpool left by an interrupted run does not get in the way
   const title = `E2E phone carpool ${Date.now()}`
-  await useVehicle(page, ev.id, '/carpools')
+  await useVehicle(page, ev.id, '/drives?tab=CARPOOLS')
   await page.getByRole('button', { name: 'New carpool' }).first().click()
   const dialog = page.getByRole('dialog', { name: 'New carpool' })
 
@@ -78,7 +78,9 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await expect(page.getByText(title).first()).toBeVisible()
 
   // On a phone the row has no menu: a long press selects the carpool and the bar carries the delete action
-  const box = (await page.locator('div.rounded-2xl', { hasText: title }).first().boundingBox())!
+  const row = page.locator('div.rounded-2xl', { hasText: title }).first()
+  await row.scrollIntoViewIfNeeded()
+  const box = (await row.boundingBox())!
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
   await expect(page.locator('[data-selection-bar]')).toBeVisible()
@@ -242,12 +244,12 @@ test('battery, resale value and contract are on the vehicle sheet, and the home 
   }
 })
 
-test('the consumption is a tile of the vehicle sheet that opens the energy page, no longer a block of the home', async ({ page }) => {
+test('the consumption is a tile of the vehicle sheet that opens the consumption page, no longer a block of the home', async ({ page }) => {
   await useVehicle(page, ev.id, '/vehicle')
   const tile = page.getByRole('main').getByRole('link', { name: /Consumption/ })
-  await expect(tile).toHaveAttribute('href', '/energy')
+  await expect(tile).toHaveAttribute('href', '/consumption')
   await tile.click()
-  await expect(page).toHaveURL(/\/energy/)
+  await expect(page).toHaveURL(/\/consumption/)
   await page.goBack()
   await expect(page).toHaveURL(/\/vehicle$/)
   await useVehicle(page, ev.id, '/')
@@ -284,8 +286,11 @@ test('the vehicle sheet lists the screens of the vehicle, each opens and Back re
   const bar = page.getByRole('navigation', { name: 'Main navigation' }).last()
   await expect(bar.getByRole('button', { name: 'More' })).toHaveCount(0)
   await expect(bar.getByRole('link', { name: 'Vehicle' })).toHaveAttribute('aria-current', 'page')
-  await main.getByRole('link', { name: 'Carpooling' }).click()
-  await expect(page).toHaveURL(/\/carpools$/)
+  // Carpooling is a segment of the trips page, no longer a line of the sheet
+  await expect(main.getByRole('link', { name: 'Carpooling' })).toHaveCount(0)
+  await page.goto('/carpools?open=none')
+  await expect(page).toHaveURL(/\/drives\?tab=CARPOOLS/)
+  await expect(page.getByRole('tab', { name: 'Carpools' })).toHaveAttribute('aria-selected', 'true')
   await expect(bar.getByRole('link', { name: 'Drives' })).toHaveAttribute('aria-current', 'page')
 })
 
@@ -483,7 +488,7 @@ test('a fill-up dragged to the left is deleted with an Undo', async ({ page, req
   const count = async () => (await logs()).length
 
   try {
-    await useVehicle(page, ice.id, '/energy?tab=FUEL')
+    await useVehicle(page, ice.id, '/consumption?tab=FUEL')
     const rowOf = () => page.locator('div.card', { hasText: odometer.toLocaleString('en-GB') }).last()
     await rowOf().scrollIntoViewIfNeeded()
     const box = (await rowOf().boundingBox())!
@@ -539,7 +544,7 @@ test('a carpool dragged to the left is deleted with an Undo', async ({ page, req
   const count = async () => (await listed()).length
 
   try {
-    await useVehicle(page, ev.id, '/carpools')
+    await useVehicle(page, ev.id, '/drives?tab=CARPOOLS&period=all')
     const rowOf = () => page.locator('div.rounded-2xl', { hasText: title }).last()
     await rowOf().scrollIntoViewIfNeeded()
     const box = (await rowOf().boundingBox())!
@@ -588,7 +593,7 @@ test('the bottom bar has four tabs and the quick add button, and the second tab 
   await expect(bar.getByRole('button', { name: 'Quick add' })).toBeVisible()
   const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')!
   await useVehicle(page, ice.id, '/')
-  await expect(bar.getByRole('link')).toHaveText(['Home', 'Energy', 'Expenses', 'Vehicle'])
+  await expect(bar.getByRole('link')).toHaveText(['Home', 'Consumption', 'Expenses', 'Vehicle'])
 })
 
 test('controls of the interface are not selectable text, values are', async ({ page }) => {
@@ -654,7 +659,7 @@ test('the sign-out button of a session and the edit link of the energy estimate 
   const a = (await session.boundingBox())!
   expect(Math.min(a.width, a.height)).toBeGreaterThanOrEqual(44)
 
-  await useVehicle(page, ev.id, '/energy')
+  await useVehicle(page, ev.id, '/consumption?tab=CHARGES')
   const edit = page.getByRole('button', { name: 'Edit', exact: true })
   await expect(edit).toBeVisible()
   const b = (await edit.boundingBox())!
@@ -931,7 +936,7 @@ test('a definition opens on touch, and Back closes it', async ({ page }) => {
 
 test('an account without a vehicle sees one "Add a vehicle first" state on every page about a vehicle', async ({ page }) => {
   await page.route(/\/api\/vehicles$/, (route) => (route.request().method() === 'GET' ? route.fulfill({ json: [] }) : route.continue()))
-  for (const route of ['/', '/drives', '/carpools', '/odometer', '/tires', '/expenses', '/maintenance', '/energy', '/?scope=all', '/comparison']) {
+  for (const route of ['/', '/drives', '/drives?tab=CARPOOLS', '/odometer', '/tires', '/expenses', '/maintenance', '/consumption', '/?scope=all', '/comparison']) {
     await page.goto(route)
     await expect(page.getByRole('heading', { name: 'Add a vehicle first' }), route).toBeVisible()
     await expect(page.getByRole('main').getByRole('link', { name: 'Add a vehicle' }), route).toHaveAttribute('href', '/vehicles')
@@ -1175,7 +1180,10 @@ test('the old addresses of the lists land on the costs page, and the tool pages 
   await expect(page.getByRole('heading', { name: 'Reminders' })).toBeVisible()
 
   await page.goto('/energy')
-  await expect(page).toHaveURL(/\/energy/)
+  await expect(page).toHaveURL(/\/costs\?theme=energy/)
+
+  await page.goto('/energy?tab=CHARGES')
+  await expect(page).toHaveURL(/\/consumption\?tab=CHARGES/)
   await page.getByTestId('charges-list-link').click()
   await expect(page).toHaveURL(/\/costs\?theme=energy/)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)

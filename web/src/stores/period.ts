@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { DEFAULT_PERIOD, parsePeriod, periodFromLegacyRange, type Period } from '@/utils/period'
+import { DEFAULT_PERIOD, parsePeriod, periodFromLegacyRange, presetPeriod, type Period } from '@/utils/period'
 
 const COSTS_KEY = 'teslacost_period_costs'
+const CARPOOLS_KEY = 'teslacost_period_carpools'
 const LEGACY_DASHBOARD_RANGE_KEY = 'teslacost_dashboard_range'
 
 const storage = () => {
@@ -26,6 +27,17 @@ function readCosts(): Period {
   return periodFromLegacyRange(store?.getItem(LEGACY_DASHBOARD_RANGE_KEY) ?? null) ?? DEFAULT_PERIOD
 }
 
+function readCarpools(): Period {
+  try {
+    const raw = storage()?.getItem(CARPOOLS_KEY)
+    const parsed = raw ? parsePeriod(JSON.parse(raw)) : null
+    if (parsed) return parsed
+  } catch {
+    // a value that is not JSON reads as none
+  }
+  return presetPeriod('thisMonth')
+}
+
 // The period of the pages about what the vehicle costs (home, energy, expenses): one choice for all of them, kept in
 // this browser. A URL that names a period wins over it (see the page's use of it) and does not overwrite it.
 export const usePeriodStore = defineStore('period', () => {
@@ -40,5 +52,17 @@ export const usePeriodStore = defineStore('period', () => {
     }
   }
 
-  return { costs, setCosts }
+  // The carpools have their own choice: a month at first, where the cost pages open on a year
+  const carpools = ref<Period>(readCarpools())
+
+  function setCarpools(period: Period) {
+    carpools.value = period
+    try {
+      storage()?.setItem(CARPOOLS_KEY, JSON.stringify(period))
+    } catch {
+      // storage full or blocked: the choice holds for this visit
+    }
+  }
+
+  return { costs, setCosts, carpools, setCarpools }
 })

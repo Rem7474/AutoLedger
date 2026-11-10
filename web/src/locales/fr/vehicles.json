@@ -268,6 +268,8 @@
     "REEV": "Prolongateur d'autonomie (recharges et pleins)"
   },
   "vehicleView": {
+    "consumptionFuel": "{consumption} · {cost}",
+    "consumptionFuelEmpty": "Saisissez deux pleins complets pour la mesurer",
     "consumption": "Consommation",
     "homeCharging": "Recharge à domicile",
     "homeChargingHint": "Grilles tarifaires de l’électricité",

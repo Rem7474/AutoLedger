@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -251,6 +252,31 @@ func scanCarpoolTrip(row pgx.Row, t *models.CarpoolTripWithPassengers) error {
 type CarpoolFilter struct {
 	// TripGroupID keeps the carpools made from that journey
 	TripGroupID string
+	// From and To keep the carpools dated within the range; To is inclusive. Nil means no bound.
+	From, To *time.Time
+}
+
+// where is the condition on the carpools of a vehicle, `alias` being the one the trips table goes by, and its arguments.
+func (f CarpoolFilter) where(alias, vehicleID string) (string, []any) {
+	col := alias + "."
+	if alias == "" {
+		col = ""
+	}
+	clause := col + `vehicle_id = $1`
+	args := []any{vehicleID}
+	if f.TripGroupID != "" {
+		args = append(args, f.TripGroupID)
+		clause += fmt.Sprintf(` AND %strip_group_id::text = $%d`, col, len(args))
+	}
+	if f.From != nil {
+		args = append(args, *f.From)
+		clause += fmt.Sprintf(` AND %sdate >= $%d`, col, len(args))
+	}
+	if f.To != nil {
+		args = append(args, *f.To)
+		clause += fmt.Sprintf(` AND %sdate <= $%d`, col, len(args))
+	}
+	return clause, args
 }
 
 // ListCarpoolTrips returns every carpool trip of a vehicle with its legs and passengers.
@@ -262,12 +288,7 @@ func (r *Repository) ListCarpoolTrips(ctx context.Context, vehicleID string) ([]
 // ListCarpoolTripsPage returns one page of the carpool trips of a vehicle, the latest first, with their legs and
 // passengers, and how many trips match in all. A limit of 0 returns every match.
 func (r *Repository) ListCarpoolTripsPage(ctx context.Context, vehicleID string, filter CarpoolFilter, limit, offset int) ([]models.CarpoolTripWithPassengers, int, error) {
-	where := `vehicle_id = $1`
-	args := []any{vehicleID}
-	if filter.TripGroupID != "" {
-		args = append(args, filter.TripGroupID)
-		where += fmt.Sprintf(` AND trip_group_id::text = $%d`, len(args))
-	}
+	where, args := filter.where("", vehicleID)
 	var total int
 	if err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM carpool_trips WHERE `+where, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("failed to count carpool trips: %w", err)
@@ -302,16 +323,17 @@ func (r *Repository) ListCarpoolTripsPage(ctx context.Context, vehicleID string,
 
 // CarpoolShareInputs returns, for every carpool of a vehicle, only what the split of its costs needs: the stored amounts of
 // its legs and the stops its passengers ride between. Nothing is refreshed from the drives.
-func (r *Repository) CarpoolShareInputs(ctx context.Context, vehicleID string) ([]models.CarpoolTripWithPassengers, error) {
+func (r *Repository) CarpoolShareInputs(ctx context.Context, vehicleID string, filter CarpoolFilter) ([]models.CarpoolTripWithPassengers, error) {
 	trips := []models.CarpoolTripWithPassengers{}
 	index := map[string]int{}
+	where, args := filter.where("t", vehicleID)
 	legRows, err := r.pool.Query(ctx, `
 		SELECT l.carpool_trip_id::text, l.electricity_cost, l.tolls_cost, l.tires_cost, l.maintenance_cost, l.insurance_cost, l.other_cost
 		FROM carpool_legs l
 		JOIN carpool_trips t ON t.id = l.carpool_trip_id
-		WHERE t.vehicle_id = $1
+		WHERE `+where+`
 		ORDER BY l.carpool_trip_id, l.order_index;
-	`, vehicleID)
+	`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load the carpool legs: %w", err)
 	}
@@ -340,8 +362,8 @@ func (r *Repository) CarpoolShareInputs(ctx context.Context, vehicleID string) (
 		SELECT p.carpool_trip_id::text, p.seats, p.board_stop_index, p.alight_stop_index
 		FROM carpool_passengers p
 		JOIN carpool_trips t ON t.id = p.carpool_trip_id
-		WHERE t.vehicle_id = $1;
-	`, vehicleID)
+		WHERE `+where+`;
+	`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load the carpool passengers: %w", err)
 	}
@@ -480,7 +502,8 @@ func (r *Repository) DeleteCarpoolTrip(ctx context.Context, id, vehicleID string
 	return nil
 }
 
-func (r *Repository) GetCarpoolSummary(ctx context.Context, vehicleID string) (*models.CarpoolSummary, error) {
+func (r *Repository) GetCarpoolSummary(ctx context.Context, vehicleID string, filter CarpoolFilter) (*models.CarpoolSummary, error) {
+	where, args := filter.where("", vehicleID)
 	query := `
 		SELECT
 			COUNT(*) AS total_trips,
@@ -489,10 +512,10 @@ func (r *Repository) GetCarpoolSummary(ctx context.Context, vehicleID string) (*
 			COALESCE(SUM(total_revenue), 0) AS total_revenue,
 			COALESCE(SUM(net_cost), 0) AS total_net_cost
 		FROM carpool_trips
-		WHERE vehicle_id = $1;
+		WHERE ` + where + `;
 	`
 	var s models.CarpoolSummary
-	err := r.pool.QueryRow(ctx, query, vehicleID).Scan(
+	err := r.pool.QueryRow(ctx, query, args...).Scan(
 		&s.TotalTrips, &s.TotalDistanceKm, &s.TotalRealCost, &s.TotalRevenue, &s.TotalNetCost,
 	)
 	if err != nil {
@@ -500,12 +523,13 @@ func (r *Repository) GetCarpoolSummary(ctx context.Context, vehicleID string) (*
 	}
 
 	// Count passengers
+	passengerWhere, passengerArgs := filter.where("ct", vehicleID)
 	_ = r.pool.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM carpool_passengers cp
 		JOIN carpool_trips ct ON cp.carpool_trip_id = ct.id
-		WHERE ct.vehicle_id = $1;
-	`, vehicleID).Scan(&s.TotalPassengers)
+		WHERE `+passengerWhere+`;
+	`, passengerArgs...).Scan(&s.TotalPassengers)
 
 	if s.TotalRealCost > 0 {
 		rate := math.Round((s.TotalRevenue.Float()/s.TotalRealCost.Float())*1000) / 10

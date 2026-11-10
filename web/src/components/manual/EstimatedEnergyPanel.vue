@@ -184,7 +184,7 @@ onMounted(() => {
       <button
         type="button"
         class="shrink-0 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-xl"
-        @click="router.push('/energy?tab=CHARGES')"
+        @click="router.push('/consumption?tab=CHARGES')"
       >
         {{ $t('manual.estimatedEnergyPanel.chargesOutsideTeslamate') }}
       </button>

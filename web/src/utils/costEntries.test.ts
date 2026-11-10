@@ -85,7 +85,7 @@ describe('entryTarget', () => {
     expect(entryTarget({ source: 'maintenance_expenses', source_id: 'm1' })).toEqual({ type: 'edit', modal: 'maintenance', id: 'm1' })
   })
   it('sends the lines held by another screen there, and leaves the others alone', () => {
-    expect(entryTarget({ source: 'fuel_logs', source_id: 'f1' })).toEqual({ type: 'link', to: '/energy?tab=FUEL' })
+    expect(entryTarget({ source: 'fuel_logs', source_id: 'f1' })).toEqual({ type: 'link', to: '/consumption?tab=FUEL' })
     expect(entryTarget({ source: 'tires', source_id: 't1' })).toEqual({ type: 'link', to: '/tires' })
     expect(entryTarget({ source: 'vehicle_ownership', source_id: 'o1' })).toEqual({ type: 'none' })
   })

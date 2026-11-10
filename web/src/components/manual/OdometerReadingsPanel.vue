@@ -319,7 +319,7 @@ useRefreshHandler(() => load(true))
             <p v-if="r.notes" class="text-xs text-slate-400 truncate mt-0.5">{{ r.notes }}</p>
           </div>
 
-          <router-link v-if="r.kind === 'FUEL'" to="/energy?tab=FUEL" class="relative z-10 tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">
+          <router-link v-if="r.kind === 'FUEL'" to="/consumption?tab=FUEL" class="relative z-10 tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">
             <Fuel class="w-4 h-4" />
           </router-link>
           <RowMenu v-else-if="canEdit" :label="$t('common.moreActions')" :heading="new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' })">

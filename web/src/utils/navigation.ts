@@ -7,7 +7,7 @@ export interface NavSection<T> {
 /** The sections of the desktop sidebar, each listing the names of its pages in order. */
 export const NAV_SECTIONS: { headingKey?: string; names: string[] }[] = [
   { names: ['dashboard'] },
-  { headingKey: 'shell.navSections.tracking', names: ['drives', 'carpools', 'odometer', 'energy'] },
+  { headingKey: 'shell.navSections.tracking', names: ['drives', 'odometer', 'consumption'] },
   { headingKey: 'shell.navSections.costs', names: ['costs', 'maintenance', 'tires', 'comparison'] },
   { headingKey: 'shell.navSections.management', names: ['vehicle', 'vehicles', 'account'] },
 ]
@@ -19,16 +19,16 @@ export interface PhoneTab {
 }
 
 /**
- * The four tabs of the phone's bottom bar. The second one is the trips of a vehicle that has some (electric, hybrid) and
- * the energy of one that has none (combustion); the other pages of the app are reached from these four, from the vehicle
+ * The four tabs of the phone's bottom bar. The second one is the trips of a vehicle that has some (electric, hybrid; the
+ * carpools are a segment of that page) and the consumption of one that has none (combustion); the other pages of the app are reached from these four, from the vehicle
  * sheet or from the account menu.
  */
 export function phoneTabs(hasDrives: boolean): PhoneTab[] {
   return [
     { name: 'dashboard', pages: ['dashboard'] },
-    hasDrives ? { name: 'drives', pages: ['drives', 'carpools'] } : { name: 'energy', pages: ['energy'] },
+    hasDrives ? { name: 'drives', pages: ['drives'] } : { name: 'consumption', pages: ['consumption'] },
     { name: 'costs', pages: ['costs', 'expenses', 'maintenance'] },
-    { name: 'vehicle', pages: ['vehicle', 'odometer', 'tires', 'comparison', 'vehicles', 'energy'] },
+    { name: 'vehicle', pages: ['vehicle', 'odometer', 'tires', 'comparison', 'vehicles', 'consumption'] },
   ]
 }
 

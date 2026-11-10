@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { t } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { TabItem } from '@/components/TabBar.vue'
-import { Receipt, Fuel, Wrench, Zap, Gauge, Calculator, Paperclip, Bell } from '@/icons'
+import { Receipt, Fuel, Wrench, Zap, Activity, Gauge, Calculator, Paperclip, Bell } from '@/icons'
 
 export type ExpensesTab = 'REMINDERS' | 'CHARGES' | 'FUEL' | 'DOCUMENTS' | 'EFFICIENCY' | 'ESTIMATE'
 
@@ -15,7 +15,7 @@ export interface ExpensesTabBadges {
 }
 
 // One view, three entries, the tools next to the lists of the Costs page: /expenses (receipts), /maintenance
-// (reminders) and /energy (charges to complete, efficiency, estimate, fill-ups). Owns the section, the tab list and
+// (reminders) and /consumption (efficiency, estimate, fill-ups, charges to complete). Owns the section, the tab list and
 // the `tab` query parameter.
 // The badges are read lazily, so they may come from state declared after this call.
 export function useExpensesTabs(badges: () => ExpensesTabBadges) {
@@ -24,17 +24,17 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
   const vehicleStore = useVehicleStore()
 
   const isMaintenanceSection = computed(() => route.meta.section === 'maintenance')
-  const isEnergySection = computed(() => route.meta.section === 'energy')
+  const isConsumptionSection = computed(() => route.meta.section === 'consumption')
 
-  // Electric: charges, efficiency, estimate. Combustion: fill-ups. Hybrid: charges, efficiency and fill-ups.
-  // Charges come first, so they are what the page opens on: it is the entry people come back to.
-  function energyTabs(): ExpensesTab[] {
+  // Electric: efficiency, estimate, charges to complete. Combustion: fill-ups. Hybrid: efficiency, fill-ups, charges.
+  // The page opens on how the vehicle consumes; the charges to complete come last.
+  function consumptionTabs(): ExpensesTab[] {
     if (!vehicleStore.canCharge) return ['FUEL']
-    return vehicleStore.canRefuel ? ['CHARGES', 'EFFICIENCY', 'FUEL'] : ['CHARGES', 'EFFICIENCY', 'ESTIMATE']
+    return vehicleStore.canRefuel ? ['EFFICIENCY', 'FUEL', 'CHARGES'] : ['EFFICIENCY', 'ESTIMATE', 'CHARGES']
   }
   const sectionTabs = computed<ExpensesTab[]>(() => {
     if (isMaintenanceSection.value) return ['REMINDERS']
-    if (isEnergySection.value) return energyTabs()
+    if (isConsumptionSection.value) return consumptionTabs()
     return ['DOCUMENTS']
   })
 
@@ -56,10 +56,10 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
     if (activeTab.value !== tab) activeTab.value = tab
   })
 
-  const sectionKey = computed(() => (isMaintenanceSection.value ? 'maintenance' : isEnergySection.value ? 'energy' : 'expenses'))
+  const sectionKey = computed(() => (isMaintenanceSection.value ? 'maintenance' : isConsumptionSection.value ? 'consumption' : 'expenses'))
   const pageTitle = computed(() => t(`expenses.expensesView.${sectionKey.value}Title`))
   const pageSubtitle = computed(() => t(`expenses.expensesView.${sectionKey.value}Subtitle`))
-  const pageIcon = computed(() => (isMaintenanceSection.value ? Wrench : isEnergySection.value ? Zap : Receipt))
+  const pageIcon = computed(() => (isMaintenanceSection.value ? Wrench : isConsumptionSection.value ? Activity : Receipt))
 
   const tabs = computed<TabItem[]>(() => {
     const b = badges()
@@ -74,22 +74,19 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
         },
       ]
     }
-    if (isEnergySection.value) {
-      const list: TabItem[] = [
-        {
-          key: 'CHARGES',
-          label: t('expenses.expensesView.charges'),
-          icon: Zap,
-          badge: b.chargesWithoutCost > 0 ? b.chargesWithoutCost : undefined,
-          badgeTone: 'warning',
-        },
-        { key: 'EFFICIENCY', label: t('expenses.expensesView.efficiency'), icon: Gauge },
-      ]
-      if (!vehicleStore.canRefuel) list.push({ key: 'ESTIMATE', label: t('expenses.expensesView.estimate'), icon: Calculator })
+    if (isConsumptionSection.value) {
       const fuel: TabItem = { key: 'FUEL', label: t('expenses.expensesView.fillUps'), icon: Fuel }
       if (!vehicleStore.canCharge) return [fuel]
-      if (vehicleStore.canRefuel) list.push(fuel)
-      return list
+      const charges: TabItem = {
+        key: 'CHARGES',
+        label: t('expenses.expensesView.charges'),
+        icon: Zap,
+        badge: b.chargesWithoutCost > 0 ? b.chargesWithoutCost : undefined,
+        badgeTone: 'warning',
+      }
+      const efficiency: TabItem = { key: 'EFFICIENCY', label: t('expenses.expensesView.efficiency'), icon: Gauge }
+      const second: TabItem = vehicleStore.canRefuel ? fuel : { key: 'ESTIMATE', label: t('expenses.expensesView.estimate'), icon: Calculator }
+      return [efficiency, second, charges]
     }
     return [
       {
@@ -101,5 +98,5 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
     ]
   })
 
-  return { activeTab, isMaintenanceSection, isEnergySection, pageTitle, pageSubtitle, pageIcon, tabs }
+  return { activeTab, isMaintenanceSection, isConsumptionSection, pageTitle, pageSubtitle, pageIcon, tabs }
 }

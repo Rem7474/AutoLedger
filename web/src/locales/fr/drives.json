@@ -12,6 +12,7 @@
     "drivesWithATollExpense": "Trajets ayant une dépense de péage",
     "toQualify": "À qualifier ({unqualifiedCount})",
     "motorwayTypeDrivesWithNo": "Trajets de type autoroutier sans péage renseigné",
+    "carpools": "Covoiturages",
     "trips": "Voyages",
     "drives": "Trajets",
     "subtitle": "Énergie et péages réels, usure et charges fixes réparties au {unit}",

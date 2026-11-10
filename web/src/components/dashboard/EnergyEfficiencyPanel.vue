@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
         <p v-if="stats?.summary.charge_efficiency == null" class="mt-0.5 text-xs text-slate-400">
           {{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyEmpty') }}
           <span class="block">
-            <router-link to="/energy?tab=CHARGES" class="tap-text font-semibold text-slate-100 underline">{{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyAction') }}</router-link>
+            <router-link to="/consumption?tab=CHARGES" class="tap-text font-semibold text-slate-100 underline">{{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyAction') }}</router-link>
           </span>
         </p>
       </KpiCard>
@@ -280,7 +280,7 @@ onBeforeUnmount(() => {
 
     <p v-if="(stats?.summary.sessions_without_cost ?? 0) > 0" class="rounded-lg border border-warning-500/20 bg-warning-500/10 px-3 py-2 text-xs text-warning-300">
       {{ $t('dashboard.energyEfficiencyPanel.chargeSWithoutAKnown', { unit: distanceUnit(), sessions_without_cost: stats?.summary.sessions_without_cost }) }}
-      <router-link to="/energy?tab=CHARGES" class="font-semibold underline">{{ $t('dashboard.energyEfficiencyPanel.completeThem') }}</router-link>
+      <router-link to="/consumption?tab=CHARGES" class="font-semibold underline">{{ $t('dashboard.energyEfficiencyPanel.completeThem') }}</router-link>
     </p>
 
     <p v-if="hasDerived" class="rounded-lg border border-info-500/20 bg-info-500/10 px-3 py-2 text-xs text-info-300">
@@ -349,7 +349,7 @@ onBeforeUnmount(() => {
           </li>
         </ul>
       </div>
-      <router-link to="/energy?tab=CHARGES" class="tap-text mt-1 inline-block text-xs font-semibold text-slate-100 underline">
+      <router-link to="/consumption?tab=CHARGES" class="tap-text mt-1 inline-block text-xs font-semibold text-slate-100 underline">
         {{ $t('dashboard.energyEfficiencyPanel.placeLink') }}
       </router-link>
     </div>
