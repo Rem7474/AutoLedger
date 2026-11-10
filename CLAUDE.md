@@ -81,6 +81,7 @@ Frontend
   - A figure with no theme is white (`text-white`, or `text-slate-200` when secondary).
   - Colour never carries information alone: a chip has its label, a series its legend or its value.
   - A date picker is themed through the `--dp-*` variables on `.dp--theme-dark` and the `dp--*` classes of the library (v14 renamed the `dp__*` ones).
+- Icons: Material Symbols Rounded, weight 400, imported from `@/icons` only (never a glyph file or another icon library: `iconRules.test.ts`). The current destination of the bottom bar is drawn in its filled version (`icons/filled.ts`).
 - Surfaces: three tonal levels. The page is `slate-950`, a block of content is `.card` (`slate-900`, outlined from `sm` up, tone only on a phone), what sits inside a card and is not content (a field, an inset row) is `slate-800`. Write a card as `.card`, not as its utilities (`surfaceRules.test.ts`).
 - Theme: the UI is dark only (`color-scheme: dark` is forced in `main.css`). A light theme is not planned; do not add `light:` variants or a theme switch.
 - Layout: pages use the full content width; the Account page is a single `max-w-3xl` column on purpose (a settings form read top to bottom). A page's primary action is one "Add" button whose label stays the same across tabs, with the type as secondary text; an empty list explains what goes there and offers the action.
