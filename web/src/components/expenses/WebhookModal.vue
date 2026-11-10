@@ -95,7 +95,7 @@ async function handleDeleteWebhook() {
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="$t('expenses.webhookModal.homelabWebhookNotifications')"
     :icon="Radio"

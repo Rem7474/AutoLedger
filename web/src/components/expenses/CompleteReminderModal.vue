@@ -101,7 +101,7 @@ const handleCompleteReminder = () => runOnce(handleCompleteReminderAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="$t('expenses.completeReminderModal.confirmCompletion', { title: completingReminder?.title })"
     :icon="CheckCircle2"

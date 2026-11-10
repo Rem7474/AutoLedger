@@ -76,7 +76,7 @@ const handleSave = () => runOnce(handleSaveAction)
 </script>
 
 <template>
-  <ModalShell
+  <ModalShell pane
     v-model:open="open"
     :title="isEditing ? $t('vehicles.vehicleFormModal.edit') : $t('shell.topBar.addAVehicle')"
   >
