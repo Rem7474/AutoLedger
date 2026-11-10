@@ -43,9 +43,11 @@ const nextDue = computed(() => {
       <dl class="mt-3 grid grid-cols-2 gap-3">
         <div v-if="summary.mostWorn">
           <dt class="text-xs font-semibold text-slate-400">{{ $t('tires.tireSetSummary.mostWorn') }}</dt>
-          <dd class="text-lg font-bold tabular-nums" :class="WEAR_TONE_TEXT[summary.mostWorn.tone]">{{ figures.left }}</dd>
-          <TireWearBar remaining class="mt-1.5" :pct="summary.mostWorn.pct" />
-          <dd class="mt-1 text-xs tabular-nums text-slate-400">{{ figures.worn }} · {{ positionLabel(summary.mostWorn.position) }}</dd>
+          <dd>
+            <p class="text-lg font-bold tabular-nums" :class="WEAR_TONE_TEXT[summary.mostWorn.tone]">{{ figures.left }}</p>
+            <TireWearBar remaining class="mt-1.5" :pct="summary.mostWorn.pct" />
+            <p class="mt-1 text-xs tabular-nums text-slate-400">{{ figures.worn }} · {{ positionLabel(summary.mostWorn.position) }}</p>
+          </dd>
         </div>
         <div v-if="nextDue">
           <dt class="text-xs font-semibold text-slate-400">{{ $t('tires.tireSetSummary.nextReplacement') }}</dt>
