@@ -206,7 +206,7 @@ const chipClass = (key: CostFilterKey) => {
     <div class="card space-y-1 px-4 py-4" data-testid="costs-headline">
       <p class="text-xs font-semibold text-slate-400">{{ headlineLabel }}</p>
       <div class="flex items-baseline justify-between gap-3">
-        <p class="text-3xl font-extrabold tabular-nums text-white">{{ formatAmount(headline, currency) }}</p>
+        <p class="text-3xl font-extrabold tabular-nums text-hero">{{ formatAmount(headline, currency) }}</p>
         <p v-if="perKm !== null" class="shrink-0 text-sm tabular-nums text-slate-300">
           {{ $t('costs.headline.perKm', { value: formatAmount(perDistance(perKm), currency, 3), unit: distanceUnit() }) }}
         </p>
