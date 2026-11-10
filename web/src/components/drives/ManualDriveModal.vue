@@ -127,7 +127,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <ModalShell :open="open" @update:open="close" size="md" :icon="Plus" icon-class="text-rose-400" :title="drive ? $t('drives.manualModal.titleEdit') : $t('drives.manualModal.titleNew')">
+  <ModalShell pane :open="open" @update:open="close" size="md" :icon="Plus" icon-class="text-rose-400" :title="drive ? $t('drives.manualModal.titleEdit') : $t('drives.manualModal.titleNew')">
     <form id="manual-drive-form" @submit.prevent="handleSubmit" class="space-y-4">
         <div v-if="error" class="p-3 bg-danger-500/10 border border-danger-500/20 rounded-xl text-xs text-danger-400">
           {{ error }}

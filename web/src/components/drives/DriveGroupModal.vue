@@ -69,7 +69,7 @@ const handleCreateGroupAndExpense = () => runOnce(handleCreateGroupAndExpenseAct
 </script>
 
 <template>
-  <ModalShell v-model:open="open" size="sm">
+  <ModalShell pane v-model:open="open" size="sm">
     <template #title>
       <div class="flex items-center gap-2">
         <Layers class="w-5 h-5 text-rose-400" aria-hidden="true" />
