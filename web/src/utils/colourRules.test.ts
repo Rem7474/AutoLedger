@@ -64,7 +64,7 @@ describe('colour rules', () => {
       expect(RAW_STATE_ALLOWLIST.has(rel)).toBe(false)
       expect(readFileSync(join(root, rel), 'utf8')).not.toMatch(RAW_STATE)
     }
-    expect(readFileSync(join(root, 'assets/main.css'), 'utf8')).toMatch(/--color-critical-400:\s*var\(--color-red-400\)/)
+    expect(readFileSync(join(root, 'assets/main.css'), 'utf8')).toMatch(/--color-critical-400:\s*var\(--color-red-500\)/)
   })
 
   it('uses no raw accent hue: the colour of a cost is a theme token', () => {
