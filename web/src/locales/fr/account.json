@@ -1,6 +1,5 @@
 {
   "accountView": {
-    "aSignedOutDeviceKeeps": "Un appareil déconnecté garde son accès jusqu'à 15 minutes, la durée de vie du jeton d'accès.",
     "noActiveSession": "Aucune session active.",
     "signedIn": "Connecté {value}",
     "active": "Actif {value}",
@@ -10,7 +9,6 @@
     "showAllDevices": "Afficher les {count} appareils",
     "showFewerDevices": "Afficher moins d’appareils",
     "connectedDevices": "Appareils connectés",
-    "otherDevicesAreSignedOut": "Les autres appareils sont déconnectés après un changement de mot de passe.",
     "confirmTheNewPassword": "Confirmer le nouveau mot de passe",
     "8CharactersMinimum72Bytes": "8 caractères au minimum, 72 octets au maximum.",
     "newPassword": "Nouveau mot de passe",
@@ -57,7 +55,6 @@
   "volumeUnit_l": "Litres",
   "volumeUnit_gal_us": "Gallons US",
   "volumeUnit_gal_uk": "Gallons UK",
-  "currencyPerVehicle": "La devise se règle par véhicule, à sa création (page Véhicules) ; ce n'est pas un réglage du compte.",
   "tokens": {
     "title": "Jetons d'API & automatisations",
     "subtitle": "Pour envoyer des données depuis Home Assistant, une borne ou un script. Un jeton n'ouvre que les routes d'intégration, jamais le reste du compte.",

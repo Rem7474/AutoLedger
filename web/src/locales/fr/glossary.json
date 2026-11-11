@@ -39,5 +39,29 @@
     "label": "Moyenne sur 12 mois",
     "definition": "Ce qu'un mois coûte en moyenne sur les douze derniers mois, le mois en cours compris. Sur un historique plus court, la moyenne porte sur les mois existants."
   },
+  "currencyPerVehicle": {
+    "label": "Devise",
+    "definition": "La devise se règle par véhicule, à sa création (page Véhicules) ; ce n'est pas un réglage du compte."
+  },
+  "passwordSignOut": {
+    "label": "Changement de mot de passe",
+    "definition": "Les autres appareils sont déconnectés après un changement de mot de passe."
+  },
+  "signedOutDevice": {
+    "label": "Déconnecter un appareil",
+    "definition": "Un appareil déconnecté garde son accès jusqu'à 15 minutes, la durée de vie du jeton d'accès."
+  },
+  "monthBars": {
+    "label": "Graphique mensuel",
+    "definition": "Cliquez ou touchez une barre du graphique pour ouvrir le détail chiffré du mois."
+  },
+  "donutFull": {
+    "label": "Coût complet",
+    "definition": "Coût économique : usure des pneus amortie et décote incluses."
+  },
+  "donutCash": {
+    "label": "Sommes payées",
+    "definition": "Sommes réellement payées : pneus au moment de l'achat, sans décote."
+  },
   "about": "Définition de {term}"
 }

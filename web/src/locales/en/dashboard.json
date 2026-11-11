@@ -184,8 +184,6 @@
     "costKm": "Cost ({cur}/{unit})",
     "distanceKm": "Distance ({unit})",
     "lastMonthSDetail": "Last month's detail",
-    "clickABarOfThe": "Click a bar of the chart to open the month's detailed figures.",
-    "tapABarOfThe": "Tap a bar of the chart to open the month's detailed figures.",
     "kmDriven": "Distance driven ({unit})",
     "averageCostPerKm": "Average cost per {unit} ({cur}/{unit})",
     "tooltipDistance": "Distance: {distance} {unit}",
@@ -305,8 +303,6 @@
     "tiresCash": "Tires (purchases)",
     "modeFull": "Full cost",
     "modeCash": "Cash out",
-    "hintFull": "Economic cost: tire wear spread over use, depreciation included.",
-    "hintCash": "Money actually paid: tires when bought, no depreciation.",
     "cashTitle": "Breakdown of cash spent"
   },
   "lease": {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import GlossaryTip from '@/components/GlossaryTip.vue'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -23,9 +24,12 @@ const rows = computed(() =>
 
 <template>
   <div :class="{ 'card p-5 shadow-sm': !bare }">
-    <div class="flex items-center justify-between gap-2 mb-1">
-      <h3 class="text-sm font-bold text-white">{{ $t(mode === 'full' ? 'dashboard.costBreakdownDonut.fullCostBreakdown' : 'dashboard.donut.cashTitle') }}</h3>
-      <div class="inline-flex rounded-lg bg-slate-800 p-0.5 text-xs" role="group">
+    <div class="flex items-center justify-between gap-2 mb-4">
+      <h3 class="min-w-0 text-sm font-bold text-white">
+        {{ $t(mode === 'full' ? 'dashboard.costBreakdownDonut.fullCostBreakdown' : 'dashboard.donut.cashTitle') }}
+        <GlossaryTip :term="mode === 'full' ? 'donutFull' : 'donutCash'" />
+      </h3>
+      <div class="inline-flex shrink-0 whitespace-nowrap rounded-lg bg-slate-800 p-0.5 text-xs" role="group">
         <button
           v-for="m in modes"
           :key="m"
@@ -39,7 +43,6 @@ const rows = computed(() =>
         </button>
       </div>
     </div>
-    <p class="text-xs text-slate-400 mb-4">{{ $t(mode === 'full' ? 'dashboard.donut.hintFull' : 'dashboard.donut.hintCash') }}</p>
     <p v-if="mode === 'full' && tco && tco.depreciation_known === false" class="text-xs font-medium text-warning-400 -mt-2 mb-3">{{ $t('dashboard.costBreakdownDonut.depreciationMissing') }}</p>
     <div v-if="tco" class="mx-auto h-36 w-36 sm:h-44 sm:w-44">
       <CostDonut

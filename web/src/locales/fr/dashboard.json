@@ -184,8 +184,6 @@
     "costKm": "Coût ({cur}/{unit})",
     "distanceKm": "Distance ({unit})",
     "lastMonthSDetail": "Détail dernier mois",
-    "clickABarOfThe": "Cliquer sur une barre du graphique pour ouvrir le détail chiffré du mois.",
-    "tapABarOfThe": "Touchez une barre du graphique pour ouvrir le détail chiffré du mois.",
     "kmDriven": "Distance parcourue ({unit})",
     "averageCostPerKm": "Coût moyen au {unit} ({cur}/{unit})",
     "tooltipDistance": "Distance : {distance} {unit}",
@@ -305,8 +303,6 @@
     "tiresCash": "Pneus (achats)",
     "modeFull": "Coût complet",
     "modeCash": "Décaissé",
-    "hintFull": "Coût économique : usure des pneus amortie et décote incluses.",
-    "hintCash": "Sommes réellement payées : pneus au moment de l'achat, sans décote.",
     "cashTitle": "Répartition des dépenses décaissées"
   },
   "lease": {

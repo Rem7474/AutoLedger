@@ -687,10 +687,10 @@ test('the selection bar counter is not cut on a phone, and the sheet ends with D
   await expect(page.getByRole('dialog').getByRole('separator')).not.toHaveCount(0)
 })
 
-test('the chart hint says "Tap" on a touch screen', async ({ page }) => {
+test('the monthly chart explains its bars in a tip that opens on a touch screen', async ({ page }) => {
   await useVehicle(page, ev.id, '/costs?tab=ANALYSIS')
-  await expect(page.getByText(/^Tap a bar of the chart/).first()).toBeVisible()
-  await expect(page.getByText(/^Click a bar of the chart/)).toBeHidden()
+  await page.getByRole('button', { name: /^Monthly chart:/ }).tap()
+  await expect(page.getByRole('dialog').getByText(/bar of the chart to open the month/)).toBeVisible()
 })
 
 // The system Back (page.goBack) closes the layer on top before it leaves the page.

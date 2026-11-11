@@ -39,5 +39,29 @@
     "label": "12-month average",
     "definition": "What a month costs on average over the last twelve months, the current one included. Over a shorter history it averages the months there are."
   },
+  "currencyPerVehicle": {
+    "label": "Currency",
+    "definition": "Currency is set per vehicle when it is created (Vehicles page); it is not an account setting."
+  },
+  "passwordSignOut": {
+    "label": "Password change",
+    "definition": "Other devices are signed out after a password change."
+  },
+  "signedOutDevice": {
+    "label": "Signing a device out",
+    "definition": "A signed-out device keeps its access for up to 15 minutes, the lifetime of the access token."
+  },
+  "monthBars": {
+    "label": "Monthly chart",
+    "definition": "Click or tap a bar of the chart to open the month's detailed figures."
+  },
+  "donutFull": {
+    "label": "Full cost",
+    "definition": "Economic cost: tire wear spread over use, depreciation included."
+  },
+  "donutCash": {
+    "label": "Cash paid",
+    "definition": "Money actually paid: tires when bought, no depreciation."
+  },
   "about": "Definition of {term}"
 }
