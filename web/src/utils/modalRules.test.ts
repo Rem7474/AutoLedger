@@ -38,6 +38,7 @@ const DIALOGS: Record<string, string> = {
   'components/carpool/CarpoolDetailModal.vue': 'detail of a carpool',
   'components/drives/DriveCostModal.vue': 'cost breakdown of a drive',
   'components/tires/TireHistoryModal.vue': 'history of a tire',
+  'components/manual/OdometerReadingsPanel.vue': 'the reading form is inline on a wide screen, this sheet only exists on a phone',
   'components/expenses/ChargingPlacesModal.vue': 'manager of the places and of their locations',
   'components/vehicles/VehicleMembersModal.vue': 'manager of the shares and persons of a vehicle',
   'components/vehicles/VehicleDataSourcesModal.vue': 'connections of a vehicle',

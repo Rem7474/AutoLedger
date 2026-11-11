@@ -255,7 +255,7 @@ useRefreshHandler(() => load(true))
       @delete="removeEditing"
     />
     <Teleport v-if="canEdit && isMobile" to="body">
-      <ModalShell pane v-model:open="formOpen" :title="editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new')" size="sm">
+      <ModalShell v-model:open="formOpen" :title="editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new')" size="sm">
         <p class="mb-4 text-xs text-slate-400">{{ $t('manual.odometerReadingsPanel.odometerReadingsSpreadTheUntracked') }}</p>
         <OdometerReadingForm
           v-model:date="form.date"
