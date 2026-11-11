@@ -47,7 +47,8 @@
       "item": "item selected | items selected",
       "tire": "tire selected | tires selected",
       "carpool": "carpool selected | carpools selected",
-      "drive": "drive selected | drives selected"
+      "drive": "drive selected | drives selected",
+      "scenario": "scenario selected | scenarios selected"
     },
     "selectedShort": "{n} selected | {n} selected",
     "selectOne": "Select a single row",

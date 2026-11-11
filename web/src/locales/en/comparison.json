@@ -1,6 +1,5 @@
 {
   "comparisonView": {
-    "editTheAssumptions": "Edit the assumptions",
     "assumptions": "Assumptions",
     "sensitivityOfTheGapTo": "Sensitivity of the gap to the assumptions",
     "effectOnTheElectricSaving": "Effect on the electric saving when an assumption changes by 20%.",
@@ -48,9 +47,8 @@
     "selectFor": "Select {name} for the comparison",
     "trackedVehicle": "Tracked vehicle",
     "projection": "Projection",
-    "scenarioUsage": "{km} {unit}/year · {years} year(s)",
-    "editScenario": "Edit {name}",
-    "deleteScenario": "Delete {name}",
+    "compareNeedsTwo": "Select at least two comparisons",
+    "yearsCount": "{years} year(s)",
     "stepOf": "Step {step} of 2 — {name}",
     "usage": "Usage",
     "equivalentIce": "Equivalent combustion vehicle",

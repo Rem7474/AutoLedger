@@ -8,6 +8,7 @@ import { downloadCsv } from '@/utils/csv'
 import { comparisonSavings } from '@/utils/comparisonSavings'
 import { sideKey, type TrackedSide } from '@/utils/comparisonSide'
 import { costRowValues } from '@/utils/comparisonForm'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import KpiCard from '@/components/KpiCard.vue'
 import ComparisonCharts from '@/components/comparison/ComparisonCharts.vue'
 import ComparisonWhatIf from '@/components/comparison/ComparisonWhatIf.vue'
@@ -17,7 +18,7 @@ import { ArrowLeft, Download, Info, Pencil, Printer, TrendingDown, TrendingUp } 
 
 // The outcome of one scenario: verdict, savings, cost breakdown, charts and the CSV / print exports.
 const props = defineProps<{ result: any | null; scenario: any | null; side: TrackedSide; currency: string; referenceVehicleId?: string; saving?: boolean; saveError?: string }>()
-const emit = defineEmits<{ back: []; edit: []; save: [form: ComparisonForm]; 'save-as': [form: ComparisonForm] }>()
+const emit = defineEmits<{ back: []; edit: []; delete: []; save: [form: ComparisonForm]; 'save-as': [form: ComparisonForm] }>()
 
 const sk = (key: string) => sideKey(key, props.side)
 
@@ -118,15 +119,18 @@ function printResult() {
 
 <template>
   <div class="space-y-5 print-area">
-    <div class="flex items-center justify-between gap-3 no-print">
-      <button class="text-xs text-slate-400 hover:text-white flex items-center gap-1.5" @click="emit('back')">
+    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 no-print">
+      <button class="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap" @click="emit('back')">
         <ArrowLeft class="w-4 h-4" /> {{ $t('comparison.comparisonView.myComparisons') }}
       </button>
       <div v-if="result" class="flex items-center gap-2">
-        <button type="button" class="btn btn-secondary" @click="exportResultCsv">
+        <button type="button" class="tap-text inline-flex items-center gap-1 rounded-lg px-2 text-xs font-semibold text-slate-300 whitespace-nowrap transition-colors hover:bg-slate-800 hover:text-white" @click="emit('edit')">
+          <Pencil class="h-3.5 w-3.5" aria-hidden="true" />{{ $t('common.edit') }}
+        </button>
+        <button type="button" class="btn btn-secondary whitespace-nowrap" @click="exportResultCsv">
           <Download class="w-4 h-4" /> {{ $t('comparison.comparisonView.csv') }}
         </button>
-        <button type="button" class="btn btn-secondary" @click="printResult">
+        <button type="button" class="btn btn-secondary whitespace-nowrap" @click="printResult">
           <Printer class="w-4 h-4" /> {{ $t('comparison.comparisonView.printPdf') }}
         </button>
       </div>
@@ -232,10 +236,8 @@ function printResult() {
         </ul>
       </div>
 
-      <div class="flex gap-2 no-print">
-        <button class="btn btn-lg btn-secondary" @click="emit('edit')">
-          <Pencil class="w-4 h-4" /> {{ $t('comparison.comparisonView.editTheAssumptions') }}
-        </button>
+      <div class="flex justify-center no-print">
+        <DetailDeleteButton @delete="emit('delete')" />
       </div>
     </template>
   </div>

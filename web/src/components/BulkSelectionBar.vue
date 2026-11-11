@@ -10,7 +10,7 @@ const props = withDefaults(
   defineProps<{
     count: number
     // What is selected: picks the wording of the counter
-    noun?: 'item' | 'tire' | 'carpool' | 'drive'
+    noun?: 'item' | 'tire' | 'carpool' | 'drive' | 'scenario'
     offScreenCount?: number
     metricsSummary?: string
     disabled?: boolean

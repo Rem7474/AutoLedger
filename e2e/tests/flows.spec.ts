@@ -22,7 +22,7 @@ test('what-if allows confirming an unusually high energy price without changing 
     scenarioId = (await saved.json()).id
     await useVehicle(page, vehicle.id, '/comparison')
     const history = page.waitForResponse(r => r.url().includes('/comparison-scenarios/price-history'))
-    await page.getByText(name, { exact: true }).click()
+    await page.getByRole('button', { name: `Open ${name}` }).click()
     expect((await history).ok()).toBeTruthy()
     await page.locator('#wi-elec').fill('0.8')
     await expect(page.getByText(/more than 3 times/)).toBeVisible()
@@ -67,7 +67,7 @@ test('what-if asks before keeping an unusually high fuel price', async ({ page, 
     scenarioId = (await saved.json()).id
     await useVehicle(page, vehicle.id, '/comparison')
     const history = page.waitForResponse(r => r.url().includes('/comparison-scenarios/price-history'))
-    await page.getByText(name, { exact: true }).click()
+    await page.getByRole('button', { name: `Open ${name}` }).click()
     expect((await history).ok()).toBeTruthy()
     await page.locator('#wi-fuel').fill('6')
     await expect(page.getByText(/more than 3 times/)).toBeVisible()
@@ -98,7 +98,7 @@ test('an adjusted scenario is saved in place or as another comparison from the r
     const scenarioId = (await saved.json()).id
     ids.push(scenarioId)
     await useVehicle(page, vehicle.id, '/comparison')
-    await page.getByText(name, { exact: true }).click()
+    await page.getByRole('button', { name: `Open ${name}` }).click()
     const save = page.getByTestId('what-if-save')
     await expect(save).toBeDisabled()
 
@@ -384,6 +384,38 @@ test('the readings of the odometer list line up whether or not they can be selec
     expect(Math.abs(fillUpText.x - manualText.x)).toBeLessThanOrEqual(1)
   } finally {
     await request.delete(`/api/vehicles/${ice.id}/odometer-checkpoints/${id}`, { headers })
+  }
+})
+
+test('a comparison is deleted from its detail with Undo, without a row menu', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const name = `Detail delete comparison ${Date.now()}`
+  const saved = await request.post('/api/comparison-scenarios/', { headers, data: {
+    name, mode: 'PROJECTION', currency: 'EUR', annual_km: 12000, years: 5,
+    ice: { fuel_type: 'SP95_E10', l_per_100km: 6.5, fuel_price: 1.7 },
+    tracked: { kwh_per_100km: 16, eur_per_kwh: 0.2 },
+  } })
+  expect(saved.ok()).toBeTruthy()
+  const { id } = await saved.json()
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, ice.id, '/comparison')
+    const open = page.getByRole('button', { name: `Open ${name}` })
+    await expect(open).toHaveCount(1)
+    await expect(page.locator('[aria-haspopup="menu"]')).toHaveCount(0)
+    await open.click()
+    await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(open).toHaveCount(0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(open).toHaveCount(1)
+    await open.click()
+    const deleted = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().includes(`/comparison-scenarios/${id}`))
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    expect((await deleted).ok()).toBeTruthy()
+    await expect(open).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/comparison-scenarios/${id}`, { headers })
   }
 })
 

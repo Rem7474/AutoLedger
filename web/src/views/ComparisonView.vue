@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
-import { Scale as PageIcon, Plus, Trash2, Pencil, ArrowLeft, ArrowRight, Info, ChevronDown, GitCompare } from '@/icons'
+import { Scale as PageIcon, Plus, ArrowLeft, ArrowRight, Info, ChevronDown } from '@/icons'
 import NumberInput from '@/components/NumberInput.vue'
 import LoadError from '@/components/LoadError.vue'
 import ComparisonEmptyState from '@/components/comparison/ComparisonEmptyState.vue'
@@ -8,11 +8,11 @@ import PageHeader from '@/components/PageHeader.vue'
 import { useStaleWrite } from '@/composables/useStaleWrite'
 import { t, te } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
-import { distanceUnit, formatDistanceValue, fuelConsumptionUnit, volumeUnitLabel } from '@/units'
+import { distanceUnit, fuelConsumptionUnit, volumeUnitLabel } from '@/units'
 import { apiMessageText } from '@/services/apiError'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import RowMenu from '@/components/RowMenu.vue'
+import ComparisonScenarioList from '@/components/comparison/ComparisonScenarioList.vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
@@ -95,10 +95,6 @@ const currency = computed(() => {
 })
 const currencyOptions = computed(() => [...new Set([...CURRENCIES, ...vehicleStore.vehicles.map(v => v.currency), form.currency])].filter(code => /^[A-Z]{3}$/.test(code)))
 const currencySign = computed(() => currencySymbol(currency.value))
-
-function fmtKm(v: number): string {
-  return formatDistanceValue(Number(v || 0))
-}
 
 // `silent` reloads behind the list that is already shown (pull to refresh) instead of swapping it for the skeleton.
 // Compared strictly: the function is also bound as an event handler, which passes the event.
@@ -245,17 +241,27 @@ async function openResult(sc: any) {
   }
 }
 
-// The comparison goes at once and comes back with Undo, the server is asked when that time is over
-function removeScenario(sc: any) {
+// The comparisons go at once and come back with Undo, the server is asked when that time is over
+function removeScenarios(items: any[]) {
+  const ids = items.map((x) => x.id)
+  selectedIds.value = selectedIds.value.filter((id) => !ids.includes(id))
   deleteRowsWithUndo({
     list: scenarios,
-    items: [sc],
+    items,
     key: (x) => x.id,
     message: t('comparison.comparisonView.scenarioDeleted'),
     remove: (x) => api.deleteComparisonScenario(x.id),
     committed: () => void loadScenarios(true),
     onError: (err: any) => void showAlert(err?.message || t('comparison.errors.deleteFailed'), t('comparison.comparisonView.deletion'), 'danger'),
   })
+}
+
+// The delete of the open comparison, from the bottom of its detail
+function removeOpenScenario() {
+  const sc = currentScenario.value
+  if (!sc) return
+  view.value = 'list'
+  removeScenarios([sc])
 }
 
 // --- Compare several scenarios ---
@@ -308,57 +314,17 @@ useRefreshHandler(() => loadScenarios(true))
       <div v-if="loading" class="text-sm text-slate-400">{{ $t('comparison.comparisonView.loading') }}</div>
       <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadScenarios" />
       <ComparisonEmptyState v-else-if="scenarios.length === 0" @start="startNew" />
-      <div v-else class="space-y-3">
-      <div v-if="scenarios.length >= 2" class="flex items-center justify-between gap-3 text-xs text-slate-400">
-        <span>{{ $t('comparison.comparisonView.tick2Or3Comparisons') }}</span>
-        <button
-          type="button"
-          :disabled="selectedIds.length < 2"
-          class="bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 border border-slate-700 font-semibold px-3 py-2 rounded-xl flex items-center gap-2"
-          @click="openCompare"
-        >
-          <GitCompare class="w-4 h-4" /> {{ $t('comparison.comparisonView.compare', { length: selectedIds.length }) }}
-        </button>
-      </div>
-      <ul class="grid gap-3 md:grid-cols-2">
-        <li v-for="sc in scenarios" :key="sc.id" class="card p-4 flex items-center justify-between gap-3">
-          <label class="tap shrink-0 cursor-pointer">
-            <input
-              :id="`cmp-select-${sc.id}`"
-              type="checkbox"
-              class="select-box"
-              :checked="selectedIds.includes(sc.id)"
-              :disabled="!selectedIds.includes(sc.id) && selectedIds.length >= MAX_COMPARE"
-              :aria-label="$t('comparison.comparisonView.selectFor', { name: sc.name })"
-              @change="toggleSelected(sc.id)"
-            />
-          </label>
-          <button class="text-left min-w-0 flex-1" @click="openResult(sc)">
-            <div class="text-sm font-semibold text-white truncate">{{ sc.name }}</div>
-            <div class="text-xs text-slate-400">
-              {{ sc.mode === 'RETROSPECTIVE' ? $t('comparison.comparisonView.trackedVehicle') : $t('comparison.comparisonView.projection') }} · {{ $t('comparison.comparisonView.scenarioUsage', { unit: distanceUnit(), km: fmtKm(sc.annual_km), years: sc.years }) }}
-            </div>
-          </button>
-          <!-- A phone keeps one quiet menu: two icon buttons, one of them red, on every row would outweigh the name -->
-          <RowMenu phone class="sm:hidden" :label="$t('common.moreActions')" :heading="sc.name">
-            <button type="button" role="menuitem" class="menu-item" @click="editScenario(sc)">
-              <Pencil class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.edit') }}
-            </button>
-            <button type="button" role="menuitem" class="menu-item menu-item-danger" @click="removeScenario(sc)">
-              <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('common.delete') }}
-            </button>
-          </RowMenu>
-          <div class="flex items-center gap-1.5 shrink-0 max-sm:hidden">
-            <button :aria-label="$t('comparison.comparisonView.editScenario', { name: sc.name })" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" @click="editScenario(sc)">
-              <Pencil class="w-4 h-4" />
-            </button>
-            <button :aria-label="$t('comparison.comparisonView.deleteScenario', { name: sc.name })" class="p-2 rounded-lg bg-slate-800 hover:bg-red-900/60 text-red-300" @click="removeScenario(sc)">
-              <Trash2 class="w-4 h-4" />
-            </button>
-          </div>
-        </li>
-      </ul>
-      </div>
+      <ComparisonScenarioList
+        v-else
+        :scenarios="scenarios"
+        :selected-ids="selectedIds"
+        @open="openResult"
+        @toggle="toggleSelected"
+        @clear="selectedIds = []"
+        @compare="openCompare"
+        @edit="editScenario"
+        @delete-many="removeScenarios"
+      />
     </div>
 
     <!-- Compare several scenarios -->
@@ -515,6 +481,7 @@ useRefreshHandler(() => loadScenarios(true))
       :reference-vehicle-id="vehicleStore.activeVehicle?.id"
       @back="view = 'list'"
       @edit="editScenario(currentScenario)"
+      @delete="removeOpenScenario"
       :saving="resultSaving"
       :save-error="resultSaveError"
       @save="saveAdjusted($event, false)"

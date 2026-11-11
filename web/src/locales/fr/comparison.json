@@ -1,6 +1,5 @@
 {
   "comparisonView": {
-    "editTheAssumptions": "Modifier les hypothèses",
     "assumptions": "Hypothèses",
     "sensitivityOfTheGapTo": "Sensibilité de l'écart aux hypothèses",
     "effectOnTheElectricSaving": "Effet sur l'économie de l'électrique quand une hypothèse varie de 20 %.",
@@ -48,9 +47,8 @@
     "selectFor": "Sélectionner {name} pour la comparaison",
     "trackedVehicle": "Véhicule suivi",
     "projection": "Projection",
-    "scenarioUsage": "{km} {unit}/an · {years} an(s)",
-    "editScenario": "Modifier {name}",
-    "deleteScenario": "Supprimer {name}",
+    "compareNeedsTwo": "Sélectionnez au moins deux comparatifs",
+    "yearsCount": "{years} an(s)",
     "stepOf": "Étape {step} sur 2 — {name}",
     "usage": "Usage",
     "equivalentIce": "Thermique équivalent",
