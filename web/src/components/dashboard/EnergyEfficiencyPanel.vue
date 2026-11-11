@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import GlossaryTip from '@/components/GlossaryTip.vue'
 import KpiCard from '@/components/KpiCard.vue'
+import FigureSecondary from '@/components/FigureSecondary.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { t } from '@/i18n'
 import { formatMonthLabel } from '@/utils/dates'
@@ -236,46 +237,43 @@ onBeforeUnmount(() => {
       </span>
     </component>
 
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div class="space-y-3">
       <KpiCard
-        compact
+        lead
         :label="$t('dashboard.energyEfficiencyPanel.actualConsumption')"
         :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
         term="atTheWheel"
         :value="fmt(perUnit(stats?.summary.consumption_kwh_100km), 1)"
         :unit="` kWh/100 ${distanceUnit()}`"
       />
-      <KpiCard
-        compact
-        :label="$t('dashboard.energyEfficiencyPanel.energyCost')"
-        :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
-        :value="fmtMoney(perUnit(stats?.summary.cost_per_100km), currency)"
-        :unit="` /100 ${distanceUnit()}`"
-      >
-        <p class="mt-0.5 text-xs text-slate-400">{{ $t('dashboard.energyEfficiencyPanel.thatIsKwhOnAverage', { price_per_kwh: fmtMoney(stats?.summary.price_per_kwh, currency, 3) }) }}</p>
-      </KpiCard>
-      <KpiCard
-        compact
-        :label="$t('dashboard.energyEfficiencyPanel.chargingEfficiency')"
-        :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
-        term="chargeEfficiency"
-        :value="fmtPercent(stats?.summary.charge_efficiency)"
-      >
-        <p v-if="stats?.summary.charge_efficiency == null" class="mt-0.5 text-xs text-slate-400">
-          {{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyEmpty') }}
-          <span class="block">
-            <router-link to="/consumption?tab=CHARGES" class="tap-text font-semibold text-slate-100 underline">{{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyAction') }}</router-link>
-          </span>
-        </p>
-      </KpiCard>
-      <KpiCard
-        compact
-        :label="$t('dashboard.energyEfficiencyPanel.fullCharge')"
-        :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
-        term="fullChargeCost"
-        :value="fmtMoney(stats?.summary.cost_per_full_charge ?? undefined, currency)"
-        unit=" (0 → 100 %)"
-      />
+      <div class="grid grid-cols-2 gap-4 px-1 sm:gap-6 lg:grid-cols-3">
+        <FigureSecondary
+          :label="$t('dashboard.energyEfficiencyPanel.energyCost')"
+          :value="fmtMoney(perUnit(stats?.summary.cost_per_100km), currency)"
+          :unit="` /100 ${distanceUnit()}`"
+        >
+          <p class="mt-0.5 text-xs text-slate-400">{{ $t('dashboard.energyEfficiencyPanel.thatIsKwhOnAverage', { price_per_kwh: fmtMoney(stats?.summary.price_per_kwh, currency, 3) }) }}</p>
+        </FigureSecondary>
+        <FigureSecondary
+          :label="$t('dashboard.energyEfficiencyPanel.chargingEfficiency')"
+          term="chargeEfficiency"
+          :value="fmtPercent(stats?.summary.charge_efficiency)"
+          keep-empty
+        >
+          <p v-if="stats?.summary.charge_efficiency == null" class="mt-0.5 text-xs text-slate-400">
+            {{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyEmpty') }}
+            <span class="block">
+              <router-link to="/consumption?tab=CHARGES" class="tap-text font-semibold text-slate-100 underline">{{ $t('dashboard.energyEfficiencyPanel.chargingEfficiencyAction') }}</router-link>
+            </span>
+          </p>
+        </FigureSecondary>
+        <FigureSecondary
+          :label="$t('dashboard.energyEfficiencyPanel.fullCharge')"
+          term="fullChargeCost"
+          :value="fmtMoney(stats?.summary.cost_per_full_charge ?? undefined, currency)"
+          unit=" (0 → 100 %)"
+        />
+      </div>
     </div>
 
     <p v-if="(stats?.summary.sessions_without_cost ?? 0) > 0" class="rounded-lg border border-warning-500/20 bg-warning-500/10 px-3 py-2 text-xs text-warning-300">

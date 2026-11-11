@@ -15,6 +15,7 @@ import SelectionHint from '@/components/SelectionHint.vue'
 import { useRowSelection } from '@/composables/useRowSelection'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
 import KpiCard from '@/components/KpiCard.vue'
+import FigureSecondary from '@/components/FigureSecondary.vue'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
 import { api } from '@/services/api'
@@ -217,28 +218,27 @@ useRefreshHandler(() => load(true))
       {{ $t('manual.odometerReadingsPanel.odometerReadingsSpreadTheUntracked') }}
     </p>
 
-    <div v-if="!loading" class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+    <div v-if="!loading" class="space-y-3">
       <KpiCard
-        compact
-        class="col-span-2 sm:col-span-1"
+        lead
         :label="$t('manual.odometerReadingsPanel.currentReading')"
         :value="vehicle?.current_odometer ? formatDistanceValue(vehicle.current_odometer) : null"
         :unit="` ${distanceUnit()}`"
       />
-      <KpiCard
-        compact
-        :label="$t('manual.odometerReadingsPanel.lastReading')"
-        :value="lastReading ? formatDistanceValue(lastReading.odometer) : null"
-        :unit="` ${distanceUnit()}`"
-      >
-        <p v-if="lastReading" class="mt-1 text-xs text-slate-400">{{ new Date(lastReading.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }}</p>
-      </KpiCard>
-      <KpiCard
-        compact
-        :label="$t('manual.odometerReadingsPanel.sinceLastReading')"
-        :value="sinceLastReading === null ? null : formatDistanceValue(sinceLastReading)"
-        :unit="` ${distanceUnit()}`"
-      />
+      <div class="grid grid-cols-2 gap-4 px-1 sm:gap-6">
+        <FigureSecondary
+          :label="$t('manual.odometerReadingsPanel.lastReading')"
+          :value="lastReading ? formatDistanceValue(lastReading.odometer) : null"
+          :unit="` ${distanceUnit()}`"
+        >
+          <p v-if="lastReading" class="mt-0.5 text-xs text-slate-400">{{ new Date(lastReading.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }}</p>
+        </FigureSecondary>
+        <FigureSecondary
+          :label="$t('manual.odometerReadingsPanel.sinceLastReading')"
+          :value="sinceLastReading === null ? null : formatDistanceValue(sinceLastReading)"
+          :unit="` ${distanceUnit()}`"
+        />
+      </div>
     </div>
 
     <!-- A phone adds and edits in a sheet, opened by the Add button of the history -->
