@@ -52,7 +52,7 @@
     "cost": "Coût ({cur})",
     "costOfTheChargeOf": "Coût de la recharge du {date} ({cur})",
     "kwh": "+{kwh_added} kWh",
-    "teslamateChargesWithoutARate": "Recharges sans tarif. Le coût saisi ici n'est pas écrasé par les synchronisations.",
+    "teslamateChargesWithoutARate": "{count} recharge sans tarif. Le coût saisi ici n'est pas écrasé par les synchronisations. | {count} recharges sans tarif. Le coût saisi ici n'est pas écrasé par les synchronisations.",
     "allHaveCost": "Toutes les recharges ont un coût.",
     "costAdded": "Coût de {cost} ajouté",
     "saveFailed": "Impossible d'enregistrer le coût.",

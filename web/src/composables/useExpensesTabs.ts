@@ -7,18 +7,10 @@ import { Receipt, Fuel, Wrench, Zap, Activity, Gauge, Calculator, Paperclip, Bel
 
 export type ExpensesTab = 'REMINDERS' | 'CHARGES' | 'FUEL' | 'DOCUMENTS' | 'EFFICIENCY' | 'ESTIMATE'
 
-export interface ExpensesTabBadges {
-  urgentReminders: number
-  overdueReminders: number
-  chargesWithoutCost: number
-  documents: number
-}
-
 // One view, three entries, the tools next to the lists of the Costs page: /expenses (receipts), /maintenance
 // (reminders) and /consumption (efficiency, estimate, fill-ups, charges to complete). Owns the section, the tab list and
-// the `tab` query parameter.
-// The badges are read lazily, so they may come from state declared after this call.
-export function useExpensesTabs(badges: () => ExpensesTabBadges) {
+// the `tab` query parameter. A tab carries its label and icon only: what there is to count is said in the tab's content.
+export function useExpensesTabs() {
   const router = useRouter()
   const route = useRoute()
   const vehicleStore = useVehicleStore()
@@ -62,39 +54,21 @@ export function useExpensesTabs(badges: () => ExpensesTabBadges) {
   const pageIcon = computed(() => (isMaintenanceSection.value ? Wrench : isConsumptionSection.value ? Activity : Receipt))
 
   const tabs = computed<TabItem[]>(() => {
-    const b = badges()
     if (isMaintenanceSection.value) {
       return [
-        {
-          key: 'REMINDERS',
-          label: t('expenses.expensesView.reminders'),
-          icon: Bell,
-          badge: b.urgentReminders > 0 ? b.urgentReminders : undefined,
-          badgeTone: b.overdueReminders > 0 ? 'danger' : 'warning',
-        },
+        { key: 'REMINDERS', label: t('expenses.expensesView.reminders'), icon: Bell },
       ]
     }
     if (isConsumptionSection.value) {
       const fuel: TabItem = { key: 'FUEL', label: t('expenses.expensesView.fillUps'), icon: Fuel }
       if (!vehicleStore.canCharge) return [fuel]
-      const charges: TabItem = {
-        key: 'CHARGES',
-        label: t('expenses.expensesView.charges'),
-        icon: Zap,
-        badge: b.chargesWithoutCost > 0 ? b.chargesWithoutCost : undefined,
-        badgeTone: 'warning',
-      }
+      const charges: TabItem = { key: 'CHARGES', label: t('expenses.expensesView.charges'), icon: Zap }
       const efficiency: TabItem = { key: 'EFFICIENCY', label: t('expenses.expensesView.efficiency'), icon: Gauge }
       const second: TabItem = vehicleStore.canRefuel ? fuel : { key: 'ESTIMATE', label: t('expenses.expensesView.estimate'), icon: Calculator }
       return [efficiency, second, charges]
     }
     return [
-      {
-        key: 'DOCUMENTS',
-        label: t('expenses.expensesView.receipts'),
-        icon: Paperclip,
-        badge: b.documents > 0 ? b.documents : undefined,
-      },
+      { key: 'DOCUMENTS', label: t('expenses.expensesView.receipts'), icon: Paperclip },
     ]
   })
 

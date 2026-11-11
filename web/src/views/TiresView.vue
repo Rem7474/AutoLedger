@@ -60,8 +60,8 @@ const currentOdometer = computed(() => vehicleStore.activeVehicle?.current_odome
 const activeTab = ref<'chassis' | 'storage' | 'disposed'>('chassis')
 const tabs = computed<TabItem[]>(() => [
   { key: 'chassis', label: t('tires.tiresView.tiresFittedOnTheVehicle'), icon: Disc },
-  { key: 'storage', label: t('tires.tiresView.catalogueAndGarageStock', { length: storageTires.value.length }), icon: Package },
-  { key: 'disposed', label: t('tires.tiresView.scrapped', { length: disposedTires.value.length }), icon: Archive, muted: disposedTires.value.length === 0 },
+  { key: 'storage', label: t('tires.tiresView.catalogueAndGarageStock'), icon: Package },
+  { key: 'disposed', label: t('tires.tiresView.scrapped'), icon: Archive, muted: disposedTires.value.length === 0 },
 ])
 
 const isMobile = useIsMobile()

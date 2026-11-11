@@ -38,12 +38,7 @@ const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
 const currentOdometer = computed(() => vehicleStore.activeVehicle?.current_odometer || 0)
 const { previewDoc, loadingDocId, closeDocPreview, viewOrDownloadDocument } = useDocumentPreview(() => vehicleStore.activeVehicle?.id)
 
-const { activeTab, pageTitle, pageSubtitle, pageIcon, tabs } = useExpensesTabs(() => ({
-  urgentReminders: urgentRemindersCount.value,
-  overdueReminders: overdueReminders.value.length,
-  chargesWithoutCost: chargesWithoutCost.value,
-  documents: documents.value.length,
-}))
+const { activeTab, pageTitle, pageSubtitle, pageIcon, tabs } = useExpensesTabs()
 
 const charges = ref<any[]>([])
 const chargesWithoutCost = ref(0)
@@ -70,7 +65,6 @@ const {
   dueSoonReminders,
   okReminders,
   unscheduledReminders,
-  urgentRemindersCount,
   loadReminders,
   openAddReminderModal,
   openEditReminderModal,

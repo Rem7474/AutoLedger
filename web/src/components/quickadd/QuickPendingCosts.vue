@@ -68,7 +68,7 @@ async function complete(c: PendingCharge) {
 
     <template v-else>
       <p class="mb-3 text-xs text-slate-400">
-        {{ $t('quickadd.quickPendingCosts.teslamateChargesWithoutARate') }}
+        {{ $t('quickadd.quickPendingCosts.teslamateChargesWithoutARate', total) }}
       </p>
       <ul class="space-y-3">
         <li v-for="c in charges" :key="c.id" class="rounded-xl border border-slate-800 bg-slate-800/40 p-3">

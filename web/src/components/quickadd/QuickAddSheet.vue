@@ -14,6 +14,7 @@ import QuickExpenseForm from './QuickExpenseForm.vue'
 import QuickFuelForm from './QuickFuelForm.vue'
 import QuickPendingCosts from './QuickPendingCosts.vue'
 import { useEscapeToClose } from '@/composables/useEscapeToClose'
+import TabBar, { type TabItem } from '@/components/TabBar.vue'
 import SheetGrabber from '@/components/SheetGrabber.vue'
 import { useSheetSwipe } from '@/composables/useSheetSwipe'
 
@@ -31,14 +32,14 @@ const pendingTotal = ref(0)
 
 const vehicle = computed(() => vehicleStore.activeVehicle)
 
-const tabs = computed<{ key: QuickKind; label: string; badge?: number }[]>(() => {
-  const list: { key: QuickKind; label: string; badge?: number }[] = []
+const tabs = computed<TabItem[]>(() => {
+  const list: TabItem[] = []
   if (vehicleStore.canCharge) {
-    if (pendingTotal.value > 0) list.push({ key: 'PENDING', label: 'quickadd.quickAddSheet.tabPending', badge: pendingTotal.value })
-    list.push({ key: 'CHARGE', label: 'quickadd.quickAddSheet.tabCharge' })
+    if (pendingTotal.value > 0) list.push({ key: 'PENDING', label: t('quickadd.quickAddSheet.tabPending') })
+    list.push({ key: 'CHARGE', label: t('quickadd.quickAddSheet.tabCharge') })
   }
-  if (vehicleStore.canRefuel) list.push({ key: 'FUEL', label: 'quickadd.quickAddSheet.tabFuel' })
-  list.push({ key: 'EXPENSE', label: 'quickadd.quickAddSheet.tabExpense' })
+  if (vehicleStore.canRefuel) list.push({ key: 'FUEL', label: t('quickadd.quickAddSheet.tabFuel') })
+  list.push({ key: 'EXPENSE', label: t('quickadd.quickAddSheet.tabExpense') })
   return list
 })
 
@@ -73,7 +74,7 @@ watch(() => quickAdd.isOpen, async (open) => {
   if (open) {
     previouslyFocused = document.activeElement as HTMLElement | null
     const wanted = quickAdd.requestedKind
-    const available = tabs.value.map((t) => t.key)
+    const available = tabs.value.map((t) => t.key as QuickKind)
     const fallback: QuickKind = available.includes('PENDING') ? 'PENDING' : available[0]
     activeKind.value = wanted && available.includes(wanted) ? wanted : fallback
     void loadPending()
@@ -230,22 +231,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <div role="tablist" :aria-label="$t('quickadd.quickAddSheet.entryType')" class="mx-4 mt-3 flex shrink-0 gap-1 rounded-2xl border border-slate-800 bg-slate-950 p-1">
-        <button
-          v-for="t in tabs"
-          :id="`quick-tab-${t.key}`"
-          :key="t.key"
-          type="button"
-          role="tab"
-          :aria-selected="activeKind === t.key"
-          class="flex min-h-12 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 text-sm font-semibold transition-colors"
-          :class="activeKind === t.key ? 'bg-rose-500/15 text-rose-200' : 'text-slate-400 hover:text-white'"
-          @click="activeKind = t.key"
-        >
-          {{ $t(t.label) }}
-          <span v-if="t.badge" class="rounded-full bg-warning-500/20 px-1.5 text-xs font-bold text-warning-300">{{ t.badge }}</span>
-        </button>
-      </div>
+      <TabBar class="mx-4 mt-3 shrink-0" :model-value="activeKind" :tabs="tabs" :label="$t('quickadd.quickAddSheet.entryType')" id-prefix="quick-tab" @update:model-value="activeKind = $event as QuickKind" />
 
       <div role="tabpanel" :aria-labelledby="`quick-tab-${activeKind}`" class="flex min-h-0 flex-1 flex-col">
         <QuickPendingCosts
