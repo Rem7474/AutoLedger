@@ -8,7 +8,6 @@ vi.mock('vue-router', () => ({ useRoute: () => route, useRouter: () => ({ replac
 const store = reactive({ canCharge: true, canRefuel: false })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => store }))
 
-const badges = reactive({ urgentReminders: 0, overdueReminders: 0, chargesWithoutCost: 0, documents: 0 })
 const keys = (tabs: { key: string }[]) => tabs.map((x) => x.key)
 
 describe('useExpensesTabs', () => {
@@ -18,47 +17,46 @@ describe('useExpensesTabs', () => {
     route.meta = {}
     store.canCharge = true
     store.canRefuel = false
-    Object.assign(badges, { urgentReminders: 0, overdueReminders: 0, chargesWithoutCost: 0, documents: 0 })
   })
 
   it('lists the tabs of each section and of each powertrain', () => {
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['DOCUMENTS'])
+    expect(keys(useExpensesTabs().tabs.value)).toEqual(['DOCUMENTS'])
     route.meta = { section: 'maintenance' }
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['REMINDERS'])
+    expect(keys(useExpensesTabs().tabs.value)).toEqual(['REMINDERS'])
     route.meta = { section: 'consumption' }
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['EFFICIENCY', 'ESTIMATE', 'CHARGES'])
+    expect(keys(useExpensesTabs().tabs.value)).toEqual(['EFFICIENCY', 'ESTIMATE', 'CHARGES'])
     store.canRefuel = true
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['EFFICIENCY', 'FUEL', 'CHARGES'])
+    expect(keys(useExpensesTabs().tabs.value)).toEqual(['EFFICIENCY', 'FUEL', 'CHARGES'])
     store.canCharge = false
-    expect(keys(useExpensesTabs(() => badges).tabs.value)).toEqual(['FUEL'])
+    expect(keys(useExpensesTabs().tabs.value)).toEqual(['FUEL'])
   })
 
   it('opens the consumption page on the efficiency of an electric or hybrid vehicle, and on the fill-ups of a combustion one', () => {
     route.meta = { section: 'consumption' }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('EFFICIENCY')
+    expect(useExpensesTabs().activeTab.value).toBe('EFFICIENCY')
     route.query = { tab: 'charges' }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('CHARGES')
+    expect(useExpensesTabs().activeTab.value).toBe('CHARGES')
     route.query = {}
     store.canRefuel = true
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('EFFICIENCY')
+    expect(useExpensesTabs().activeTab.value).toBe('EFFICIENCY')
     store.canCharge = false
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('FUEL')
+    expect(useExpensesTabs().activeTab.value).toBe('FUEL')
   })
 
   it('opens the tab of the query, falling back to the first tab of the section', () => {
     route.meta = { section: 'consumption' }
     route.query = { tab: 'estimate' }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('ESTIMATE')
+    expect(useExpensesTabs().activeTab.value).toBe('ESTIMATE')
     route.meta = {}
     route.query = { tab: 'REMINDERS' }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('DOCUMENTS')
+    expect(useExpensesTabs().activeTab.value).toBe('DOCUMENTS')
     route.query = { tab: ['documents', 'x'] }
-    expect(useExpensesTabs(() => badges).activeTab.value).toBe('DOCUMENTS')
+    expect(useExpensesTabs().activeTab.value).toBe('DOCUMENTS')
   })
 
   it('writes the tab to the query and follows the query', async () => {
     route.meta = { section: 'consumption' }
-    const { activeTab } = useExpensesTabs(() => badges)
+    const { activeTab } = useExpensesTabs()
     activeTab.value = 'EFFICIENCY'
     await nextTick()
     expect(replace).toHaveBeenCalledWith({ query: { tab: 'EFFICIENCY' } })
@@ -67,13 +65,8 @@ describe('useExpensesTabs', () => {
     expect(activeTab.value).toBe('ESTIMATE')
   })
 
-  it('shows badges only when there is something to count', () => {
-    route.meta = { section: 'maintenance' }
-    const { tabs } = useExpensesTabs(() => badges)
-    expect(tabs.value[0].badge).toBeUndefined()
-    badges.urgentReminders = 2
-    expect(tabs.value[0]).toMatchObject({ badge: 2, badgeTone: 'warning' })
-    badges.overdueReminders = 1
-    expect(tabs.value[0].badgeTone).toBe('danger')
+  it('gives a tab a label and an icon only, never a counter', () => {
+    route.meta = { section: 'consumption' }
+    for (const tab of useExpensesTabs().tabs.value) expect(Object.keys(tab).sort()).toEqual(['icon', 'key', 'label'])
   })
 })

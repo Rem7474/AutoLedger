@@ -20,7 +20,7 @@ function sources(dir: string): string[] {
 const RAW_STATE = /\b(?:[a-z-]+:)*(?:text|bg|border|ring|from|to|via|stroke|fill|shadow|divide|outline|placeholder|accent|caret)-(?:amber|emerald|red|sky)-\d{2,3}/
 const RAW_STATE_ALLOWLIST = new Set([
   'components/AppDropzone.vue', 'components/CSVImportModal.vue', 'components/ConfirmModal.vue', 'components/KpiCard.vue',
-  'components/KpiRow.vue', 'components/ListSummary.vue', 'components/TabBar.vue', 'components/account/TokenCallLog.vue',
+  'components/KpiRow.vue', 'components/ListSummary.vue', 'components/account/TokenCallLog.vue',
   'components/carpool/CarpoolDetailModal.vue', 'components/carpool/CarpoolLegs.vue', 'components/carpool/CarpoolOverview.vue',
   'components/carpool/CarpoolPassengers.vue', 'components/carpool/CarpoolRecap.vue', 'components/carpool/CarpoolShareMath.vue',
   'components/carpool/CarpoolTripModal.vue', 'components/comparison/ComparisonEmptyState.vue',

@@ -52,7 +52,7 @@
     "cost": "Cost ({cur})",
     "costOfTheChargeOf": "Cost of the charge of {date} ({cur})",
     "kwh": "+{kwh_added} kWh",
-    "teslamateChargesWithoutARate": "Charges without a rate. The cost entered here is not overwritten by the synchronizations.",
+    "teslamateChargesWithoutARate": "{count} charge without a rate. The cost entered here is not overwritten by the synchronizations. | {count} charges without a rate. The cost entered here is not overwritten by the synchronizations.",
     "allHaveCost": "All charges have a cost.",
     "costAdded": "Cost of {cost} added",
     "saveFailed": "Could not save the cost.",

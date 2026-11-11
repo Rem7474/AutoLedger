@@ -5,9 +5,6 @@ export interface TabItem {
   key: string
   label: string
   icon?: Component
-  /** Count or short text shown after the label. */
-  badge?: string | number
-  badgeTone?: 'neutral' | 'warning' | 'danger'
   /** Tab with nothing in it: still reachable, but greyed out. */
   muted?: boolean
 }
@@ -59,13 +56,6 @@ onMounted(() => {
   }
 })
 onBeforeUnmount(() => observer?.disconnect())
-
-const badgeClass = (tone?: TabItem['badgeTone']) =>
-  tone === 'danger'
-    ? 'bg-rose-500 text-white'
-    : tone === 'warning'
-      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-      : 'bg-slate-800 text-slate-300'
 </script>
 
 <template>
@@ -90,7 +80,6 @@ const badgeClass = (tone?: TabItem['badgeTone']) =>
       >
         <component :is="t.icon" v-if="t.icon" class="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{{ t.label }}</span>
-        <span v-if="t.badge !== undefined" class="rounded-full px-1.5 text-[11px] font-bold leading-5" :class="badgeClass(t.badgeTone)">{{ t.badge }}</span>
       </button>
     </div>
     <div v-if="canScrollLeft" class="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-slate-950 to-transparent" aria-hidden="true" />
