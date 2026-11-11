@@ -195,4 +195,24 @@ describe('useCostEntryActions', () => {
     sheet.restore()
     expect(h.hide.mock.calls[0][0]).toBe(h.restore.mock.calls[0][0])
   })
+
+  it('deletes the opened charge from its detail through the shared deletion, which still refuses a synchronised one', async () => {
+    api.getCharge.mockResolvedValue({ id: 'c1', origin: 'MANUAL' })
+    const h = hooks()
+    const a = useCostEntryActions(h)
+    await a.open(entry('charge_logs', 'c1'))
+    await a.removeOpenedCharge({ id: 'c1' })
+    const call = deleteWithUndo.mock.calls.at(-1)![0]
+    expect(call.message).toBe('expenses.expensesView.chargeDeleted')
+    call.hide()
+    call.restore()
+    expect(h.hide.mock.calls[0][0]).toBe(h.restore.mock.calls[0][0])
+
+    const before = deleteWithUndo.mock.calls.length
+    api.getCharge.mockResolvedValue({ id: 'c2', origin: 'TESLAMATE' })
+    await a.open(entry('charge_logs', 'c2'))
+    await a.removeOpenedCharge({ id: 'c2' })
+    expect(deleteWithUndo.mock.calls.length).toBe(before)
+    expect(showAlert).toHaveBeenCalled()
+  })
 })

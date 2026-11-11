@@ -31,8 +31,8 @@ describe('ChargesPanel', () => {
     expect(html).not.toContain('data-icon="edit"')
   })
 
-  it('keeps the menu for the actions the row does not carry', async () => {
-    expect(await render()).toContain('aria-haspopup="menu"')
+  it('has no row menu: delete is in the detail, the swipe and the selection bar', async () => {
+    expect(await render()).not.toContain('aria-haspopup="menu"')
   })
 
   it('shows a read-only list with no open button and no menu', async () => {
@@ -40,14 +40,6 @@ describe('ChargesPanel', () => {
     const html = await render()
     expect(html).not.toContain('inset-0')
     expect(html).not.toContain('aria-haspopup="menu"')
-  })
-})
-
-describe('ChargesPanel menu', () => {
-  it('offers no menu for a synchronised charge that has no TeslaMate link: it cannot be deleted', async () => {
-    const html = await renderSync()
-    expect(html).not.toContain('aria-haspopup="menu"')
-    expect(html).toContain('inset-0')
   })
 })
 
@@ -83,3 +75,11 @@ const renderSync = () =>
       render: () => h(ChargesPanel as any, { charges: [{ ...manual, origin: 'TESLAMATE' }], chargesTotal: 1, chargesWithoutCost: 0, loading: false, loadingMoreCharges: false, missingCostOnly: false }),
     }).use(i18n),
   )
+
+describe("ChargesPanel synchronised charge", () => {
+  it("opens from the row, without a menu", async () => {
+    const html = await renderSync()
+    expect(html).toContain("inset-0")
+    expect(html).not.toContain("aria-haspopup=\"menu\"")
+  })
+})

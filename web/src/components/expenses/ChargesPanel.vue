@@ -135,7 +135,6 @@ const months = computed(() => {
           :selecting="selecting"
           @open="emit('edit', $event)"
           @toggle="toggle"
-          @delete="emit('delete', $event)"
           @review-cost="(charge, reviewed) => emit('review-cost', charge, reviewed)"
           @view-document="(id, name, download) => emit('view-document', id, name, download)"
         />

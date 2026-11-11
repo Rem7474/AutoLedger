@@ -22,6 +22,8 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
   const showFuel = ref(false)
   // The journal line the fill-up sheet was opened from: the sheet's own Delete takes that line off the page
   let fuelEntryId = ''
+  // The same for the charge detail
+  let chargeEntryId = ''
   const editing = ref<any | null>(null)
   const documents = ref<ExpenseDocumentHeader[]>([])
   // The earlier maintenance entries, read when a new one is added: they suggest descriptions and close a revision
@@ -76,7 +78,10 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
         loadDocuments(vehicle.id),
       ])
       editing.value = record
-      if (target.modal === 'charge') showCharge.value = true
+      if (target.modal === 'charge') {
+        chargeEntryId = entryKey(entry)
+        showCharge.value = true
+      }
       else if (target.modal === 'toll') showToll.value = true
       else showMaintenance.value = true
     } catch (err) {
@@ -113,9 +118,14 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     if (fuelEntryId) return removeFromJournal('fuel_log', log.id, fuelEntryId)
   }
 
+  /** The Delete of the charge detail: the line goes with the same Undo, and a synchronised charge is refused by the shared deletion. */
+  function removeOpenedCharge(charge: { id: string }) {
+    if (chargeEntryId) return removeFromJournal('charge', charge.id, chargeEntryId)
+  }
+
   function onDocumentAdded(doc: ExpenseDocumentHeader) {
     documents.value.unshift(doc)
   }
 
-  return { showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, editing, documents, maintenanceExpenses, open, addMaintenance, remove, onDocumentAdded }
+  return { showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, removeOpenedCharge, editing, documents, maintenanceExpenses, open, addMaintenance, remove, onDocumentAdded }
 }

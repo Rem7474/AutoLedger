@@ -12,19 +12,22 @@ import { Zap, Paperclip, FileText, Eye, UploadCloud, Calculator, ExternalLink } 
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { currencyPayload, formatDate, toLocalDateTimeInput } from '@/utils/expenses'
 import ModalShell from '@/components/ModalShell.vue'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import ChargeAmountFields from '@/components/charges/ChargeAmountFields.vue'
 import { loadMemory, rememberCharge } from '@/utils/quickAdd'
 import PublicChargeCalculatorModal from '@/components/expenses/PublicChargeCalculatorModal.vue'
 import { useSubmit } from '@/composables/useSubmit'
 import { useSessionTariffCost } from '@/composables/useSessionTariffCost'
 import { sessionPriceRequest } from '@/utils/tariffSession'
-import { chargeFieldAccess, chargeOriginKey } from '@/utils/chargeProvenance'
+import { chargeDeletable, chargeFieldAccess, chargeOrigin } from '@/utils/chargeProvenance'
 import { chargeCostToReview, teslamateChargeUrl, teslamateCostEditUrl } from '@/utils/teslamateCharges'
 
 // Records a charge, or edits `editing`: the facts reported by TeslaMate are read-only, the cost and the notes are AutoLedger's.
 const props = defineProps<{ vehicleId: string; editing: any | null; documents: ExpenseDocumentHeader[]; currentOdometer: number }>()
 const emit = defineEmits<{
   saved: []
+  // The charge goes with an Undo, handled by the page; the detail closes first
+  delete: [charge: any]
   'document-added': [doc: ExpenseDocumentHeader]
   'view-document': [docId: string | null | undefined, filename?: string | null, download?: boolean]
 }>()
@@ -41,6 +44,12 @@ const { explainStaleWrite } = useStaleWrite()
 const editingCharge = computed(() => props.editing)
 const baseCurrency = computed(() => vehicleStore.currency)
 const sourceLocked = computed(() => chargeFieldAccess(editingCharge.value).sourceLocked)
+const deletable = computed(() => !!editingCharge.value && chargeDeletable(editingCharge.value))
+function removeEditing() {
+  const charge = editingCharge.value
+  open.value = false
+  if (charge) emit('delete', charge)
+}
 
 const chargeForm = ref({
   date: toLocalDateTimeInput(new Date()),
@@ -173,6 +182,20 @@ async function reviewCost(reviewed: boolean) {
 const detailsUrl = computed(() => teslamateChargeUrl(vehicleStore.activeVehicle, editingCharge.value))
 // The cost of a synchronised charge that TeslaMate still reads again is set there: the form shows it, read-only
 const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicle, editingCharge.value))
+// Where the charge comes from, in one sentence by what it changes: a synchronised charge has read-only fields
+// (the TeslaMate link is in the sentence); the others only say how they got here
+const originNoteKey = computed(() => {
+  switch (chargeOrigin(editingCharge.value ?? {})) {
+    case 'TESLAMATE':
+      return setCostUrl.value ? 'expenses.chargeModal.originTeslaMateCost' : 'expenses.chargeModal.originTeslaMate'
+    case 'CSV':
+      return 'expenses.chargeModal.originCsv'
+    case 'WEBHOOK':
+      return 'expenses.chargeModal.originAutomatic'
+    default:
+      return 'expenses.chargeModal.originManual'
+  }
+})
 </script>
 
 <template>
@@ -183,20 +206,21 @@ const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicl
             <Zap class="w-5 h-5 text-info-400 shrink-0" />
             {{ !editingCharge ? $t('expenses.chargeModal.newCharge') : $t('expenses.chargeModal.editCharge') }}
           </h3>
-          <p v-if="editingCharge" class="text-xs text-slate-400 mt-1">
-            <span class="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">{{ $t(chargeOriginKey(editingCharge)) }}</span>
-            <span v-if="sourceLocked" class="ml-1.5">{{ $t(setCostUrl ? 'expenses.chargeModal.sourceLockedCostInTeslaMate' : 'expenses.chargeModal.sourceLocked') }}</span>
+          <p v-if="editingCharge" class="text-xs text-slate-400 mt-1" data-testid="charge-origin">
+            <i18n-t :keypath="originNoteKey" tag="span">
+              <template #link>
+                <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 inline-flex items-center gap-0.5 text-slate-100 hover:text-white font-medium" :title="$t('expenses.teslamateLinks.details')">TeslaMate<ExternalLink class="w-3 h-3" aria-hidden="true" /></a>
+                <template v-else>TeslaMate</template>
+              </template>
+            </i18n-t>
           </p>
-          <p v-if="detailsUrl || canConfirmFree || canReopenCost" class="text-xs mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+          <p v-if="canConfirmFree || canReopenCost" class="text-xs mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
             <button v-if="canConfirmFree" type="button" class="text-info-400 hover:text-info-300 font-medium" :title="$t('expenses.costReview.confirmFreeHint')" @click="reviewCost(true)">
               {{ $t('expenses.costReview.confirmFree') }}
             </button>
             <button v-if="canReopenCost" type="button" class="text-info-400 hover:text-info-300 font-medium" @click="reviewCost(false)">
               {{ $t('expenses.costReview.reopen') }}
             </button>
-            <a v-if="detailsUrl" :href="detailsUrl" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 inline-flex items-center gap-1 text-slate-100 hover:text-white font-medium">
-              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
-            </a>
           </p>
         </div>
     </template>
@@ -335,6 +359,7 @@ const setCostUrl = computed(() => teslamateCostEditUrl(vehicleStore.activeVehicl
       </form>
 
     <template #footer>
+        <DetailDeleteButton v-if="editingCharge" class="mr-auto" :deletable="deletable" :can-edit="vehicleStore.canEdit" @delete="removeEditing" />
         <button type="button" @click="open = false" class="btn btn-lg btn-secondary">
           {{ $t('common.cancel') }}
         </button>
