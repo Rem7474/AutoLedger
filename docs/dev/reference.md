@@ -63,6 +63,36 @@ An item that several people or tools can edit carries a `version` column (`BIGIN
 
 `web/src/components/ActionMenu.vue` is the "⋯" menu of one card or one page: a vehicle card (setup, sharing, data sources, delete) and the import/export of the odometer page. It is not for list rows: a list row is one tappable card whose actions live in its detail and in the selection bar (`BulkSelectionBar`). Entries are `.menu-item` buttons or links in the default slot, the destructive one last with `menu-item-danger`; a click on an entry closes the menu. On a wide screen the menu is a popover under the button. On a phone it is a bottom sheet (`ModalShell`) titled with the `heading` prop, with entries at least 48px high and pulled down to close. The `phone` prop keeps the button visible below `sm`; without it the button is desktop only. An action that exists as a visible button on the card (the vehicle's Edit pencil) is not repeated as an entry. `ActionMenu.test.ts` lists the files allowed to import the component.
 
+## Screen budget
+
+Each screen stays inside a fixed budget. The ceilings are a review criterion: a PR that changes a screen states the count before and after for the criteria it touches and shows the screen at 390 px.
+
+| Criterion | Ceiling | How it is checked |
+| :--- | :--- | :--- |
+| Lead figure | 1 per screen | `colourRules.test.ts` allows one `text-hero` per file |
+| Chart visible without an action | 1 | PR captures |
+| Page length outside the list | 2 screens (about 1,700 px at 390 px, the list itself excluded) | PR captures |
+| Pieces of information per list row | 4 | PR captures |
+| Chips per list row | 1, for a deviation | PR captures (a pill is clickable only, see `StatusLabel`) |
+| Permanent help texts | 1 per page | PR captures: every other explanation is a `GlossaryTip` |
+| Filter rows | 1 | PR captures |
+
+A permanent help text is a sentence in `text-slate-400` or `text-slate-500` under a title or a figure that stays on screen. Information about a term, a figure or a chart goes in `glossary.json` and is read through `GlossaryTip`. A text that tells the user what to do next (an empty state, a validation message, a field hint inside a form) is not a help text of the page.
+
+No script measures page height or chips per row. Both depend on the amount of data on the screen, so a count taken on seeded data does not hold on another account and a threshold test would fail without a regression or pass with one. Screen length and chip count are read on the captures, with the same data before and after.
+
+### Figures
+
+A block of figures has three levels. `KpiCard` with `lead` is the one figure the block is read for. `FigureSecondary` (label, value, optional unit and `GlossaryTip`) carries two or three more, frameless, in a two or three column grid. Everything else is in the detail of the block. A figure whose value is unknown is not rendered; `keep-empty` is for a figure whose absence is itself the message and which links to what fills it.
+
+### Tabs
+
+`TabBar` is the only tab component: a `tablist` with roving focus, a selected tab in the rose look, icon and label. It takes no counter or badge; a count belongs in the content of the tab. `CarpoolPassengers` keeps its own tablist because it picks a passenger inside a form. `disclosureRules.test.ts` lists both.
+
+### Disclosures
+
+`<details>` holds the advanced inputs of a form (maintenance, CSV import, what-if, resale assumptions, battery reading) and nothing else. Content that matters to the page is shown, not folded. The files allowed to use it are listed in `web/src/utils/disclosureRules.test.ts`, and the test fails for any other file.
+
 ## SonarCloud coverage
 
 Coverage for SonarCloud: CI writes `coverage.out` (`go test -coverprofile -coverpkg=./...`, PostgreSQL-backed, so repositories count) and `web/coverage/lcov.info` (`npm run test:coverage`, scope `utils`, `composables`, `stores`), uploads them as artifacts and the `SonarCloud Scan` job passes them to Sonar through `sonar-project.properties` (`sonar.go.coverage.reportPaths`, `sonar.javascript.lcov.reportPaths`). The job runs only when the repository variable `SONAR_CI_ANALYSIS` is `true` and the secret `SONAR_TOKEN` exists, and requires SonarCloud's automatic analysis to be switched off; Dependabot and fork PRs are not scanned; the CI jobs that need no secret (tests, coverage, build) still run on them, and SonarCloud analyses `main` once they are merged.
