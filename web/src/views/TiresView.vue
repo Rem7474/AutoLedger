@@ -126,7 +126,7 @@ const {
   openLogModal,
   editLog,
   handleDeleteLog,
-} = useTireHistory({ tires, loadTires, selectedTireIds, openDispose: () => (showDisposeModal.value = true) })
+} = useTireHistory({ tires, loadTires, selectedTireIds })
 
 watch(
   () => [vehicleStore.activeVehicle?.id, activeTab.value],

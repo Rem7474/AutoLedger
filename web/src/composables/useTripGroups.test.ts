@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/services/api'
 import { useTripGroups } from './useTripGroups'
+import { flushPendingDeletes, UNDO_MS } from './useUndoableDelete'
 
 vi.mock('@/services/api', () => ({
   api: {
@@ -10,6 +11,7 @@ vi.mock('@/services/api', () => ({
     createTripGroup: vi.fn(),
     getDrives: vi.fn(),
     updateTripGroup: vi.fn(),
+    deleteTripGroup: vi.fn(),
   },
 }))
 
@@ -18,8 +20,9 @@ vi.mock('@/stores/vehicle', () => ({
 }))
 
 const alert = vi.fn()
+const choice = vi.fn()
 vi.mock('@/composables/useConfirm', () => ({
-  useConfirm: () => ({ showConfirm: vi.fn(), showAlert: alert }),
+  useConfirm: () => ({ showChoice: choice, showAlert: alert }),
 }))
 
 const suggestion = { drive_ids: ['d1', 'd2'], start_time: '2026-01-01T08:00:00Z', end_time: '2026-01-02T08:00:00Z', start_address: 'Paris', end_address: 'Lyon' }
@@ -123,6 +126,76 @@ describe('useTripGroups', () => {
       await trips.removeDriveFromTrip(tg, 'a')
       expect(trips.expandedTripId.value).toBeNull()
       expect(api.getDrives).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('handleDeleteTrip', () => {
+    async function listed(expenseCount: number) {
+      const trip = { id: 't1', name: 'Alps', expense_count: expenseCount, expenses_total: '12.5' }
+      vi.mocked(api.getTripGroups).mockResolvedValue([trip] as any)
+      vi.mocked(api.getTripSuggestions).mockResolvedValue([] as any)
+      const loadDrives = vi.fn()
+      const trips = useTripGroups({ loadDrives })
+      await trips.loadTripGroups()
+      return { trips, trip, loadDrives }
+    }
+
+    it('hides a trip without costs at once and deletes it when the time to undo is over', async () => {
+      vi.useFakeTimers()
+      try {
+        const { trips, trip, loadDrives } = await listed(0)
+        vi.mocked(api.deleteTripGroup).mockResolvedValue({} as any)
+        vi.mocked(api.getTripGroups).mockResolvedValue([] as any)
+        await trips.handleDeleteTrip(trip)
+        expect(choice).not.toHaveBeenCalled()
+        expect(trips.tripGroups.value).toEqual([])
+        expect(api.deleteTripGroup).not.toHaveBeenCalled()
+        await vi.advanceTimersByTimeAsync(UNDO_MS)
+        expect(api.deleteTripGroup).toHaveBeenCalledWith('v1', 't1', false)
+        expect(loadDrives).toHaveBeenCalled()
+      } finally {
+        await flushPendingDeletes()
+        vi.useRealTimers()
+      }
+    })
+
+    it('asks what to do with the costs first: delete them too, keep them unlinked, or keep the trip', async () => {
+      vi.useFakeTimers()
+      try {
+        const { trips, trip } = await listed(2)
+        vi.mocked(api.deleteTripGroup).mockResolvedValue({} as any)
+        choice.mockResolvedValueOnce('cancel')
+        await trips.handleDeleteTrip(trip)
+        expect(trips.tripGroups.value).toHaveLength(1)
+        choice.mockResolvedValueOnce('confirm')
+        await trips.handleDeleteTrip(trip)
+        await vi.advanceTimersByTimeAsync(UNDO_MS)
+        expect(api.deleteTripGroup).toHaveBeenLastCalledWith('v1', 't1', true)
+        vi.mocked(api.getTripGroups).mockResolvedValue([trip] as any)
+        await trips.loadTripGroups()
+        choice.mockResolvedValueOnce('alternative')
+        await trips.handleDeleteTrip(trip)
+        await vi.advanceTimersByTimeAsync(UNDO_MS)
+        expect(api.deleteTripGroup).toHaveBeenLastCalledWith('v1', 't1', false)
+      } finally {
+        await flushPendingDeletes()
+        vi.useRealTimers()
+      }
+    })
+
+    it('puts the trip back and alerts when the server refuses', async () => {
+      vi.useFakeTimers()
+      try {
+        const { trips, trip } = await listed(0)
+        vi.mocked(api.deleteTripGroup).mockRejectedValue(new Error('nope'))
+        await trips.handleDeleteTrip(trip)
+        await vi.advanceTimersByTimeAsync(UNDO_MS)
+        expect(trips.tripGroups.value).toHaveLength(1)
+        expect(alert).toHaveBeenCalled()
+      } finally {
+        await flushPendingDeletes()
+        vi.useRealTimers()
+      }
     })
   })
 })
