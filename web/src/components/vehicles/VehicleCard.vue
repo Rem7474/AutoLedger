@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import { distanceUnit, formatDistance, formatDistanceValue, formatPerDistanceValue, perDistance } from '@/units'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
-import RowMenu from '@/components/RowMenu.vue'
+import ActionMenu from '@/components/ActionMenu.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import { api } from '@/services/api'
 import { Car, Plus, Trash2, Edit2, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database, Check } from '@/icons'
@@ -86,17 +86,14 @@ function clearCardTestResult() {
         <button
           v-if="v.role === 'OWNER'"
           type="button"
-          class="row-action relative z-10 max-sm:hidden"
+          class="row-action relative z-10"
           :title="$t('common.edit')"
           :aria-label="$t('common.edit')"
           @click="emit('edit', v)"
         >
           <Edit2 class="h-4 w-4" aria-hidden="true" />
         </button>
-        <RowMenu phone :label="$t('common.moreActions')" :heading="v.name">
-          <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item sm:hidden" @click="emit('edit', v)">
-            <Edit2 class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('common.edit') }}
-          </button>
+        <ActionMenu phone :label="$t('common.moreActions')" :heading="v.name">
           <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item" @click="emit('ownership', v)">
             <FileText class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('vehicles.vehicleCard.acquisitionAndFinancing') }}
           </button>
@@ -115,7 +112,7 @@ function clearCardTestResult() {
           <button v-if="v.role === 'OWNER'" type="button" role="menuitem" class="menu-item menu-item-danger" @click="emit('delete', v.id)">
             <Trash2 class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />{{ $t('common.delete') }}
           </button>
-        </RowMenu>
+        </ActionMenu>
       </div>
     </div>
 
