@@ -6,6 +6,8 @@ import DriveLegRow from './DriveLegRow.vue'
 
 const vehicleStore = reactive<{ canEdit: boolean; currency: string; activeVehicle: any }>({ canEdit: true, currency: 'EUR', activeVehicle: { powertrain: 'EV', teslamate_api_url: 'http://tm' } })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
+const prefs = reactive({ proPersoEnabled: false })
+vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => prefs }))
 
 const leg = {
   id: 'a',
@@ -22,11 +24,12 @@ afterEach(() => {
 })
 
 describe('DriveLegRow', () => {
-  it('is one flat row opened as a whole, with the route cut to its first segment and the cost beside it', async () => {
+  it('is a compact card opened as a whole, with the route cut to its first segment and the cost beside it', async () => {
     const html = await render(leg)
     expect(html).toContain('data-testid="drive-leg"')
     expect(html).toContain('inset-0')
-    expect(html).not.toContain('card py-2.5')
+    expect(html).toContain('card relative flex items-center px-3 gap-2.5 py-1.5')
+    expect(html).not.toContain('py-2.5')
     expect(html).not.toContain('aria-haspopup')
     expect(html).toContain('Zone industrielle des Grandes Terres Nord')
     expect(html).not.toContain('>Zone industrielle des Grandes Terres Nord, 69800')
@@ -55,5 +58,19 @@ describe('DriveLegRow', () => {
     const html = await render(leg)
     expect(html).toContain('flex-col')
     expect(html).not.toContain('> · <')
+  })
+
+  it('carries the glyph of the drives list, smaller and at every width', async () => {
+    const html = await render(leg)
+    expect(html).toContain('size-8')
+    expect(html).not.toContain('sm:hidden')
+    // a carpooled leg takes the carpool glyph and a work leg the work glyph, like the drive row
+    const plain = html.match(/<svg[\s\S]*?<\/svg>/)?.[0]
+    const carpooled = (await render({ ...leg, carpools: [{ id: 'c1', passenger_count: 2, total_revenue: 20 }] })).match(/<svg[\s\S]*?<\/svg>/)?.[0]
+    expect(carpooled).not.toBe(plain)
+    prefs.proPersoEnabled = true
+    const pro = (await render({ ...leg, tags: ['Pro'] })).match(/<svg[\s\S]*?<\/svg>/)?.[0]
+    prefs.proPersoEnabled = false
+    expect(pro).not.toBe(plain)
   })
 })

@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
-import { Navigation, Users, Briefcase, User } from '@/icons'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import ListItem from '@/components/ListItem.vue'
 import RowLeading from '@/components/RowLeading.vue'
@@ -13,6 +12,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import DriveCarpoolChip from '@/components/drives/DriveCarpoolChip.vue'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
 import { hasTeslaMate } from '@/utils/vehicles'
+import { driveGlyph } from '@/utils/driveGlyph'
 import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
 import { formatDayTime, formatTimeOfDay } from '@/utils/dates'
 import { formatAmount } from '@/currency'
@@ -48,12 +48,7 @@ function onRowClick() {
 const showManualBadge = computed(() => hasTeslaMate(vehicleStore.activeVehicle))
 const carpoolSummary = computed(() => summarizeDriveCarpools(props.d.carpools))
 // The glyph says what is particular to the drive (carpooled, work, personal); an ordinary drive keeps the plain trip glyph.
-const leadingIcon = computed(() => {
-  if (carpoolSummary.value) return Users
-  if (prefs.proPersoEnabled && props.d.tags?.includes('Pro')) return Briefcase
-  if (prefs.proPersoEnabled && props.d.tags?.includes('Perso')) return User
-  return Navigation
-})
+const leadingIcon = computed(() => driveGlyph(props.d, !!carpoolSummary.value, prefs.proPersoEnabled))
 
 // One carpool opens it directly; several open the drive's cost breakdown, which lists them
 function openCarpool() {

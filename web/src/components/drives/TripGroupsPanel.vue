@@ -113,7 +113,7 @@ const actions = computed<SelectionAction[]>(() => {
         </template>
       </ListItem>
       <!-- The legs of the trip: a list indented under its row, one flat row per leg, each opening the cost breakdown of the leg -->
-      <div v-if="expandedTripId === tg.id" class="ml-6 mt-1 divide-y divide-slate-800 border-l-2 border-slate-800 pl-1" data-testid="trip-legs">
+      <div v-if="expandedTripId === tg.id" class="ml-5 mt-1.5 space-y-1.5 border-l-2 border-slate-800 pl-2" data-testid="trip-legs">
         <DriveLegRow v-for="d in tripDrives" :key="d.id" :leg="d" @open="emit('open-leg', $event)" />
         <p v-if="!tripDrives.length" class="px-3 py-2 text-xs text-slate-400">{{ $t('drives.tripGroupsPanel.loadingTheDrives') }}</p>
       </div>

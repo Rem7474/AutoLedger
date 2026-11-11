@@ -6,6 +6,7 @@ import TripGroupsPanel from './TripGroupsPanel.vue'
 
 const vehicleStore = reactive<{ canEdit: boolean; currency: string }>({ canEdit: true, currency: 'EUR' })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
+vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => ({ proPersoEnabled: false }) }))
 
 const trip = { id: 'g1', name: 'Summer holiday', distance_km: 1200, drive_ids: ['a', 'b'], tolls_total: '31.5', carpool_count: 1, notes: '', start_date: '2026-07-01', end_date: '2026-07-10' }
 const legs = [
@@ -40,16 +41,17 @@ describe('TripGroupsPanel', () => {
     expect(await render()).not.toContain('id="select-g1"')
   })
 
-  it('lists the legs of an open trip as flat rows that open the leg, with no remove control', async () => {
+  it('lists the legs of an open trip as small cards that open the leg, with no remove control', async () => {
     const html = await render('g1', legs)
     expect(html).toContain('data-testid="trip-legs"')
     expect(html.match(/data-testid="drive-leg"/g)).toHaveLength(2)
     expect(html).toContain('title="Rue de la Paix, 75002 Paris, France → Lyon, France"')
     expect(html).not.toContain('aria-haspopup="menu"')
     expect(html).not.toContain('Retirer ce trajet du voyage')
-    // a leg is a flat row inside the list, not a second card
+    // a leg is the card of the drives list one step smaller (compact padding), under the rule of its trip
     const list = html.slice(html.indexOf('data-testid="trip-legs"'))
-    expect(list).not.toContain('card py-2.5')
+    expect(list).toContain('class="card relative flex items-center px-3 gap-2.5 py-1.5"')
+    expect(list).not.toContain('divide-y')
   })
 
   it('shows the loading line while the legs load', async () => {

@@ -707,7 +707,7 @@ test('a trip has no row menu: its detail carries Edit in the header and a quiet 
   }
 })
 
-test('the legs of a trip are flat rows that open the leg; a leg is taken out of the trip from its detail', async ({ page, request }) => {
+test('the legs of a trip are compact cards that open the leg; a leg is taken out of the trip from its detail', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const name = `E2E legs ${Date.now()}`
   const drives = (await (await request.get(`/api/vehicles/${ev.id}/drives?limit=3`, { headers })).json()).drives as { id: string }[]
@@ -720,6 +720,7 @@ test('the legs of a trip are flat rows that open the leg; a leg is taken out of 
     await page.locator('div.relative.flex', { has: page.getByRole('button', { name: `Open ${name}` }) }).getByRole('button', { name: 'Legs', exact: true }).click()
     const legs = page.locator('[data-testid="trip-legs"] [data-testid="drive-leg"]')
     await expect(legs).toHaveCount(3)
+    await expect(legs.first()).toHaveClass(/card/)
     // no hidden control on a leg: the row is one open button, nothing else
     await expect(page.locator('[data-testid="trip-legs"] button')).toHaveCount(3)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0)

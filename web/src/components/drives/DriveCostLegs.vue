@@ -13,8 +13,8 @@ const emit = defineEmits<{ open: [leg: any] }>()
       <Layers class="w-3.5 h-3.5 text-slate-400" />
       {{ $t('drives.driveCostModal.tripLegs', { count: tripLegs.length }) }}
     </h4>
-    <div class="divide-y divide-slate-800">
-      <DriveLegRow v-for="leg in tripLegs" :key="leg.id" :leg="leg" @open="emit('open', $event)" />
+    <div class="space-y-1.5">
+      <DriveLegRow class="bg-slate-800" v-for="leg in tripLegs" :key="leg.id" :leg="leg" @open="emit('open', $event)" />
     </div>
   </div>
 </template>
