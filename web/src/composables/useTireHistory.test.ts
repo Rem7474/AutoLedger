@@ -14,22 +14,19 @@ vi.mock('@/i18n', () => ({ t: (k: string) => k, intlLocale: () => 'en' }))
 vi.mock('@/stores/vehicle', () => ({
   useVehicleStore: () => ({ activeVehicle: { id: 'v1', current_odometer: 1234.6 } }),
 }))
-const confirm = vi.hoisted(() => ({ showConfirm: vi.fn(), showChoice: vi.fn(), showAlert: vi.fn() }))
+const confirm = vi.hoisted(() => ({ showAlert: vi.fn() }))
 vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => confirm }))
 
 function setup() {
   const tires = ref<any[]>([{ tire: { id: 't1' } }])
   const loadTires = vi.fn().mockResolvedValue(undefined)
   const selectedTireIds = ref<string[]>(['t1', 't2'])
-  const openDispose = vi.fn()
-  return { tires, loadTires, selectedTireIds, openDispose, h: useTireHistory({ tires, loadTires, selectedTireIds, openDispose }) }
+    return { tires, loadTires, selectedTireIds, h: useTireHistory({ tires, loadTires, selectedTireIds }) }
 }
 
 describe('useTireHistory', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    confirm.showConfirm.mockResolvedValue(true)
-    confirm.showChoice.mockResolvedValue('confirm')
     api.getTireHistory.mockResolvedValue({ tire: { id: 't1' }, stats: { s: 1 }, sessions: [{ id: 's1' }], logs: null })
   })
 
@@ -68,32 +65,40 @@ describe('useTireHistory', () => {
     expect(api.getTireHistory).toHaveBeenCalledTimes(2)
   })
 
-  it('deletes a tire after confirmation and unselects it', async () => {
-    const { h, loadTires, selectedTireIds } = setup()
-    await h.handleDeleteTire({ id: 't1' })
-    expect(api.deleteTire).toHaveBeenCalledWith('v1', 't1')
-    expect(selectedTireIds.value).toEqual(['t2'])
-    expect(loadTires).toHaveBeenCalled()
+  it('hides a tire at once, closes its history and unselects it, then deletes it when the time to undo is over', async () => {
+    vi.useFakeTimers()
+    try {
+      const { h, tires, loadTires, selectedTireIds } = setup()
+      await h.openHistoryModal({ tire: { id: 't1' } })
+      h.handleDeleteTire({ id: 't1' })
+      expect(tires.value).toEqual([])
+      expect(h.showHistoryModal.value).toBe(false)
+      expect(selectedTireIds.value).toEqual(['t2'])
+      expect(api.deleteTire).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(api.deleteTire).toHaveBeenCalledWith('v1', 't1')
+      expect(loadTires).toHaveBeenCalledWith(true)
+    } finally {
+      await flushPendingDeletes()
+      vi.useRealTimers()
+    }
   })
 
-  it('does nothing when the deletion is declined, and alerts when it fails', async () => {
-    const { h } = setup()
-    confirm.showChoice.mockResolvedValue('cancel')
-    await h.handleDeleteTire({ id: 't1' })
-    expect(api.deleteTire).not.toHaveBeenCalled()
-    confirm.showChoice.mockResolvedValue('confirm')
-    api.deleteTire.mockRejectedValue(new Error('x'))
-    await h.handleDeleteTire({ id: 't1' })
-    expect(confirm.showAlert).toHaveBeenCalled()
-  })
-
-  it('opens the scrap form instead of deleting when scrapping is chosen', async () => {
-    const { h, openDispose, loadTires } = setup()
-    confirm.showChoice.mockResolvedValue('alternative')
-    await h.handleDeleteTire({ id: 't1' })
-    expect(openDispose).toHaveBeenCalledTimes(1)
-    expect(api.deleteTire).not.toHaveBeenCalled()
-    expect(loadTires).not.toHaveBeenCalled()
+  it('puts the tire back and alerts when the server refuses, and ignores a tire that is not listed', async () => {
+    vi.useFakeTimers()
+    try {
+      const { h, tires } = setup()
+      h.handleDeleteTire({ id: 'unknown' })
+      expect(tires.value).toHaveLength(1)
+      api.deleteTire.mockRejectedValue(new Error('x'))
+      h.handleDeleteTire({ id: 't1' })
+      await vi.advanceTimersByTimeAsync(UNDO_MS)
+      expect(tires.value).toHaveLength(1)
+      expect(confirm.showAlert).toHaveBeenCalled()
+    } finally {
+      await flushPendingDeletes()
+      vi.useRealTimers()
+    }
   })
 
   it('hides a session and a reading at once, deletes them once the time to undo is over, and reloads', async () => {

@@ -3,6 +3,7 @@ import { t } from '@/i18n'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { useStaleWrite } from '@/composables/useStaleWrite'
 import { formatAmount } from '@/currency'
 import { formatTripDates } from '@/utils/drives'
@@ -12,7 +13,7 @@ import { formatTripDates } from '@/utils/drives'
 export function useTripGroups({ loadDrives }: { loadDrives: () => unknown }) {
   const { explainStaleWrite } = useStaleWrite()
   const vehicleStore = useVehicleStore()
-  const { showConfirm, showAlert } = useConfirm()
+  const { showChoice, showAlert } = useConfirm()
 
   const tripGroups = ref<any[]>([])
   const tripSuggestions = ref<any[]>([])
@@ -110,33 +111,35 @@ export function useTripGroups({ loadDrives }: { loadDrives: () => unknown }) {
     }
   }
 
+  // The trip goes at once and comes back with Undo, the server is asked when that time is over. Its costs are the one
+  // thing to decide first: they are deleted with it or kept unlinked, and closing the question keeps the trip.
   async function handleDeleteTrip(tg: any) {
-    if (!vehicleStore.activeVehicle) return
-    const ok = await showConfirm({
-      title: t('drives.drivesView.deleteTripTitle'),
-      message: t('drives.drivesView.deleteTripMessage', { name: tg.name }),
-      confirmText: t('drives.drivesView.deleteTripTitle'),
-      type: 'danger',
-    })
-    if (!ok) return
-
+    const vehicle = vehicleStore.activeVehicle
+    if (!vehicle) return
     let deleteExpenses = false
     if (tg.expense_count > 0) {
-      deleteExpenses = await showConfirm({
+      const choice = await showChoice({
         title: t('drives.drivesView.tripCostsTitle'),
         message: t('drives.drivesView.tripCostsMessage', { count: tg.expense_count, total: formatAmount(Number(tg.expenses_total), vehicleStore.currency) }),
         confirmText: t('drives.drivesView.deleteCostsToo'),
-        cancelText: t('drives.drivesView.keepCostsUnlinked'),
+        alternativeText: t('drives.drivesView.keepCostsUnlinked'),
         type: 'warning',
       })
+      if (choice === 'cancel') return
+      deleteExpenses = choice === 'confirm'
     }
-    try {
-      await api.deleteTripGroup(vehicleStore.activeVehicle.id, tg.id, deleteExpenses)
-      await loadTripGroups()
-      loadDrives()
-    } catch (err: any) {
-      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
+    deleteRowsWithUndo({
+      list: tripGroups,
+      items: [tg],
+      key: (x) => x.id,
+      message: t('drives.drivesView.tripDeleted'),
+      remove: (x) => api.deleteTripGroup(vehicle.id, x.id, deleteExpenses),
+      committed: async () => {
+        await loadTripGroups()
+        loadDrives()
+      },
+      onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
+    })
   }
 
   return {
