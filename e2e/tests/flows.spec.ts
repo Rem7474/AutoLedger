@@ -468,6 +468,35 @@ test('an odometer reading is deleted from its form with Undo, without a row menu
   }
 })
 
+test('a manual drive is deleted from its detail with Undo, without a row menu', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const end = `Detail delete drive ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/drives`, { headers, data: { start_time: new Date().toISOString(), distance_km: 12.3, start_address: 'Probe start', end_address: end, tags: [] } })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, ev.id, '/drives')
+    const row = page.getByTestId('drive-card').filter({ hasText: end })
+    await expect(row).toHaveCount(1)
+    await expect(row.getByRole('button', { name: 'More actions' })).toHaveCount(0)
+    await row.getByRole('button', { name: /^Open the cost breakdown/ }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(row).toHaveCount(0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(row).toHaveCount(1)
+    await row.getByRole('button', { name: /^Open the cost breakdown/ }).click()
+    const deleted = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().includes(`/drives/${id}`))
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
+    expect((await deleted).ok()).toBeTruthy()
+    await expect(row).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${ev.id}/drives/${id}`, { headers })
+  }
+})
+
 test('the drive filters sit in a sheet on a phone and in the bar on a wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await useVehicle(page, ev.id, '/drives')

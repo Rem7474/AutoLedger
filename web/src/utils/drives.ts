@@ -373,3 +373,30 @@ export function canStepDrivesPeriod(f: PeriodState, dir: -1 | 1, today: Date = n
   if (dir === -1) return true
   return unitRange(unit, referenceOf(f)).to < todayIso(today)
 }
+
+export interface DriveTotals {
+  /** Distance of the listed drives, in km. */
+  distanceKm: number
+  /** What the rows display added up: the known `costs.total_cost` of each drive. */
+  gross: number
+  /** Gross minus what the carpools of these drives brought in; null when none of them was carpooled. */
+  net: number | null
+  /** Some drive has no known cost, so `gross` only adds up the others. */
+  incomplete: boolean
+}
+
+/** The figures of a day (or month) header, from the drives listed under it. A carpool that covers several of the drives counts once. */
+export function driveTotals(drives: any[]): DriveTotals {
+  let distanceKm = 0
+  let gross = 0
+  let incomplete = false
+  const carpools = new Map<string, number>()
+  for (const d of drives) {
+    distanceKm += Number(d.distance_km) || 0
+    if (d.costs?.total_cost == null) incomplete = true
+    else gross += Number(d.costs.total_cost) || 0
+    for (const c of (d.carpools ?? []) as DriveCarpoolRef[]) carpools.set(c.id, Number(c.total_revenue) || 0)
+  }
+  const revenue = [...carpools.values()].reduce((s, v) => s + v, 0)
+  return { distanceKm, gross, net: carpools.size ? gross - revenue : null, incomplete }
+}

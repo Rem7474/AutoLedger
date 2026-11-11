@@ -50,6 +50,11 @@ describe('request', () => {
     expect(init.headers['Idempotency-Key']).toBeUndefined()
   })
 
+  it('accepte une suppression répondue sans contenu (204) au lieu d\'y voir une réponse invalide', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }))
+    await expect(api.deleteDrive('v1', 'd1')).resolves.toBeUndefined()
+  })
+
   it('leaves the content type to the browser for a multipart body', async () => {
     fetchMock.mockImplementation(async () => jsonResponse({ id: 'd1' }))
     await api.uploadDocument('v1', new File(['x'], 'a.pdf'), 'invoice')

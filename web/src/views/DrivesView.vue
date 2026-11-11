@@ -21,6 +21,7 @@ import { api } from '@/services/api'
 import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import DrivesToolbar from '@/components/drives/DrivesToolbar.vue'
 import DriveBulkActions from '@/components/drives/DriveBulkActions.vue'
+import DriveTotalsLine from '@/components/drives/DriveTotalsLine.vue'
 import DriveCard from '@/components/drives/DriveCard.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
 import AddressBackfillNotice from '@/components/drives/AddressBackfillNotice.vue'
@@ -41,7 +42,6 @@ import EmptySourceHints from '@/components/EmptySourceHints.vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useInfiniteList } from '@/composables/useInfiniteList'
 import { groupByDay, dayLabel, groupDaysByMonth, monthHeader } from '@/utils/dayGroups'
-import { formatAmount } from '@/currency'
 import { toLocalDay } from '@/utils/dates'
 import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
@@ -51,6 +51,7 @@ import {
   countActiveDriveFilters,
   periodBounds,
   selectionSummary,
+  driveTotals,
   todayIso,
   type PeriodMode,
   toggleTag,
@@ -218,9 +219,12 @@ const driveMonths = computed(() => {
   const days = groupByDay(drives.value, (d) => d.start_time).map((g) => ({ ...g, label: dayLabel(g.day, today, labels, format) }))
   const grouped = groupDaysByMonth(days)
   return grouped.map((m, i) => {
-    const complete = !(hasMore.value && i === grouped.length - 1)
-    const subtotal = m.days.reduce((sum, g) => sum + g.items.reduce((s, d) => s + (d.costs?.total_cost || 0), 0), 0)
-    return { ...m, label: monthHeader(m.month, today, monthFormat), subtotal: complete ? subtotal : null }
+    const lastMonth = i === grouped.length - 1
+    const complete = !(hasMore.value && lastMonth)
+    // The day the next page may continue is the last one loaded: its figures wait for it, like the month's
+    const monthDays = m.days.map((g, j) => ({ ...g, totals: hasMore.value && lastMonth && j === m.days.length - 1 ? null : driveTotals(g.items) }))
+    const all = m.days.flatMap((g) => g.items)
+    return { ...m, days: monthDays, label: monthHeader(m.month, today, monthFormat), totals: complete ? driveTotals(all) : null }
   })
 })
 
@@ -413,6 +417,16 @@ function editTripFromCostModal(virtual: any) {
   openTripEdit(tg)
 }
 
+// A manual drive's edit form replaces its detail; its delete closes the detail and goes with the same Undo as the swipe
+function editFromCostModal(drive: any) {
+  showCostModal.value = false
+  openManualDriveModal(drive)
+}
+function deleteFromCostModal(drive: any) {
+  showCostModal.value = false
+  handleDeleteManualDrive(drive)
+}
+
 // Its legs may have changed: the trips, the drives (their trip badge) and the open leg list are reloaded
 async function onTripSaved() {
   expandedTripId.value = null
@@ -593,12 +607,15 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       </div>
 
       <section v-for="month in driveMonths" :key="month.month" class="space-y-2">
-        <div class="flex items-baseline justify-between gap-3 px-1 pt-2">
+        <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-2">
           <h2 class="text-sm font-bold capitalize text-white">{{ month.label }}</h2>
-          <p v-if="month.subtotal !== null" class="text-xs font-semibold tabular-nums text-slate-300">{{ formatAmount(month.subtotal, vehicleStore.currency) }}</p>
+          <DriveTotalsLine :totals="month.totals" show-net />
         </div>
         <div v-for="group in month.days" :key="group.day" class="space-y-2">
-          <h3 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h3>
+          <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-1">
+            <h3 class="text-xs font-semibold text-slate-400">{{ group.label }}</h3>
+            <DriveTotalsLine :totals="group.totals" show-net />
+          </div>
           <SwipeToDelete v-for="d in group.items" :key="d.id" :disabled="!d.is_manual || selectedDriveIds.length > 0" @delete="handleDeleteManualDrive(d)">
             <DriveCard
               :d="d"
@@ -608,9 +625,6 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
               @toggle="toggleSelectDrive"
               @toll-entry="openTollEntry"
               @no-toll="markNoToll"
-              @edit="openManualDriveModal"
-              @delete="handleDeleteManualDrive"
-              @carpool="(drive) => openCarpoolEditor({ driveIds: [drive.id] })"
             />
           </SwipeToDelete>
         </div>
@@ -669,6 +683,9 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       @create-trip="createTripFromCostModal"
       @dismiss-trip="dismissTripFromCostModal"
       @carpool="openCarpoolEditor"
+      manageable
+      @edit="editFromCostModal"
+      @delete="deleteFromCostModal"
     />
 
     <CarpoolTripModal
