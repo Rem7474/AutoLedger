@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import ListItem from '@/components/ListItem.vue'
+import QuietLine from '@/components/QuietLine.vue'
 import StatusLabel from '@/components/StatusLabel.vue'
 import { computed } from 'vue'
 import { useSelectableRow } from '@/composables/useSelectableRow'
@@ -16,7 +17,7 @@ import { editDeleteActions, type SelectionAction } from '@/utils/selectionAction
 import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 
-// The carpool trips as list rows (the notes, legs, passengers and costs are in the detail, opened by a click; its edit, recalculate and delete are there too), and the
+// The carpool trips as list rows (the legs, passengers and costs are in the detail, opened by a click; its edit, recalculate and delete are there too), and the
 // selection actions (edit, delete, freeze or resync the amounts of the carpools made from drives, recalculate, export). On a phone the checkboxes are hidden at rest: a long press selects a carpool and
 // starts the selection, where the boxes show and a tap toggles the row instead of opening it.
 const props = defineProps<{ trips: any[]; selectedTripIds: string[]; recalculating: boolean; /** How many carpools the vehicle has, when only some pages are loaded. */ total?: number }>()
@@ -116,7 +117,7 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
     </div>
 
     <SwipeToDelete v-for="trip in trips" :key="trip.id" :disabled="!vehicleStore.canEdit || selectedTripIds.length > 0" @delete="emit('delete', trip)">
-      <ListItem class="max-sm:select-none max-sm:[-webkit-touch-callout:none]" :class="selectedTripIds.includes(trip.id) ? '!border-rose-500/50 bg-rose-500/[0.02]' : ''">
+      <ListItem wrap-title class="max-sm:select-none max-sm:[-webkit-touch-callout:none]" :class="selectedTripIds.includes(trip.id) ? '!border-rose-500/50 bg-rose-500/[0.02]' : ''">
         <template #open>
           <CardOpenButton
             :label="$t('common.openItem', { item: trip.title })"
@@ -149,20 +150,17 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         <template #title><span :title="trip.title">{{ trip.title }}</span></template>
         <!-- The quiet line: when, how far, who, and how far the cost is recovered; the amounts as entered or following the drives is a second state in the same line -->
         <template #subtitle>
-          <span class="whitespace-normal">
-            <span class="whitespace-nowrap">{{ formatDate(trip.date) }}</span>
-            <span> · </span><span class="whitespace-nowrap">{{ formatDistance(trip.distance_km, 1) }}</span>
-            <span> · </span><span class="whitespace-nowrap">{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
-            <span> · </span><span class="whitespace-nowrap">{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
-            <span> · </span>
-            <StatusLabel class="align-top [&>.truncate]:whitespace-normal [&>.truncate]:overflow-visible" :tone="trip.net_cost <= 0 ? 'neutral' : 'attention'">
+          <QuietLine>
+            <span>{{ formatDate(trip.date) }}</span>
+            <span>{{ formatDistance(trip.distance_km, 1) }}</span>
+            <span>{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
+            <span>{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
+            <StatusLabel class="[&>.truncate]:whitespace-normal [&>.truncate]:overflow-visible" :tone="trip.net_cost <= 0 ? 'neutral' : 'attention'">
               {{ trip.net_cost <= 0 ? $t('carpool.carpoolTripList.fullyRecovered') : $t('carpool.carpoolTripList.recovered', { percent: trip.total_cost > 0 ? Math.min(100, Math.round((trip.total_revenue / trip.total_cost) * 100)) : 0 }) }}
             </StatusLabel>
-            <template v-if="hasLinkedLegs(trip)">
-              <span> · </span>
-              <span class="whitespace-nowrap" :title="trip.costs_frozen_at ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint')">{{ trip.costs_frozen_at ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}</span>
-            </template>
-          </span>
+            <span v-if="hasLinkedLegs(trip)" :title="trip.costs_frozen_at ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint')">{{ trip.costs_frozen_at ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}</span>
+            <span v-if="trip.notes">{{ trip.notes }}</span>
+          </QuietLine>
         </template>
         <template #value>
           <span v-if="trip.net_cost > 0">{{ fmt(trip.net_cost) }}</span>

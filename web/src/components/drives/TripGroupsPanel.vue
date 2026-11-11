@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
+import QuietLine from '@/components/QuietLine.vue'
 import ListItem from '@/components/ListItem.vue'
 import RowLeading from '@/components/RowLeading.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -65,7 +66,7 @@ const actions = computed<SelectionAction[]>(() => {
       v-for="tg in tripGroups"
       :key="tg.id"
     >
-      <ListItem class="max-sm:select-none max-sm:[-webkit-touch-callout:none]" :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(tg) }">
+      <ListItem wrap-title class="max-sm:select-none max-sm:[-webkit-touch-callout:none]" :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(tg) }">
         <template #open>
           <CardOpenButton
             :label="$t('common.openItem', { item: tg.name })"
@@ -84,12 +85,11 @@ const actions = computed<SelectionAction[]>(() => {
         <template #title><span :title="tg.name">{{ tg.name }}</span></template>
         <!-- The quiet line: when, how far, how many legs and carpools, and the legs toggle -->
         <template #subtitle>
-          <span class="whitespace-normal">
-            <span class="whitespace-nowrap">{{ formatTripDates(tg) }}</span>
-            <span> · </span><span class="whitespace-nowrap">{{ formatDistance(tg.distance_km) }}</span>
-            <span> · </span><span class="whitespace-nowrap">{{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}</span>
-            <template v-if="tg.carpool_count"><span> · </span><span class="whitespace-nowrap">{{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}</span></template>
-            <span> · </span>
+          <QuietLine>
+            <span>{{ formatTripDates(tg) }}</span>
+            <span>{{ formatDistance(tg.distance_km) }}</span>
+            <span>{{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}</span>
+            <span v-if="tg.carpool_count">{{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}</span>
             <button
               type="button"
               @click="emit('toggle-details', tg)"
@@ -99,7 +99,7 @@ const actions = computed<SelectionAction[]>(() => {
               {{ expandedTripId === tg.id ? $t('drives.tripGroupsPanel.hide') : $t('drives.tripGroupsPanel.legs') }}
               <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expandedTripId === tg.id }" />
             </button>
-          </span>
+          </QuietLine>
         </template>
         <template #value>
           <span :title="$t('drives.tripGroupsPanel.consolidatedCostOfTheTrip')">

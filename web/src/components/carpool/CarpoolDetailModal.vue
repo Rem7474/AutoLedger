@@ -56,8 +56,8 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
           <div class="p-2 rounded-xl shrink-0 bg-rose-500/10 text-rose-400">
             <Users class="w-5 h-5" />
           </div>
-          <div class="min-w-0 truncate">
-            <h3 class="text-base font-bold text-white truncate">{{ trip.title }}</h3>
+          <div class="min-w-0">
+            <h3 class="text-base font-bold text-white line-clamp-2" :title="trip.title">{{ trip.title }}</h3>
             <p class="text-xs text-slate-400">{{ formatDate(trip.date) }} · {{ formatDistance(trip.distance_km, 1) }}</p>
           </div>
         </div>
@@ -203,9 +203,10 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
             @click="emit('recalculate', trip)"
             :disabled="recalculating"
             class="btn btn-secondary"
-            :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')" :aria-label="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')"
+            :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')"
           >
             <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': recalculating }" />
+            <span>{{ $t('carpool.carpoolTripList.recalculate') }}</span>
           </button>
         </div>
     </template>

@@ -162,8 +162,8 @@ async function handleDriverChange(event: Event) {
           <div class="p-2 rounded-xl shrink-0 bg-slate-800 text-slate-300">
             <component :is="selectedCostDrive.is_trip_group ? Layers : Coins" class="w-5 h-5" />
           </div>
-          <div class="min-w-0 truncate">
-            <h3 class="text-base font-bold text-white truncate">
+          <div class="min-w-0">
+            <h3 class="text-base font-bold text-white line-clamp-2">
               {{ selectedCostDrive.is_trip_group ? $t('drives.driveCostModal.tripTitle', { name: selectedCostDrive.trip_group_name }) : $t('drives.driveCostModal.driveTitle') }}
             </h3>
             <p class="text-xs text-slate-400">{{ formatDate(selectedCostDrive.start_time) }}</p>
