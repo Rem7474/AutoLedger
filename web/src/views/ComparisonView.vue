@@ -37,7 +37,7 @@ import {
 } from '@/utils/comparisonForm'
 
 const vehicleStore = useVehicleStore()
-const { showConfirm, showAlert } = useConfirm()
+const { showAlert } = useConfirm()
 
 const scenarios = ref<any[]>([])
 const loading = ref(false)

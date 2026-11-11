@@ -32,7 +32,7 @@ const props = defineProps<{
 }>()
 
 const vehicleStore = useVehicleStore()
-const { showConfirm, showAlert } = useConfirm()
+const { showAlert } = useConfirm()
 
 const readings = ref<any[]>([])
 const fuelLogs = ref<any[]>([])
@@ -255,7 +255,7 @@ useRefreshHandler(() => load(true))
       @delete="removeEditing"
     />
     <Teleport v-if="canEdit && isMobile" to="body">
-      <ModalShell v-model:open="formOpen" :title="editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new')" size="sm">
+      <ModalShell pane v-model:open="formOpen" :title="editingId ? $t('manual.odometerReadingsPanel.edit') : $t('manual.odometerReadingsPanel.new')" size="sm">
         <p class="mb-4 text-xs text-slate-400">{{ $t('manual.odometerReadingsPanel.odometerReadingsSpreadTheUntracked') }}</p>
         <OdometerReadingForm
           v-model:date="form.date"

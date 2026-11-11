@@ -63,7 +63,7 @@ const vehicleStore = useVehicleStore()
 const route = useRoute()
 const router = useRouter()
 const prefs = usePreferencesStore()
-const { showConfirm, showAlert } = useConfirm()
+const { showAlert } = useConfirm()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
 // The list grows as it is scrolled: older drives are found with the filters, not by paging
 const PAGE_SIZE = 30
