@@ -9,14 +9,13 @@ import { editDeleteActions, type SelectionAction } from '@/utils/selectionAction
 import { intlLocale, t } from '@/i18n'
 import { ref, computed, watch, onMounted } from 'vue'
 import { Fuel, Plus } from '@/icons'
-import { useConfirm } from '@/composables/useConfirm'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatDistance, formatFuelConsumptionValue, formatVolumeValue, fuelConsumptionUnit, perDistance, perVolume, volumeUnitLabel } from '@/units'
 import LoadError from '@/components/LoadError.vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
-import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
+import { useRecordDeletion } from '@/composables/useRecordDeletion'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import FuelFillUpModal from '@/components/manual/FuelFillUpModal.vue'
 
@@ -27,7 +26,7 @@ const props = defineProps<{
 
 const vehicleStore = useVehicleStore()
 const currency = computed(() => vehicleStore.currency)
-const { showConfirm, showAlert } = useConfirm()
+const { removeRecords } = useRecordDeletion()
 
 const stats = ref<any | null>(null)
 const loading = ref(false)
@@ -74,35 +73,7 @@ function openEdit(log: any) {
   showForm.value = true
 }
 
-// A single fill-up goes at once and comes back with Undo, the server is asked when that time is over
-function remove(log: any) {
-  const all = () => stats.value?.logs ?? []
-  const index = all().findIndex((l: any) => l.id === log.id)
-  const setLogs = (logs: any[]) => {
-    stats.value = { ...stats.value, logs }
-  }
-  deleteWithUndo({
-    message: t('manual.fuelLogsPanel.fillUpDeleted'),
-    hide: () => setLogs(all().filter((l: any) => l.id !== log.id)),
-    restore: () => {
-      if (all().some((l: any) => l.id === log.id)) return
-      const next = [...all()]
-      next.splice(Math.min(Math.max(index, 0), next.length), 0, log)
-      setLogs(next)
-    },
-    commit: () => api.deleteFuelLog(props.vehicleId, log.id),
-    committed: () => void load(true),
-    onError: (err: any) => void showAlert(err?.message || t('manual.fuelLogsPanel.deleteFailed'), t('shell.confirm.error'), 'danger'),
-  })
-}
-
-// The detail's own Delete: the sheet closes and the fill-up goes with the same Undo
-function removeEditing(log: any) {
-  showForm.value = false
-  remove(log)
-}
-
-// A selection goes at once under one Undo, the server is asked when that time is over
+// One fill-up or a selection: the shared deletion hides it at once and offers Undo
 const logsList = computed({
   get: () => stats.value?.logs ?? [],
   set: (logs: any[]) => {
@@ -110,16 +81,14 @@ const logsList = computed({
   },
 })
 function removeMany(items: any[]) {
-  if (items.length === 1) return remove(items[0])
-  deleteRowsWithUndo({
-    list: logsList,
-    items,
-    key: (l) => l.id,
-    message: t('manual.fuelLogsPanel.fillUpsDeleted', { count: items.length }),
-    remove: (l) => api.deleteFuelLog(props.vehicleId, l.id),
-    committed: () => void load(true),
-    onError: (err: any) => void showAlert(err?.message || t('manual.fuelLogsPanel.deleteFailed'), t('shell.confirm.error'), 'danger'),
-  })
+  void removeRecords({ kind: 'fuel_log', items, place: { list: logsList }, loaded: true, reload: () => load(true) })
+}
+const remove = (log: any) => removeMany([log])
+
+// The detail's own Delete: the sheet closes and the fill-up goes with the same Undo
+function removeEditing(log: any) {
+  showForm.value = false
+  remove(log)
 }
 
 const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(

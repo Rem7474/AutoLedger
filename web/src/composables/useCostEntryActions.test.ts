@@ -21,7 +21,7 @@ vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => store }))
 const showAlert = vi.hoisted(() => vi.fn())
 vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => ({ showAlert }) }))
 const deleteWithUndo = vi.hoisted(() => vi.fn())
-vi.mock('@/composables/useUndoableDelete', () => ({ deleteWithUndo }))
+vi.mock('@/composables/useUndoableDelete', () => ({ deleteWithUndo, deleteRowsWithUndo: vi.fn() }))
 
 const entry = (source: string, id = 'r1'): CostEntryLine => ({
   date: '2026-03-10', category: 'toll', kind: 'toll', amount: { amount: '5.00', currency: 'EUR' }, note: null, place: null,
@@ -188,7 +188,7 @@ describe('useCostEntryActions', () => {
     expect(h.reload).toHaveBeenCalled()
 
     await a.open(entry('fuel_logs', 'f1'))
-    a.removeOpenedFuel({ id: 'f1' })
+    await a.removeOpenedFuel({ id: 'f1' })
     expect(a.showFuel.value).toBe(false)
     const sheet = deleteWithUndo.mock.calls[1][0]
     sheet.hide()
