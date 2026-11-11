@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
-import RowMenu from '@/components/RowMenu.vue'
+import QuietLine from '@/components/QuietLine.vue'
+import ListItem from '@/components/ListItem.vue'
+import RowLeading from '@/components/RowLeading.vue'
+import DriveLegRow from '@/components/drives/DriveLegRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import RowSelectBox from '@/components/RowSelectBox.vue'
@@ -11,19 +14,20 @@ import { computed } from 'vue'
 import { t } from '@/i18n'
 import { distanceUnit, formatDistance, perDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Layers, X, Users, ChevronDown, Pencil, Trash2 } from '@/icons'
+import { Layers, Users, ChevronDown, Pencil, Trash2 } from '@/icons'
 import { formatTripDates } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 
-// The trip groups ("voyages") list; a trip can be expanded to show its drives.
+// The trip groups ("voyages") list; a trip can be expanded to show its legs, which open their own cost detail. A click on the row opens its cost detail,
+// where the edit, the carpool and the delete are; the selection bar offers the same three for one selected trip.
 const props = defineProps<{ loadingTrips: boolean; tripGroups: any[]; hasFilters: boolean; expandedTripId: string | null; tripDrives: any[] }>()
 const emit = defineEmits<{
   'open-cost': [trip: any]
   'toggle-details': [trip: any]
   edit: [trip: any]
   delete: [trip: any]
-  'remove-drive': [trip: any, driveId: string]
+  'open-leg': [leg: any]
   carpool: [trip: any]
 }>()
 const vehicleStore = useVehicleStore()
@@ -63,83 +67,55 @@ const actions = computed<SelectionAction[]>(() => {
       v-for="tg in tripGroups"
       :key="tg.id"
     >
-      <div
-        class="relative hover:border-slate-700/90 p-3 sm:p-4 card transition-all flex items-start gap-3 group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
-        :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(tg) }"
-      >
-        <CardOpenButton
-          :label="$t('common.openItem', { item: tg.name })"
-          @click="onRowClick(tg)"
-          @pointerdown="onPointerdown($event, tg)"
-          @pointermove="press.onPointermove"
-          @pointerup="press.onPointerup"
-          @pointercancel="press.onPointercancel"
-          @contextmenu="press.onContextmenu"
-        />
-        <RowSelectBox v-if="showBox" :id="tg.id" :checked="isSelected(tg)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(tg)" />
-        <div class="min-w-0 flex-1">
-          <!-- What matters: which trip, and what it cost -->
-          <div class="flex items-start justify-between gap-3">
-            <div class="text-sm text-white flex items-center gap-1.5 min-w-0">
-              <Layers class="w-3.5 h-3.5 text-sky-400 shrink-0" />
-              <span class="font-semibold truncate" :title="tg.name">{{ tg.name }}</span>
-            </div>
-            <div class="shrink-0 text-right" :title="$t('drives.tripGroupsPanel.consolidatedCostOfTheTrip')">
-              <div class="text-sm font-extrabold text-white">
-                {{ Number(tg.tolls_total || 0) > 0 ? $t('drives.tripGroupsPanel.costsAmount', { amount: formatAmount(Number(tg.tolls_total), vehicleStore.currency) }) : $t('drives.tripGroupsPanel.costDetail') }}
-              </div>
-              <div v-if="tg.distance_km > 0 && tg.tolls_total" class="text-xs text-slate-400">
-                {{ formatAmount(perDistance(Number(tg.tolls_total) / tg.distance_km), vehicleStore.currency, 3) }}/{{ distanceUnit() }}
-              </div>
-            </div>
-          </div>
-
-          <!-- The rest, in one quiet line: when, how far, how many legs, carpools, and the legs toggle -->
-          <div class="mt-1 flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-slate-400">
-            <span class="font-semibold">{{ formatTripDates(tg) }}</span>
-            <span class="px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-200 border border-slate-700/60">{{ formatDistance(tg.distance_km) }}</span>
-            <span class="px-2 py-0.5 rounded-full font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30">{{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}</span>
-            <span v-if="tg.carpool_count" class="px-2 py-0.5 rounded-full font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 flex items-center gap-1">
-              <Users class="w-3 h-3" />{{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}
+      <ListItem wrap-title class="max-sm:select-none max-sm:[-webkit-touch-callout:none]" :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(tg) }">
+        <template #open>
+          <CardOpenButton
+            :label="$t('common.openItem', { item: tg.name })"
+            @click="onRowClick(tg)"
+            @pointerdown="onPointerdown($event, tg)"
+            @pointermove="press.onPointermove"
+            @pointerup="press.onPointerup"
+            @pointercancel="press.onPointercancel"
+            @contextmenu="press.onContextmenu"
+          />
+        </template>
+        <template #lead>
+          <RowLeading :icon="Layers" :selected="isSelected(tg)" />
+          <RowSelectBox v-if="showBox" class="max-sm:sr-only max-sm:pointer-events-none" :id="tg.id" :checked="isSelected(tg)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(tg)" />
+        </template>
+        <template #title><span :title="tg.name">{{ tg.name }}</span></template>
+        <!-- The quiet line: when, how far, how many legs and carpools, and the legs toggle -->
+        <template #subtitle>
+          <QuietLine>
+            <span><span>{{ formatTripDates(tg) }}</span></span>
+            <span><span>{{ formatDistance(tg.distance_km) }}</span><span>{{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}</span></span>
+            <span data-plain>
+              <span v-if="tg.carpool_count">{{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}</span>
+              <button
+                type="button"
+                @click="emit('toggle-details', tg)"
+                class="relative z-10 inline-flex items-center gap-1 font-semibold text-sky-400 hover:text-sky-300"
+                :aria-expanded="expandedTripId === tg.id"
+              >
+                {{ expandedTripId === tg.id ? $t('drives.tripGroupsPanel.hide') : $t('drives.tripGroupsPanel.legs') }}
+                <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expandedTripId === tg.id }" />
+              </button>
             </span>
-            <span v-if="tg.notes" class="truncate max-w-full">{{ tg.notes }}</span>
-            <button
-              type="button"
-              @click="emit('toggle-details', tg)"
-              class="relative z-10 flex items-center gap-1 font-semibold text-sky-400 hover:text-sky-300"
-              :aria-expanded="expandedTripId === tg.id"
-            >
-              {{ expandedTripId === tg.id ? $t('drives.tripGroupsPanel.hide') : $t('drives.tripGroupsPanel.legs') }}
-              <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expandedTripId === tg.id }" />
-            </button>
-          </div>
-        </div>
-
-        <!-- The row opens the cost breakdown; the other actions sit in its menu -->
-        <RowMenu v-if="vehicleStore.canEdit" :label="$t('common.moreActions')" :heading="tg.name">
-          <button type="button" role="menuitem" class="menu-item" :title="$t('drives.tripGroupsPanel.carpoolThisTrip')" @click="emit('carpool', tg)">
-            <Users class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.carpool') }}
-          </button>
-          <button type="button" role="menuitem" class="menu-item" @click="emit('edit', tg)">
-            <Pencil class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.renameTheTrip') }}
-          </button>
-          <button type="button" role="menuitem" class="menu-item menu-item-danger" @click="emit('delete', tg)">
-            <Trash2 class="w-3.5 h-3.5 text-slate-400" />{{ $t('drives.tripGroupsPanel.deleteTheTrip') }}
-          </button>
-        </RowMenu>
-      </div>
-      <!-- Expanded drives drawer -->
-      <div v-if="expandedTripId === tg.id" class="space-y-1.5 bg-slate-800 rounded-2xl p-3 -mt-1 ml-4 mr-4">
-        <div v-for="d in tripDrives" :key="d.id" class="flex items-center justify-between gap-3 text-xs text-slate-300 bg-slate-800/40 rounded-lg px-2.5 py-1.5 min-w-0">
-          <span class="truncate min-w-0 flex-1">
-            {{ formatDate(d.start_time) }}{{ $t('drives.tripGroupsPanel.dateSeparator') }}{{ (d.start_address || $t('drives.driveCostModal.start')).split(',')[0] }} → {{ (d.end_address || $t('drives.driveCostModal.end')).split(',')[0] }}
-            <span class="text-slate-400">({{ formatDistance(d.distance_km, 1) }})</span>
+          </QuietLine>
+        </template>
+        <template #value>
+          <span :title="$t('drives.tripGroupsPanel.consolidatedCostOfTheTrip')">
+            {{ Number(tg.tolls_total || 0) > 0 ? $t('drives.tripGroupsPanel.costsAmount', { amount: formatAmount(Number(tg.tolls_total), vehicleStore.currency) }) : $t('drives.tripGroupsPanel.costDetail') }}
           </span>
-          <button v-if="vehicleStore.canEdit" @click="emit('remove-drive', tg, d.id)" class="tap text-slate-400 hover:text-danger-400 shrink-0 p-1" :title="$t('drives.tripGroupsPanel.removeThisDriveFromThe')" :aria-label="$t('drives.tripGroupsPanel.removeThisDriveFromThe')">
-            <X class="w-3.5 h-3.5" />
-          </button>
-        </div>
-        <p v-if="!tripDrives.length" class="text-xs text-slate-400">{{ $t('drives.tripGroupsPanel.loadingTheDrives') }}</p>
+        </template>
+        <template v-if="tg.distance_km > 0 && tg.tolls_total" #subvalue>
+          {{ formatAmount(perDistance(Number(tg.tolls_total) / tg.distance_km), vehicleStore.currency, 3) }}/{{ distanceUnit() }}
+        </template>
+      </ListItem>
+      <!-- The legs of the trip: a list indented under its row, one flat row per leg, each opening the cost breakdown of the leg -->
+      <div v-if="expandedTripId === tg.id" class="ml-5 mt-1.5 space-y-1.5 border-l-2 border-slate-800 pl-2" data-testid="trip-legs">
+        <DriveLegRow v-for="d in tripDrives" :key="d.id" :leg="d" @open="emit('open-leg', $event)" />
+        <p v-if="!tripDrives.length" class="px-3 py-2 text-xs text-slate-400">{{ $t('drives.tripGroupsPanel.loadingTheDrives') }}</p>
       </div>
     </template>
     </template>

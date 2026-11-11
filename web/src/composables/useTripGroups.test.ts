@@ -9,6 +9,7 @@ vi.mock('@/services/api', () => ({
     dismissTripSuggestion: vi.fn(),
     createTripGroup: vi.fn(),
     getDrives: vi.fn(),
+    updateTripGroup: vi.fn(),
   },
 }))
 
@@ -83,5 +84,45 @@ describe('useTripGroups', () => {
     const trips = useTripGroups({ loadDrives: vi.fn() })
     await trips.removeDriveFromTrip({ id: 't1', drive_ids: ['d1'] }, 'd1')
     expect(alert).toHaveBeenCalledTimes(1)
+  })
+
+  describe('removeDriveFromTrip with several legs', () => {
+    const tg = { id: 't1', name: 'Trip', notes: '', version: 3, drive_ids: ['a', 'b'] }
+
+    it('keeps the drawer open on the reloaded legs when it was open for that trip', async () => {
+      vi.mocked(api.updateTripGroup).mockResolvedValue({} as any)
+      vi.mocked(api.getTripGroups).mockResolvedValue([{ ...tg, drive_ids: ['b'] }] as any)
+      vi.mocked(api.getTripSuggestions).mockResolvedValue([] as any)
+      vi.mocked(api.getDrives).mockResolvedValue({ drives: [{ id: 'b', start_time: '2026-01-02' }] } as any)
+      const loadDrives = vi.fn()
+      const trips = useTripGroups({ loadDrives })
+      trips.expandedTripId.value = 't1'
+      await trips.removeDriveFromTrip(tg, 'a')
+      expect(api.updateTripGroup).toHaveBeenCalledWith('v1', 't1', { name: 'Trip', notes: '', drive_ids: ['b'], expected_version: 3 })
+      expect(trips.expandedTripId.value).toBe('t1')
+      expect(trips.tripDrives.value.map((d) => d.id)).toEqual(['b'])
+      expect(loadDrives).toHaveBeenCalled()
+    })
+
+    it('leaves the drawer closed when it was not open for that trip', async () => {
+      vi.mocked(api.updateTripGroup).mockResolvedValue({} as any)
+      vi.mocked(api.getTripGroups).mockResolvedValue([{ ...tg, drive_ids: ['b'] }] as any)
+      vi.mocked(api.getTripSuggestions).mockResolvedValue([] as any)
+      const trips = useTripGroups({ loadDrives: vi.fn() })
+      await trips.removeDriveFromTrip(tg, 'a')
+      expect(trips.expandedTripId.value).toBeNull()
+      expect(api.getDrives).not.toHaveBeenCalled()
+    })
+
+    it('closes the drawer when the trip is gone after the reload', async () => {
+      vi.mocked(api.updateTripGroup).mockResolvedValue({} as any)
+      vi.mocked(api.getTripGroups).mockResolvedValue([] as any)
+      vi.mocked(api.getTripSuggestions).mockResolvedValue([] as any)
+      const trips = useTripGroups({ loadDrives: vi.fn() })
+      trips.expandedTripId.value = 't1'
+      await trips.removeDriveFromTrip(tg, 'a')
+      expect(trips.expandedTripId.value).toBeNull()
+      expect(api.getDrives).not.toHaveBeenCalled()
+    })
   })
 })

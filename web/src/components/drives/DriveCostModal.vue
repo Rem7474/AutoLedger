@@ -37,6 +37,8 @@ const props = defineProps<{
   backLabel?: string
   // The page that can edit and delete the drive (a manual one) listens to `edit` and `delete`; elsewhere the detail offers neither
   manageable?: boolean
+  // The leg shown belongs to a trip (the page knows its trips): the detail then offers to take it out of that trip
+  inTrip?: boolean
   refreshDrive: (driveId: string) => Promise<any | null>
 }>()
 const emit = defineEmits<{
@@ -48,6 +50,8 @@ const emit = defineEmits<{
   back: []
   edit: [drive: any]
   delete: [drive: any]
+  'delete-trip': [trip: any]
+  'remove-from-trip': [drive: any]
 }>()
 const open = defineModel<boolean>('open', { required: true })
 const selectedCostDrive = defineModel<any | null>('drive', { required: true })
@@ -60,6 +64,9 @@ const breakdown = computed(() => buildDriveBreakdown(selectedCostDrive.value?.co
 const vehicleCurrency = computed(() => vehicleStore.currency)
 // Only a drive entered by hand can be edited or deleted: the ones synced from TeslaMate follow their source
 const canManage = computed(() => !!props.manageable && vehicleStore.canEdit && !!selectedCostDrive.value?.is_manual && !selectedCostDrive.value?.is_trip_group && !selectedCostDrive.value?.is_suggestion)
+// A trip group is edited and deleted from its detail too, by a user who can edit; the page that lists the trips handles both
+const canManageTrip = computed(() => !!props.manageable && vehicleStore.canEdit && !!selectedCostDrive.value?.is_trip_group && !selectedCostDrive.value?.is_suggestion)
+const canRemoveFromTrip = computed(() => !!props.manageable && !!props.inTrip && vehicleStore.canEdit && !selectedCostDrive.value?.is_trip_group && !selectedCostDrive.value?.is_suggestion)
 const teslamateDriveUrl = (d: any) => buildTeslamateDriveUrl(vehicleStore.activeVehicle, d)
 
 // A trip shows its legs and carpools; opening a leg keeps the trip to come back to
@@ -159,16 +166,16 @@ async function handleDriverChange(event: Event) {
           <div class="p-2 rounded-xl shrink-0 bg-slate-800 text-slate-300">
             <component :is="selectedCostDrive.is_trip_group ? Layers : Coins" class="w-5 h-5" />
           </div>
-          <div class="min-w-0 truncate">
-            <h3 class="text-base font-bold text-white truncate">
+          <div class="min-w-0">
+            <h3 class="text-base font-bold text-white line-clamp-2">
               {{ selectedCostDrive.is_trip_group ? $t('drives.driveCostModal.tripTitle', { name: selectedCostDrive.trip_group_name }) : $t('drives.driveCostModal.driveTitle') }}
             </h3>
             <p class="text-xs text-slate-400">{{ formatDate(selectedCostDrive.start_time) }}</p>
           </div>
         </div>
     </template>
-    <template v-if="canManage" #actions>
-      <button type="button" class="tap-text inline-flex items-center gap-1 rounded-lg px-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white" @click="emit('edit', selectedCostDrive)">
+    <template v-if="canManage || canManageTrip" #actions>
+      <button type="button" class="tap-text inline-flex items-center gap-1 rounded-lg px-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white" @click="canManageTrip ? emit('edit-trip', selectedCostDrive) : emit('edit', selectedCostDrive)">
         <Pencil class="h-3.5 w-3.5" aria-hidden="true" />{{ $t('common.edit') }}
       </button>
     </template>
@@ -199,6 +206,8 @@ async function handleDriverChange(event: Event) {
             <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
           </a>
         </div>
+
+        <p v-if="selectedCostDrive.is_trip_group && selectedCostDrive.trip_group_notes" class="pt-2 border-t border-slate-700/60 text-xs text-slate-400">{{ selectedCostDrive.trip_group_notes }}</p>
 
         <!-- Tag qualification (only for individual drives) -->
         <div v-if="prefs.proPersoEnabled && !selectedCostDrive.is_trip_group && vehicleStore.canEdit" class="pt-2 border-t border-slate-700/60 flex items-center justify-between gap-2">
@@ -260,7 +269,7 @@ async function handleDriverChange(event: Event) {
         <span>{{ $t('drives.driveCostModal.someItemsUseADefault') }}</span>
       </p>
 
-      <DriveCostLegs v-if="selectedCostDrive.is_trip_group && tripLegs.length" :trip-legs="tripLegs" :vehicle-currency="vehicleCurrency" @open="openLeg" />
+      <DriveCostLegs v-if="selectedCostDrive.is_trip_group && tripLegs.length" :trip-legs="tripLegs" @open="openLeg" />
 
       <DriveCostCarpools
         v-if="selectedCostDrive.is_trip_group && tripCarpools.length"
@@ -313,8 +322,16 @@ async function handleDriverChange(event: Event) {
       </div>
       </div>
 
-      <div v-if="canManage" class="flex justify-center">
-        <DetailDeleteButton @delete="emit('delete', selectedCostDrive)" />
+      <div v-if="canManage || canManageTrip || canRemoveFromTrip" class="flex flex-wrap items-center justify-center gap-x-2">
+        <button
+          v-if="canRemoveFromTrip"
+          type="button"
+          class="tap-text rounded-lg px-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+          @click="emit('remove-from-trip', selectedCostDrive)"
+        >
+          {{ $t('drives.driveCostModal.removeFromTrip') }}
+        </button>
+        <DetailDeleteButton v-if="canManage || canManageTrip" @delete="canManageTrip ? emit('delete-trip', selectedCostDrive) : emit('delete', selectedCostDrive)" />
       </div>
 
     <template #footer>
@@ -343,15 +360,6 @@ async function handleDriverChange(event: Event) {
           </button>
         </div>
         <div v-else-if="!selectedCostDrive.is_suggestion && vehicleStore.canEdit" class="flex items-center gap-2">
-          <button
-            v-if="selectedCostDrive.is_trip_group"
-            type="button"
-            @click="emit('edit-trip', selectedCostDrive)"
-            class="btn btn-lg btn-secondary"
-          >
-            <Pencil class="w-4 h-4" />
-            <span>{{ $t('common.edit') }}</span>
-          </button>
           <button
             @click="open = false; emit('carpool', selectedCostDrive.is_trip_group ? { tripGroupId: selectedCostDrive.id } : { driveIds: [selectedCostDrive.id] })"
             class="btn btn-lg btn-primary"
