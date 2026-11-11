@@ -126,7 +126,7 @@ async function save() {
 </script>
 
 <template>
-  <ModalShell v-model:open="open" size="sm" :title="editing ? $t('manual.fuelLogsPanel.edit') : $t('manual.fuelLogsPanel.new')">
+  <ModalShell pane v-model:open="open" size="sm" :title="editing ? $t('manual.fuelLogsPanel.edit') : $t('manual.fuelLogsPanel.new')">
     <form id="fuel-log-form" class="space-y-3.5" @submit.prevent="save">
       <div class="grid grid-cols-2 gap-3">
         <div>
