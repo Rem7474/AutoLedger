@@ -47,7 +47,8 @@
       "item": "élément sélectionné | éléments sélectionnés",
       "tire": "pneu sélectionné | pneus sélectionnés",
       "carpool": "covoiturage sélectionné | covoiturages sélectionnés",
-      "drive": "trajet sélectionné | trajets sélectionnés"
+      "drive": "trajet sélectionné | trajets sélectionnés",
+      "scenario": "comparatif sélectionné | comparatifs sélectionnés"
     },
     "selectedShort": "{n} sélectionné | {n} sélectionnés",
     "selectOne": "Sélectionnez une seule ligne",
