@@ -5,11 +5,11 @@ import ModalShell from '@/components/ModalShell.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
 import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 
-// The "..." of a list row: the actions that are not "open it" (the row itself opens it) in a small popover, so a
-// list does not repeat a row of icons. Entries are `.menu-item` buttons in the slot; a click on one closes it.
-// On a phone the menu is a bottom sheet with large touch targets, pulled down to close, instead of a popover.
-// A list row has its actions in the selection bar on a phone, so the button is hidden there; a card that is not a selectable
-// row (a vehicle) passes `phone` to keep it.
+// The "..." of one card or one page: the actions that are not "open it" in a small popover, so the card does not repeat a
+// row of buttons. It is not for list rows (a list row is one tappable card, its actions live in its detail and in the
+// selection bar); `ActionMenu.test.ts` lists the files allowed to use it. Entries are `.menu-item` buttons in the slot;
+// a click on one closes it. On a phone the menu is a bottom sheet (the heading as title, 48px entries) pulled down to
+// close, instead of a popover. `phone` keeps the button visible below `sm`; without it the button is desktop only.
 const props = defineProps<{ label: string; heading?: string; phone?: boolean }>()
 const isMobile = useIsMobile()
 const open = ref(false)
