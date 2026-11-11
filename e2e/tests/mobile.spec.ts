@@ -79,7 +79,8 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
 
   // On a phone the row has no menu: a long press selects the carpool and the bar carries the delete action
   const row = page.locator('div.rounded-2xl', { hasText: title }).first()
-  await row.scrollIntoViewIfNeeded()
+  // Centred, so the touch lands above the bottom bar and the period bar
+  await row.evaluate((el) => el.scrollIntoView({ block: 'center' }))
   const box = (await row.boundingBox())!
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + 120, y: box.y + box.height / 2 }] })
@@ -546,7 +547,7 @@ test('a carpool dragged to the left is deleted with an Undo', async ({ page, req
   try {
     await useVehicle(page, ev.id, '/drives?tab=CARPOOLS&period=all')
     const rowOf = () => page.locator('div.rounded-2xl', { hasText: title }).last()
-    await rowOf().scrollIntoViewIfNeeded()
+    await rowOf().evaluate((el) => el.scrollIntoView({ block: 'center' }))
     const box = (await rowOf().boundingBox())!
     const y = box.y + box.height / 2
 

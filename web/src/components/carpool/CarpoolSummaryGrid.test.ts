@@ -32,10 +32,12 @@ describe('carpool summary grid', () => {
     expect(await render({})).toContain('64.1')
   })
 
-  it('reads an unknown recovery rate as a dash, not as 0 %', async () => {
+  it('draws no recovery rate when there is none, rather than 0 %', async () => {
+    setLocale('en')
     const html = await render({ coverage_rate_pct: null })
-    expect(html).toContain('—')
+    expect(html).not.toContain('Cost recovery rate')
     expect(html).not.toContain('0 %')
+    expect(await render({})).toContain('Cost recovery rate')
   })
 
   it('says how much is missing while the revenue is under the fair share', async () => {
@@ -45,14 +47,14 @@ describe('carpool summary grid', () => {
     expect(await render({ total_revenue: 80 })).toContain('text-success-400')
   })
 
-  it('names the period of the totals and reads an unknown cost per distance as a dash', async () => {
+  it('names the period of the totals once and draws no cost per distance when no distance is shared', async () => {
     setLocale('en')
     const html = await render({})
-    expect((html.match(/All trips/g) ?? []).length).toBe(3)
+    expect((html.match(/All trips/g) ?? []).length).toBe(1)
     expect(html).toContain('€0.05')
     const none = await render({ total_distance_km: 0, net_cost_per_km: 0 })
     expect(none).not.toContain('€0.0')
-    expect(none).toMatch(/Driver&#39;s net cost[\s\S]*?—/)
+    expect(none).not.toContain('Driver&#39;s net cost')
   })
 
   it('tints the received total with its verdict, only when there are passengers\' shares to cover', async () => {
@@ -63,10 +65,11 @@ describe('carpool summary grid', () => {
     expect(await render({ total_passengers_share: 0, total_revenue: 0 })).not.toMatch(/border-(success|warning)-500\/30/)
   })
 
-  it('tints the recovery rate only once the whole cost is recovered', async () => {
-    expect(await render({})).not.toContain('border-success-500/30')
-    expect(await render({ coverage_rate_pct: 100 })).toContain('border-success-500/30')
-    expect(await render({ coverage_rate_pct: null })).not.toContain('border-success-500/30')
+  it('colours the recovery rate only once the whole cost is recovered', async () => {
+    const figure = /text-success-400 mt-0.5 text-xl/
+    expect(await render({})).not.toMatch(figure)
+    expect(await render({ coverage_rate_pct: 100 })).toMatch(figure)
+    expect(await render({ coverage_rate_pct: null })).not.toMatch(figure)
   })
 
   it('names the period the totals cover, and all trips when none is given', async () => {

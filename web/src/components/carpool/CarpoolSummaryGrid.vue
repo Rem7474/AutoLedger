@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import KpiCard from '@/components/KpiCard.vue'
-import { TrendingUp, CreditCard, Receipt } from '@/icons'
+import FigureSecondary from '@/components/FigureSecondary.vue'
+import { CreditCard } from '@/icons'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { formatPercentOrUnknown } from '@/utils/numbers'
@@ -32,9 +33,9 @@ const netCostPerDistance = computed(() =>
 </script>
 
 <template>
-  <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+  <div class="space-y-3">
     <KpiCard
-      class="col-span-2 lg:col-span-1"
+      lead
       :label="$t('carpool.carpoolSummaryGrid.totalReceivedFromPassengers')"
       :period="period"
       :icon="CreditCard"
@@ -47,25 +48,21 @@ const netCostPerDistance = computed(() =>
       </p>
     </KpiCard>
 
-    <KpiCard
-      :label="$t('carpool.carpoolSummaryGrid.costRecoveryRate')"
-      :period="period"
-      :icon="TrendingUp"
-      :value="coverageRate"
-      :tone="recoveryTone"
-      :tinted="recoveryTone !== 'default'"
-    >
-      <p class="mt-1 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.ofTheTotalActualCost', { total_real_cost: fmt(summary.total_real_cost) }) }}</p>
-    </KpiCard>
-
-    <KpiCard
-      :label="$t('carpool.carpoolSummaryGrid.driverSNetCost')"
-      :period="period"
-      :icon="Receipt"
-      :value="netCostPerDistance"
-      :unit="` / ${distanceUnit()}`"
-    >
-      <p class="mt-1 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.driverSFairShare', { total_driver_share: fmt(summary.total_driver_share) }) }}</p>
-    </KpiCard>
+    <div class="grid grid-cols-2 gap-4 px-1 sm:gap-6">
+      <FigureSecondary
+        :label="$t('carpool.carpoolSummaryGrid.costRecoveryRate')"
+        :value="coverageRate"
+        :tone="recoveryTone === 'success' ? 'success' : 'default'"
+      >
+        <p class="mt-0.5 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.ofTheTotalActualCost', { total_real_cost: fmt(summary.total_real_cost) }) }}</p>
+      </FigureSecondary>
+      <FigureSecondary
+        :label="$t('carpool.carpoolSummaryGrid.driverSNetCost')"
+        :value="netCostPerDistance"
+        :unit="` / ${distanceUnit()}`"
+      >
+        <p class="mt-0.5 text-xs text-slate-400">{{ $t('carpool.carpoolSummaryGrid.driverSFairShare', { total_driver_share: fmt(summary.total_driver_share) }) }}</p>
+      </FigureSecondary>
+    </div>
   </div>
 </template>
