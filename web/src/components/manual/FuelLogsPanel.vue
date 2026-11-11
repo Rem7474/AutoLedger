@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import EmptyState from '@/components/EmptyState.vue'
-import CardOpenButton from '@/components/CardOpenButton.vue'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
-import RowSelectBox from '@/components/RowSelectBox.vue'
+import FuelLogRow from '@/components/manual/FuelLogRow.vue'
 import SelectionHint from '@/components/SelectionHint.vue'
 import { useRowSelection } from '@/composables/useRowSelection'
 import { editDeleteActions, type SelectionAction } from '@/utils/selectionActions'
@@ -12,7 +11,9 @@ import { Fuel, Plus } from '@/icons'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
-import { distanceUnit, formatDistance, formatFuelConsumptionValue, formatVolumeValue, fuelConsumptionUnit, perDistance, perVolume, volumeUnitLabel } from '@/units'
+import { distanceUnit, formatFuelConsumptionValue, formatVolume, fuelConsumptionUnit, perVolume, volumeUnitLabel } from '@/units'
+import { fuelMonths } from '@/utils/fuelLogs'
+import { toLocalDay } from '@/utils/dates'
 import LoadError from '@/components/LoadError.vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useRecordDeletion } from '@/composables/useRecordDeletion'
@@ -44,9 +45,10 @@ function fmtNum(v: number | null | undefined, digits = 1): string {
   return Number(v).toLocaleString(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
 
-function fmtDate(d: string): string {
-  return new Date(d).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short', year: 'numeric' })
-}
+// Fill-ups under a header per month, the newest first
+const months = computed(() =>
+  fuelMonths(logs.value, toLocalDay(), (date, withYear) => date.toLocaleDateString(intlLocale(), { month: 'long', ...(withYear ? { year: 'numeric' } : {}) })),
+)
 
 // `silent` reloads behind the list that is already shown instead of swapping it for the loading state.
 // Compared strictly: the function is also bound as an event handler, which passes the event.
@@ -91,7 +93,7 @@ function removeEditing(log: any) {
   remove(log)
 }
 
-const { selected, selectedIds, clear, isSelected, toggle, showBox, press, onPointerdown, onRowClick } = useRowSelection(
+const { selected, selectedIds, clear, isSelected, toggle } = useRowSelection(
   logs,
   computed(() => props.canEdit),
   openEdit,
@@ -152,43 +154,31 @@ useRefreshHandler(() => load(true))
     <template v-else>
     <BulkSelectionBar v-if="canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
     <SelectionHint v-if="canEdit" />
-    <ul class="space-y-2">
-      <li v-for="log in logs" :key="log.id">
-      <SwipeToDelete :disabled="!canEdit || selectedIds.length > 0" @delete="remove(log)">
-      <div
-        class="relative hover:border-slate-700/90 card p-3 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
-        :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(log) }"
-      >
-        <CardOpenButton
-          v-if="canEdit"
-          :label="$t('manual.fuelLogsPanel.editFillUp', { date: fmtDate(log.date) })"
-          @click="onRowClick(log)"
-          @pointerdown="onPointerdown($event, log)"
-          @pointermove="press.onPointermove"
-          @pointerup="press.onPointerup"
-          @pointercancel="press.onPointercancel"
-          @contextmenu="press.onContextmenu"
-        />
-        <RowSelectBox v-if="showBox" :id="log.id" :checked="isSelected(log)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(log)" />
-        <div class="min-w-0 flex-1">
-          <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
-            {{ fmtDate(log.date) }}
-            <template v-if="log.odometer != null"> · {{ formatDistance(log.odometer) }}</template>
-            <template v-else-if="log.odometer_estimated != null"> · ≈ {{ formatDistance(log.odometer_estimated) }} <span class="text-xs px-2 py-0.5 rounded-full border border-slate-600 text-slate-400">{{ $t('manual.fuelLogsPanel.estimated') }}</span></template>
-            <span v-if="!log.is_full_tank" class="text-xs px-2 py-0.5 rounded-full border border-slate-600 text-slate-400">{{ $t('manual.fuelLogsPanel.partial') }}</span>
-          </div>
-          <div class="text-xs text-slate-400 mt-0.5">
-            {{ fmtMoney(log.amount) }}
-            <template v-if="log.liters"> · {{ formatVolumeValue(log.liters, 2) }} {{ volumeUnitLabel() }}</template>
-            <template v-if="log.price_per_liter"> · {{ fmtMoney(perVolume(log.price_per_liter), 3) }}/{{ volumeUnitLabel() }}</template>
-            <template v-if="log.consumption_l_100km"> · <span class="text-slate-300">{{ log.segment_estimated ? '≈ ' : '' }}{{ formatFuelConsumptionValue(log.consumption_l_100km, 2) }} {{ fuelConsumptionUnit() }}</span></template>
-            <template v-if="log.cost_per_km"> · {{ fmtMoney(perDistance(log.cost_per_km), 3) }}/{{ distanceUnit() }}</template>
-          </div>
-        </div>
+    <section v-for="m in months" :key="m.month" class="space-y-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-2">
+        <h2 class="text-sm font-bold capitalize text-white">{{ m.label }}</h2>
+        <p class="ml-auto flex flex-wrap items-baseline justify-end gap-x-1.5 text-xs font-semibold tabular-nums text-slate-300" data-testid="fuel-month-totals">
+          <span v-if="m.totals.liters > 0">{{ formatVolume(m.totals.liters, 1) }}</span>
+          <span v-if="m.totals.liters > 0" class="text-slate-500" aria-hidden="true">·</span>
+          <span>{{ fmtMoney(m.totals.amount) }}</span>
+          <template v-if="m.totals.pricePerLiter">
+            <span class="text-slate-500" aria-hidden="true">·</span>
+            <span>{{ fmtMoney(perVolume(m.totals.pricePerLiter), 3) }}/{{ volumeUnitLabel() }}</span>
+          </template>
+        </p>
       </div>
+      <SwipeToDelete v-for="log in m.items" :key="log.id" :disabled="!canEdit || selectedIds.length > 0" @delete="remove(log)">
+        <FuelLogRow
+          :log="log"
+          :currency="currency"
+          :can-edit="canEdit"
+          :selected="isSelected(log)"
+          :selecting="selectedIds.length > 0"
+          @open="openEdit"
+          @toggle="toggle"
+        />
       </SwipeToDelete>
-      </li>
-    </ul>
+    </section>
     </template>
 
     <FuelFillUpModal v-model:open="showForm" :vehicle-id="vehicleId" :editing="editingLog" :can-edit="canEdit" @saved="load()" @delete="removeEditing" />
