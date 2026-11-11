@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { UserRound as PageIcon, KeyRound, Laptop, LogOut, SlidersHorizontal, Smartphone, UserRound } from '@/icons'
 import PageHeader from '@/components/PageHeader.vue'
+import GlossaryTip from '@/components/GlossaryTip.vue'
 import { t } from '@/i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import DistanceUnitSwitcher from '@/components/DistanceUnitSwitcher.vue'
@@ -218,6 +219,7 @@ useRefreshHandler(() => load(true))
       <h2 id="account-preferences" class="mb-3 flex items-center gap-2 text-sm font-bold text-white">
         <SlidersHorizontal class="h-4 w-4 text-slate-400" aria-hidden="true" />
         {{ $t('account.accountView.preferences') }}
+        <GlossaryTip term="currencyPerVehicle" />
       </h2>
       <div class="divide-y divide-slate-800">
         <label class="settings-row cursor-pointer !items-start">
@@ -242,13 +244,13 @@ useRefreshHandler(() => load(true))
           <VolumeUnitSwitcher />
         </div>
       </div>
-      <p class="mt-3 text-xs text-slate-400">{{ $t('account.currencyPerVehicle') }}</p>
     </section>
 
     <section v-if="hasPassword" class="card p-5" aria-labelledby="account-password">
       <h2 id="account-password" class="mb-3 flex items-center gap-2 text-sm font-bold text-white">
         <KeyRound class="h-4 w-4 text-slate-400" aria-hidden="true" />
         {{ $t('account.accountView.password') }}
+        <GlossaryTip term="passwordSignOut" />
       </h2>
       <form class="space-y-4" novalidate @submit.prevent="changePassword">
         <div>
@@ -273,7 +275,6 @@ useRefreshHandler(() => load(true))
         >
           {{ saving ? $t('account.saving') : $t('account.changePassword') }}
         </button>
-        <p class="text-xs text-slate-400">{{ $t('account.accountView.otherDevicesAreSignedOut') }}</p>
       </form>
     </section>
 
@@ -284,6 +285,7 @@ useRefreshHandler(() => load(true))
         <h2 id="account-sessions" class="flex items-center gap-2 text-sm font-bold text-white">
           <Laptop class="h-4 w-4 text-slate-400" aria-hidden="true" />
           {{ $t('account.accountView.connectedDevices') }}
+          <GlossaryTip term="signedOutDevice" />
         </h2>
         <button
           type="button"
@@ -340,7 +342,6 @@ useRefreshHandler(() => load(true))
         {{ showAllSessions ? $t('account.accountView.showFewerDevices') : $t('account.accountView.showAllDevices', { count: sessions.length }) }}
       </button>
       <p v-if="sessionError" role="alert" class="mt-3 text-xs text-danger-300">{{ sessionError }}</p>
-      <p class="mt-3 text-xs text-slate-400">{{ $t('account.accountView.aSignedOutDeviceKeeps') }}</p>
     </section>
   </div>
 </template>

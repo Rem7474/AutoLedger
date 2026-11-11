@@ -1,6 +1,5 @@
 {
   "accountView": {
-    "aSignedOutDeviceKeeps": "A signed-out device keeps its access for up to 15 minutes, the lifetime of the access token.",
     "noActiveSession": "No active session.",
     "signedIn": "Signed in {value}",
     "active": "Active {value}",
@@ -10,7 +9,6 @@
     "showAllDevices": "Show all {count} devices",
     "showFewerDevices": "Show fewer devices",
     "connectedDevices": "Connected devices",
-    "otherDevicesAreSignedOut": "Other devices are signed out after a password change.",
     "confirmTheNewPassword": "Confirm the new password",
     "8CharactersMinimum72Bytes": "8 characters minimum, 72 bytes maximum.",
     "newPassword": "New password",
@@ -57,7 +55,6 @@
   "volumeUnit_l": "Litres",
   "volumeUnit_gal_us": "US gallons",
   "volumeUnit_gal_uk": "UK gallons",
-  "currencyPerVehicle": "Currency is set per vehicle when it is created (Vehicles page); it is not an account setting.",
   "tokens": {
     "title": "API Tokens & Automations",
     "subtitle": "To send data from Home Assistant, a charger or a script. A token only opens the integration endpoints, never the rest of the account.",

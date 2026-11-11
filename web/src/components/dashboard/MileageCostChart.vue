@@ -10,6 +10,7 @@ import { usePeriodStore } from '@/stores/period'
 import { filterMonthsByPeriod } from '@/utils/period'
 import { currencySymbol, formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
+import GlossaryTip from '@/components/GlossaryTip.vue'
 import ChartTable from '@/components/charts/ChartTable.vue'
 import { distanceUnit, formatDistanceValue, kmToDisplayDistance, perDistance } from '@/units'
 
@@ -189,11 +190,8 @@ onUnmounted(() => {
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <Activity class="w-4 h-4 text-slate-400" aria-hidden="true" />
           <span>{{ $t('dashboard.mileageCostChart.monthlyMileageAndCostPer', { unit: distanceUnit() }) }}</span>
+          <GlossaryTip term="monthBars" class="-ml-1" />
         </h3>
-        <p class="text-xs text-slate-400 mt-0.5">
-          <span class="pointer-coarse:hidden">{{ $t('dashboard.mileageCostChart.clickABarOfThe') }}</span>
-          <span class="hidden pointer-coarse:inline">{{ $t('dashboard.mileageCostChart.tapABarOfThe') }}</span>
-        </p>
       </div>
       <button
         v-if="months.length"
