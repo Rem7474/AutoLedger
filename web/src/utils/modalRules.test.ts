@@ -19,7 +19,7 @@ const DIALOGS: Record<string, string> = {
   'components/AccountSheet.vue': 'account sheet',
   'components/BulkSelectionBar.vue': 'all the actions of a selection',
   'components/GlossaryTip.vue': 'the definition of a term',
-  'components/RowMenu.vue': 'actions of a row',
+  'components/ActionMenu.vue': 'actions of a card or of a page',
   'components/SheetRow.vue': 'a row of a sheet that opens a sheet',
   'components/drives/DriveBulkActions.vue': 'driver choice for a selection',
   'components/drives/DrivesPeriodBar.vue': 'period choice',
