@@ -151,15 +151,20 @@ const isAllSelected = computed(() => props.trips.length > 0 && props.selectedTri
         <!-- The quiet line: when, how far, who, and how far the cost is recovered; the amounts as entered or following the drives is a second state in the same line -->
         <template #subtitle>
           <QuietLine>
-            <span>{{ formatDate(trip.date) }}</span>
-            <span>{{ formatDistance(trip.distance_km, 1) }}</span>
-            <span>{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
-            <span>{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
-            <StatusLabel class="[&>.truncate]:whitespace-normal [&>.truncate]:overflow-visible" :tone="trip.net_cost <= 0 ? 'neutral' : 'attention'">
-              {{ trip.net_cost <= 0 ? $t('carpool.carpoolTripList.fullyRecovered') : $t('carpool.carpoolTripList.recovered', { percent: trip.total_cost > 0 ? Math.min(100, Math.round((trip.total_revenue / trip.total_cost) * 100)) : 0 }) }}
-            </StatusLabel>
-            <span v-if="hasLinkedLegs(trip)" :title="trip.costs_frozen_at ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint')">{{ trip.costs_frozen_at ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}</span>
-            <span v-if="trip.notes">{{ trip.notes }}</span>
+            <span><span>{{ formatDate(trip.date) }}</span><span>{{ formatDistance(trip.distance_km, 1) }}</span></span>
+            <span>
+              <span>{{ $t('carpool.carpoolTripList.legs', { length: trip.legs.length }) }}</span>
+              <span>{{ $t('carpool.carpoolTripList.passengers', { length: trip.passengers?.length || 0 }) }}</span>
+            </span>
+            <span data-plain class="!whitespace-normal">
+              <StatusLabel :tone="trip.net_cost <= 0 ? 'neutral' : 'attention'" class="[&>.truncate]:whitespace-normal [&>.truncate]:overflow-visible">
+                {{ trip.net_cost <= 0 ? $t('carpool.carpoolTripList.fullyRecovered') : $t('carpool.carpoolTripList.recovered', { percent: trip.total_cost > 0 ? Math.min(100, Math.round((trip.total_revenue / trip.total_cost) * 100)) : 0 }) }}
+              </StatusLabel>
+            </span>
+            <span v-if="hasLinkedLegs(trip)" data-plain :title="trip.costs_frozen_at ? $t('carpool.linked.frozenHint') : $t('carpool.linked.followHint')">
+              <span>{{ trip.costs_frozen_at ? $t('carpool.linked.frozen') : $t('carpool.linked.linked') }}</span>
+            </span>
+            <span v-if="trip.notes" class="truncate"><span class="truncate">{{ trip.notes }}</span></span>
           </QuietLine>
         </template>
         <template #value>

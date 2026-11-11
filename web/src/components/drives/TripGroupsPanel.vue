@@ -86,19 +86,20 @@ const actions = computed<SelectionAction[]>(() => {
         <!-- The quiet line: when, how far, how many legs and carpools, and the legs toggle -->
         <template #subtitle>
           <QuietLine>
-            <span>{{ formatTripDates(tg) }}</span>
-            <span>{{ formatDistance(tg.distance_km) }}</span>
-            <span>{{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}</span>
-            <span v-if="tg.carpool_count">{{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}</span>
-            <button
-              type="button"
-              @click="emit('toggle-details', tg)"
-              class="relative z-10 inline-flex items-center gap-1 font-semibold text-sky-400 hover:text-sky-300"
-              :aria-expanded="expandedTripId === tg.id"
-            >
-              {{ expandedTripId === tg.id ? $t('drives.tripGroupsPanel.hide') : $t('drives.tripGroupsPanel.legs') }}
-              <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expandedTripId === tg.id }" />
-            </button>
+            <span><span>{{ formatTripDates(tg) }}</span></span>
+            <span><span>{{ formatDistance(tg.distance_km) }}</span><span>{{ $t('drives.tripGroupsPanel.legS', { length: tg.drive_ids?.length || 0 }) }}</span></span>
+            <span data-plain>
+              <span v-if="tg.carpool_count">{{ $t('drives.tripGroupsPanel.carpoolS', { carpool_count: tg.carpool_count }) }}</span>
+              <button
+                type="button"
+                @click="emit('toggle-details', tg)"
+                class="relative z-10 inline-flex items-center gap-1 font-semibold text-sky-400 hover:text-sky-300"
+                :aria-expanded="expandedTripId === tg.id"
+              >
+                {{ expandedTripId === tg.id ? $t('drives.tripGroupsPanel.hide') : $t('drives.tripGroupsPanel.legs') }}
+                <ChevronDown class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': expandedTripId === tg.id }" />
+              </button>
+            </span>
           </QuietLine>
         </template>
         <template #value>
