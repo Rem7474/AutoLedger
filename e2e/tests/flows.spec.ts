@@ -1081,8 +1081,7 @@ test('the TeslaMate connection is set, edited and removed from Data sources', as
     const card = page.locator('div.card', { has: page.getByRole('heading', { name: vehicle.name }) })
 
     // The vehicle form is only its identity
-    await card.getByRole('button', { name: 'More actions' }).click()
-    await page.getByRole('menuitem', { name: 'Edit' }).click()
+    await card.getByRole('button', { name: 'Edit', exact: true }).click()
     await expect(page.locator('#vehicle-teslamate-api-url')).toHaveCount(0)
     await page.keyboard.press('Escape')
 
