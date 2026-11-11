@@ -451,7 +451,7 @@
     "name": "Name",
     "add": "Add",
     "delete": "Delete the place",
-    "deleteConfirm": "Delete the place {name}? Its charges become unclassified.",
+    "deleted": "Place deleted",
     "failed": "The places could not be loaded.",
     "save": "The change could not be saved.",
     "chargeField": "Place category",
