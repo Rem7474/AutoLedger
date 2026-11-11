@@ -8,6 +8,7 @@ import { api } from '@/services/api'
 import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { mergeExpensesByDrive, tollApplyStatusLabel } from '@/utils/drives'
 import { currencySymbol, formatAmount } from '@/currency'
 import { sharedTollSegments } from '@/utils/tolls'
@@ -213,21 +214,39 @@ async function handleSaveExpenseEdit(exp: any) {
   }
 }
 
+// A cost of one drive goes at once and comes back with Undo. A cost shared with a trip changes the totals of its other
+// drives, so that one is asked about first.
 async function handleDeleteExpense(exp: any) {
-  if (!props.vehicleId) return
-  const scope = exp.trip_group_id ? t('drives.driveCostModal.tripScope', { name: exp.trip_group_name }) : ''
+  const vehicleId = props.vehicleId
+  if (!vehicleId) return
+  const fail = (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+  if (!exp.trip_group_id) {
+    deleteRowsWithUndo({
+      list: driveExpenses,
+      items: [exp],
+      key: (x) => x.id,
+      message: t('expenses.expensesView.costDeleted'),
+      remove: (x) => api.deleteDriveExpense(vehicleId, x.id),
+      committed: () => void refreshCostModal(),
+      onError: fail,
+    })
+    return
+  }
   const ok = await showConfirm({
     title: t('drives.driveCostModal.deleteCostTitle'),
-    message: t('drives.driveCostModal.deleteCostMessage', { amount: formatAmount(Number(exp.amount), exp.currency || vehicleCurrency.value), scope }),
+    message: t('drives.driveCostModal.deleteCostMessage', {
+      amount: formatAmount(Number(exp.amount), exp.currency || vehicleCurrency.value),
+      scope: t('drives.driveCostModal.tripScope', { name: exp.trip_group_name }),
+    }),
     confirmText: t('common.delete'),
     type: 'danger',
   })
   if (!ok) return
   try {
-    await api.deleteDriveExpense(props.vehicleId, exp.id)
+    await api.deleteDriveExpense(vehicleId, exp.id)
     await refreshCostModal()
   } catch (err: any) {
-    void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
+    fail(err)
   }
 }
 

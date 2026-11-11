@@ -21,12 +21,10 @@ export function useTireHistory(options: {
   tires: Ref<any[]>
   loadTires: (silent?: boolean) => Promise<void>
   selectedTireIds: Ref<string[]>
-  // Opens the scrap form of the selected tire
-  openDispose: () => void
 }) {
-  const { tires, loadTires, selectedTireIds, openDispose } = options
+  const { tires, loadTires, selectedTireIds } = options
   const vehicleStore = useVehicleStore()
-  const { showConfirm, showChoice, showAlert } = useConfirm()
+  const { showAlert } = useConfirm()
 
   const showHistoryModal = ref(false)
   const showSessionModal = ref(false)
@@ -108,30 +106,25 @@ export function useTireHistory(options: {
     await loadTires(true)
   }
 
-  async function handleDeleteTire(tire: any) {
-    if (!vehicleStore.activeVehicle) return
-    // Deleting erases the tire and its cost; scrapping keeps both in the history and the TCO
-    const choice = await showChoice({
-      title: t('tires.tiresView.deleteTireTitle'),
-      message: t('tires.tiresView.deleteTireMessage', { brand: tire.brand, model: tire.model, dimension: tire.dimension }),
-      confirmText: t('tires.tiresView.deleteTireConfirm'),
-      alternativeText: t('tires.tiresView.deleteTireScrapInstead'),
-      type: 'danger',
+  // The tire goes at once and comes back with Undo, the server is asked when that time is over. Scrapping it instead
+  // (it keeps its history and cost) is the other button of the tire's history.
+  function handleDeleteTire(tire: any) {
+    const vehicle = vehicleStore.activeVehicle
+    const row = tires.value.find((x) => x.tire.id === tire.id)
+    if (!vehicle || !row) return
+    deleteRowsWithUndo({
+      list: tires,
+      items: [row],
+      key: (x) => x.tire.id,
+      message: t('tires.tiresView.tireDeleted'),
+      onHide: () => {
+        showHistoryModal.value = false
+        selectedTireIds.value = selectedTireIds.value.filter((id) => id !== tire.id)
+      },
+      remove: (x) => api.deleteTire(vehicle.id, x.tire.id),
+      committed: () => void loadTires(true),
+      onError: (err: any) => void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger'),
     })
-    if (choice === 'alternative') {
-      openDispose()
-      return
-    }
-    if (choice !== 'confirm') return
-
-    try {
-      await api.deleteTire(vehicleStore.activeVehicle.id, tire.id)
-      showHistoryModal.value = false
-      selectedTireIds.value = selectedTireIds.value.filter((id) => id !== tire.id)
-      await loadTires(true)
-    } catch (err: any) {
-      void showAlert(t('common.errorWithMessage', { message: err.message }), t('shell.confirm.error'), 'danger')
-    }
   }
 
   // Mount sessions

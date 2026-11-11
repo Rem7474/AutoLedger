@@ -731,9 +731,10 @@ test('a trip has no row menu: its detail carries Edit in the header and a quiet 
     await expect(detail.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
     await expect(detail.getByText('E2E trip notes')).toBeVisible()
     await detail.getByRole('button', { name: 'Delete', exact: true }).click()
-    // Deleting a trip asks first (its costs are kept or deleted with it)
-    await page.getByRole('dialog', { name: 'Delete the trip' }).getByRole('button', { name: 'Delete the trip', exact: true }).click()
-    await expect.poll(listed, { timeout: 10_000 }).toBe(0)
+    // A trip without costs goes at once with Undo; the server is asked when the time to undo is over
+    await expect(page.getByRole('button', { name: `Open ${name}` })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
+    await expect.poll(listed, { timeout: 15_000 }).toBe(0)
   } finally {
     if (await listed()) await request.delete(`/api/vehicles/${ev.id}/trip-groups/${id}`, { headers })
   }
