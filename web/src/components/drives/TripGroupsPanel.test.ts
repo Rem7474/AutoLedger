@@ -18,10 +18,10 @@ afterEach(() => {
 })
 
 describe('TripGroupsPanel', () => {
-  it('opens a trip from the whole row and keeps the other actions in a menu', async () => {
+  it('opens a trip from the whole row, with no row menu', async () => {
     const html = await render()
     expect(html).toContain('inset-0')
-    expect(html).toContain('aria-haspopup="menu"')
+    expect(html).not.toContain('aria-haspopup="menu"')
     expect(html).not.toContain('data-icon="edit"')
   })
 
@@ -31,8 +31,8 @@ describe('TripGroupsPanel', () => {
     expect(toggle).toContain('relative z-10')
   })
 
-  it('has no menu on a read-only list', async () => {
+  it('has no selection box on a read-only list', async () => {
     vehicleStore.canEdit = false
-    expect(await render()).not.toContain('aria-haspopup="menu"')
+    expect(await render()).not.toContain('id="select-g1"')
   })
 })

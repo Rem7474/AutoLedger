@@ -290,6 +290,7 @@ export function buildTripCostDrive(tg: any, tgDrives: any[]) {
     duration_min: totalDuration,
     tags: [],
     trip_group_name: tg.name,
+    trip_group_notes: tg.notes || '',
     drives_count: tgDrives.length,
     costs: {
       electricity_kwh: Math.round(totalKwh),

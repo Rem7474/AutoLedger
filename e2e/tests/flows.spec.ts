@@ -669,14 +669,42 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
   await expect(dialog).toHaveCount(0)
   await expect(page.getByText('E2E carpool').first()).toBeVisible()
 
-  await page.locator('div.rounded-2xl', { hasText: 'E2E carpool' }).getByRole('button', { name: 'More actions' }).first().click()
-  await page.getByRole('menuitem', { name: 'Delete', exact: true }).click()
+  // The row has no menu: it opens the carpool detail, which carries Edit in its header and a quiet Delete at the bottom
+  await expect(page.getByRole('button', { name: 'More actions' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Open E2E carpool' }).first().click()
+  const detail = page.getByRole('dialog')
+  await expect(detail.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+  await detail.getByRole('button', { name: 'Delete', exact: true }).click()
   // No confirmation: the carpool leaves the list and a snackbar offers to take it back until the server is asked
   await expect(page.getByText('E2E carpool')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
   const listed = async () => ((await (await request.get(`/api/vehicles/${ev.id}/carpools`, { headers })).json()).trips ?? []).filter((c: { title: string }) => c.title === 'E2E carpool').length
   expect(await listed()).toBe(1)
   await expect.poll(listed, { timeout: 12_000 }).toBe(0)
+})
+
+test('a trip has no row menu: its detail carries Edit in the header and a quiet Delete at the bottom', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const name = `E2E trip ${Date.now()}`
+  const drives = (await (await request.get(`/api/vehicles/${ev.id}/drives?limit=2`, { headers })).json()).drives as { id: string }[]
+  const created = await request.post(`/api/vehicles/${ev.id}/trip-groups`, { headers, data: { name, notes: 'E2E trip notes', drive_ids: drives.map((d) => d.id) } })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  const listed = async () => ((await (await request.get(`/api/vehicles/${ev.id}/trip-groups`, { headers })).json()) as { id: string }[]).filter((g) => g.id === id).length
+  try {
+    await useVehicle(page, ev.id, '/drives?tab=TRIPS&period=all')
+    await expect(page.getByRole('button', { name: 'More actions' })).toHaveCount(0)
+    await page.getByRole('button', { name: `Open ${name}` }).click({ position: { x: 20, y: 6 } })
+    const detail = page.getByRole('dialog')
+    await expect(detail.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+    await expect(detail.getByText('E2E trip notes')).toBeVisible()
+    await detail.getByRole('button', { name: 'Delete', exact: true }).click()
+    // Deleting a trip asks first (its costs are kept or deleted with it)
+    await page.getByRole('dialog', { name: 'Delete the trip' }).getByRole('button', { name: 'Delete the trip', exact: true }).click()
+    await expect.poll(listed, { timeout: 10_000 }).toBe(0)
+  } finally {
+    if (await listed()) await request.delete(`/api/vehicles/${ev.id}/trip-groups/${id}`, { headers })
+  }
 })
 
 test('carpools are listed 30 at a time and the totals cover all of them', async ({ page, request }) => {

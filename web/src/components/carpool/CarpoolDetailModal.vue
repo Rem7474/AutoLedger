@@ -10,15 +10,16 @@ import CarpoolRouteStrip from '@/components/carpool/CarpoolRouteStrip.vue'
 import { allocate, cents, driveCostGapCents, formatDate, hasLinkedLegs, passengerLabel, stopNames, titleShowsRoute } from '@/utils/carpool'
 import { formatAmount } from '@/currency'
 import ModalShell from '@/components/ModalShell.vue'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 import { distanceUnit, formatDistance } from '@/units'
 
 // Detail of a carpool trip: summary, where the amounts come from, the recap (what it costs, what was received, what is left
 // to the driver), the passengers on the route, the legs, the cost split and the total of the drive and trip cost breakdown. A leg made from a drive opens the cost detail of that drive, like the legs of a trip. The form to change the
-// carpool is the edit modal, reached from the footer.
+// carpool is the edit modal, reached from the header; the delete is at the bottom of the detail.
 const props = defineProps<{ trip: any | null; recalculating: boolean }>()
-const emit = defineEmits<{ edit: [trip: any]; recalculate: [trip: any]; freeze: [trip: any]; unfreeze: [trip: any]; 'open-drive': [driveId: string] }>()
+const emit = defineEmits<{ edit: [trip: any]; recalculate: [trip: any]; delete: [trip: any]; freeze: [trip: any]; unfreeze: [trip: any]; 'open-drive': [driveId: string] }>()
 const open = defineModel<boolean>('open', { required: true })
 const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
@@ -60,6 +61,11 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
             <p class="text-xs text-slate-400">{{ formatDate(trip.date) }} · {{ formatDistance(trip.distance_km, 1) }}</p>
           </div>
         </div>
+    </template>
+    <template v-if="vehicleStore.canEdit" #actions>
+      <button type="button" class="tap-text inline-flex items-center gap-1 rounded-lg px-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white" @click="emit('edit', trip)">
+        <Pencil class="h-3.5 w-3.5" aria-hidden="true" />{{ $t('common.edit') }}
+      </button>
     </template>
 
         <!-- The route, when the title does not say it, and the notes -->
@@ -171,6 +177,10 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
           :strong="trip.net_cost <= 0"
         />
 
+        <div v-if="vehicleStore.canEdit" class="flex justify-center">
+          <DetailDeleteButton @delete="emit('delete', trip)" />
+        </div>
+
     <template #footer>
         <button @click="open = false" class="btn btn-lg btn-secondary">
           {{ $t('common.close') }}
@@ -196,14 +206,6 @@ const gap = computed(() => driveCostGapCents(props.trip?.legs || []) / 100)
             :title="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')" :aria-label="$t('carpool.carpoolTripList.recalculateTheActualCostsOf')"
           >
             <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': recalculating }" />
-          </button>
-          <button
-            type="button"
-            @click="emit('edit', trip)"
-            class="btn btn-lg btn-primary"
-          >
-            <Pencil class="w-4 h-4" />
-            <span>{{ $t('common.edit') }}</span>
           </button>
         </div>
     </template>

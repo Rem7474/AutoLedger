@@ -417,6 +417,14 @@ function editTripFromCostModal(virtual: any) {
   openTripEdit(tg)
 }
 
+// The delete of a trip closes its detail and asks the same question as the selection bar (the costs of the trip are kept or deleted with it)
+function deleteTripFromCostModal(virtual: any) {
+  const tg = tripGroups.value.find((g) => g.id === virtual.id)
+  if (!tg) return
+  showCostModal.value = false
+  void handleDeleteTrip(tg)
+}
+
 // A manual drive's edit form replaces its detail; its delete closes the detail and goes with the same Undo as the swipe
 function editFromCostModal(drive: any) {
   showCostModal.value = false
@@ -680,6 +688,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       :refresh-drive="refreshCostDrive"
       @toggle-tag="toggleDriveTag"
       @edit-trip="editTripFromCostModal"
+      @delete-trip="deleteTripFromCostModal"
       @create-trip="createTripFromCostModal"
       @dismiss-trip="dismissTripFromCostModal"
       @carpool="openCarpoolEditor"

@@ -33,11 +33,21 @@ describe('CarpoolTripList', () => {
     expect(await render([trip], [], 500)).toContain('500 covoiturage(s) au total')
   })
 
-  it('opens a carpool from the whole row, with the other actions in a menu and no icon row', async () => {
+  it('opens a carpool from the whole row, with no row menu and no icon row', async () => {
     const html = await render()
     expect(html).toContain('inset-0')
-    expect(html).toContain('aria-haspopup="menu"')
+    expect(html).not.toContain('aria-haspopup="menu"')
     expect(html).not.toContain('data-icon="edit"')
+    expect(html).not.toContain('data-icon="delete"')
+  })
+
+  it('says the recovery and the origin of the amounts as plain text in the quiet line', async () => {
+    const html = await render([trip, { ...trip, id: 'b', net_cost: 0, legs: [{ drive_id: 'd1' }], costs_frozen_at: '2026-10-10T08:00:00Z' }])
+    expect(html).toContain('data-tone="attention"')
+    expect(html).toContain('60 % payé par les passagers')
+    expect(html).toContain('data-tone="neutral"')
+    expect(html).toContain('Montants figés')
+    expect(html).not.toContain('rounded-full font-semibold border')
   })
 
   it('shows what is left to the driver, or the surplus once the cost is recovered', async () => {
@@ -47,11 +57,10 @@ describe('CarpoolTripList', () => {
     expect(recovered).toContain('text-success-400')
   })
 
-  it('leaves the selection box and the menu out of a read-only list', async () => {
+  it('leaves the selection box out of a read-only list', async () => {
     vehicleStore.canEdit = false
     const html = await render()
     expect(html).not.toContain('carpool-select-')
-    expect(html).not.toContain('aria-haspopup="menu"')
   })
 
   it('offers to freeze or resync the selected carpools made from drives, with how many each applies to', async () => {

@@ -42,3 +42,27 @@ describe('DriveCostModal : modifier et supprimer', () => {
     expect(await render(drive)).not.toContain('Supprimer')
   })
 })
+
+describe('DriveCostModal : un voyage', () => {
+  const trip = { id: 'g1', is_trip_group: true, trip_group_name: 'Vacances', trip_group_notes: 'Aller-retour', start_time: '2026-07-01T08:00:00Z', distance_km: 900, costs: { total_cost: 80, cost_per_km: 0.09 } }
+
+  it('propose Modifier dans l\'en-tête, Supprimer en bas, et les notes du voyage', async () => {
+    const html = await render(trip)
+    expect(html).toContain('text-critical-400')
+    expect(html).toContain('Supprimer')
+    expect(html).toContain('Aller-retour')
+    // le bouton Modifier du pied de page a disparu : un seul bouton Modifier
+    expect(html.match(/Modifier/g)).toHaveLength(1)
+  })
+
+  it('n\'en propose aucun pour une lecture seule, une page qui ne gère pas ou une suggestion', async () => {
+    for (const html of [await render(trip, false), await render({ ...trip, is_suggestion: true })]) {
+      expect(html).not.toContain('Supprimer')
+      expect(html).not.toContain('Modifier')
+    }
+    vehicleStore.canEdit = false
+    const html = await render(trip)
+    expect(html).not.toContain('Supprimer')
+    expect(html).not.toContain('Modifier')
+  })
+})
