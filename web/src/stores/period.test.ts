@@ -82,4 +82,24 @@ describe('period store', () => {
     const { usePeriodStore } = await import('./period')
     expect(usePeriodStore().carpools).toEqual({ kind: 'months', count: 1, end: null })
   })
+
+  it('opens the fill-ups on the current month and remembers their own choice apart from the costs and the carpools', async () => {
+    const storage = fakeStorage()
+    vi.stubGlobal('localStorage', storage)
+    const { usePeriodStore } = await import('./period')
+    const store = usePeriodStore()
+    expect(store.fuel).toEqual({ kind: 'months', count: 1, end: null })
+    store.setFuel({ kind: 'all' })
+    expect(store.costs).toEqual({ kind: 'months', count: 12, end: null })
+    expect(store.carpools).toEqual({ kind: 'months', count: 1, end: null })
+    vi.resetModules()
+    setActivePinia(createPinia())
+    expect((await import('./period')).usePeriodStore().fuel).toEqual({ kind: 'all' })
+  })
+
+  it('falls back to the current month when the saved fill-up period is unreadable', async () => {
+    vi.stubGlobal('localStorage', fakeStorage({ teslacost_period_fuel: '{broken' }))
+    const { usePeriodStore } = await import('./period')
+    expect(usePeriodStore().fuel).toEqual({ kind: 'months', count: 1, end: null })
+  })
 })
