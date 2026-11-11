@@ -4,6 +4,8 @@ import { useCostEntryActions } from './useCostEntryActions'
 
 const api = vi.hoisted(() => ({
   getCharge: vi.fn(),
+  getFuelLogs: vi.fn(),
+  deleteFuelLog: vi.fn(),
   getDriveExpense: vi.fn(),
   getMaintenanceExpense: vi.fn(),
   getMaintenance: vi.fn(),
@@ -19,7 +21,7 @@ vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => store }))
 const showAlert = vi.hoisted(() => vi.fn())
 vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => ({ showAlert }) }))
 const deleteWithUndo = vi.hoisted(() => vi.fn())
-vi.mock('@/composables/useUndoableDelete', () => ({ deleteWithUndo }))
+vi.mock('@/composables/useUndoableDelete', () => ({ deleteWithUndo, deleteRowsWithUndo: vi.fn() }))
 
 const entry = (source: string, id = 'r1'): CostEntryLine => ({
   date: '2026-03-10', category: 'toll', kind: 'toll', amount: { amount: '5.00', currency: 'EUR' }, note: null, place: null,
@@ -154,5 +156,63 @@ describe('useCostEntryActions', () => {
     await a.remove(entry('drive_expenses', 'e1'), 'row3')
     expect(deleteWithUndo).not.toHaveBeenCalled()
     expect(showAlert).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens a fill-up in its sheet, found by id among the fill-ups of the vehicle', async () => {
+    api.getFuelLogs.mockResolvedValue({ logs: [{ id: 'f0' }, { id: 'f1', version: 2 }] })
+    const a = useCostEntryActions(hooks())
+    await a.open(entry('fuel_logs', 'f1'))
+    expect(a.showFuel.value).toBe(true)
+    expect(a.editing.value).toEqual({ id: 'f1', version: 2 })
+    expect([a.showToll.value, a.showMaintenance.value, a.showCharge.value]).toEqual([false, false, false])
+  })
+
+  it('says so when the fill-up is gone, and opens nothing', async () => {
+    api.getFuelLogs.mockResolvedValue({ logs: [{ id: 'f0' }] })
+    const a = useCostEntryActions(hooks())
+    await a.open(entry('fuel_logs', 'f1'))
+    expect(a.showFuel.value).toBe(false)
+    expect(showAlert).toHaveBeenCalledTimes(1)
+  })
+
+  it('deletes a fill-up with a way back, from a swipe or from the sheet, and reads the journal again', async () => {
+    api.getFuelLogs.mockResolvedValue({ logs: [{ id: 'f1', version: 2 }] })
+    const h = hooks()
+    const a = useCostEntryActions(h)
+    await a.remove(entry('fuel_logs', 'f1'), 'row1')
+    const swipe = deleteWithUndo.mock.calls[0][0]
+    expect(swipe.message).toBe('manual.fuelLogsPanel.fillUpDeleted')
+    await swipe.commit()
+    expect(api.deleteFuelLog).toHaveBeenCalledWith('v1', 'f1')
+    swipe.committed()
+    expect(h.reload).toHaveBeenCalled()
+
+    await a.open(entry('fuel_logs', 'f1'))
+    await a.removeOpenedFuel({ id: 'f1' })
+    expect(a.showFuel.value).toBe(false)
+    const sheet = deleteWithUndo.mock.calls[1][0]
+    sheet.hide()
+    sheet.restore()
+    expect(h.hide.mock.calls[0][0]).toBe(h.restore.mock.calls[0][0])
+  })
+
+  it('deletes the opened charge from its detail through the shared deletion, which still refuses a synchronised one', async () => {
+    api.getCharge.mockResolvedValue({ id: 'c1', origin: 'MANUAL' })
+    const h = hooks()
+    const a = useCostEntryActions(h)
+    await a.open(entry('charge_logs', 'c1'))
+    await a.removeOpenedCharge({ id: 'c1' })
+    const call = deleteWithUndo.mock.calls.at(-1)![0]
+    expect(call.message).toBe('expenses.expensesView.chargeDeleted')
+    call.hide()
+    call.restore()
+    expect(h.hide.mock.calls[0][0]).toBe(h.restore.mock.calls[0][0])
+
+    const before = deleteWithUndo.mock.calls.length
+    api.getCharge.mockResolvedValue({ id: 'c2', origin: 'TESLAMATE' })
+    await a.open(entry('charge_logs', 'c2'))
+    await a.removeOpenedCharge({ id: 'c2' })
+    expect(deleteWithUndo.mock.calls.length).toBe(before)
+    expect(showAlert).toHaveBeenCalled()
   })
 })

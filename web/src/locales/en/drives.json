@@ -20,6 +20,9 @@
     "importCsv": "Import CSV",
     "noTelemetryBanner": "This vehicle runs in manual or semi-automatic mode. You can log drives manually or import your history via CSV.",
     "driveDeleted": "Drive deleted",
+    "totalNet": "net {amount}",
+    "totalIncomplete": "incomplete",
+    "totalIncompleteHint": "Some drives have no known cost: the total only adds up the others",
     "setUpTheLink": "Set up the link",
     "deselectPage": "Deselect the listed drives",
     "selectPage": "Select the listed drives",
@@ -103,6 +106,7 @@
     "unknownEnd": "Unknown destination",
     "openBreakdown": "Open the cost breakdown of the drive of {date}",
     "carpooledSummary": "Carpooled · {passengers} passenger | Carpooled · {passengers} passengers",
+    "carpooledShort": "{passengers} passenger | {passengers} passengers",
     "carpooledOpen": "Open the carpool of this drive"
   },
   "drivePicker": {

@@ -221,10 +221,16 @@ function openAddChargeModal() {
   void ensureDocumentsLoaded()
 }
 
-function openEditChargeModal(c: any) {
-  editingCharge.value = c
-  showChargeModal.value = true
-  void ensureDocumentsLoaded()
+// A charge opens from the record the server holds (as the cost journal reads it), not from the row of the list
+async function openEditChargeModal(c: any) {
+  if (!vehicleStore.activeVehicle) return
+  try {
+    const [record] = await Promise.all([api.getCharge(vehicleStore.activeVehicle.id, c.id), ensureDocumentsLoaded()])
+    editingCharge.value = record
+    showChargeModal.value = true
+  } catch (err: any) {
+    void showAlert(t('common.errorWithMessage', { message: err?.message ?? '' }), t('shell.confirm.error'), 'danger')
+  }
 }
 
 // Documents

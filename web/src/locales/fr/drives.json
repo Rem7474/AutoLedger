@@ -20,6 +20,9 @@
     "importCsv": "Importer CSV",
     "noTelemetryBanner": "Ce véhicule fonctionne en suivi autonome ou semi-auto. Vous pouvez enregistrer vos trajets manuellement ou importer vos historiques au format CSV.",
     "driveDeleted": "Trajet supprimé",
+    "totalNet": "net {amount}",
+    "totalIncomplete": "incomplet",
+    "totalIncompleteHint": "Certains trajets n’ont pas de coût connu : le total n’additionne que les autres",
     "setUpTheLink": "Configurer la liaison",
     "deselectPage": "Désélectionner les trajets affichés",
     "selectPage": "Sélectionner les trajets affichés",
@@ -103,6 +106,7 @@
     "unknownEnd": "Arrivée inconnue",
     "openBreakdown": "Ouvrir le détail des coûts du trajet du {date}",
     "carpooledSummary": "Covoituré · {passengers} passager | Covoituré · {passengers} passagers",
+    "carpooledShort": "{passengers} passager | {passengers} passagers",
     "carpooledOpen": "Ouvrir le covoiturage de ce trajet"
   },
   "drivePicker": {

@@ -7,7 +7,7 @@ import { useToast } from './useToast'
 
 const { toasts } = useToast()
 
-const api = vi.hoisted(() => ({ deleteCharge: vi.fn(), deleteDocument: vi.fn() }))
+const api = vi.hoisted(() => ({ deleteCharge: vi.fn(), deleteDocument: vi.fn(), deleteFuelLog: vi.fn() }))
 vi.mock('@/services/api', () => ({ api }))
 const store = vi.hoisted(() => ({ activeVehicle: { id: 'v1' } as { id: string } | null, currency: 'EUR' }))
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => store }))
@@ -17,7 +17,7 @@ vi.mock('@/composables/useConfirm', () => ({ useConfirm: () => confirm }))
 const setup = () => {
   const documents = ref<any[]>([{ id: 'doc1', filename: 'a.pdf' }, { id: 'doc2', filename: 'b.pdf' }])
   const lists = {
-    charges: ref<any[]>([{ id: 'x1' }, { id: 'c1' }]),
+    charges: ref<any[]>([{ id: 'x1', origin: 'MANUAL' }, { id: 'c1', origin: 'MANUAL' }]),
   }
   const reload = vi.fn().mockResolvedValue(undefined)
   return { documents, lists, reload, h: useExpenseDeletions(documents, reload, lists) }
@@ -43,7 +43,7 @@ describe('useExpenseDeletions', () => {
     it(`takes a single one of the ${label} off the list at once and deletes it once the time to undo is over`, async () => {
       const { h, reload, lists } = setup()
       const list = lists[listOf[label]]
-      await h[handler]([{ id: 'x1', amount: '12', kwh_added: 30, description: 'Oil' }])
+      await h[handler]([{ id: 'x1', origin: 'MANUAL', amount: '12', kwh_added: 30, description: 'Oil' }])
       expect(confirm.showConfirm).not.toHaveBeenCalled()
       expect(list.value.map((r) => r.id)).not.toContain('x1')
       expect(api[call]).not.toHaveBeenCalled()
@@ -56,7 +56,7 @@ describe('useExpenseDeletions', () => {
       const { h, reload, lists } = setup()
       const list = lists[listOf[label]]
       const before = list.value.map((r) => r.id)
-      await h[handler]([{ id: 'x1' }])
+      await h[handler]([{ id: 'x1', origin: 'MANUAL' }])
       toasts.value.at(-1)!.action!.run()
       expect(list.value.map((r) => r.id)).toEqual(before)
       await vi.advanceTimersByTimeAsync(UNDO_MS * 2)
@@ -67,8 +67,8 @@ describe('useExpenseDeletions', () => {
     it(`takes a selection of ${label} off the list at once under one snackbar, deletes them one by one once the time is over and reloads`, async () => {
       const { h, reload, lists } = setup()
       const list = lists[listOf[label]]
-      list.value = [{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }, { id: 'keep' }]
-      await h[handler]([{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }])
+      list.value = [{ id: 'x1', origin: 'MANUAL' }, { id: 'x2', origin: 'MANUAL' }, { id: 'x3', origin: 'MANUAL' }, { id: 'keep', origin: 'MANUAL' }]
+      await h[handler]([{ id: 'x1', origin: 'MANUAL' }, { id: 'x2', origin: 'MANUAL' }, { id: 'x3', origin: 'MANUAL' }])
       expect(confirm.showConfirm).not.toHaveBeenCalled()
       expect(list.value.map((r) => r.id)).toEqual(['keep'])
       expect(toasts.value).toHaveLength(1)
@@ -81,8 +81,8 @@ describe('useExpenseDeletions', () => {
     it(`puts a selection of ${label} back when undone`, async () => {
       const { h, lists } = setup()
       const list = lists[listOf[label]]
-      list.value = [{ id: 'x1' }, { id: 'x2' }, { id: 'keep' }]
-      await h[handler]([{ id: 'x1' }, { id: 'x2' }])
+      list.value = [{ id: 'x1', origin: 'MANUAL' }, { id: 'x2', origin: 'MANUAL' }, { id: 'keep', origin: 'MANUAL' }]
+      await h[handler]([{ id: 'x1', origin: 'MANUAL' }, { id: 'x2', origin: 'MANUAL' }])
       toasts.value.at(-1)!.action!.run()
       expect(list.value.map((r) => r.id)).toEqual(['x1', 'x2', 'keep'])
       await vi.advanceTimersByTimeAsync(UNDO_MS * 2)
@@ -93,7 +93,7 @@ describe('useExpenseDeletions', () => {
       api[call].mockRejectedValueOnce(new Error('boom'))
       const { h, reload, lists } = setup()
       const list = lists[listOf[label]]
-      await h[handler]([{ id: 'x1' }])
+      await h[handler]([{ id: 'x1', origin: 'MANUAL' }])
       await vi.advanceTimersByTimeAsync(UNDO_MS)
       expect(list.value.map((r) => r.id)).toContain('x1')
       expect(confirm.showAlert).toHaveBeenCalledWith(t('common.deleteError', { message: 'boom' }), t('shell.confirm.error'), 'danger')
@@ -104,8 +104,8 @@ describe('useExpenseDeletions', () => {
       api[call].mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('boom'))
       const { h, reload, lists } = setup()
       const list = lists[listOf[label]]
-      list.value = [{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }]
-      await h[handler]([{ id: 'x1' }, { id: 'x2' }, { id: 'x3' }])
+      list.value = [{ id: 'x1', origin: 'MANUAL' }, { id: 'x2', origin: 'MANUAL' }, { id: 'x3', origin: 'MANUAL' }]
+      await h[handler]([{ id: 'x1', origin: 'MANUAL' }, { id: 'x2', origin: 'MANUAL' }, { id: 'x3', origin: 'MANUAL' }])
       await vi.advanceTimersByTimeAsync(UNDO_MS)
       expect(api[call]).toHaveBeenCalledTimes(2)
       expect(list.value.map((r) => r.id)).toEqual(['x2', 'x3'])
@@ -114,12 +114,25 @@ describe('useExpenseDeletions', () => {
     })
   }
 
+  it('refuses a charge reported by TeslaMate: nothing is hidden, nothing is sent, the user is told', async () => {
+    const { h, lists, reload } = setup()
+    lists.charges.value = [{ id: 's1', origin: 'TESLAMATE' }, { id: 'x1', origin: 'MANUAL' }]
+    await h.handleDeleteCharge({ id: 's1', origin: 'TESLAMATE' })
+    await h.handleDeleteCharges([{ id: 's1', origin: 'TESLAMATE' }, { id: 'x1', origin: 'MANUAL' }])
+    expect(lists.charges.value.map((r) => r.id)).toEqual(['s1', 'x1'])
+    expect(toasts.value).toHaveLength(0)
+    await vi.advanceTimersByTimeAsync(UNDO_MS)
+    expect(api.deleteCharge).not.toHaveBeenCalled()
+    expect(reload).not.toHaveBeenCalled()
+    expect(confirm.showAlert).toHaveBeenCalledWith(t('expenses.chargesPanel.syncedCannotDelete'), t('shell.confirm.error'), 'warning')
+  })
+
   it('does nothing without an active vehicle or an empty selection', async () => {
     const { h, reload } = setup()
     await h.handleDeleteCharges([])
     expect(confirm.showConfirm).not.toHaveBeenCalled()
     store.activeVehicle = null
-    await h.handleDeleteCharge({ id: 'c1', kwh_added: 1 })
+    await h.handleDeleteCharge({ id: 'c1', origin: 'MANUAL', kwh_added: 1 })
     await h.handleDeleteDocument({ id: 'doc1', filename: 'a.pdf' } as any)
     expect(confirm.showConfirm).not.toHaveBeenCalled()
     expect(reload).not.toHaveBeenCalled()

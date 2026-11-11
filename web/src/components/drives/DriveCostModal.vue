@@ -15,6 +15,7 @@ import { formatAmount } from '@/currency'
 import { formatQuantity } from '@/utils/numbers'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import ModalShell from '@/components/ModalShell.vue'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
 import { distanceUnit, formatDistance, kmToDisplayDistance, speedUnit } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
@@ -34,6 +35,8 @@ const props = defineProps<{
   startWithTollEntry: boolean
   // Set when the drive was opened from another detail (a carpool): the header then offers a way back to it
   backLabel?: string
+  // The page that can edit and delete the drive (a manual one) listens to `edit` and `delete`; elsewhere the detail offers neither
+  manageable?: boolean
   refreshDrive: (driveId: string) => Promise<any | null>
 }>()
 const emit = defineEmits<{
@@ -43,6 +46,8 @@ const emit = defineEmits<{
   'edit-trip': [trip: any]
   carpool: [options: { driveIds?: string[]; tripGroupId?: string }]
   back: []
+  edit: [drive: any]
+  delete: [drive: any]
 }>()
 const open = defineModel<boolean>('open', { required: true })
 const selectedCostDrive = defineModel<any | null>('drive', { required: true })
@@ -53,6 +58,8 @@ const { showAlert } = useConfirm()
 const formatDate = formatDayTime
 const breakdown = computed(() => buildDriveBreakdown(selectedCostDrive.value?.costs, Number(selectedCostDrive.value?.distance_km) || 0))
 const vehicleCurrency = computed(() => vehicleStore.currency)
+// Only a drive entered by hand can be edited or deleted: the ones synced from TeslaMate follow their source
+const canManage = computed(() => !!props.manageable && vehicleStore.canEdit && !!selectedCostDrive.value?.is_manual && !selectedCostDrive.value?.is_trip_group && !selectedCostDrive.value?.is_suggestion)
 const teslamateDriveUrl = (d: any) => buildTeslamateDriveUrl(vehicleStore.activeVehicle, d)
 
 // A trip shows its legs and carpools; opening a leg keeps the trip to come back to
@@ -157,18 +164,13 @@ async function handleDriverChange(event: Event) {
               {{ selectedCostDrive.is_trip_group ? $t('drives.driveCostModal.tripTitle', { name: selectedCostDrive.trip_group_name }) : $t('drives.driveCostModal.driveTitle') }}
             </h3>
             <p class="text-xs text-slate-400">{{ formatDate(selectedCostDrive.start_time) }}</p>
-            <a
-              v-if="teslamateDriveUrl(selectedCostDrive)"
-              :href="teslamateDriveUrl(selectedCostDrive)!"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-1 inline-flex items-center gap-1 text-xs text-info-400 hover:text-info-300 font-medium"
-              :title="$t('drives.driveCostModal.openThisDriveInThe')"
-            >
-              <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
-            </a>
           </div>
         </div>
+    </template>
+    <template v-if="canManage" #actions>
+      <button type="button" class="tap-text inline-flex items-center gap-1 rounded-lg px-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white" @click="emit('edit', selectedCostDrive)">
+        <Pencil class="h-3.5 w-3.5" aria-hidden="true" />{{ $t('common.edit') }}
+      </button>
     </template>
 
 
@@ -186,6 +188,16 @@ async function handleDriverChange(event: Event) {
           <span v-if="selectedCostDrive.drives_count" class="text-sky-400 font-semibold">{{ $t('drives.driveCostModal.legs', { drives_count: selectedCostDrive.drives_count }) }}</span>
           <span v-if="selectedCostDrive.speed_avg" class="text-slate-400">{{ $t('drives.driveCostModal.kmHAvg', { speed: speedUnit(), speed_avg: Math.round(kmToDisplayDistance(selectedCostDrive.speed_avg)) }) }}</span>
           <span v-if="selectedCostDrive.costs?.electricity_kwh" class="text-theme-energy">{{ $t('drives.driveCostModal.kwh', { electricity_kwh: formatQuantity(Number(selectedCostDrive.costs.electricity_kwh)) }) }}</span>
+          <a
+            v-if="teslamateDriveUrl(selectedCostDrive)"
+            :href="teslamateDriveUrl(selectedCostDrive)!"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 font-medium text-info-400 underline underline-offset-2 hover:text-info-300"
+            :title="$t('drives.driveCostModal.openThisDriveInThe')"
+          >
+            <ExternalLink class="w-3 h-3" /> {{ $t('expenses.teslamateLinks.details') }}
+          </a>
         </div>
 
         <!-- Tag qualification (only for individual drives) -->
@@ -299,6 +311,10 @@ async function handleDriverChange(event: Event) {
           :per-distance-label="$t('drives.driveCostModal.costPerKilometre', { unit: distanceUnit() })"
         />
       </div>
+      </div>
+
+      <div v-if="canManage" class="flex justify-center">
+        <DetailDeleteButton @delete="emit('delete', selectedCostDrive)" />
       </div>
 
     <template #footer>

@@ -98,6 +98,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}, offlineLa
     }
   }
 
+  // A deletion answered with no content (204) succeeded and has no body to read
+  if (res.status === 204) return undefined as T
+
   let data: any
   const contentType = res.headers.get('content-type') || ''
   if (contentType.includes('application/json')) {

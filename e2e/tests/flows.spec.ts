@@ -414,6 +414,33 @@ test('a fill-up is deleted from its detail with Undo, without a row menu', async
   }
 })
 
+test('a fill-up opens from the cost journal in its sheet, is edited and shows its new amount', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const notes = `Journal fill-up ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ice.id}/fuel-logs`, { headers, data: { date: new Date().toISOString(), amount: 17, liters: 10, fuel_type: 'SP95_E10', notes } })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  try {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await useVehicle(page, ice.id, '/costs')
+    const row = page.getByRole('button', { name: notes })
+    await row.click()
+    // The sheet opens on the journal: no navigation to the consumption page
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await expect(page).toHaveURL(/\/costs/)
+    await expect(dialog.getByRole('button', { name: 'Delete', exact: true })).toBeVisible()
+    await dialog.locator('#fuel-amount').fill('18.5')
+    const saved = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes(`/fuel-logs/${id}`))
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+    expect((await saved).ok()).toBeTruthy()
+    await expect(dialog).toHaveCount(0)
+    await expect(page.getByTestId('cost-entry').filter({ hasText: notes })).toContainText(/18[.,]50/)
+  } finally {
+    await request.delete(`/api/vehicles/${ice.id}/fuel-logs/${id}`, { headers })
+  }
+})
+
 test('an odometer reading is deleted from its form with Undo, without a row menu', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const notes = `Detail delete reading ${Date.now()}`
@@ -438,6 +465,35 @@ test('an odometer reading is deleted from its form with Undo, without a row menu
     await expect(open).toHaveCount(0)
   } finally {
     await request.delete(`/api/vehicles/${ice.id}/odometer-checkpoints/${id}`, { headers })
+  }
+})
+
+test('a manual drive is deleted from its detail with Undo, without a row menu', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const end = `Detail delete drive ${Date.now()}`
+  const created = await request.post(`/api/vehicles/${ev.id}/drives`, { headers, data: { start_time: new Date().toISOString(), distance_km: 12.3, start_address: 'Probe start', end_address: end, tags: [] } })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, ev.id, '/drives')
+    const row = page.getByTestId('drive-card').filter({ hasText: end })
+    await expect(row).toHaveCount(1)
+    await expect(row.getByRole('button', { name: 'More actions' })).toHaveCount(0)
+    await row.getByRole('button', { name: /^Open the cost breakdown/ }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(row).toHaveCount(0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(row).toHaveCount(1)
+    await row.getByRole('button', { name: /^Open the cost breakdown/ }).click()
+    const deleted = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().includes(`/drives/${id}`))
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
+    expect((await deleted).ok()).toBeTruthy()
+    await expect(row).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${ev.id}/drives/${id}`, { headers })
   }
 })
 
