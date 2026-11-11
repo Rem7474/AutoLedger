@@ -124,7 +124,7 @@ onMounted(() => {
           <div
             v-for="charge in pendingCharges"
             :key="charge.id"
-            class="p-4 rounded-xl bg-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            class="p-4 rounded-xl bg-slate-800 flex flex-col max-lg:sm:flex-row max-lg:sm:items-center justify-between gap-4"
           >
             <!-- Charge Details -->
             <div class="space-y-1 min-w-0">
