@@ -212,7 +212,7 @@ test.describe('a modal with edits does not close on a backdrop click', () => {
   })
 })
 
-test('deleting a tire asks whether to delete it or scrap it', async ({ page, request }) => {
+test('a tire is deleted from its history with Undo, scrapping is the other button', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const created = await request.post('/api/vehicles', { headers, data: { name: 'Tire dialog reference', powertrain: 'EV', currency: 'EUR' } })
   expect(created.ok()).toBeTruthy()
@@ -223,21 +223,25 @@ test('deleting a tire asks whether to delete it or scrap it', async ({ page, req
       current_position: 'STORAGE', initial_depth_mm: 8, min_legal_depth_mm: 1.6, estimated_lifespan_km: 40000,
     } })
     expect(tire.ok()).toBeTruthy()
+    const listed = async () => JSON.stringify(await (await request.get(`/api/vehicles/${vehicle.id}/tires`, { headers })).json()).includes('Zeta')
     await page.setViewportSize({ width: 390, height: 844 })
     await useVehicle(page, vehicle.id, '/tires')
     await page.getByRole('tab', { name: /Catalogue and garage stock/ }).click()
-    await page.getByRole('button', { name: 'Open Zeta Grip' }).click()
+    const open = page.getByRole('button', { name: 'Open Zeta Grip' })
+    await open.click()
+    await expect(page.getByRole('button', { name: /Scrap/ }).first()).toBeVisible()
     await page.getByRole('button', { name: 'Delete (entry error)' }).click()
 
-    const dialog = page.getByRole('dialog', { name: 'Delete or scrap this tire?' })
-    await expect(dialog.getByRole('button', { name: 'Delete permanently' })).toBeVisible()
-    await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeVisible()
-    await dialog.getByRole('button', { name: 'Scrap it instead' }).click()
+    // The tire leaves the list at once and comes back with Undo
+    await expect(open).toHaveCount(0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(open).toHaveCount(1)
+    expect(await listed()).toBe(true)
 
-    // Scrapping opens the scrap form and keeps the tire
-    await expect(page.getByRole('dialog', { name: /Scrap/ })).toBeVisible()
-    const still = await request.get(`/api/vehicles/${vehicle.id}/tires`, { headers })
-    expect(JSON.stringify(await still.json())).toContain('Zeta')
+    await open.click()
+    await page.getByRole('button', { name: 'Delete (entry error)' }).click()
+    await expect(open).toHaveCount(0)
+    await expect.poll(listed, { timeout: 15_000 }).toBe(false)
   } finally {
     await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
   }
@@ -661,8 +665,9 @@ test('a toll added from the cost modal of a drive is listed, edited and deleted'
   await expect(dialog.getByText('€4.50').first()).toBeVisible()
 
   await dialog.getByRole('button', { name: 'Delete this cost' }).click()
-  await page.getByRole('dialog', { name: 'Delete the cost' }).getByRole('button', { name: 'Delete', exact: true }).click()
+  // A cost of one drive goes at once with Undo
   await expect(dialog.getByText('0 cost(s) assigned')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
 })
 
 test('a carpool is entered with its legs and passengers, priced and saved, then deleted', async ({ page, request }) => {
