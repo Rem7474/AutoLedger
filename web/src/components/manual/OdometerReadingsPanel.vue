@@ -33,7 +33,7 @@ const props = defineProps<{
 }>()
 
 const vehicleStore = useVehicleStore()
-const { showConfirm, showAlert } = useConfirm()
+const { showAlert } = useConfirm()
 
 const readings = ref<any[]>([])
 const fuelLogs = ref<any[]>([])

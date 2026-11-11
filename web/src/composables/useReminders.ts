@@ -17,7 +17,7 @@ export interface UseRemindersOptions {
 // Maintenance reminders of the active vehicle, the modals that edit them, and the vehicle webhook.
 export function useReminders(options: UseRemindersOptions) {
   const vehicleStore = useVehicleStore()
-  const { showConfirm, showAlert } = useConfirm()
+  const { showAlert } = useConfirm()
 
   const reminders = ref<MaintenanceReminder[]>([])
   const loadingReminders = ref(false)

@@ -6,13 +6,11 @@ import { api, type TariffPlan } from '@/services/api'
 import { t } from '@/i18n'
 import { formatAmount } from '@/currency'
 import { formatCalendarDay } from '@/utils/expenses'
-import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
 import LoadError from '@/components/LoadError.vue'
 import TariffPlanModal from '@/components/tariffs/TariffPlanModal.vue'
 import { groupVersions, nextVersionForm, planToForm, type PlanForm } from '@/utils/tariffPlans'
 
-const { showConfirm } = useConfirm()
 const vehicleStore = useVehicleStore()
 
 const plans = ref<TariffPlan[]>([])
