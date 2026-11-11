@@ -37,6 +37,8 @@ const props = defineProps<{
   backLabel?: string
   // The page that can edit and delete the drive (a manual one) listens to `edit` and `delete`; elsewhere the detail offers neither
   manageable?: boolean
+  // The leg shown belongs to a trip (the page knows its trips): the detail then offers to take it out of that trip
+  inTrip?: boolean
   refreshDrive: (driveId: string) => Promise<any | null>
 }>()
 const emit = defineEmits<{
@@ -49,6 +51,7 @@ const emit = defineEmits<{
   edit: [drive: any]
   delete: [drive: any]
   'delete-trip': [trip: any]
+  'remove-from-trip': [drive: any]
 }>()
 const open = defineModel<boolean>('open', { required: true })
 const selectedCostDrive = defineModel<any | null>('drive', { required: true })
@@ -63,6 +66,7 @@ const vehicleCurrency = computed(() => vehicleStore.currency)
 const canManage = computed(() => !!props.manageable && vehicleStore.canEdit && !!selectedCostDrive.value?.is_manual && !selectedCostDrive.value?.is_trip_group && !selectedCostDrive.value?.is_suggestion)
 // A trip group is edited and deleted from its detail too, by a user who can edit; the page that lists the trips handles both
 const canManageTrip = computed(() => !!props.manageable && vehicleStore.canEdit && !!selectedCostDrive.value?.is_trip_group && !selectedCostDrive.value?.is_suggestion)
+const canRemoveFromTrip = computed(() => !!props.manageable && !!props.inTrip && vehicleStore.canEdit && !selectedCostDrive.value?.is_trip_group && !selectedCostDrive.value?.is_suggestion)
 const teslamateDriveUrl = (d: any) => buildTeslamateDriveUrl(vehicleStore.activeVehicle, d)
 
 // A trip shows its legs and carpools; opening a leg keeps the trip to come back to
@@ -265,7 +269,7 @@ async function handleDriverChange(event: Event) {
         <span>{{ $t('drives.driveCostModal.someItemsUseADefault') }}</span>
       </p>
 
-      <DriveCostLegs v-if="selectedCostDrive.is_trip_group && tripLegs.length" :trip-legs="tripLegs" :vehicle-currency="vehicleCurrency" @open="openLeg" />
+      <DriveCostLegs v-if="selectedCostDrive.is_trip_group && tripLegs.length" :trip-legs="tripLegs" @open="openLeg" />
 
       <DriveCostCarpools
         v-if="selectedCostDrive.is_trip_group && tripCarpools.length"
@@ -318,8 +322,16 @@ async function handleDriverChange(event: Event) {
       </div>
       </div>
 
-      <div v-if="canManage || canManageTrip" class="flex justify-center">
-        <DetailDeleteButton @delete="canManageTrip ? emit('delete-trip', selectedCostDrive) : emit('delete', selectedCostDrive)" />
+      <div v-if="canManage || canManageTrip || canRemoveFromTrip" class="flex flex-wrap items-center justify-center gap-x-2">
+        <button
+          v-if="canRemoveFromTrip"
+          type="button"
+          class="tap-text rounded-lg px-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+          @click="emit('remove-from-trip', selectedCostDrive)"
+        >
+          {{ $t('drives.driveCostModal.removeFromTrip') }}
+        </button>
+        <DetailDeleteButton v-if="canManage || canManageTrip" @delete="canManageTrip ? emit('delete-trip', selectedCostDrive) : emit('delete', selectedCostDrive)" />
       </div>
 
     <template #footer>

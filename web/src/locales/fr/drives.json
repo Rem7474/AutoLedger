@@ -143,6 +143,7 @@
   "driveCostModal": {
     "suggestionNotice": "Voyage détecté automatiquement, pas encore créé. Créez-le pour y rattacher des frais ou un covoiturage.",
     "backToTrip": "Retour au voyage",
+    "removeFromTrip": "Retirer de ce voyage",
     "tripLegs": "Étapes du voyage ({count})",
     "tripCarpools": "Covoiturages du voyage ({count})",
     "breakdownTitle": "Répartition du trajet",
@@ -283,7 +284,6 @@
   "tripGroupsPanel": {
     "noTripMatchesTheFilters": "Aucun voyage ne correspond aux filtres",
     "loadingTheDrives": "Chargement des trajets...",
-    "removeThisDriveFromThe": "Retirer ce trajet du voyage",
     "deleteTheTrip": "Supprimer le voyage",
     "renameTheTrip": "Renommer le voyage",
     "carpool": "Covoiturer",

@@ -3,6 +3,7 @@ import CardOpenButton from '@/components/CardOpenButton.vue'
 import QuietLine from '@/components/QuietLine.vue'
 import ListItem from '@/components/ListItem.vue'
 import RowLeading from '@/components/RowLeading.vue'
+import DriveLegRow from '@/components/drives/DriveLegRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import BulkSelectionBar from '@/components/BulkSelectionBar.vue'
 import RowSelectBox from '@/components/RowSelectBox.vue'
@@ -13,12 +14,12 @@ import { computed } from 'vue'
 import { t } from '@/i18n'
 import { distanceUnit, formatDistance, perDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Layers, X, Users, ChevronDown, Pencil, Trash2 } from '@/icons'
+import { Layers, Users, ChevronDown, Pencil, Trash2 } from '@/icons'
 import { formatTripDates } from '@/utils/drives'
 import { formatDayTime } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 
-// The trip groups ("voyages") list; a trip can be expanded to show its drives. A click on the row opens its cost detail,
+// The trip groups ("voyages") list; a trip can be expanded to show its legs, which open their own cost detail. A click on the row opens its cost detail,
 // where the edit, the carpool and the delete are; the selection bar offers the same three for one selected trip.
 const props = defineProps<{ loadingTrips: boolean; tripGroups: any[]; hasFilters: boolean; expandedTripId: string | null; tripDrives: any[] }>()
 const emit = defineEmits<{
@@ -26,7 +27,7 @@ const emit = defineEmits<{
   'toggle-details': [trip: any]
   edit: [trip: any]
   delete: [trip: any]
-  'remove-drive': [trip: any, driveId: string]
+  'open-leg': [leg: any]
   carpool: [trip: any]
 }>()
 const vehicleStore = useVehicleStore()
@@ -111,18 +112,10 @@ const actions = computed<SelectionAction[]>(() => {
           {{ formatAmount(perDistance(Number(tg.tolls_total) / tg.distance_km), vehicleStore.currency, 3) }}/{{ distanceUnit() }}
         </template>
       </ListItem>
-      <!-- Expanded drives drawer -->
-      <div v-if="expandedTripId === tg.id" class="space-y-1.5 bg-slate-800 rounded-2xl p-3 -mt-1 ml-4 mr-4">
-        <div v-for="d in tripDrives" :key="d.id" class="flex items-center justify-between gap-3 text-xs text-slate-300 bg-slate-800/40 rounded-lg px-2.5 py-1.5 min-w-0">
-          <span class="truncate min-w-0 flex-1">
-            {{ formatDate(d.start_time) }}{{ $t('drives.tripGroupsPanel.dateSeparator') }}{{ (d.start_address || $t('drives.driveCostModal.start')).split(',')[0] }} → {{ (d.end_address || $t('drives.driveCostModal.end')).split(',')[0] }}
-            <span class="text-slate-400">({{ formatDistance(d.distance_km, 1) }})</span>
-          </span>
-          <button v-if="vehicleStore.canEdit" @click="emit('remove-drive', tg, d.id)" class="tap text-slate-400 hover:text-danger-400 shrink-0 p-1" :title="$t('drives.tripGroupsPanel.removeThisDriveFromThe')" :aria-label="$t('drives.tripGroupsPanel.removeThisDriveFromThe')">
-            <X class="w-3.5 h-3.5" />
-          </button>
-        </div>
-        <p v-if="!tripDrives.length" class="text-xs text-slate-400">{{ $t('drives.tripGroupsPanel.loadingTheDrives') }}</p>
+      <!-- The legs of the trip: a list indented under its row, one flat row per leg, each opening the cost breakdown of the leg -->
+      <div v-if="expandedTripId === tg.id" class="ml-6 mt-1 divide-y divide-slate-800 border-l-2 border-slate-800 pl-1" data-testid="trip-legs">
+        <DriveLegRow v-for="d in tripDrives" :key="d.id" :leg="d" @open="emit('open-leg', $event)" />
+        <p v-if="!tripDrives.length" class="px-3 py-2 text-xs text-slate-400">{{ $t('drives.tripGroupsPanel.loadingTheDrives') }}</p>
       </div>
     </template>
     </template>

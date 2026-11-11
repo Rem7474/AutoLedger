@@ -26,7 +26,7 @@ const RAW_STATE_ALLOWLIST = new Set([
   'components/carpool/CarpoolTripModal.vue', 'components/comparison/ComparisonEmptyState.vue',
   'components/comparison/ComparisonWhatIf.vue', 'components/dashboard/DataQualityCard.vue', 'components/dashboard/LeaseContractCard.vue',
   'components/dashboard/MonthDetailModal.vue', 'components/dashboard/ResaleValueCard.vue', 'components/drives/AddToTripModal.vue',
-  'components/drives/DriveCarpoolChip.vue', 'components/drives/DriveCostCarpools.vue', 'components/drives/DriveCostLegs.vue',
+  'components/drives/DriveCarpoolChip.vue', 'components/drives/DriveCostCarpools.vue',
   'components/drives/DriveCostModal.vue', 'components/drives/DriveCostTolls.vue', 'components/drives/DrivePicker.vue',
   'components/drives/TripEditModal.vue', 'components/drives/TripGroupsPanel.vue', 'components/drives/TripSuggestions.vue',
   'components/expenses/ChargeCard.vue', 'components/expenses/ChargeModal.vue', 'components/expenses/ChargingInsights.vue',

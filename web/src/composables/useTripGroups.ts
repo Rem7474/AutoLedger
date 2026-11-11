@@ -97,8 +97,9 @@ export function useTripGroups({ loadDrives }: { loadDrives: () => unknown }) {
       await api.updateTripGroup(vehicleStore.activeVehicle.id, tg.id, { name: tg.name, notes: tg.notes, drive_ids: remaining, expected_version: tg.version })
       await loadTripGroups()
       const updated = tripGroups.value.find((g) => g.id === tg.id)
+      const wasOpen = expandedTripId.value === tg.id
       expandedTripId.value = null
-      if (updated) await toggleTripDetails(updated)
+      if (wasOpen && updated) await toggleTripDetails(updated)
       loadDrives()
     } catch (err: any) {
       if (await explainStaleWrite(err)) {

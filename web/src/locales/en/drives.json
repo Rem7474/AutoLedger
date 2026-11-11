@@ -143,6 +143,7 @@
   "driveCostModal": {
     "suggestionNotice": "Trip detected automatically, not created yet. Create it to attach costs or a carpool to it.",
     "backToTrip": "Back to the trip",
+    "removeFromTrip": "Remove from this trip",
     "tripLegs": "Trip legs ({count})",
     "tripCarpools": "Trip carpools ({count})",
     "breakdownTitle": "Cost split",
@@ -283,7 +284,6 @@
   "tripGroupsPanel": {
     "noTripMatchesTheFilters": "No trip matches the filters",
     "loadingTheDrives": "Loading the drives...",
-    "removeThisDriveFromThe": "Remove this drive from the trip",
     "deleteTheTrip": "Delete the trip",
     "renameTheTrip": "Rename the trip",
     "carpool": "Carpool",

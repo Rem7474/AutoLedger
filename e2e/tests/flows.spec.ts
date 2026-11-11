@@ -707,6 +707,31 @@ test('a trip has no row menu: its detail carries Edit in the header and a quiet 
   }
 })
 
+test('the legs of a trip are flat rows that open the leg; a leg is taken out of the trip from its detail', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const name = `E2E legs ${Date.now()}`
+  const drives = (await (await request.get(`/api/vehicles/${ev.id}/drives?limit=3`, { headers })).json()).drives as { id: string }[]
+  const created = await request.post(`/api/vehicles/${ev.id}/trip-groups`, { headers, data: { name, drive_ids: drives.map((d) => d.id) } })
+  expect(created.ok()).toBeTruthy()
+  const { id } = await created.json()
+  const legCount = async () => (((await (await request.get(`/api/vehicles/${ev.id}/trip-groups`, { headers })).json()) as { id: string; drive_ids: string[] }[]).find((g) => g.id === id)?.drive_ids ?? []).length
+  try {
+    await useVehicle(page, ev.id, '/drives?tab=TRIPS&period=all')
+    await page.locator('div.relative.flex', { has: page.getByRole('button', { name: `Open ${name}` }) }).getByRole('button', { name: 'Legs', exact: true }).click()
+    const legs = page.locator('[data-testid="trip-legs"] [data-testid="drive-leg"]')
+    await expect(legs).toHaveCount(3)
+    // no hidden control on a leg: the row is one open button, nothing else
+    await expect(page.locator('[data-testid="trip-legs"] button')).toHaveCount(3)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0)
+    await legs.first().getByRole('button').click()
+    const detail = page.getByRole('dialog')
+    await detail.getByRole('button', { name: 'Remove from this trip', exact: true }).click()
+    await expect.poll(legCount, { timeout: 10_000 }).toBe(2)
+  } finally {
+    await request.delete(`/api/vehicles/${ev.id}/trip-groups/${id}`, { headers })
+  }
+})
+
 test('carpools are listed 30 at a time and the totals cover all of them', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const mine = async () => {

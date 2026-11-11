@@ -425,6 +425,19 @@ function deleteTripFromCostModal(virtual: any) {
   void handleDeleteTrip(tg)
 }
 
+// The trip a leg belongs to, when its detail is open: that is where it can be taken out of
+const legTrip = computed(() => {
+  const d = selectedCostDrive.value
+  if (!d || d.is_trip_group || d.is_suggestion) return null
+  return tripGroups.value.find((g) => g.drive_ids?.includes(d.id)) ?? null
+})
+function removeLegFromCostModal(drive: any) {
+  const tg = legTrip.value
+  if (!tg) return
+  showCostModal.value = false
+  void removeDriveFromTrip(tg, drive.id)
+}
+
 // A manual drive's edit form replaces its detail; its delete closes the detail and goes with the same Undo as the swipe
 function editFromCostModal(drive: any) {
   showCostModal.value = false
@@ -673,7 +686,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       @toggle-details="toggleTripDetails"
       @edit="openTripEdit"
       @delete="handleDeleteTrip"
-      @remove-drive="removeDriveFromTrip"
+      @open-leg="openCostModal"
       @carpool="(trip) => openCarpoolEditor({ tripGroupId: trip.id })"
     />
     </template>
@@ -688,6 +701,8 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
       :refresh-drive="refreshCostDrive"
       @toggle-tag="toggleDriveTag"
       @edit-trip="editTripFromCostModal"
+      :in-trip="!!legTrip"
+      @remove-from-trip="removeLegFromCostModal"
       @delete-trip="deleteTripFromCostModal"
       @create-trip="createTripFromCostModal"
       @dismiss-trip="dismissTripFromCostModal"
