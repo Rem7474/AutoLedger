@@ -451,7 +451,7 @@
     "name": "Nom",
     "add": "Ajouter",
     "delete": "Supprimer le lieu",
-    "deleteConfirm": "Supprimer le lieu {name} ? Ses recharges redeviennent non classées.",
+    "deleted": "Lieu supprimé",
     "failed": "Les lieux n'ont pas pu être chargés.",
     "save": "La modification n'a pas pu être enregistrée.",
     "chargeField": "Catégorie de lieu",

@@ -5,6 +5,7 @@ import ModalShell from '@/components/ModalShell.vue'
 import { api } from '@/services/api'
 import { apiErrorMessage } from '@/services/apiError'
 import { useConfirm } from '@/composables/useConfirm'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { useSubmit } from '@/composables/useSubmit'
 import { formatNumber } from '@/utils/numbers'
 import { PLACE_CATEGORIES, placeCategoryKey, type ChargingLocation, type ChargingPlace } from '@/utils/chargingPlaces'
@@ -14,7 +15,7 @@ import { t } from '@/i18n'
 const props = defineProps<{ vehicleId: string; canEdit: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
 const open = defineModel<boolean>('open', { required: true })
-const { showConfirm, showAlert } = useConfirm()
+const { showAlert } = useConfirm()
 
 const places = ref<ChargingPlace[]>([])
 const locations = ref<ChargingLocation[]>([])
@@ -76,9 +77,20 @@ function assign(location: ChargingLocation, value: string) {
   })
 }
 
-async function removePlace(place: ChargingPlace) {
-  const ok = await showConfirm({ message: t('expenses.chargingPlaces.deleteConfirm', { name: place.name }), type: 'danger' })
-  if (ok) await mutate(() => api.deleteChargingPlace(props.vehicleId, place.id))
+// The place goes at once and comes back with Undo, the server is asked when that time is over
+function removePlace(place: ChargingPlace) {
+  deleteRowsWithUndo({
+    list: places,
+    items: [place],
+    key: (p) => p.id,
+    message: t('expenses.chargingPlaces.deleted'),
+    remove: (p) => api.deleteChargingPlace(props.vehicleId, p.id),
+    committed: () => {
+      void load()
+      emit('changed')
+    },
+    onError: (e: any) => void showAlert(apiErrorMessage(e, t('expenses.chargingPlaces.save')), t('shell.confirm.error'), 'danger'),
+  })
 }
 </script>
 

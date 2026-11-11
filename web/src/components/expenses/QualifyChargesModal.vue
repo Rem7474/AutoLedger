@@ -7,6 +7,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { formatChargeWindow } from '@/utils/dates'
 import { t } from '@/i18n'
 import ModalShell from '@/components/ModalShell.vue'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import LoadError from '@/components/LoadError.vue'
 
 const vehicleStore = useVehicleStore()
@@ -21,7 +22,6 @@ const pendingCharges = ref<PendingCharge[]>([])
 const loadError = ref<string | null>(null)
 const loading = ref(false)
 const assigningId = ref<string | null>(null)
-const dismissingId = ref<string | null>(null)
 
 // Vehicle selection per pending charge
 const selectedVehicleIds = ref<Record<string, string>>({})
@@ -74,19 +74,19 @@ async function handleAssign(charge: PendingCharge) {
   }
 }
 
-async function handleDismiss(charge: PendingCharge) {
-  dismissingId.value = charge.id
-  try {
-    await api.deletePendingCharge(charge.id)
-    pendingCharges.value = pendingCharges.value.filter((c) => c.id !== charge.id)
-    if (pendingCharges.value.length === 0) {
-      open.value = false
-    }
-  } catch (err) {
-    console.error('Failed to dismiss pending charge', err)
-  } finally {
-    dismissingId.value = null
-  }
+// The charge goes at once and comes back with Undo, the server is asked when that time is over
+function handleDismiss(charge: PendingCharge) {
+  deleteRowsWithUndo({
+    list: pendingCharges,
+    items: [charge],
+    key: (c) => c.id,
+    message: t('pendingCharges.dismissed'),
+    remove: (c) => api.deletePendingCharge(c.id),
+    committed: () => {
+      if (pendingCharges.value.length === 0) open.value = false
+    },
+    onError: (err) => console.error('Failed to dismiss pending charge', err),
+  })
 }
 
 onMounted(() => {
@@ -97,7 +97,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <ModalShell v-model:open="open" size="lg">
+  <ModalShell pane v-model:open="open" size="lg">
     <template #title>
         <div class="flex items-center gap-2">
           <div class="p-2 bg-warning-500/10 text-warning-400 rounded-lg">
@@ -175,7 +175,6 @@ onMounted(() => {
 
               <button
                 type="button"
-                :disabled="dismissingId === charge.id"
                 @click="handleDismiss(charge)"
                 class="tap p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                 :title="t('pendingCharges.dismiss')" :aria-label="t('pendingCharges.dismiss')"
