@@ -5,17 +5,17 @@ import { isRoundedToMonths, periodBounds, periodFromQuery, periodLabel, queryNam
 
 /**
  * The period of the pages about cost (home, energy, expenses), shared through the store and written in the URL; the
- * carpools keep their own (`scope` 'carpools', a month at first).
+ * carpools and the fill-ups keep their own (`scope` 'carpools' and 'fuel', a month at first).
  * A period named by the URL on arrival (a shared link, a reload) is adopted and kept; afterwards the URL follows the
  * store. The query is replaced, never pushed, so a change of period leaves no history entry.
  */
-export function usePeriod(scope: 'costs' | 'carpools' = 'costs') {
+export function usePeriod(scope: 'costs' | 'carpools' | 'fuel' = 'costs') {
   const store = usePeriodStore()
   const route = useRoute()
   const router = useRouter()
   const path = route.path
-  const current = () => (scope === 'costs' ? store.costs : store.carpools)
-  const write = (p: Period) => (scope === 'costs' ? store.setCosts(p) : store.setCarpools(p))
+  const current = () => (scope === 'costs' ? store.costs : scope === 'fuel' ? store.fuel : store.carpools)
+  const write = (p: Period) => (scope === 'costs' ? store.setCosts(p) : scope === 'fuel' ? store.setFuel(p) : store.setCarpools(p))
 
   const fromUrl = periodFromQuery(route.query)
   if (fromUrl) write(fromUrl)

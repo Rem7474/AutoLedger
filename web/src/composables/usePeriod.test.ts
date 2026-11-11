@@ -15,7 +15,7 @@ async function load() {
   vi.resetModules()
   setActivePinia(createPinia())
   const { usePeriod: real } = await import('./usePeriod')
-  const usePeriod = () => scope.run(real)!
+  const usePeriod = (name?: 'costs' | 'carpools' | 'fuel') => scope.run(() => real(name))!
   const { usePeriodStore } = await import('@/stores/period')
   return { usePeriod, store: usePeriodStore() }
 }
@@ -96,5 +96,28 @@ describe('usePeriod', () => {
     p.step(-1)
     await nextTick()
     expect(replace).not.toHaveBeenCalled()
+  })
+
+  it("gives the fill-ups their own period, a month at first, written in the URL without touching the costs'", async () => {
+    const { usePeriod, store } = await load()
+    route.query = { tab: 'FUEL' }
+    const p = usePeriod('fuel')
+    await nextTick()
+    expect(p.period.value).toEqual({ kind: 'months', count: 1, end: null })
+    expect(replace).toHaveBeenCalledWith({ query: { tab: 'FUEL', period: '1M' } })
+    p.set({ kind: 'all' })
+    await nextTick()
+    expect(store.fuel).toEqual({ kind: 'all' })
+    expect(store.costs).toEqual({ kind: 'months', count: 12, end: null })
+    expect(route.query).toEqual({ tab: 'FUEL', period: 'all' })
+  })
+
+  it('adopts a period named by the URL into the fill-ups only', async () => {
+    const { usePeriod, store } = await load()
+    route.query = { period: '3M' }
+    usePeriod('fuel')
+    await nextTick()
+    expect(store.fuel).toEqual({ kind: 'months', count: 3, end: null })
+    expect(store.costs).toEqual({ kind: 'months', count: 12, end: null })
   })
 })

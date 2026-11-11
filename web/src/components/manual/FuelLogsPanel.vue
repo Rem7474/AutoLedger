@@ -36,7 +36,7 @@ const loading = ref(false)
 const loadError = ref<string | null>(null)
 const showForm = ref(false)
 const editingLog = ref<any | null>(null)
-const { period, bounds, label: periodLabel, rounded, canPrevious, canNext, set: setPeriod, step: stepPeriod } = usePeriod()
+const { period, bounds, label: periodLabel, rounded, canPrevious, canNext, set: setPeriod, step: stepPeriod } = usePeriod('fuel')
 // Every fill-up is loaded, and the consumption of each interval is measured by the server over the whole history: the
 // period only chooses the rows, the months and the figures shown. The API sends them oldest first.
 const allLogs = computed<any[]>(() => stats.value?.logs ?? [])
@@ -144,7 +144,7 @@ useRefreshHandler(() => load(true))
       </div>
       <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averageConsumption') }}</div>
-        <div class="text-lg font-bold text-white">{{ summary.consumption ? `${formatFuelConsumptionValue(summary.consumption, 2)} ${fuelConsumptionUnit()}` : $t('manual.fuelLogsPanel.notMeasurable') }}</div>
+        <div class="font-bold text-white" :class="summary.consumption ? 'text-lg' : 'text-base'">{{ summary.consumption ? `${formatFuelConsumptionValue(summary.consumption, 2)} ${fuelConsumptionUnit()}` : $t('manual.fuelLogsPanel.notMeasurable') }}</div>
       </div>
     </div>
     <p v-if="logs.length > 0 && summary.unmeasurable > 0" class="text-xs text-warning-400">
