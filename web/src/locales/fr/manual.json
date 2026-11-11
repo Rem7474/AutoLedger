@@ -63,7 +63,10 @@
     "deleteFailed": "Suppression impossible.",
     "fillUpsDeleted": "{count} pleins supprimés",
     "saving": "Enregistrement…",
-    "noFillUpHint": "Saisissez la date, le kilométrage et le montant de chaque plein : le coût au {unit} est calculé à partir de ces relevés."
+    "noFillUpHint": "Saisissez la date, le kilométrage et le montant de chaque plein : le coût au {unit} est calculé à partir de ces relevés.",
+    "periodFigures": "Période : {period}",
+    "noFillUpInPeriod": "Aucun plein sur cette période",
+    "noFillUpInPeriodHint": "Aucun plein n'est daté de {period}. Choisissez une autre période dans la barre."
   },
   "odometerReadingsPanel": {
     "noManualReadingYet": "Aucun relevé pour l'instant",

@@ -12,7 +12,9 @@ import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { distanceUnit, formatFuelConsumptionValue, formatVolume, fuelConsumptionUnit, perVolume, volumeUnitLabel } from '@/units'
-import { fuelMonths } from '@/utils/fuelLogs'
+import { fuelLogsInPeriod, fuelMonths, fuelPeriodSummary } from '@/utils/fuelLogs'
+import PeriodBar from '@/components/period/PeriodBar.vue'
+import { usePeriod } from '@/composables/usePeriod'
 import { toLocalDay } from '@/utils/dates'
 import LoadError from '@/components/LoadError.vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
@@ -34,8 +36,13 @@ const loading = ref(false)
 const loadError = ref<string | null>(null)
 const showForm = ref(false)
 const editingLog = ref<any | null>(null)
-// Newest first for display; the API sends them oldest first
-const logs = computed<any[]>(() => [...(stats.value?.logs || [])].reverse())
+const { period, bounds, label: periodLabel, rounded, canPrevious, canNext, set: setPeriod, step: stepPeriod } = usePeriod()
+// Every fill-up is loaded, and the consumption of each interval is measured by the server over the whole history: the
+// period only chooses the rows, the months and the figures shown. The API sends them oldest first.
+const allLogs = computed<any[]>(() => stats.value?.logs ?? [])
+const summary = computed(() => fuelPeriodSummary(allLogs.value, bounds.value))
+// Newest first for display
+const logs = computed<any[]>(() => fuelLogsInPeriod(allLogs.value, bounds.value).reverse())
 
 function fmtMoney(v: number | null | undefined, digits = 2): string {
   return formatAmount(Number(v || 0), currency.value, digits)
@@ -117,37 +124,45 @@ useRefreshHandler(() => load(true))
       </button>
     </div>
 
-    <div v-if="stats && stats.fill_ups > 0" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="md:sticky md:top-[4.25rem] md:z-30 md:bg-slate-950/90 md:py-2 md:backdrop-blur-md">
+      <PeriodBar :period="period" :label="periodLabel" :rounded="rounded" :can-previous="canPrevious" :can-next="canNext" @step="stepPeriod" @pick="setPeriod" />
+    </div>
+
+    <p v-if="logs.length > 0" class="px-1 text-xs font-semibold text-slate-400" data-testid="fuel-period-label">{{ $t('manual.fuelLogsPanel.periodFigures', { period: periodLabel }) }}</p>
+    <div v-if="logs.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.fillUps') }}</div>
-        <div class="text-lg font-bold text-white">{{ stats.fill_ups }}</div>
+        <div class="text-lg font-bold text-white">{{ summary.fillUps }}</div>
       </div>
       <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.totalSpent') }}</div>
-        <div class="text-lg font-bold text-white">{{ fmtMoney(stats.total_cost, 0) }}</div>
+        <div class="text-lg font-bold text-white">{{ fmtMoney(summary.totalCost, 0) }}</div>
       </div>
       <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averagePricePerLitre', { unit: volumeUnitLabel() }) }}</div>
-        <div class="text-lg font-bold text-white">{{ stats.avg_price_per_liter ? `${fmtMoney(perVolume(stats.avg_price_per_liter), 3)}/${volumeUnitLabel()}` : '—' }}</div>
+        <div class="text-lg font-bold text-white">{{ summary.pricePerLiter ? `${fmtMoney(perVolume(summary.pricePerLiter), 3)}/${volumeUnitLabel()}` : '—' }}</div>
       </div>
       <div class="card p-3">
         <div class="text-xs text-slate-400">{{ $t('manual.fuelLogsPanel.averageConsumption') }}</div>
-        <div class="text-lg font-bold text-white">{{ stats.consumption_l_100km ? `${formatFuelConsumptionValue(stats.consumption_l_100km, 2)} ${fuelConsumptionUnit()}` : $t('manual.fuelLogsPanel.notMeasurable') }}</div>
+        <div class="text-lg font-bold text-white">{{ summary.consumption ? `${formatFuelConsumptionValue(summary.consumption, 2)} ${fuelConsumptionUnit()}` : $t('manual.fuelLogsPanel.notMeasurable') }}</div>
       </div>
     </div>
-    <p v-if="stats && stats.unmeasurable_segments > 0" class="text-xs text-warning-400">
-      {{ $t('manual.fuelLogsPanel.intervalSBetweenFullTanks', { unmeasurable_segments: stats.unmeasurable_segments }) }}
+    <p v-if="logs.length > 0 && summary.unmeasurable > 0" class="text-xs text-warning-400">
+      {{ $t('manual.fuelLogsPanel.intervalSBetweenFullTanks', { unmeasurable_segments: summary.unmeasurable }) }}
     </p>
-    <p v-if="stats && stats.fill_ups_without_mileage > 0" class="text-xs text-slate-400">
-      {{ $t('manual.fuelLogsPanel.fillUpSWithoutMileage', { fill_ups_without_mileage: stats.fill_ups_without_mileage }) }}
-      <template v-if="stats.estimated_segments > 0">{{ $t('manual.fuelLogsPanel.theConsumptionOfIntervalS', { estimated_segments: stats.estimated_segments }) }}</template>
+    <p v-if="logs.length > 0 && summary.withoutMileage > 0" class="text-xs text-slate-400">
+      {{ $t('manual.fuelLogsPanel.fillUpSWithoutMileage', { fill_ups_without_mileage: summary.withoutMileage }) }}
+      <template v-if="summary.estimated > 0">{{ $t('manual.fuelLogsPanel.theConsumptionOfIntervalS', { estimated_segments: summary.estimated }) }}</template>
     </p>
-    <p v-if="stats && stats.fill_ups > 0 && !stats.consumption_l_100km && stats.unmeasurable_segments === 0" class="text-xs text-slate-400">
+    <p v-if="logs.length > 0 && !summary.consumption && summary.unmeasurable === 0" class="text-xs text-slate-400">
       {{ $t('manual.fuelLogsPanel.consumptionIsCalculatedBetweenTwo') }}
     </p>
 
     <div v-if="loading && !stats" class="text-sm text-slate-400">{{ $t('manual.fuelLogsPanel.loading') }}</div>
     <LoadError v-else-if="loadError !== null" :message="loadError" @retry="load" />
+    <EmptyState v-else-if="allLogs.length > 0 && logs.length === 0" :icon="Fuel" :title="$t('manual.fuelLogsPanel.noFillUpInPeriod')" data-testid="fuel-period-empty">
+      {{ $t('manual.fuelLogsPanel.noFillUpInPeriodHint', { period: periodLabel }) }}
+    </EmptyState>
     <EmptyState v-else-if="logs.length === 0" :icon="Fuel" :title="$t('manual.fuelLogsPanel.noFillUpRecordedEnter')">
       {{ $t('manual.fuelLogsPanel.noFillUpHint', { unit: distanceUnit() }) }}
     </EmptyState>

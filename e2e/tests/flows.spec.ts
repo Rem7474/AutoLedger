@@ -718,6 +718,50 @@ test('the carpools open on the current month and follow the period bar', async (
   }
 })
 
+test('the fuel tab follows the period bar: rows and figures change with the period', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Fuel period reference', powertrain: 'ICE', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString()
+  try {
+    // Two full tanks two years ago, two this month: the period decides which are listed and counted
+    const fills = [
+      { date: daysAgo(740), odometer: 10000, liters: 40, amount: 60 },
+      { date: daysAgo(700), odometer: 10600, liters: 36, amount: 54 },
+      { date: daysAgo(2), odometer: 20000, liters: 45, amount: 90 },
+      { date: daysAgo(1), odometer: 20500, liters: 30, amount: 60 },
+    ]
+    for (const f of fills) {
+      const res = await request.post(`/api/vehicles/${vehicle.id}/fuel-logs`, { headers, data: { ...f, fuel_type: 'SP95_E10', is_full_tank: true } })
+      expect(res.ok()).toBeTruthy()
+    }
+    await useVehicle(page, vehicle.id, '/consumption?tab=FUEL&period=12M')
+    const cards = page.locator('.grid .card')
+    await expect(page.getByTestId('period-bar')).toBeVisible()
+    await expect(page.getByTestId('fuel-period-label')).toContainText('Last 12 months')
+    // Only the two recent fill-ups: 150 spent. The first still closes its interval with the full tank of two years ago
+    // (45 L over 9400 km) and the second one 30 L over 500 km: 75 L over 9900 km, weighted by distance
+    await expect(cards.nth(0)).toContainText('2')
+    await expect(cards.nth(1)).toContainText('150')
+    await expect(cards.nth(3)).toContainText('0.76')
+
+    await page.getByTestId('period-bar').getByRole('button', { name: /Choose the period/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'All time' }).click()
+    await expect(page).toHaveURL(/period=all/)
+    await expect(cards.nth(0)).toContainText('4')
+    await expect(cards.nth(1)).toContainText('264')
+    await expectNoHorizontalScroll(page)
+
+    // A period with no fill-up says so instead of showing a blank list
+    await page.goto(`/consumption?tab=FUEL&from=2019-01-01&to=2019-01-31`)
+    await expect(page.getByTestId('fuel-period-empty')).toContainText('No fill-up in this period')
+    await expect(cards).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})
+
 test('a charges CSV is previewed, imported, then undone from the import history', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const undoLeftovers = async () => {

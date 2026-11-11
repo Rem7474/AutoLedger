@@ -63,7 +63,10 @@
     "deleteFailed": "Could not delete.",
     "fillUpsDeleted": "{count} fill-ups deleted",
     "saving": "Saving…",
-    "noFillUpHint": "Enter the date, mileage and amount of each fill-up: the cost per {unit} is calculated from these readings."
+    "noFillUpHint": "Enter the date, mileage and amount of each fill-up: the cost per {unit} is calculated from these readings.",
+    "periodFigures": "Period: {period}",
+    "noFillUpInPeriod": "No fill-up in this period",
+    "noFillUpInPeriodHint": "No fill-up is dated {period}. Choose another period in the bar."
   },
   "odometerReadingsPanel": {
     "noManualReadingYet": "No reading yet",
