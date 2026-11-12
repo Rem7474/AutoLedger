@@ -2,6 +2,7 @@ import { intlLocale, t } from '@/i18n'
 import { COST_COLORS } from '@/utils/costBreakdown'
 import { CHART_GROUPS, THEME_HEX, chartGroupOf, type Theme } from '@/utils/themes'
 import { formatAmount } from '@/currency'
+import { monthKey } from '@/utils/reportingTime'
 import { distanceUnit, formatDistanceValue } from '@/units'
 export function formatMonthName(monthStr: string) {
   if (!monthStr) return ''
@@ -20,7 +21,7 @@ export function formatMonthName(monthStr: string) {
  */
 export function currentMonthStats(monthlyCosts: any[] | undefined, now = new Date(), currentMonth?: string) {
   if (!monthlyCosts?.length) return null
-  const key = currentMonth || now.toISOString().substring(0, 7) // YYYY-MM
+  const key = currentMonth || monthKey(now) // YYYY-MM
   const list = monthlyCosts
   const current = list.find((m: any) => m.month === key) || list[list.length - 1]
   const prevIdx = list.indexOf(current) - 1

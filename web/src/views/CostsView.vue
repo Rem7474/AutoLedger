@@ -34,7 +34,7 @@ import { useDocumentPreview } from '@/composables/useDocumentPreview'
 import { COST_FILTERS, amountValue, categoriesOfFilter, costPerKm, entryKey, entryTarget, isCostFilterKey, type CostFilterKey } from '@/utils/costEntries'
 import { costsTabQuery, parseCostsTab, type CostsTab } from '@/utils/costsTab'
 import { dayLabel, groupByDay, groupDaysByMonth, monthHeader } from '@/utils/dayGroups'
-import { toLocalDay } from '@/utils/dates'
+import { dayKey } from '@/utils/dates'
 import { THEME_STYLES } from '@/utils/themes'
 import { formatAmount } from '@/currency'
 import { distanceUnit, perDistance } from '@/units'
@@ -156,7 +156,7 @@ const swipeable = (e: { source: string; source_id: string }) => vehicleStore.can
 // newest month still lists only what is loaded while there are more pages, and the oldest month is complete once nothing
 // older follows.
 const months = computed(() => {
-  const today = toLocalDay()
+  const today = dayKey()
   const labels = { today: t('costs.list.today'), yesterday: t('costs.list.yesterday') }
   const format = (date: Date, withYear: boolean) =>
     date.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', ...(withYear ? { year: 'numeric' } : {}) })

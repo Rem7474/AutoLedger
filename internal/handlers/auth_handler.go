@@ -16,7 +16,6 @@ import (
 	"github.com/teslacost/teslacost/internal/config"
 	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/middleware"
-	"github.com/teslacost/teslacost/internal/models"
 )
 
 const (
@@ -262,7 +261,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusInternalServerError, apierror.New("internal", "Failed to generate session tokens"))
 		return
 	}
-	writeJSON(w, http.StatusCreated, AuthResponse{Token: accessToken, User: user})
+	writeJSON(w, http.StatusCreated, AuthResponse{Token: accessToken, User: h.accountUser(user)})
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -303,7 +302,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusInternalServerError, apierror.New("internal", "Failed to generate session tokens"))
 		return
 	}
-	writeJSON(w, http.StatusOK, AuthResponse{Token: accessToken, User: user})
+	writeJSON(w, http.StatusOK, AuthResponse{Token: accessToken, User: h.accountUser(user)})
 }
 
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -375,7 +374,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	h.setRefreshTokenCookie(w, newPlainToken, expiresAt)
 	accessTokenExpiresAt := time.Now().Add(time.Duration(h.cfg.JWTAccessExpirationMinutes) * time.Minute)
 	h.setAccessTokenCookie(w, accessToken, accessTokenExpiresAt)
-	writeJSON(w, http.StatusOK, AuthResponse{Token: accessToken, User: user})
+	writeJSON(w, http.StatusOK, AuthResponse{Token: accessToken, User: h.accountUser(user)})
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -413,10 +412,10 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, struct {
-		*models.User
+		accountUser
 		HasPassword bool `json:"has_password"`
 		OIDCLinked  bool `json:"oidc_linked"`
-	}{user, user.PasswordHash != nil, user.OIDCSubject != nil})
+	}{h.accountUser(user), user.PasswordHash != nil, user.OIDCSubject != nil})
 }
 
 // OIDCLogin initiates the Authorization Code Flow: generates state + nonce cookies,

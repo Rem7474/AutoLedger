@@ -1,5 +1,5 @@
 import { groupByDay, groupDaysByMonth, monthHeader } from '@/utils/dayGroups'
-import { toLocalDay } from '@/utils/dates'
+import { dayKey } from '@/utils/dates'
 
 export interface FuelTotals {
   liters: number
@@ -62,7 +62,7 @@ export interface FuelLogFigures {
 /** The fill-ups whose local day falls in the period (both bounds inclusive, an absent one is open), order kept. */
 export function fuelLogsInPeriod<T extends { date: string }>(logs: T[], bounds: { from?: string; to?: string }): T[] {
   return logs.filter((l) => {
-    const day = toLocalDay(l.date)
+    const day = dayKey(l.date)
     return (!bounds.from || day >= bounds.from) && (!bounds.to || day <= bounds.to)
   })
 }
