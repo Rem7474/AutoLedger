@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import type { MaintenanceReminder } from '@/services/api'
-import { Pencil, Trash2, CheckCircle2, Radio, CircleDashed, ChevronDown } from '@/icons'
+import { Pencil, CheckCircle2, Radio, CircleDashed, ChevronDown } from '@/icons'
 import { formatDate, formatCalendarDay, hasReminderSchedule, reminderDaysLabel, reminderDaysOver, reminderDueTile } from '@/utils/expenses'
 import { distanceUnit, formatDistanceValue } from '@/units'
 
@@ -11,7 +11,6 @@ const props = defineProps<{ reminder: MaintenanceReminder }>()
 const emit = defineEmits<{
   edit: [reminder: MaintenanceReminder]
   complete: [reminder: MaintenanceReminder]
-  delete: [reminder: MaintenanceReminder]
 }>()
 const vehicleStore = useVehicleStore()
 const expanded = ref(false)
@@ -161,13 +160,6 @@ const tile = computed(() => reminderDueTile(r.value))
             :title="$t('expenses.remindersPanel.editThisReminder')" :aria-label="$t('expenses.remindersPanel.editThisReminder')"
           >
             <Pencil class="w-3.5 h-3.5" />
-          </button>
-          <button
-            @click="emit('delete', r)"
-            class="tap p-1.5 bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 rounded-xl transition-colors border border-slate-700/60"
-            :title="$t('expenses.remindersPanel.deleteThisReminder')" :aria-label="$t('expenses.remindersPanel.deleteThisReminder')"
-          >
-            <Trash2 class="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
