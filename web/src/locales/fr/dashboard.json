@@ -342,6 +342,7 @@
     "addReading": "Ajouter",
     "readingRequired": "Saisissez d'abord un pourcentage de santé ou une capacité de batterie neuve.",
     "deleteReading": "Supprimer la mesure du {date}",
+    "readingDeleted": "Mesure supprimée",
     "source": {
       "reading": "mesure enregistrée",
       "capacity": "capacités enregistrées",

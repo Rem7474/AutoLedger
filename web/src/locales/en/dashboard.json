@@ -342,6 +342,7 @@
     "addReading": "Add",
     "readingRequired": "Enter a health percentage or the capacity of the new battery first.",
     "deleteReading": "Delete the reading of {date}",
+    "readingDeleted": "Reading deleted",
     "source": {
       "reading": "recorded reading",
       "capacity": "recorded capacities",
