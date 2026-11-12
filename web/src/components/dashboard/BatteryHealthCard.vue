@@ -4,8 +4,10 @@ import { computed, ref, watch } from 'vue'
 import { intlLocale, t } from '@/i18n'
 import { formatNumber } from '@/utils/numbers'
 import { api } from '@/services/api'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 import { todayIso } from '@/utils/dates'
-import { BatteryCharging, ChevronDown, Trash2 } from '@/icons'
+import { BatteryCharging, ChevronDown } from '@/icons'
 
 // The battery health of an electric vehicle: the level as a gauge coloured by value, its history as a line,
 // and the readings it is computed from (kept behind a fold, they are entered rarely).
@@ -44,10 +46,30 @@ async function saveReading() {
   }
 }
 
-async function removeReading(date: string) {
-  await api.deleteBatteryReading(props.vehicleId, date)
-  await loadHealth()
-  emit('updated')
+// The readings as a list `deleteRowsWithUndo` can take rows out of and put back
+const readings = computed<Reading[]>({
+  get: () => health.value?.readings ?? [],
+  set: (rows) => {
+    if (health.value) health.value.readings = rows
+  },
+})
+
+// The reading goes at once and comes back with Undo, the server is asked when that time is over
+function removeReading(reading: Reading) {
+  deleteRowsWithUndo({
+    list: readings,
+    items: [reading],
+    key: (r) => r.date,
+    message: t('dashboard.batteryHealth.readingDeleted'),
+    remove: (r) => api.deleteBatteryReading(props.vehicleId, r.date),
+    committed: () => {
+      void loadHealth()
+      emit('updated')
+    },
+    onError: (e) => {
+      error.value = e instanceof Error ? e.message : ''
+    },
+  })
 }
 
 watch(() => props.vehicleId, () => {
@@ -128,7 +150,7 @@ const sourceLabel = computed(() => (health.value?.source ? t(`dashboard.batteryH
       <ul v-if="health?.readings.length" class="mt-2 space-y-1">
         <li v-for="r in [...health.readings].reverse().slice(0, 6)" :key="r.date" class="flex items-center justify-between text-slate-300">
           <span>{{ r.date }} · <template v-if="r.health_percent !== undefined">{{ r.health_percent }} %</template><template v-else-if="r.current_capacity_kwh !== undefined">{{ r.current_capacity_kwh }} kWh</template><template v-else>{{ r.max_capacity_kwh }} kWh</template></span>
-          <button type="button" class="text-slate-400 hover:text-danger-400" :aria-label="$t('dashboard.batteryHealth.deleteReading', { date: r.date })" @click="removeReading(r.date)"><Trash2 class="w-4 h-4" /></button>
+          <RowDeleteButton :label="$t('dashboard.batteryHealth.deleteReading', { date: r.date })" @delete="removeReading(r)" />
         </li>
       </ul>
     </details>
