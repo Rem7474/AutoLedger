@@ -391,7 +391,7 @@ const viewTabs = computed<TabItem[]>(() => [
   { key: 'DRIVES', label: t('drives.drivesView.drives'), icon: List },
   { key: 'TRIPS', label: t('drives.drivesView.trips'), icon: Layers },
   // Carpooling applies to any vehicle that has drives
-  ...(vehicleStore.canCharge ? [{ key: 'CARPOOLS', label: t('drives.drivesView.carpools'), icon: Users }] : []),
+  ...(vehicleStore.capabilities.drives ? [{ key: 'CARPOOLS', label: t('drives.drivesView.carpools'), icon: Users }] : []),
 ])
 
 function switchView(mode: DrivesTab) {
@@ -491,7 +491,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 <template>
   <div class="space-y-6 max-md:pb-16">
     <!-- Drives informational banner when no telemetry is linked -->
-    <div v-if="vehicleStore.activeVehicle && !vehicleStore.hasTeslaMate && total === 0 && !loading && loadError === null" class="rounded-2xl border border-info-500/30 bg-info-500/10 p-4 text-sm text-info-200">
+    <div v-if="vehicleStore.activeVehicle && !vehicleStore.capabilities.sync && total === 0 && !loading && loadError === null" class="rounded-2xl border border-info-500/30 bg-info-500/10 p-4 text-sm text-info-200">
       <span>{{ $t('drives.drivesView.noTelemetryBanner') }}</span>
     </div>
 

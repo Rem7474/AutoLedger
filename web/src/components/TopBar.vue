@@ -114,7 +114,7 @@ const showAccount = ref(false)
         </div>
 
         <button
-          v-if="vehicleStore.hasTeslaMate"
+          v-if="vehicleStore.capabilities.sync && vehicleStore.capabilities.write"
           @click="vehicleStore.syncActiveVehicle"
           :disabled="vehicleStore.isSyncing"
           class="flex min-h-11 min-w-11 items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all sm:min-h-0 sm:min-w-0"

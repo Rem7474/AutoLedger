@@ -5,7 +5,7 @@ import { useExpensesTabs } from './useExpensesTabs'
 const route = reactive<{ query: Record<string, unknown>; meta: Record<string, unknown> }>({ query: {}, meta: {} })
 const replace = vi.fn()
 vi.mock('vue-router', () => ({ useRoute: () => route, useRouter: () => ({ replace }) }))
-const store = reactive({ canCharge: true, canRefuel: false })
+const store = reactive({ capabilities: { charges: true, refuels: false } })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => store }))
 
 const keys = (tabs: { key: string }[]) => tabs.map((x) => x.key)
@@ -15,8 +15,8 @@ describe('useExpensesTabs', () => {
     vi.clearAllMocks()
     route.query = {}
     route.meta = {}
-    store.canCharge = true
-    store.canRefuel = false
+    store.capabilities.charges = true
+    store.capabilities.refuels = false
   })
 
   it('lists the tabs of each section and of each powertrain', () => {
@@ -25,9 +25,9 @@ describe('useExpensesTabs', () => {
     expect(keys(useExpensesTabs().tabs.value)).toEqual(['REMINDERS'])
     route.meta = { section: 'consumption' }
     expect(keys(useExpensesTabs().tabs.value)).toEqual(['EFFICIENCY', 'ESTIMATE', 'CHARGES'])
-    store.canRefuel = true
+    store.capabilities.refuels = true
     expect(keys(useExpensesTabs().tabs.value)).toEqual(['EFFICIENCY', 'FUEL', 'CHARGES'])
-    store.canCharge = false
+    store.capabilities.charges = false
     expect(keys(useExpensesTabs().tabs.value)).toEqual(['FUEL'])
   })
 
@@ -37,9 +37,9 @@ describe('useExpensesTabs', () => {
     route.query = { tab: 'charges' }
     expect(useExpensesTabs().activeTab.value).toBe('CHARGES')
     route.query = {}
-    store.canRefuel = true
+    store.capabilities.refuels = true
     expect(useExpensesTabs().activeTab.value).toBe('EFFICIENCY')
-    store.canCharge = false
+    store.capabilities.charges = false
     expect(useExpensesTabs().activeTab.value).toBe('FUEL')
   })
 

@@ -181,7 +181,7 @@ const showBreakdown = computed(() => filter.value === 'all' && received.value > 
 // Journal first, the charts behind a second tab kept in the address (`?tab=ANALYSIS`) so that a reload and Back find it.
 // Only the whole cost and the energy theme have an analysis: under another theme the page is the journal alone.
 const requestedTab = ref<CostsTab>(parseCostsTab(route.query.tab))
-const hasAnalysis = computed(() => filter.value === 'all' || (filter.value === 'energy' && vehicleStore.canCharge))
+const hasAnalysis = computed(() => filter.value === 'all' || (filter.value === 'energy' && vehicleStore.capabilities.charges))
 const tab = computed<CostsTab>(() => (hasAnalysis.value ? requestedTab.value : 'JOURNAL'))
 const tabs = computed<TabItem[]>(() => [
   { key: 'JOURNAL', label: t('costs.tabs.journal'), icon: List },

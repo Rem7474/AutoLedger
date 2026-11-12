@@ -41,7 +41,7 @@ const vehicleStore = useVehicleStore()
 // Carpool amounts are in the vehicle's own currency
 const fmt = (v: number) => formatAmount(Number(v || 0), vehicleStore.currency)
 // Trips are built from TeslaMate drives when the vehicle has them, from a typed distance otherwise
-const defaultSourceMode = (): 'DRIVES' | 'MANUAL' => (vehicleStore.hasTeslaMate ? 'DRIVES' : 'MANUAL')
+const defaultSourceMode = (): 'DRIVES' | 'MANUAL' => (vehicleStore.capabilities.sync ? 'DRIVES' : 'MANUAL')
 const sourceMode = ref<'DRIVES' | 'MANUAL'>(defaultSourceMode())
 // Drives listed by the picker (it reports them: the earliest selected one dates a carpool without an estimate date)
 const recentDrives = ref<any[]>([])
@@ -424,8 +424,8 @@ async function handleModalRecalculate() {
       </ol>
 
       <!-- Source -->
-      <div v-if="phase === 'drives' || (!isMobile && sourceMode === 'MANUAL' && vehicleStore.hasTeslaMate)" class="space-y-3">
-        <div v-if="vehicleStore.hasTeslaMate || sourceMode === 'DRIVES'" class="flex items-center gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl w-fit text-xs font-semibold">
+      <div v-if="phase === 'drives' || (!isMobile && sourceMode === 'MANUAL' && vehicleStore.capabilities.sync)" class="space-y-3">
+        <div v-if="vehicleStore.capabilities.sync || sourceMode === 'DRIVES'" class="flex items-center gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl w-fit text-xs font-semibold">
           <button
             @click="switchSource('DRIVES')"
             class="px-3 py-1.5 rounded-lg"

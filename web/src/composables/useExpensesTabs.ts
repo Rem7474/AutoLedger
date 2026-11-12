@@ -21,8 +21,8 @@ export function useExpensesTabs() {
   // Electric: efficiency, estimate, charges to complete. Combustion: fill-ups. Hybrid: efficiency, fill-ups, charges.
   // The page opens on how the vehicle consumes; the charges to complete come last.
   function consumptionTabs(): ExpensesTab[] {
-    if (!vehicleStore.canCharge) return ['FUEL']
-    return vehicleStore.canRefuel ? ['EFFICIENCY', 'FUEL', 'CHARGES'] : ['EFFICIENCY', 'ESTIMATE', 'CHARGES']
+    if (!vehicleStore.capabilities.charges) return ['FUEL']
+    return vehicleStore.capabilities.refuels ? ['EFFICIENCY', 'FUEL', 'CHARGES'] : ['EFFICIENCY', 'ESTIMATE', 'CHARGES']
   }
   const sectionTabs = computed<ExpensesTab[]>(() => {
     if (isMaintenanceSection.value) return ['REMINDERS']
@@ -43,7 +43,7 @@ export function useExpensesTabs() {
     }
   })
 
-  watch([() => route.query.tab, () => route.meta.section, () => vehicleStore.canRefuel], ([qTab]) => {
+  watch([() => route.query.tab, () => route.meta.section, () => vehicleStore.capabilities.refuels], ([qTab]) => {
     const tab = parseTab(qTab)
     if (activeTab.value !== tab) activeTab.value = tab
   })
@@ -61,10 +61,10 @@ export function useExpensesTabs() {
     }
     if (isConsumptionSection.value) {
       const fuel: TabItem = { key: 'FUEL', label: t('expenses.expensesView.fillUps'), icon: Fuel }
-      if (!vehicleStore.canCharge) return [fuel]
+      if (!vehicleStore.capabilities.charges) return [fuel]
       const charges: TabItem = { key: 'CHARGES', label: t('expenses.expensesView.charges'), icon: Zap }
       const efficiency: TabItem = { key: 'EFFICIENCY', label: t('expenses.expensesView.efficiency'), icon: Gauge }
-      const second: TabItem = vehicleStore.canRefuel ? fuel : { key: 'ESTIMATE', label: t('expenses.expensesView.estimate'), icon: Calculator }
+      const second: TabItem = vehicleStore.capabilities.refuels ? fuel : { key: 'ESTIMATE', label: t('expenses.expensesView.estimate'), icon: Calculator }
       return [efficiency, second, charges]
     }
     return [

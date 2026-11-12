@@ -32,21 +32,21 @@ const allNavItems = [
   { name: 'account', labelKey: 'shell.nav.account', path: '/account', icon: UserRound },
 ]
 
-// Drives (and the carpools inside them) apply to any non-combustion vehicle (connected or manually tracked)
+// Drives (and the carpools inside them) apply to a vehicle with the drives capability
 const navItems = computed(() =>
   allNavItems.filter((item) => {
-    if (item.name === 'drives') return vehicleStore.canCharge
-    if (item.name === 'consumption') return vehicleStore.canCharge || vehicleStore.canRefuel
+    if (item.name === 'drives') return vehicleStore.capabilities.drives
+    if (item.name === 'consumption') return vehicleStore.capabilities.charges || vehicleStore.capabilities.refuels
     return true
   }),
 )
 
 const currentRouteName = computed(() => route.name)
-const openQuickAdd = () => quickAdd.open(quickKindForRoute(route.name, vehicleStore))
+const openQuickAdd = () => quickAdd.open(quickKindForRoute(route.name, vehicleStore.capabilities))
 const navSections = computed(() => groupNavItems(navItems.value))
 
 // Phone bar: four tabs around the quick entry button; the other pages are reached from them (see `phoneTabs`).
-const tabs = computed(() => phoneTabs(vehicleStore.canCharge))
+const tabs = computed(() => phoneTabs(vehicleStore.capabilities.drives))
 const primaryItems = computed(() => tabs.value.map((tab) => navItems.value.find((item) => item.name === tab.name)).filter((item) => !!item))
 const activeTab = computed(() => activePhoneTab(tabs.value, currentRouteName.value))
 const leftItems = computed(() => primaryItems.value.slice(0, 2))
