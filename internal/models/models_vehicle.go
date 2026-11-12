@@ -28,35 +28,36 @@ func (r VehicleRole) CanEdit() bool {
 type Vehicle struct {
 	ID string `json:"id"`
 	// Version advances with every save made by a user; ExpectedVersion is the one the client read (nil: not checked).
-	Version                  int64       `json:"version"`
-	ExpectedVersion          *int64      `json:"-"`
-	UserID                   string      `json:"user_id"`
-	Role                     VehicleRole `json:"role,omitempty"`
-	Name                     string      `json:"name"`
-	Vin                      *string     `json:"vin,omitempty"`
-	TeslaMateCarID           *int        `json:"teslamate_car_id,omitempty"`
-	CurrentOdometer          float64     `json:"current_odometer"`
-	TeslaMateAPIURL          *string     `json:"teslamate_api_url,omitempty"`
-	TeslaMateAuthType        AuthMode    `json:"teslamate_auth_type"`
-	TeslaMateAPIKeyEncrypted *string     `json:"-"`
-	TeslaMateBasicUser       *string     `json:"teslamate_basic_user,omitempty"`
-	TeslaMateBasicPassEnc    *string     `json:"-"`
-	EstimatedKwh100km        *float64    `json:"estimated_kwh_100km,omitempty"`
-	EstimatedPricePerKwh     *float64    `json:"estimated_price_per_kwh,omitempty"`
-	Currency                 string      `json:"currency"`                        // ISO 4217 code, fixed at creation: see CLAUDE.md
-	Powertrain               string      `json:"powertrain"`                      // PowertrainEV | PowertrainICE | PowertrainPHEV | PowertrainREEV
-	TelemetryMode            string      `json:"telemetry_mode"`                  // Derived by DerivedTelemetryMode, never entered
-	Make                     string      `json:"make"`                            // Free text, empty when not given
-	Model                    string      `json:"model"`                           // Free text, empty when not given
-	TeslaMateGrafanaURL      *string     `json:"teslamate_grafana_url,omitempty"` // Grafana serving the TeslaMate dashboards, to link drives
-	TeslaMateURL             *string     `json:"teslamate_url,omitempty"`         // TeslaMate web application, to link the cost page of a charge
-	DefaultDriverID          *string     `json:"default_driver_id,omitempty"`
-	TariffPlanID             *string     `json:"tariff_plan_id,omitempty"`
-	IsHomeChargerDefault     bool        `json:"is_home_charger_default"`
-	TollDetection            string      `json:"toll_detection"`        // TollDetectionAuto | TollDetectionOn | TollDetectionOff
-	TollDetectionActive      bool        `json:"toll_detection_active"` // Derived by the repository, never entered
-	CreatedAt                time.Time   `json:"created_at"`
-	UpdatedAt                time.Time   `json:"updated_at"`
+	Version                  int64               `json:"version"`
+	ExpectedVersion          *int64              `json:"-"`
+	UserID                   string              `json:"user_id"`
+	Role                     VehicleRole         `json:"role,omitempty"`
+	Name                     string              `json:"name"`
+	Vin                      *string             `json:"vin,omitempty"`
+	TeslaMateCarID           *int                `json:"teslamate_car_id,omitempty"`
+	CurrentOdometer          float64             `json:"current_odometer"`
+	TeslaMateAPIURL          *string             `json:"teslamate_api_url,omitempty"`
+	TeslaMateAuthType        AuthMode            `json:"teslamate_auth_type"`
+	TeslaMateAPIKeyEncrypted *string             `json:"-"`
+	TeslaMateBasicUser       *string             `json:"teslamate_basic_user,omitempty"`
+	TeslaMateBasicPassEnc    *string             `json:"-"`
+	EstimatedKwh100km        *float64            `json:"estimated_kwh_100km,omitempty"`
+	EstimatedPricePerKwh     *float64            `json:"estimated_price_per_kwh,omitempty"`
+	Currency                 string              `json:"currency"`                        // ISO 4217 code, fixed at creation: see CLAUDE.md
+	Powertrain               string              `json:"powertrain"`                      // PowertrainEV | PowertrainICE | PowertrainPHEV | PowertrainREEV
+	TelemetryMode            string              `json:"telemetry_mode"`                  // Derived by DerivedTelemetryMode, never entered
+	Make                     string              `json:"make"`                            // Free text, empty when not given
+	Model                    string              `json:"model"`                           // Free text, empty when not given
+	TeslaMateGrafanaURL      *string             `json:"teslamate_grafana_url,omitempty"` // Grafana serving the TeslaMate dashboards, to link drives
+	TeslaMateURL             *string             `json:"teslamate_url,omitempty"`         // TeslaMate web application, to link the cost page of a charge
+	DefaultDriverID          *string             `json:"default_driver_id,omitempty"`
+	TariffPlanID             *string             `json:"tariff_plan_id,omitempty"`
+	IsHomeChargerDefault     bool                `json:"is_home_charger_default"`
+	TollDetection            string              `json:"toll_detection"`        // TollDetectionAuto | TollDetectionOn | TollDetectionOff
+	TollDetectionActive      bool                `json:"toll_detection_active"` // Derived by the repository, never entered
+	Capabilities             VehicleCapabilities `json:"capabilities"`          // Derived by the repository (ComputeCapabilities), never entered
+	CreatedAt                time.Time           `json:"created_at"`
+	UpdatedAt                time.Time           `json:"updated_at"`
 }
 
 // Toll detection modes of a vehicle. The detection (GPS trace matched against the French motorway dataset) and the
