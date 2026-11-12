@@ -5,7 +5,7 @@ import ModalShell from '@/components/ModalShell.vue'
 import { api } from '@/services/api'
 import { apiErrorMessage } from '@/services/apiError'
 import { useConfirm } from '@/composables/useConfirm'
-import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { useSubmit } from '@/composables/useSubmit'
 import { formatNumber } from '@/utils/numbers'
@@ -130,7 +130,7 @@ function removePlace(place: ChargingPlace) {
       <ul class="space-y-1.5">
         <li v-for="p in places" :key="p.id" class="flex items-center justify-between gap-2 p-2 bg-slate-800/40 border border-slate-700/40 rounded-xl text-xs">
           <span class="min-w-0 truncate"><span class="font-semibold text-white">{{ p.name }}</span> <span class="text-slate-400">· {{ $t(placeCategoryKey(p.category)) }}</span></span>
-          <DetailDeleteButton :can-edit="canEdit" :aria-label="$t('expenses.chargingPlaces.delete')" @delete="removePlace(p)" />
+          <RowDeleteButton :can-edit="canEdit" :label="$t('expenses.chargingPlaces.delete')" @delete="removePlace(p)" />
         </li>
       </ul>
       <form v-if="canEdit" class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end" @submit.prevent="addPlace">

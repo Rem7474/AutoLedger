@@ -159,27 +159,25 @@ function sessionKm(s: any): number {
 
     <!-- Timeline: Mount/Dismount Sessions -->
     <div class="space-y-3">
-      <div class="flex items-center justify-between">
-        <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
-          <History class="w-4 h-4 text-rose-500" />
+      <div class="flex items-center justify-between gap-3">
+        <h4 class="flex min-w-0 items-center gap-1.5 text-xs font-bold text-white">
+          <History class="h-4 w-4 shrink-0 text-slate-400" />
           {{ $t('tires.tireHistoryModal.historyOfFittingsRemovalsAnd') }}
         </h4>
-        <div class="flex items-center gap-2">
+        <div class="flex shrink-0 items-center gap-2">
           <button
             v-if="copiedSession"
+            type="button"
             @click="emit('paste-session')"
-            class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 transition-colors bg-sky-950/40 border border-sky-800/60 px-2 py-1 rounded-lg"
+            class="btn btn-secondary whitespace-nowrap border border-slate-700"
             :title="$t('tires.tireHistoryModal.pasteCopied', { date: copiedSession.mounted_date ? formatDate(copiedSession.mounted_date) : '' })" :aria-label="$t('tires.tireHistoryModal.pasteCopied', { date: copiedSession.mounted_date ? formatDate(copiedSession.mounted_date) : '' })"
           >
-            <ClipboardPaste class="w-3.5 h-3.5" />
+            <ClipboardPaste class="h-4 w-4 text-rose-400" aria-hidden="true" />
             <span>{{ $t('tires.tireHistoryModal.paste') }}</span>
           </button>
-          <button
-            @click="emit('add-session')"
-            class="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 transition-colors"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            {{ $t('tires.tireHistoryModal.addAPastSession') }}
+          <button type="button" @click="emit('add-session')" class="btn btn-secondary whitespace-nowrap border border-slate-700">
+            <Plus class="h-4 w-4 text-rose-400" aria-hidden="true" />
+            <span>{{ $t('tires.tireHistoryModal.addAPastSession') }}</span>
           </button>
         </div>
       </div>
@@ -213,17 +211,14 @@ function sessionKm(s: any): number {
 
     <!-- Tread Logs (Mesures de gomme) -->
     <div class="space-y-2 pt-3 border-t border-slate-800">
-      <div class="flex items-center justify-between">
-        <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
-          <Ruler class="w-4 h-4 text-success-400" />
+      <div class="flex items-center justify-between gap-3">
+        <h4 class="flex min-w-0 items-center gap-1.5 text-xs font-bold text-white">
+          <Ruler class="h-4 w-4 shrink-0 text-slate-400" />
           {{ $t('tires.tireHistoryModal.treadDepthReadings', { length: tireLogs.length }) }}
         </h4>
-        <button
-          @click="emit('add-log')"
-          class="text-xs text-success-400 hover:text-success-300 font-semibold flex items-center gap-1 transition-colors"
-        >
-          <Plus class="w-3.5 h-3.5" />
-          {{ $t('tires.tireHistoryModal.addAReading') }}
+        <button type="button" @click="emit('add-log')" class="btn btn-secondary shrink-0 whitespace-nowrap border border-slate-700">
+          <Plus class="h-4 w-4 text-rose-400" aria-hidden="true" />
+          <span>{{ $t('tires.tireHistoryModal.addAReading') }}</span>
         </button>
       </div>
 

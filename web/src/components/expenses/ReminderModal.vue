@@ -251,7 +251,7 @@ const handleSaveReminder = () => runOnce(handleSaveReminderAction)
             {{ mode === 'interval' ? $t('expenses.reminderModal.modeInterval') : $t('expenses.reminderModal.modeDate') }}
           </button>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
           <div>
             <label for="reminder-form-interval-km" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.reminderModal.intervalInKm', { unit: distanceUnit() }) }}</label>
             <DistanceInput whole text
@@ -309,7 +309,7 @@ const handleSaveReminder = () => runOnce(handleSaveReminderAction)
       <!-- Last service date & odometer -->
       <div v-if="scheduleMode === 'interval' || reminderForm.interval_km" class="p-3.5 bg-slate-800/40 rounded-xl border border-slate-800 space-y-3">
         <span class="block text-xs font-semibold text-slate-200">{{ $t('expenses.reminderModal.startingPointLastMaintenance') }}</span>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
           <div>
             <label for="reminder-form-last-odo" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.reminderModal.odometerAtLastMaintenanceKm', { unit: distanceUnit() }) }}</label>
             <DistanceInput inputmode="numeric" text
@@ -335,7 +335,7 @@ const handleSaveReminder = () => runOnce(handleSaveReminderAction)
       <!-- Alert lead thresholds -->
       <div class="p-3.5 bg-slate-800/40 rounded-xl border border-slate-800 space-y-3">
         <span class="block text-xs font-semibold text-slate-200">{{ $t('expenses.reminderModal.alertLeadThreshold') }}</span>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
           <div>
             <label for="reminder-form-lead-km" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.reminderModal.alertBeforeKm', { unit: distanceUnit() }) }}</label>
             <DistanceInput whole

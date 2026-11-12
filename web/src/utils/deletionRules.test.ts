@@ -42,8 +42,8 @@ describe('deletion rules', () => {
     expect(asking.sort()).toEqual(Object.keys(QUESTIONS_KEPT).sort())
   })
 
-  // The delete of a record is the quiet red text button at the bottom of its detail (`DetailDeleteButton`), never an
-  // icon-only button in the header actions of a modal or panel.
+  // A record deletes from the quiet red text button at the bottom of its detail (`DetailDeleteButton`) or, for a row that
+  // opens no detail, from `RowDeleteButton`. A bare trash icon never sits in the header actions of a modal or panel.
   it('keeps a trash icon out of the header actions of a modal', () => {
     const root = join(__dirname, '..')
     const offenders = sources(root)
@@ -51,5 +51,15 @@ describe('deletion rules', () => {
       .filter((file) => [...readFileSync(file, 'utf8').matchAll(/<template #actions>([\s\S]*?)<\/template>/g)].some((m) => /Trash2/.test(m[1])))
       .map((file) => relative(root, file))
     expect(offenders).toEqual([])
+  })
+
+  // The rows of a list without a detail delete through the shared icon button, in one tone.
+  it('deletes the rows without a detail through RowDeleteButton', () => {
+    const root = join(__dirname, '..')
+    for (const rel of ['components/expenses/ChargingPlacesModal.vue']) {
+      const source = readFileSync(join(root, rel), 'utf8')
+      expect(source, rel).toMatch(/<RowDeleteButton\b/)
+      expect(source, rel).not.toMatch(/\bTrash2\b/)
+    }
   })
 })
