@@ -9,7 +9,8 @@ import { hasOpenEscapeLayer } from '@/composables/useEscapeToClose'
 // row of buttons. It is not for list rows (a list row is one tappable card, its actions live in its detail and in the
 // selection bar); `ActionMenu.test.ts` lists the files allowed to use it. Entries are `.menu-item` buttons in the slot;
 // a click on one closes it. On a phone the menu is a bottom sheet (the heading as title, 48px entries) pulled down to
-// close, instead of a popover. `phone` keeps the button visible below `sm`; without it the button is desktop only.
+// close, instead of a popover. Open, the root sits above the `z-10` controls of its card (a chip, a pencil) so the
+// popover is never drawn under them. `phone` keeps the button visible below `sm`; without it the button is desktop only.
 const props = defineProps<{ label: string; heading?: string; phone?: boolean }>()
 const isMobile = useIsMobile()
 const open = ref(false)
@@ -31,7 +32,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="root" class="relative z-10 shrink-0" :class="{ 'max-sm:hidden': !phone }">
+  <div ref="root" class="relative shrink-0" :class="[open ? 'z-30' : 'z-10', { 'max-sm:hidden': !phone }]">
     <button type="button" class="tap row-action" :class="{ 'max-sm:!min-w-7 max-sm:!px-0.5 max-sm:-mr-1.5': !phone }" :aria-label="label" :title="label" aria-haspopup="menu" :aria-expanded="open" @click="open = !open">
       <MoreHorizontal class="h-4 w-4" aria-hidden="true" />
     </button>

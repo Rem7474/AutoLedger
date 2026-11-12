@@ -1142,3 +1142,24 @@ test('on a wide screen a cost opens as a panel beside the journal, which stays v
   await expect(pane).toHaveCount(0)
   await expect(row).toBeVisible()
 })
+
+test('on a wide screen the vehicle card menu opens above the content of the card and of the next one', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 800 })
+  await page.goto('/login')
+  await page.evaluate(() => localStorage.setItem('teslacost_locale', 'en'))
+  await page.goto('/vehicles')
+  const buttons = page.getByRole('button', { name: 'More actions' })
+  for (let i = 0; i < Math.min(await buttons.count(), 2); i++) {
+    await buttons.nth(i).click()
+    const entries = page.getByRole('menu').getByRole('menuitem')
+    for (let j = 0; j < (await entries.count()); j++) {
+      const hit = await entries.nth(j).evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+        return !!top && el.contains(top)
+      })
+      expect(hit, `entry ${j} of menu ${i} is covered`).toBe(true)
+    }
+    await page.keyboard.press('Escape')
+  }
+})
