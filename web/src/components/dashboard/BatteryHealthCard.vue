@@ -6,6 +6,7 @@ import { formatNumber } from '@/utils/numbers'
 import { api } from '@/services/api'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import RowDeleteButton from '@/components/RowDeleteButton.vue'
+import { todayIso } from '@/utils/dates'
 import { BatteryCharging, ChevronDown } from '@/icons'
 
 // The battery health of an electric vehicle: the level as a gauge coloured by value, its history as a line,
@@ -18,7 +19,7 @@ interface Health { readings: Reading[]; health_percent?: number; source?: string
 
 const health = ref<Health | null>(null)
 const error = ref('')
-const readingDate = ref(new Date().toISOString().slice(0, 10))
+const readingDate = ref(todayIso())
 const readingPercent = ref('')
 const readingMax = ref('')
 

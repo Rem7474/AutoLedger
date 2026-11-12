@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/teslacost/teslacost/internal/auth"
 	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/middleware"
+	"github.com/teslacost/teslacost/internal/models"
 )
 
 // currentFamily returns the session (refresh token family) of the request, or "" for a client that does not send
@@ -237,4 +239,23 @@ func (h *AuthHandler) UpdateVolumeUnit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Volume unit updated"})
+}
+
+// accountUser is the user as the client reads it: the stored fields plus the timezone whose midnights cut the
+// calendar days of every record, so that the period bars name the same "today" and months as the server.
+type accountUser struct {
+	*models.User
+	ReportingTimezone string `json:"reporting_timezone"`
+}
+
+func (h *AuthHandler) accountUser(u *models.User) accountUser {
+	return accountUser{User: u, ReportingTimezone: reportingZoneName(h.cfg.ReportingTimezone)}
+}
+
+// reportingZoneName is the configured IANA zone, or UTC when it does not load (the zone the reporting services fall back to).
+func reportingZoneName(zone string) string {
+	if _, err := time.LoadLocation(zone); err != nil || zone == "" {
+		return "UTC"
+	}
+	return zone
 }

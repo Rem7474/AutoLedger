@@ -15,7 +15,7 @@ import { distanceUnit, formatFuelConsumptionValue, formatVolume, fuelConsumption
 import { fuelLogsInPeriod, fuelMonths, fuelPeriodSummary } from '@/utils/fuelLogs'
 import PeriodBar from '@/components/period/PeriodBar.vue'
 import { usePeriod } from '@/composables/usePeriod'
-import { toLocalDay } from '@/utils/dates'
+import { dayKey } from '@/utils/dates'
 import LoadError from '@/components/LoadError.vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useRecordDeletion } from '@/composables/useRecordDeletion'
@@ -54,7 +54,7 @@ function fmtNum(v: number | null | undefined, digits = 1): string {
 
 // Fill-ups under a header per month, the newest first
 const months = computed(() =>
-  fuelMonths(logs.value, toLocalDay(), (date, withYear) => date.toLocaleDateString(intlLocale(), { month: 'long', ...(withYear ? { year: 'numeric' } : {}) })),
+  fuelMonths(logs.value, dayKey(), (date, withYear) => date.toLocaleDateString(intlLocale(), { month: 'long', ...(withYear ? { year: 'numeric' } : {}) })),
 )
 
 // `silent` reloads behind the list that is already shown instead of swapping it for the loading state.

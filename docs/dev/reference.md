@@ -6,6 +6,23 @@ Detail behind the short rules in [CLAUDE.md](../../CLAUDE.md). Read the section 
 
 A vehicle has a `Powertrain` (`EV`, `ICE`, `PHEV` or `REEV`; plug-in hybrids and range-extenders record both charges and fill-ups, see the capability helpers in `models_vehicle.go`) and a `telemetry_mode` (`CONNECTED`, `SEMI_AUTO`, `MANUAL`). Vehicles also carry optional free-form `make` and `model` text attributes (`VARCHAR(100)`). ICE vehicles are tracked through fuel logs and have no TeslaMate link. EV vehicles may or may not have a TeslaMate connection (`teslamate_api_url`, `teslamate_car_id`, credentials stored encrypted) or can be tracked semi-automatically (CSV imports) or fully declaratively. TeslaMate-fed features (continuous telemetry sync, battery and temperature panels, sync button) are conditioned on `hasTeslaMate` (`web/src/utils/vehicles.ts`, exposed by the vehicle store): electric and a teslamateapi URL set. Non-Tesla and manual EV vehicles can log drives, import CSV files, and track expenses without requiring TeslaMate.
 
+### Vehicle capabilities
+
+Every vehicle returned by `GET /api/vehicles`, `GET /api/vehicles/{id}` and by the create and update routes carries `capabilities`, an object of booleans computed on each read by `models.ComputeCapabilities` (never stored, never accepted from a client). It is additive: `powertrain`, `telemetry_mode` and `toll_detection_active` stay. The integration routes (`/api/integrations/v1`) and the MCP tools have their own views and do not carry it. Clients read a capability instead of comparing the powertrain or testing for a connection.
+
+| Capability | Rule |
+| :--- | :--- |
+| `charges` | powertrain other than `ICE` |
+| `refuels` | `ICE`, `PHEV` or `REEV` (a plug-in hybrid has both) |
+| `drives` | `charges`, or at least one drive stored whatever its origin (a combustion vehicle fed trips by a push source) |
+| `sync` | a rechargeable vehicle with a teslamateapi URL; true for every role, though only the owner receives the URL |
+| `odometer_auto` | `sync`, or at least one odometer reading reported by a source (`HA`) |
+| `battery_health` | `charges` (readings can be recorded by hand or come from a source) |
+| `tolls_auto` | `drives` and `toll_detection_active` |
+| `write` | role `OWNER` or `EDITOR` |
+
+`FillVehicleCapabilities` (`internal/database/repository_vehicle_capabilities.go`) reads the facts for a set of vehicles with one query and runs before the connection is hidden from a member who is not the owner.
+
 ## Manual drives
 
 Manual drives (`is_manual`) carry no energy cost. When no energy is typed, the server derives it from the vehicle's average consumption (`services.EstimateDriveEnergy`) and sets `energy_estimated`; the energy statistics ignore estimated energy. In the TCO mileage smoothing, tracking starts with the first synchronized drive or charge (the first manual charge without any), never with a manual drive, and a manual drive's distance still has its energy estimated before tracking starts.
@@ -169,6 +186,10 @@ A monthly row carries `scheduled`: the part of the month in progress's `total` (
 Use `models.AddCalendarMonths` for a monthly interval from an arbitrary day: 31 January plus one month ends on 28 February (29 in a leap year). `time.Time.AddDate` remains suitable for day increments and for month buckets explicitly starting on day 1. `internal/calendarcheck` checks production calls to `AddDate` with a nonzero or variable month argument in `internal/` and `cmd/`. Each reviewed first-of-month file is listed with its reason; a call in any other file, or a listed file that no longer adds months, fails the normal Go test suite. The guard is syntactic, not a proof of the receiver's value: a change to how a bucket start is built still needs review. It sees `AddDate` only: a month computed in SQL (`+ interval '1 month'`, which PostgreSQL clamps) or by adding a fixed number of days is outside its scope.
 
 Keep a calendar date and an instant distinct. For a SQL `DATE` boundary, first derive the day in an explicit reporting timezone and bind that day; for `TIMESTAMPTZ`, compare instants. Do not rely on a database session's timezone to turn an instant into a day. A local day range ends at the next local midnight, not at midnight plus 24 hours (DST changes the day's duration).
+
+### Days in the frontend
+
+The server cuts days and months in its reporting timezone, and sends that zone as `reporting_timezone` with the user (`/api/auth/me`, login and registration answers). `web/src/utils/reportingTime.ts` holds it (`setReportingTimezone`, called by the auth store) and is the only place that turns "now" or a timestamp into a calendar day: `reportingToday()`, `dayKey(date)`, `monthKey(date)`, `reportingYear()`, `dayParts(date)`. Period bounds and presets, the default dates of the forms, the day and month headings of the journals, the month in progress and the file-name dates go through it, never through `getDate`, `getMonth`, `getFullYear` or `toISOString().slice` on an instant. Without a configured zone (signed out) the browser's zone is used. Timestamps are still displayed in the browser's zone; only the day a record belongs to follows the reporting zone. Arithmetic on a bare `YYYY-MM-DD` (next week, next month) is plain calendar arithmetic and stays on local `Date` components. The value of a `datetime-local` input is a browser wall-clock time converted to an instant by the browser.
 
 ## Phone navigation
 

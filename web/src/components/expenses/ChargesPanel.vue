@@ -19,7 +19,7 @@ import { teslamateChargeUrl } from '@/utils/teslamateCharges'
 import { t } from '@/i18n'
 import { groupChargesByMonth } from '@/utils/expenses'
 import { monthHeader } from '@/utils/dayGroups'
-import { toLocalDay } from '@/utils/dates'
+import { dayKey } from '@/utils/dates'
 import { formatAmount } from '@/currency'
 import { formatNumber } from '@/utils/numbers'
 import { distanceUnit, formatPerDistanceValue, perDistance } from '@/units'
@@ -68,7 +68,7 @@ const actions = computed<SelectionAction[]>(() => {
 // The charges loaded so far, which is the whole list until "load more" is needed. A month shows its figures once it is
 // complete: the newest-loaded month still lacks its older charges while more pages remain.
 const months = computed(() => {
-  const today = toLocalDay()
+  const today = dayKey()
   const format = (date: Date, withYear: boolean) => date.toLocaleDateString(intlLocale(), { month: 'long', ...(withYear ? { year: 'numeric' } : {}) })
   const grouped = groupChargesByMonth(props.charges, vehicleStore.currency)
   const more = props.charges.length < props.chargesTotal
