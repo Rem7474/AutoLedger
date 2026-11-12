@@ -222,6 +222,8 @@ jobs:
           AUTOLEDGER_BASE_URL: ${{ env.BASE_URL }}
           AUTOLEDGER_STORAGE_DIR: ${{ runner.temp }}/documents
           AUTOLEDGER_MCP_ENABLED: true
+          # The browser of the tests runs in this zone (e2e/playwright.config.ts): server and page cut their days alike.
+          APP_TIMEZONE: Europe/Paris
         run: |
           nohup ./autoledger-server > server.log 2>&1 &
           for _ in $(seq 1 60); do curl -sf "$BASE_URL/api/health" >/dev/null && break; sleep 1; done
