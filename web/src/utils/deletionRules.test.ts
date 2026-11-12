@@ -62,4 +62,16 @@ describe('deletion rules', () => {
       expect(source, rel).not.toMatch(/\bTrash2\b/)
     }
   })
+
+  // A deletion with no question goes through Undo: the server call lives in the `remove` callback of
+  // `deleteRowsWithUndo`, never awaited at the click.
+  it('deletes the readings, rates, templates and import profiles with Undo', () => {
+    const root = join(__dirname, '..')
+    for (const rel of ['components/dashboard/BatteryHealthCard.vue', 'components/MileageRatesEditor.vue', 'components/expenses/ReminderTemplatesBar.vue', 'components/CSVImportModal.vue']) {
+      const source = readFileSync(join(root, rel), 'utf8')
+      expect(source, rel).toMatch(/deleteRowsWithUndo\(/)
+      expect(source, rel).toMatch(/<RowDeleteButton\b/)
+      expect(source, rel).not.toMatch(/await\s+api\.delete(?:BatteryReading|MileageRate|ReminderTemplate|ImportProfile)\b/)
+    }
+  })
 })
