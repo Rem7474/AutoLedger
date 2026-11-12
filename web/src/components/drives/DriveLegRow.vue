@@ -7,7 +7,6 @@ import ListItem from '@/components/ListItem.vue'
 import QuietLine from '@/components/QuietLine.vue'
 import RowLeading from '@/components/RowLeading.vue'
 import StatusLabel from '@/components/StatusLabel.vue'
-import { hasTeslaMate } from '@/utils/vehicles'
 import { driveGlyph } from '@/utils/driveGlyph'
 import { usePreferencesStore } from '@/stores/preferences'
 import { summarizeDriveCarpools } from '@/utils/drives'
@@ -35,7 +34,7 @@ const cost = computed(() => {
 const carpools = computed(() => summarizeDriveCarpools(props.leg.carpools))
 // A vehicle fed by TeslaMate mixes synced and manual legs: the label tells them apart
 const glyph = computed(() => driveGlyph(props.leg, !!carpools.value, prefs.proPersoEnabled))
-const showManual = computed(() => !!props.leg.is_manual && hasTeslaMate(vehicleStore.activeVehicle))
+const showManual = computed(() => !!props.leg.is_manual && vehicleStore.capabilities.sync)
 </script>
 
 <template>

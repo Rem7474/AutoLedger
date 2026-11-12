@@ -8,6 +8,7 @@ import { t, intlLocale } from '@/i18n'
 import { distanceUnit } from '@/units'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { CAPABILITY_FALLBACK } from '@/utils/capabilityRoutes'
 import { drivesTabQuery, parseDrivesTab, type DrivesTab } from '@/utils/drivesTab'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -340,6 +341,14 @@ watch(
 watch(
   () => vehicleStore.activeVehicle?.id,
   () => clearSelection()
+)
+
+// Switching to a vehicle without trips leaves the page, like opening its address does
+watch(
+  () => vehicleStore.capabilities.drives,
+  (drives) => {
+    if (!drives) void router.replace(CAPABILITY_FALLBACK)
+  }
 )
 
 // The qualification queue and the toll source only exist with the toll detection: leave them when it goes away

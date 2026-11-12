@@ -4,10 +4,10 @@ import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import DriveCard from './DriveCard.vue'
 
-const vehicleStore = reactive<{ canEdit: boolean; currency: string; activeVehicle: any }>({
+const vehicleStore = reactive<{ canEdit: boolean; currency: string; capabilities: { sync: boolean } }>({
   canEdit: true,
   currency: 'EUR',
-  activeVehicle: { powertrain: 'EV', teslamate_api_url: null },
+  capabilities: { sync: false },
 })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
 vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => ({ proPersoEnabled: false }) }))
@@ -18,7 +18,7 @@ const render = (d: any = drive) => renderToString(createSSRApp({ render: () => h
 
 afterEach(() => {
   vehicleStore.canEdit = true
-  vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: null }
+  vehicleStore.capabilities = { sync: false }
 })
 
 describe('DriveCard', () => {
@@ -27,7 +27,7 @@ describe('DriveCard', () => {
   })
 
   it('mentionne « manuel » sur un véhicule alimenté par TeslaMate, où cela distingue les trajets', async () => {
-    vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: 'http://teslamate.local' }
+    vehicleStore.capabilities = { sync: true }
     expect(await render()).toContain('Manuel')
     expect(await render({ ...drive, is_manual: false })).not.toContain('Manuel')
   })
