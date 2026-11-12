@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { api, type MileageRate } from '@/services/api'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
-import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 
 const emit = defineEmits<{ (e: 'change', labels: string[]): void }>()
 
@@ -77,7 +77,7 @@ onMounted(load)
     <ul v-if="rates.length" class="space-y-1 text-xs text-slate-300">
       <li v-for="r in rates" :key="r.id" class="flex items-center justify-between gap-2">
         <span>{{ r.label }} · {{ r.year }} · {{ describe(r) }}</span>
-        <DetailDeleteButton :aria-label="$t('import.rateDelete')" @delete="remove(r)" />
+        <RowDeleteButton :label="$t('import.rateDelete')" @delete="remove(r)" />
       </li>
     </ul>
     <div class="grid grid-cols-2 gap-2">

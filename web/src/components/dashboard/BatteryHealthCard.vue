@@ -5,7 +5,7 @@ import { intlLocale, t } from '@/i18n'
 import { formatNumber } from '@/utils/numbers'
 import { api } from '@/services/api'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
-import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 import { BatteryCharging, ChevronDown } from '@/icons'
 
 // The battery health of an electric vehicle: the level as a gauge coloured by value, its history as a line,
@@ -149,7 +149,7 @@ const sourceLabel = computed(() => (health.value?.source ? t(`dashboard.batteryH
       <ul v-if="health?.readings.length" class="mt-2 space-y-1">
         <li v-for="r in [...health.readings].reverse().slice(0, 6)" :key="r.date" class="flex items-center justify-between text-slate-300">
           <span>{{ r.date }} · <template v-if="r.health_percent !== undefined">{{ r.health_percent }} %</template><template v-else-if="r.current_capacity_kwh !== undefined">{{ r.current_capacity_kwh }} kWh</template><template v-else>{{ r.max_capacity_kwh }} kWh</template></span>
-          <DetailDeleteButton :aria-label="$t('dashboard.batteryHealth.deleteReading', { date: r.date })" @delete="removeReading(r)" />
+          <RowDeleteButton :label="$t('dashboard.batteryHealth.deleteReading', { date: r.date })" @delete="removeReading(r)" />
         </li>
       </ul>
     </details>

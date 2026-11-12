@@ -4,7 +4,7 @@ import { t } from '@/i18n'
 import { api, type ReminderTemplate } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
-import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 
 defineProps<{ hasReminders: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -85,7 +85,7 @@ onMounted(load)
         <button type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/20 text-sky-200 border border-sky-500/30 font-semibold disabled:opacity-50" :disabled="!selected" :title="!selected ? $t('expenses.remindersPanel.templates.pickFirst') : undefined" @click="apply">
           {{ $t('expenses.remindersPanel.templates.apply') }}
         </button>
-        <DetailDeleteButton v-if="selected" :aria-label="$t('expenses.remindersPanel.templates.delete')" @delete="remove" />
+        <RowDeleteButton v-if="selected" :label="$t('expenses.remindersPanel.templates.delete')" @delete="remove" />
       </div>
       <p v-else class="text-slate-400 italic">{{ $t('expenses.remindersPanel.templates.none') }}</p>
       <div v-if="hasReminders" class="flex flex-wrap gap-2 items-center">

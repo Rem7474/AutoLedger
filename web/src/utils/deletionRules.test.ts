@@ -49,6 +49,7 @@ describe('deletion rules', () => {
     for (const rel of ['components/dashboard/BatteryHealthCard.vue', 'components/MileageRatesEditor.vue', 'components/expenses/ReminderTemplatesBar.vue', 'components/CSVImportModal.vue']) {
       const source = readFileSync(join(root, rel), 'utf8')
       expect(source, rel).toMatch(/deleteRowsWithUndo\(/)
+      expect(source, rel).toMatch(/<RowDeleteButton\b/)
       expect(source, rel).not.toMatch(/await\s+api\.delete(?:BatteryReading|MileageRate|ReminderTemplate|ImportProfile)\b/)
     }
   })

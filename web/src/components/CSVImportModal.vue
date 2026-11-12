@@ -8,7 +8,7 @@ import { downloadCsv } from '@/utils/csv'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
-import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 import { profileColumns, profileMapping, type CSVDateOrder, type CSVDecimalSeparator, type CSVExecuteResult, type CSVImportBatch, type CSVImportOptions, type CSVImportProfile, type CSVImportType, type CSVPreviewResult } from '@/services/csvImport'
 import { apiErrorMessage } from '@/services/apiError'
 import { distanceUnit } from '@/units'
@@ -454,7 +454,7 @@ async function handleExecute() {
             <ul v-if="profilesForType.length" class="mt-2 space-y-1">
               <li v-for="p in profilesForType" :key="p.id" class="flex items-center justify-between gap-2 text-slate-400">
                 <span class="truncate">{{ p.name }}</span>
-                <DetailDeleteButton class="shrink-0" :aria-label="$t('import.profileDelete', { name: p.name })" @delete="deleteProfile(p)" />
+                <RowDeleteButton :label="$t('import.profileDelete', { name: p.name })" @delete="deleteProfile(p)" />
               </li>
             </ul>
           </div>
