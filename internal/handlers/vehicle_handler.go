@@ -286,7 +286,9 @@ func (h *VehicleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeRepoError(w, r, err, "Failed to create vehicle")
 		return
 	}
+	v.Role = models.RoleOwner
 	v.TollDetectionActive, _ = h.repo.TollDetectionActive(r.Context(), v.ID)
+	_ = h.repo.FillVehicleCapabilities(r.Context(), v)
 
 	writeJSON(w, http.StatusCreated, v)
 }
@@ -431,6 +433,7 @@ func (h *VehicleHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	existing.TollDetectionActive, _ = h.repo.TollDetectionActive(r.Context(), existing.ID)
+	_ = h.repo.FillVehicleCapabilities(r.Context(), existing)
 
 	writeJSON(w, http.StatusOK, existing)
 }

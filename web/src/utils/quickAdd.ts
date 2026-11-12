@@ -1,4 +1,5 @@
 import { t } from '@/i18n'
+import { dayKey } from '@/utils/reportingTime'
 // Pure helpers of the quick entry sheet: payload builders, tariff memory and small numeric utilities.
 // Kept free of Vue and of the API layer so they can be unit tested.
 
@@ -78,9 +79,9 @@ export function toLocalDateTimeInput(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-// Local calendar day (YYYY-MM-DD): the UTC day would be off by one after midnight for a phone in Europe.
+// Calendar day (YYYY-MM-DD) in the server's reporting timezone: neither the UTC day nor the browser's day, which differ from it around midnight.
 export function toLocalDateInput(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  return dayKey(d)
 }
 
 export type OdometerCheck = 'none' | 'below' | 'ok'
@@ -100,7 +101,7 @@ export function describeQuickDate(value: string, withTime: boolean, now: Date, l
   const date = withTime ? new Date(value) : new Date(`${value}T00:00:00`)
   if (Number.isNaN(date.getTime())) return value
   const time = withTime ? date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : ''
-  if (toLocalDateInput(date) === toLocalDateInput(now)) return time ? `${todayLabel}, ${time}` : todayLabel
+  if ((withTime ? dayKey(date) : value) === dayKey(now)) return time ? `${todayLabel}, ${time}` : todayLabel
   const day = date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
   return time ? `${day}, ${time}` : day
 }

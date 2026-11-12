@@ -42,7 +42,7 @@ import EmptySourceHints from '@/components/EmptySourceHints.vue'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 import { useInfiniteList } from '@/composables/useInfiniteList'
 import { groupByDay, dayLabel, groupDaysByMonth, monthHeader } from '@/utils/dayGroups'
-import { toLocalDay } from '@/utils/dates'
+import { dayKey } from '@/utils/dates'
 import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import {
@@ -211,7 +211,7 @@ useRefreshHandler(() => loadDrives(true))
 // The drives under a header per month, each month under its days, the newest first as the server sends them. A month's
 // subtotal is shown once the month is complete: the newest month lists only what is loaded while there are more pages.
 const driveMonths = computed(() => {
-  const today = toLocalDay()
+  const today = dayKey()
   const labels = { today: t('drives.drivesView.today'), yesterday: t('drives.drivesView.yesterday') }
   const format = (date: Date, withYear: boolean) =>
     date.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', ...(withYear ? { year: 'numeric' } : {}) })

@@ -5,13 +5,14 @@ import { t } from '@/i18n'
 import { api, type MileageRate } from '@/services/api'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import RowDeleteButton from '@/components/RowDeleteButton.vue'
+import { reportingYear } from '@/utils/reportingTime'
 
 const emit = defineEmits<{ (e: 'change', labels: string[]): void }>()
 
 const rates = ref<MileageRate[]>([])
 const error = ref('')
 const label = ref('')
-const year = ref(new Date().getFullYear())
+const year = ref(reportingYear())
 const fromKm = ref(0)
 const toKm = ref<number | null>(null)
 const rate = ref<number | null>(null)
