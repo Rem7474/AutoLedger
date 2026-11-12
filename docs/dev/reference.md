@@ -6,6 +6,23 @@ Detail behind the short rules in [CLAUDE.md](../../CLAUDE.md). Read the section 
 
 A vehicle has a `Powertrain` (`EV`, `ICE`, `PHEV` or `REEV`; plug-in hybrids and range-extenders record both charges and fill-ups, see the capability helpers in `models_vehicle.go`) and a `telemetry_mode` (`CONNECTED`, `SEMI_AUTO`, `MANUAL`). Vehicles also carry optional free-form `make` and `model` text attributes (`VARCHAR(100)`). ICE vehicles are tracked through fuel logs and have no TeslaMate link. EV vehicles may or may not have a TeslaMate connection (`teslamate_api_url`, `teslamate_car_id`, credentials stored encrypted) or can be tracked semi-automatically (CSV imports) or fully declaratively. TeslaMate-fed features (continuous telemetry sync, battery and temperature panels, sync button) are conditioned on `hasTeslaMate` (`web/src/utils/vehicles.ts`, exposed by the vehicle store): electric and a teslamateapi URL set. Non-Tesla and manual EV vehicles can log drives, import CSV files, and track expenses without requiring TeslaMate.
 
+### Vehicle capabilities
+
+Every vehicle returned by `GET /api/vehicles`, `GET /api/vehicles/{id}` and by the create and update routes carries `capabilities`, an object of booleans computed on each read by `models.ComputeCapabilities` (never stored, never accepted from a client). It is additive: `powertrain`, `telemetry_mode` and `toll_detection_active` stay. The integration routes (`/api/integrations/v1`) and the MCP tools have their own views and do not carry it. Clients read a capability instead of comparing the powertrain or testing for a connection.
+
+| Capability | Rule |
+| :--- | :--- |
+| `charges` | powertrain other than `ICE` |
+| `refuels` | `ICE`, `PHEV` or `REEV` (a plug-in hybrid has both) |
+| `drives` | `charges`, or at least one drive stored whatever its origin (a combustion vehicle fed trips by a push source) |
+| `sync` | a rechargeable vehicle with a teslamateapi URL; true for every role, though only the owner receives the URL |
+| `odometer_auto` | `sync`, or at least one odometer reading reported by a source (`HA`) |
+| `battery_health` | `charges` (readings can be recorded by hand or come from a source) |
+| `tolls_auto` | `drives` and `toll_detection_active` |
+| `write` | role `OWNER` or `EDITOR` |
+
+`FillVehicleCapabilities` (`internal/database/repository_vehicle_capabilities.go`) reads the facts for a set of vehicles with one query and runs before the connection is hidden from a member who is not the owner.
+
 ## Manual drives
 
 Manual drives (`is_manual`) carry no energy cost. When no energy is typed, the server derives it from the vehicle's average consumption (`services.EstimateDriveEnergy`) and sets `energy_estimated`; the energy statistics ignore estimated energy. In the TCO mileage smoothing, tracking starts with the first synchronized drive or charge (the first manual charge without any), never with a manual drive, and a manual drive's distance still has its energy estimated before tracking starts.
