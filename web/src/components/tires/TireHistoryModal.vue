@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import ModalShell from '@/components/ModalShell.vue'
 import { intlLocale } from '@/i18n'
-import { Archive, ClipboardPaste, Copy, Edit2, History, Pencil, Plus, Ruler, Shuffle, Zap } from '@/icons'
+import { Archive, ChevronRight, ClipboardPaste, History, Pencil, Plus, Ruler, Zap } from '@/icons'
 import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
+import StatusLabel from '@/components/StatusLabel.vue'
+import TireSessionDetailModal from '@/components/tires/TireSessionDetailModal.vue'
+import { computed, ref } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { apiMessageText } from '@/services/apiError'
 import { formatAmount } from '@/currency'
@@ -16,7 +19,7 @@ const vehicleStore = useVehicleStore()
 
 // Full history of one tire: life KPIs, TeslaMate telemetry, mount sessions and tread depth measurements.
 // It only displays: every action is emitted for the page to run.
-defineProps<{
+const props = defineProps<{
   selectedTire: any | null
   selectedTireStats: any | null
   tireSessions: any[]
@@ -35,9 +38,15 @@ const emit = defineEmits<{
   'delete-session': [session: any]
   'add-log': []
   'edit-log': [log: any]
-  'delete-log': [log: any]
 }>()
 const open = defineModel<boolean>('open', { required: true })
+
+// The fitting whose detail is open; the distance of the one still on the vehicle is the live run of the tire.
+const detail = ref<any | null>(null)
+const detailOpen = computed({ get: () => detail.value !== null, set: (v) => { if (!v) detail.value = null } })
+function sessionKm(s: any): number {
+  return s.dismounted_date ? s.distance_km : props.selectedTireStats?.current_run_km ?? s.distance_km
+}
 </script>
 
 <template>
@@ -179,70 +188,26 @@ const open = defineModel<boolean>('open', { required: true })
         {{ $t('tires.tireHistoryModal.noSessionRecordedForThis') }}
       </div>
 
-      <div v-else class="space-y-2.5">
-        <div
+      <div v-else class="space-y-2">
+        <button
           v-for="s in tireSessions"
           :key="s.id"
-          class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-3.5 text-xs space-y-2 hover:border-slate-700 transition-all"
+          type="button"
+          class="flex w-full items-center gap-3 rounded-2xl bg-slate-800 p-3.5 text-left text-xs transition-colors hover:bg-slate-700"
+          @click="detail = s"
         >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span
-                class="px-2 py-0.5 rounded-md font-bold text-xs"
-                :class="s.dismounted_date ? 'bg-slate-800 text-slate-300' : 'bg-success-500/20 text-success-400 border border-success-500/30'"
-              >
+          <div class="min-w-0 flex-1">
+            <div class="truncate text-sm font-bold text-white">{{ positionLabel(s.position) }}</div>
+            <div class="mt-0.5 flex min-w-0 items-center gap-1.5 text-slate-400">
+              <StatusLabel class="shrink-0" :tone="s.dismounted_date ? 'neutral' : 'info'">
                 {{ s.dismounted_date ? $t('tires.tireHistoryModal.sessionOver') : $t('tires.tireHistoryModal.currentlyFitted') }}
-              </span>
-              <span class="font-bold text-white">{{ positionLabel(s.position) }}</span>
-            </div>
-
-            <div class="flex items-center gap-1.5">
-              <button
-                @click="emit('copy-session', s)"
-                class="tap p-1 rounded transition-colors"
-                :class="copiedSession?.mounted_date === (s.mounted_date ? new Date(s.mounted_date).toISOString().substring(0, 10) : '') && copiedSession?.mounted_odometer === s.mounted_odometer ? 'text-sky-400 bg-sky-950/60' : 'text-slate-400 hover:text-sky-400'"
-                :title="$t('tires.tireHistoryModal.copyThisSessionSData')" :aria-label="$t('tires.tireHistoryModal.copyThisSessionSData')"
-              >
-                <Copy class="w-3.5 h-3.5" />
-              </button>
-              <button
-                @click="emit('duplicate-session', s)"
-                class="tap p-1 text-slate-400 hover:text-info-400 rounded transition-colors"
-                :title="$t('tires.tireHistoryModal.duplicateToOtherTires')" :aria-label="$t('tires.tireHistoryModal.duplicateToOtherTires')"
-              >
-                <Shuffle class="w-3.5 h-3.5" />
-              </button>
-              <button
-                @click="emit('edit-session', s)"
-                class="tap p-1 text-slate-400 hover:text-white rounded"
-                :title="$t('tires.tireHistoryModal.editTheSession')" :aria-label="$t('tires.tireHistoryModal.editTheSession')"
-              >
-                <Edit2 class="w-3.5 h-3.5" />
-              </button>
-              <DetailDeleteButton :aria-label="$t('tires.tireHistoryModal.deleteTheSession')" @delete="emit('delete-session', s)" />
+              </StatusLabel>
+              <span class="truncate">{{ formatDate(s.mounted_date) }}</span>
             </div>
           </div>
-
-          <!-- Session Details -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-400 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/60">
-            <div>
-              <div class="text-slate-400">{{ $t('tires.tireHistoryModal.fitting') }}</div>
-              <div class="text-slate-200 font-medium">{{ $t('tires.tireHistoryModal.dateAtKm', { unit: distanceUnit(), date: formatDate(s.mounted_date), km: formatDistanceValue(s.mounted_odometer) }) }}</div>
-            </div>
-            <div>
-              <div class="text-slate-400">{{ $t('tires.tireHistoryModal.removal') }}</div>
-              <div class="text-slate-200 font-medium">
-                {{ s.dismounted_date ? $t('tires.tireHistoryModal.removedAt', { unit: distanceUnit(), date: formatDate(s.dismounted_date), odometer: formatDistanceValue(s.dismounted_odometer) }) : $t('tires.tireHistoryModal.currentlyOnVehicle') }}
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between text-xs pt-1">
-            <span v-if="s.notes" class="text-slate-400 italic">"{{ s.notes }}"</span>
-            <span v-else></span>
-            <span class="font-bold text-white">{{ $t('tires.tireHistoryModal.kmDriven', { unit: distanceUnit(), distance_km: formatDistanceValue(s.dismounted_date ? s.distance_km : selectedTireStats?.current_run_km ?? s.distance_km) }) }}</span>
-          </div>
-        </div>
+          <span class="shrink-0 font-bold text-white">{{ $t('tires.tireHistoryModal.kmDriven', { unit: distanceUnit(), distance_km: formatDistanceValue(sessionKm(s)) }) }}</span>
+          <ChevronRight class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+        </button>
       </div>
     </div>
 
@@ -263,25 +228,20 @@ const open = defineModel<boolean>('open', { required: true })
       </div>
 
       <div v-if="tireLogs.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        <div
+        <button
           v-for="l in tireLogs"
           :key="l.id"
-          class="bg-slate-800 p-2.5 rounded-xl text-xs space-y-0.5"
+          type="button"
+          class="rounded-xl bg-slate-800 p-2.5 text-left text-xs transition-colors hover:bg-slate-700"
+          :aria-label="$t('tires.tireHistoryModal.editTheReading')"
+          @click="emit('edit-log', l)"
         >
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-success-400">{{ l.depth_mm }} mm</span>
-            <span class="text-xs text-slate-400">{{ formatDate(l.date) }}</span>
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-bold text-white">{{ l.depth_mm }} mm</span>
+            <span class="truncate text-slate-400">{{ formatDate(l.date) }}</span>
           </div>
-          <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>{{ $t('common.atKm', { unit: distanceUnit(), km: formatDistanceValue(l.odometer) }) }}</span>
-            <span class="flex items-center gap-1">
-              <button @click="emit('edit-log', l)" class="tap text-slate-400 hover:text-success-400" :title="$t('tires.tireHistoryModal.editTheReading')" :aria-label="$t('tires.tireHistoryModal.editTheReading')">
-                <Pencil class="w-3 h-3" />
-              </button>
-              <DetailDeleteButton :aria-label="$t('tires.tireHistoryModal.deleteTheReading')" @delete="emit('delete-log', l)" />
-            </span>
-          </div>
-        </div>
+          <div class="truncate text-slate-400">{{ $t('common.atKm', { unit: distanceUnit(), km: formatDistanceValue(l.odometer) }) }}</div>
+        </button>
       </div>
     </div>
     <template #footer>
@@ -294,5 +254,14 @@ const open = defineModel<boolean>('open', { required: true })
         {{ $t('common.close') }}
       </button>
     </template>
+    <TireSessionDetailModal
+      v-model:open="detailOpen"
+      :session="detail"
+      :km-driven="detail ? sessionKm(detail) : null"
+      @edit="emit('edit-session', $event)"
+      @copy="emit('copy-session', $event)"
+      @duplicate="emit('duplicate-session', $event)"
+      @delete="emit('delete-session', $event)"
+    />
   </ModalShell>
 </template>

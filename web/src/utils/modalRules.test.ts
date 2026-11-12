@@ -50,6 +50,7 @@ const DIALOGS: Record<string, string> = {
   'components/tires/TireBatchDisposeModal.vue': 'opened from another dialog (nested)',
   'components/tires/TireCopyHistoryModal.vue': 'opened from the tire history',
   'components/tires/TireDuplicateSessionModal.vue': 'opened from the tire history',
+  'components/tires/TireSessionDetailModal.vue': 'a fitting, opened from the tire history',
 }
 
 function drawsDialog(source: string): boolean {
