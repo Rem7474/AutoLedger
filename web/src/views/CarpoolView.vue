@@ -26,6 +26,7 @@ import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDel
 import EmptyState from '@/components/EmptyState.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
 import { useInfiniteList } from '@/composables/useInfiniteList'
+import { todayIso } from '@/utils/dates'
 
 // The page reads the trips page by page (the latest first) and the totals apart, and owns the selection and which trip
 // the modal edits; the summary, the list and the form are components. Other pages open it with a drive, drives or a trip group in the query string.
@@ -122,7 +123,7 @@ function clearTripSelection() {
 function exportSelectedCarpools() {
   const selected = trips.value.filter((t) => selectedTripIds.value.includes(t.id))
   if (!selected.length) return
-  downloadCsv(`${t('carpool.carpoolView.csvFileName')}_${new Date().toISOString().slice(0, 10)}.csv`, carpoolCsvHeaders(vehicleStore.currency), carpoolCsvRows(selected))
+  downloadCsv(`${t('carpool.carpoolView.csvFileName')}_${todayIso()}.csv`, carpoolCsvHeaders(vehicleStore.currency), carpoolCsvRows(selected))
 }
 
 useRefreshHandler(() => loadData(true))

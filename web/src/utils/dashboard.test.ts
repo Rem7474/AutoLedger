@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { setReportingTimezone } from '@/utils/reportingTime'
 import { formatAmount } from '@/currency'
 import {
   buildLeaseSummary,
@@ -357,6 +358,8 @@ describe('groupRemindersByDue', () => {
 })
 
 describe('currentMonthStats with the month named by the server', () => {
+  afterEach(() => setReportingTimezone(null))
+
   const list = [
     { month: '2026-09', distance_km: 300, total: 100 },
     { month: '2026-10', distance_km: 50, total: 20 },
@@ -369,7 +372,8 @@ describe('currentMonthStats with the month named by the server', () => {
     expect(s.prevDistance).toBe(300)
   })
 
-  it('falls back to the clock when the server did not name it', () => {
+  it('falls back to the clock, in the reporting timezone, when the server did not name it', () => {
+    setReportingTimezone('UTC')
     expect(currentMonthStats(list, new Date('2026-09-30T23:30:00Z'))!.month).toBe('2026-09')
   })
 })

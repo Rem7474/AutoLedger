@@ -241,6 +241,13 @@ async function onSessionSaved() {
 async function onLogSaved() {
   await refreshAfterHistoryChange()
 }
+
+// The reading being edited is deleted from the footer of its panel, with Undo.
+function onDeleteEditedLog() {
+  const log = tireLogs.value.find((l) => l.id === editingLogId.value)
+  showLogModal.value = false
+  if (log) handleDeleteLog(log)
+}
 </script>
 
 <template>
@@ -476,7 +483,6 @@ async function onLogSaved() {
       @delete-session="handleDeleteSession"
       @add-log="openLogModal(selectedTireStats)"
       @edit-log="editLog"
-      @delete-log="handleDeleteLog"
     />
 
     <TireSessionModal
@@ -498,6 +504,7 @@ async function onLogSaved() {
       :editing-log-version="editingLogVersion"
       :initial-form="logInitialForm"
       @saved="onLogSaved"
+      @delete="onDeleteEditedLog"
     />
 
     <TirePackSwapModal

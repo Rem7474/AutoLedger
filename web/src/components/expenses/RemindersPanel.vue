@@ -25,7 +25,6 @@ const emit = defineEmits<{
   add: [preset: ReminderPreset | null]
   edit: [reminder: MaintenanceReminder]
   complete: [reminder: MaintenanceReminder]
-  delete: [reminder: MaintenanceReminder]
   reload: []
 }>()
 const vehicleStore = useVehicleStore()
@@ -143,7 +142,6 @@ const groups = computed(() => groupRemindersByDue(props.reminders))
           :reminder="r"
           @edit="emit('edit', $event)"
           @complete="emit('complete', $event)"
-          @delete="emit('delete', $event)"
         />
       </section>
     </div>

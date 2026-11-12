@@ -10,7 +10,7 @@ import { useExpensesTabs, type ExpensesTab } from '@/composables/useExpensesTabs
 import { useExpenseDeletions } from '@/composables/useExpenseDeletions'
 import { useDocumentPreview } from '@/composables/useDocumentPreview'
 import { useReminders } from '@/composables/useReminders'
-import { api, type ExpenseDocumentHeader } from '@/services/api'
+import { api, type ExpenseDocumentHeader, type MaintenanceReminder } from '@/services/api'
 import DocumentPreviewModal from '@/components/expenses/DocumentPreviewModal.vue'
 import RemindersPanel from '@/components/expenses/RemindersPanel.vue'
 import ChargesPanel from '@/components/expenses/ChargesPanel.vue'
@@ -117,6 +117,12 @@ useRefreshHandler(refreshData)
 
 async function onChargesAssigned() {
   await refreshData()
+}
+
+// The reminder edited in its panel is deleted from there: the panel closes and Undo is in the snackbar
+function onDeleteEditedReminder(r: MaintenanceReminder) {
+  showReminderModal.value = false
+  handleDeleteReminder(r)
 }
 
 // The fill-ups panel loads its own data when mounted: remounting it shows what an import added
@@ -278,7 +284,6 @@ function openUploadDocumentModal() {
       @add="openAddReminderModal"
       @edit="openEditReminderModal"
       @complete="openCompleteReminder"
-      @delete="handleDeleteReminder"
       @reload="loadReminders"
     />
 
@@ -388,6 +393,7 @@ function openUploadDocumentModal() {
       :preset="reminderPreset"
       :current-odometer="currentOdometer"
       @saved="loadReminders"
+      @delete="onDeleteEditedReminder"
     />
 
     <CompleteReminderModal

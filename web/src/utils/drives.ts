@@ -1,6 +1,7 @@
 import { intlLocale, t } from '@/i18n'
 import { distanceUnit, formatDistance, kmToDisplayDistance, perDistance } from '@/units'
 import { formatAmount } from '@/currency'
+import { dayParts, monthKey, reportingToday } from '@/utils/reportingTime'
 /** Drive of the "to qualify" toll queue: highway-like (speed heuristic or a toll found by the GPS detection), no toll
  * attached, not reviewed. The server decides (needs_toll_qualification), with the same rule as the queue filter. */
 export function needsTollQualification(d: any) {
@@ -48,7 +49,7 @@ export function formatTripDates(tg: any) {
 // ----- Month navigation (YYYY-MM strings) -----
 
 export function currentYearMonth(now = new Date()) {
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  return monthKey(now)
 }
 
 /** The month `delta` months after (or before, when negative) the given YYYY-MM. */
@@ -77,7 +78,7 @@ const dayOf = (iso: string) => {
 const isoOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 export function todayIso(now: Date = new Date()) {
-  return isoOf(now)
+  return reportingToday(now)
 }
 
 /** The from/to days of the unit containing `anchor` (YYYY-MM-DD). */
@@ -117,14 +118,15 @@ export type PeriodPreset = 'lastMonth' | 'last30' | 'last90' | 'thisYear'
 
 const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-/** The from/to days (YYYY-MM-DD) of a ready-made period, relative to `today`. */
+/** The from/to days (YYYY-MM-DD) of a ready-made period, relative to `today` (the day it is in the reporting timezone). */
 export function presetRange(preset: PeriodPreset, today: Date = new Date()) {
-  const y = today.getFullYear()
-  const m = today.getMonth()
+  const { year: y, month, day } = dayParts(today)
+  const m = month - 1
+  const last = reportingToday(today)
   if (preset === 'lastMonth') return { from: isoDay(new Date(y, m - 1, 1)), to: isoDay(new Date(y, m, 0)) }
-  if (preset === 'thisYear') return { from: `${y}-01-01`, to: isoDay(today) }
+  if (preset === 'thisYear') return { from: `${y}-01-01`, to: last }
   const days = preset === 'last30' ? 29 : 89
-  return { from: isoDay(new Date(y, m, today.getDate() - days)), to: isoDay(today) }
+  return { from: isoDay(new Date(y, m, day - days)), to: last }
 }
 
 export function formatMonthLabel(yearMonth: string) {

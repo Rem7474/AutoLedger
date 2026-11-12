@@ -1,4 +1,5 @@
 import { plottedCostPerKm } from '@/utils/dashboard'
+import { monthKey } from '@/utils/reportingTime'
 
 // A month still running has little distance and a few costs: its cost per distance swings far from the months before
 // and, drawn on the same scale, flattens all of them. It is drawn apart, as a hollow point named "in progress", and the
@@ -6,8 +7,8 @@ import { plottedCostPerKm } from '@/utils/dashboard'
 
 type Month = { month: string; distance_km?: number | null; cost_per_km?: number | null }
 
-/** The key (`YYYY-MM`) of the month a date falls in, in the local time zone. */
-export const monthKeyOf = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+/** The key (`YYYY-MM`) of the month a date falls in, in the reporting timezone. */
+export const monthKeyOf = (d: Date): string => monthKey(d)
 
 export interface CostPerKmSeries {
   /** One value per month, null for a gap and for the month in progress. */
