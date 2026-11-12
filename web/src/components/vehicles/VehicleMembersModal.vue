@@ -6,7 +6,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { useAuthStore } from '@/stores/auth'
 import { api, type VehiclePerson } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
-import { Trash2, RefreshCw, Users, UserPlus, ShieldCheck, LogOut, Star } from '@/icons'
+import { RefreshCw, UserPlus, ShieldCheck, Star } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 
 // Who can access a vehicle: the owner adds members and changes their role, a member can leave.
@@ -156,16 +156,11 @@ async function handleRemoveMember(m: any) {
 </script>
 
 <template>
-  <ModalShell v-model:open="open" size="md" body-class="space-y-6 text-xs">
+  <ModalShell pane v-model:open="open" size="md" body-class="space-y-6 text-xs">
     <template #title>
-      <div class="flex items-center gap-3 min-w-0">
-        <div class="p-2 bg-sky-500/10 text-sky-400 rounded-xl">
-          <Users class="w-5 h-5" aria-hidden="true" />
-        </div>
-        <div class="min-w-0">
-          <h3 class="text-base font-bold text-white">{{ $t('vehicles.vehicleMembersModal.sharingAndAccess') }}</h3>
-          <p class="text-xs text-slate-400 truncate">{{ membersVehicle?.name }}</p>
-        </div>
+      <div class="min-w-0">
+        <h3 class="text-base font-bold text-white">{{ $t('vehicles.vehicleMembersModal.sharingAndAccess') }}</h3>
+        <p class="text-xs text-slate-400 truncate">{{ membersVehicle?.name }}</p>
       </div>
     </template>
 
@@ -308,10 +303,10 @@ async function handleRemoveMember(m: any) {
               <button
                 type="button"
                 @click="handleRemoveMember(m)"
-                class="tap p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
-                :title="$t('vehicles.vehicleMembersModal.removeAccess')" :aria-label="$t('vehicles.vehicleMembersModal.removeAccess')"
+                class="tap-text rounded-lg px-2 text-xs font-semibold text-critical-400 transition-colors hover:bg-critical-500/10 hover:text-critical-300"
+                :aria-label="$t('vehicles.vehicleMembersModal.removeAccess')"
               >
-                <Trash2 class="w-4 h-4" />
+                {{ $t('vehicles.vehicleMembersModal.remove') }}
               </button>
             </template>
 
@@ -320,10 +315,9 @@ async function handleRemoveMember(m: any) {
               <button
                 type="button"
                 @click="handleRemoveMember(m)"
-                class="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors border border-rose-500/20"
+                class="tap-text rounded-lg px-2 text-xs font-semibold text-critical-400 transition-colors hover:bg-critical-500/10 hover:text-critical-300"
               >
-                <LogOut class="w-3.5 h-3.5" />
-                <span>{{ $t('vehicles.vehicleMembersModal.leave') }}</span>
+                {{ $t('vehicles.vehicleMembersModal.leave') }}
               </button>
             </template>
           </div>
@@ -381,10 +375,10 @@ async function handleRemoveMember(m: any) {
               <button
                 type="button"
                 @click="handleDeletePerson(p)"
-                class="tap p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
-                :title="$t('vehicles.vehicleMembersModal.removeDriver')" :aria-label="$t('vehicles.vehicleMembersModal.removeDriver')"
+                class="tap-text rounded-lg px-2 text-xs font-semibold text-critical-400 transition-colors hover:bg-critical-500/10 hover:text-critical-300"
+                :aria-label="$t('vehicles.vehicleMembersModal.removeDriver')"
               >
-                <Trash2 class="w-4 h-4" />
+                {{ $t('vehicles.vehicleMembersModal.remove') }}
               </button>
             </template>
           </div>

@@ -40,8 +40,6 @@ const DIALOGS: Record<string, string> = {
   'components/tires/TireHistoryModal.vue': 'history of a tire',
   'components/manual/OdometerReadingsPanel.vue': 'the reading form is inline on a wide screen, this sheet only exists on a phone',
   'components/expenses/ChargingPlacesModal.vue': 'manager of the places and of their locations',
-  'components/vehicles/VehicleMembersModal.vue': 'manager of the shares and persons of a vehicle',
-  'components/vehicles/VehicleDataSourcesModal.vue': 'connections of a vehicle',
   // forms that are still a dialog
   'components/carpool/CarpoolTripModal.vue': 'the legs table needs the width',
   'components/drives/AddToTripModal.vue': 'picker of a trip for the selected drives',
