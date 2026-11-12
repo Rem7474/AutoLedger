@@ -86,12 +86,12 @@ function sessionKm(s: any): number {
 
     <!-- Life KPI Card -->
     <div class="bg-slate-800 p-4 rounded-2xl space-y-3">
-      <div class="flex items-center justify-between text-xs">
-        <span class="text-slate-400">{{ $t('tires.tireHistoryModal.totalLifetimeMileage') }}</span>
-        <span class="text-base font-bold text-white">
-          {{ formatDistance(selectedTireStats?.total_distance_km || 0) }}
-          <span class="text-xs text-slate-400 font-normal">{{ $t('tires.tireHistoryModal.kmEstimated', { unit: distanceUnit(), estimated_lifespan_km: formatDistanceValue(selectedTire.estimated_lifespan_km || 45000) }) }}</span>
-        </span>
+      <div class="space-y-0.5">
+        <div class="text-xs text-slate-400">{{ $t('tires.tireHistoryModal.totalLifetimeMileage') }}</div>
+        <div class="flex flex-wrap items-baseline gap-x-2">
+          <span class="text-base font-bold text-white">{{ formatDistance(selectedTireStats?.total_distance_km || 0) }}</span>
+          <span class="text-xs text-slate-400">{{ $t('tires.tireHistoryModal.kmEstimated', { unit: distanceUnit(), estimated_lifespan_km: formatDistanceValue(selectedTire.estimated_lifespan_km || 45000) }) }}</span>
+        </div>
       </div>
 
       <TireWearBar thick :pct="selectedTireStats?.life_progress_pct || 0" :condition="selectedTireStats?.condition" />
@@ -196,11 +196,11 @@ function sessionKm(s: any): number {
         >
           <div class="min-w-0 flex-1">
             <div class="truncate text-sm font-bold text-white">{{ positionLabel(s.position) }}</div>
-            <div class="mt-0.5 flex min-w-0 items-center gap-1.5 text-slate-400">
+            <div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-slate-400">
               <StatusLabel class="shrink-0" :tone="s.dismounted_date ? 'neutral' : 'info'">
                 {{ s.dismounted_date ? $t('tires.tireHistoryModal.sessionOver') : $t('tires.tireHistoryModal.currentlyFitted') }}
               </StatusLabel>
-              <span class="truncate">{{ formatDate(s.mounted_date) }}</span>
+              <span>{{ formatDate(s.mounted_date) }}</span>
             </div>
           </div>
           <span class="shrink-0 font-bold text-white">{{ $t('tires.tireHistoryModal.kmDriven', { unit: distanceUnit(), distance_km: formatDistanceValue(sessionKm(s)) }) }}</span>
@@ -231,11 +231,11 @@ function sessionKm(s: any): number {
           :aria-label="$t('tires.tireHistoryModal.editTheReading')"
           @click="emit('edit-log', l)"
         >
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-2">
             <span class="font-bold text-white">{{ l.depth_mm }} mm</span>
-            <span class="truncate text-slate-400">{{ formatDate(l.date) }}</span>
+            <span class="text-slate-400">{{ formatDate(l.date) }}</span>
           </div>
-          <div class="truncate text-slate-400">{{ $t('common.atKm', { unit: distanceUnit(), km: formatDistanceValue(l.odometer) }) }}</div>
+          <div class="text-slate-400">{{ $t('common.atKm', { unit: distanceUnit(), km: formatDistanceValue(l.odometer) }) }}</div>
         </button>
       </div>
     </div>
