@@ -1,5 +1,6 @@
 import { intlLocale, t } from '@/i18n'
 import { distanceUnit, kmToDisplayDistance } from '@/units'
+import { dayKey } from '@/utils/reportingTime'
 export interface LegForm {
   drive_id: string | null
   start_label: string
@@ -39,12 +40,8 @@ export const cents = (v: number | string) => Math.round((Number(v) || 0) * 100)
 export const euros = (c: number) => c / 100
 export function toDateInputString(dateVal: string | Date | null | undefined): string {
   if (!dateVal) return ''
-  const d = new Date(dateVal)
-  if (Number.isNaN(d.getTime())) return ''
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  if (Number.isNaN(new Date(dateVal).getTime())) return ''
+  return dayKey(dateVal)
 }
 
 export function formatDate(dateStr: string) {

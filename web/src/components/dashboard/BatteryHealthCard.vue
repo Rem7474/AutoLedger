@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { intlLocale, t } from '@/i18n'
 import { formatNumber } from '@/utils/numbers'
 import { api } from '@/services/api'
+import { todayIso } from '@/utils/dates'
 import { BatteryCharging, ChevronDown, Trash2 } from '@/icons'
 
 // The battery health of an electric vehicle: the level as a gauge coloured by value, its history as a line,
@@ -16,7 +17,7 @@ interface Health { readings: Reading[]; health_percent?: number; source?: string
 
 const health = ref<Health | null>(null)
 const error = ref('')
-const readingDate = ref(new Date().toISOString().slice(0, 10))
+const readingDate = ref(todayIso())
 const readingPercent = ref('')
 const readingMax = ref('')
 

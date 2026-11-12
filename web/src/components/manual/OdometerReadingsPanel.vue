@@ -25,6 +25,7 @@ import { useSubmit } from '@/composables/useSubmit'
 import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { canRefuel } from '@/utils/vehicles'
+import { todayIso } from '@/utils/dates'
 import { mergeOdometerHistory } from '@/utils/odometerHistory'
 
 const props = defineProps<{
@@ -53,7 +54,7 @@ const isMobile = useIsMobile()
 // On a phone the form is a sheet: it opens for a new reading or an edit, and closes once saved or dismissed
 const formOpen = ref(false)
 const form = ref({
-  date: new Date().toISOString().substring(0, 10),
+  date: todayIso(),
   odometer: '',
   notes: '',
 })
@@ -80,7 +81,7 @@ function resetForm() {
   editingId.value = null
   editingVersion.value = undefined
   form.value = {
-    date: new Date().toISOString().substring(0, 10),
+    date: todayIso(),
     odometer: props.vehicle?.current_odometer ? String(Math.round(props.vehicle.current_odometer)) : '',
     notes: '',
   }
