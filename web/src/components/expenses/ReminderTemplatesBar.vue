@@ -3,7 +3,8 @@ import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { api, type ReminderTemplate } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
-import { Trash2 } from '@/icons'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 
 defineProps<{ hasReminders: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -50,11 +51,22 @@ async function save() {
   }
 }
 
-async function remove() {
-  if (!selected.value) return
-  await api.deleteReminderTemplate(selected.value)
+// The template goes at once and comes back with Undo, the server is asked when that time is over
+function remove() {
+  const template = templates.value.find((tpl) => tpl.id === selected.value)
+  if (!template) return
   selected.value = ''
-  await load()
+  deleteRowsWithUndo({
+    list: templates,
+    items: [template],
+    key: (tpl) => tpl.id,
+    message: t('expenses.remindersPanel.templates.deleted'),
+    remove: (tpl) => api.deleteReminderTemplate(tpl.id),
+    committed: () => void load(),
+    onError: (e) => {
+      error.value = e instanceof Error ? e.message : ''
+    },
+  })
 }
 
 onMounted(load)
@@ -73,9 +85,7 @@ onMounted(load)
         <button type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/20 text-sky-200 border border-sky-500/30 font-semibold disabled:opacity-50" :disabled="!selected" :title="!selected ? $t('expenses.remindersPanel.templates.pickFirst') : undefined" @click="apply">
           {{ $t('expenses.remindersPanel.templates.apply') }}
         </button>
-        <button type="button" class="text-slate-400 hover:text-danger-400 disabled:opacity-40" :disabled="!selected" :title="!selected ? $t('expenses.remindersPanel.templates.pickFirst') : undefined" :aria-label="$t('expenses.remindersPanel.templates.delete')" @click="remove">
-          <Trash2 class="w-4 h-4" />
-        </button>
+        <DetailDeleteButton v-if="selected" :aria-label="$t('expenses.remindersPanel.templates.delete')" @delete="remove" />
       </div>
       <p v-else class="text-slate-400 italic">{{ $t('expenses.remindersPanel.templates.none') }}</p>
       <div v-if="hasReminders" class="flex flex-wrap gap-2 items-center">

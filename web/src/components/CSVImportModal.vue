@@ -7,6 +7,8 @@ import { CSV_COLUMNS, csvTemplate, csvTemplateFilename, csvTemplateTypes, type C
 import { downloadCsv } from '@/utils/csv'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import { profileColumns, profileMapping, type CSVDateOrder, type CSVDecimalSeparator, type CSVExecuteResult, type CSVImportBatch, type CSVImportOptions, type CSVImportProfile, type CSVImportType, type CSVPreviewResult } from '@/services/csvImport'
 import { apiErrorMessage } from '@/services/apiError'
 import { distanceUnit } from '@/units'
@@ -155,13 +157,19 @@ async function saveProfile() {
   }
 }
 
-async function deleteProfile(id: string) {
-  try {
-    await api.deleteImportProfile(id)
-    await loadProfiles()
-  } catch (err: any) {
-    error.value = err.message || t('import.profileDeleteFailed')
-  }
+// The profile goes at once and comes back with Undo, the server is asked when that time is over
+function deleteProfile(profile: CSVImportProfile) {
+  deleteRowsWithUndo({
+    list: profiles,
+    items: [profile],
+    key: (p) => p.id,
+    message: t('import.profileDeleted'),
+    remove: (p) => api.deleteImportProfile(p.id),
+    committed: () => void loadProfiles(),
+    onError: (err: any) => {
+      error.value = err.message || t('import.profileDeleteFailed')
+    },
+  })
 }
 
 function resetFormat() {
@@ -446,7 +454,7 @@ async function handleExecute() {
             <ul v-if="profilesForType.length" class="mt-2 space-y-1">
               <li v-for="p in profilesForType" :key="p.id" class="flex items-center justify-between gap-2 text-slate-400">
                 <span class="truncate">{{ p.name }}</span>
-                <button type="button" @click="deleteProfile(p.id)" class="shrink-0 text-danger-400 hover:text-danger-300">{{ $t('common.delete') }}</button>
+                <DetailDeleteButton class="shrink-0" :aria-label="$t('import.profileDelete', { name: p.name })" @delete="deleteProfile(p)" />
               </li>
             </ul>
           </div>
