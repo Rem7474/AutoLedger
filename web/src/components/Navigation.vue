@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useQuickAddStore } from '@/stores/quickAdd'
 import { useVehicleStore } from '@/stores/vehicle'
-import { LayoutDashboard, Navigation as NavIcon, Activity, Disc, Receipt, Wrench, Car, LogOut, Zap, Scale, ClipboardList, UserRound, Plus } from '@/icons'
+import { LayoutDashboard, Navigation as NavIcon, Activity, Disc, Receipt, Wrench, Car, Garage, LogOut, Zap, Scale, ClipboardList, UserRound, Plus } from '@/icons'
 import { APP_NAME } from '@/brand'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { APP_VERSION } from '@/version'
@@ -28,7 +28,7 @@ const allNavItems = [
   { name: 'maintenance', labelKey: 'shell.nav.maintenance', path: '/maintenance', icon: Wrench },
   { name: 'comparison', labelKey: 'shell.nav.comparison', path: '/comparison', icon: Scale },
   { name: 'vehicle', labelKey: 'shell.nav.vehicle', path: '/vehicle', icon: Car },
-  { name: 'vehicles', labelKey: 'shell.nav.vehicles', path: '/vehicles', icon: Car },
+  { name: 'vehicles', labelKey: 'shell.nav.vehicles', path: '/vehicles', icon: Garage },
   { name: 'account', labelKey: 'shell.nav.account', path: '/account', icon: UserRound },
 ]
 
