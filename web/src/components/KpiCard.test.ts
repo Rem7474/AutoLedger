@@ -52,6 +52,16 @@ describe('KpiCard', () => {
     expect(html).toContain('text-danger-400')
   })
 
+  it('takes a lighter tone with an outline when set inside a panel, and stays a card on the page', async () => {
+    const nested = await render({ label: 'Consommation', value: '16,4', lead: true, nested: true })
+    expect(nested).toContain('bg-slate-800')
+    expect(nested).toContain('border-slate-700')
+    expect(nested).not.toContain('card')
+    const onPage = await render({ label: 'Consommation', value: '16,4', lead: true })
+    expect(onPage).toContain('card')
+    expect(onPage).not.toContain('bg-slate-800')
+  })
+
   it('has a dense variant for the panels inside a disclosure', async () => {
     const html = await render({ label: 'Consumption', value: '15,2', unit: ' kWh/100 km', compact: true })
     expect(html).toContain('bg-slate-800')

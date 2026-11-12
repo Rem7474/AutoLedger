@@ -240,6 +240,7 @@ onBeforeUnmount(() => {
     <div class="space-y-3">
       <KpiCard
         lead
+        nested
         :label="$t('dashboard.energyEfficiencyPanel.actualConsumption')"
         :period="$t('dashboard.energyEfficiencyPanel.wholeHistory')"
         term="atTheWheel"
