@@ -8,6 +8,7 @@ import { useConfirm } from '@/composables/useConfirm'
 import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useMaintenanceChoices } from '@/composables/useMaintenanceChoices'
 import { Bell, Sparkles } from '@/icons'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { reminderPresets, nextOccurrenceDate, maintenanceStartPoint, type ReminderPreset } from '@/utils/expenses'
 import { todayIso } from '@/utils/dates'
@@ -16,7 +17,7 @@ import { useSubmit } from '@/composables/useSubmit'
 
 // Creates a maintenance reminder, or edits `editing`. `preset` pre-fills a new one from a suggestion.
 const props = defineProps<{ vehicleId: string; editing: MaintenanceReminder | null; preset: ReminderPreset | null; currentOdometer: number }>()
-const emit = defineEmits<{ saved: [] }>()
+const emit = defineEmits<{ saved: []; delete: [reminder: MaintenanceReminder] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
 const { explainStaleWrite } = useStaleWrite()
@@ -375,6 +376,7 @@ const handleSaveReminder = () => runOnce(handleSaveReminderAction)
       </div>
     </form>
     <template #footer>
+      <DetailDeleteButton v-if="editing" class="mr-auto" :aria-label="$t('expenses.remindersPanel.deleteThisReminder')" @delete="emit('delete', editing)" />
       <button type="button" @click="open = false" class="btn btn-lg btn-secondary">
         {{ $t('common.cancel') }}
       </button>

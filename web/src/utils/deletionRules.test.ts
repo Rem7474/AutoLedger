@@ -41,4 +41,15 @@ describe('deletion rules', () => {
       .filter((rel) => /\bshow(?:Confirm|Choice)\s*\(/.test(readFileSync(join(root, rel), 'utf8')))
     expect(asking.sort()).toEqual(Object.keys(QUESTIONS_KEPT).sort())
   })
+
+  // The delete of a record is the quiet red text button at the bottom of its detail (`DetailDeleteButton`), never an
+  // icon-only button in the header actions of a modal or panel.
+  it('keeps a trash icon out of the header actions of a modal', () => {
+    const root = join(__dirname, '..')
+    const offenders = sources(root)
+      .filter((file) => file.endsWith('.vue'))
+      .filter((file) => [...readFileSync(file, 'utf8').matchAll(/<template #actions>([\s\S]*?)<\/template>/g)].some((m) => /Trash2/.test(m[1])))
+      .map((file) => relative(root, file))
+    expect(offenders).toEqual([])
+  })
 })

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import ModalShell from '@/components/ModalShell.vue'
 import { intlLocale } from '@/i18n'
-import { Archive, ClipboardPaste, Copy, Edit2, History, Pencil, Plus, Ruler, Shuffle, Trash2, Zap } from '@/icons'
+import { Archive, ClipboardPaste, Copy, Edit2, History, Pencil, Plus, Ruler, Shuffle, Zap } from '@/icons'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import { useVehicleStore } from '@/stores/vehicle'
 import { apiMessageText } from '@/services/apiError'
 import { formatAmount } from '@/currency'
@@ -71,9 +72,6 @@ const open = defineModel<boolean>('open', { required: true })
         :title="$t('tires.tireHistoryModal.scrapWornPuncturedSold')" :aria-label="$t('tires.tireHistoryModal.scrapWornPuncturedSold')"
       >
         <Archive class="w-4 h-4" />
-      </button>
-      <button @click="emit('delete-tire')" class="tap p-1.5 ml-1.5 bg-slate-800 hover:bg-danger-900/40 text-slate-400 hover:text-danger-400 rounded-lg transition-colors" :title="$t('tires.tireHistoryModal.deleteEntryError')" :aria-label="$t('tires.tireHistoryModal.deleteEntryError')">
-        <Trash2 class="w-4 h-4" />
       </button>
     </template>
 
@@ -221,13 +219,7 @@ const open = defineModel<boolean>('open', { required: true })
               >
                 <Edit2 class="w-3.5 h-3.5" />
               </button>
-              <button
-                @click="emit('delete-session', s)"
-                class="tap p-1 text-slate-400 hover:text-rose-400 rounded"
-                :title="$t('tires.tireHistoryModal.deleteTheSession')" :aria-label="$t('tires.tireHistoryModal.deleteTheSession')"
-              >
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
+              <DetailDeleteButton :aria-label="$t('tires.tireHistoryModal.deleteTheSession')" @delete="emit('delete-session', s)" />
             </div>
           </div>
 
@@ -286,15 +278,14 @@ const open = defineModel<boolean>('open', { required: true })
               <button @click="emit('edit-log', l)" class="tap text-slate-400 hover:text-success-400" :title="$t('tires.tireHistoryModal.editTheReading')" :aria-label="$t('tires.tireHistoryModal.editTheReading')">
                 <Pencil class="w-3 h-3" />
               </button>
-              <button @click="emit('delete-log', l)" class="tap text-slate-400 hover:text-danger-400" :title="$t('tires.tireHistoryModal.deleteTheReading')" :aria-label="$t('tires.tireHistoryModal.deleteTheReading')">
-                <Trash2 class="w-3 h-3" />
-              </button>
+              <DetailDeleteButton :aria-label="$t('tires.tireHistoryModal.deleteTheReading')" @delete="emit('delete-log', l)" />
             </span>
           </div>
         </div>
       </div>
     </div>
     <template #footer>
+      <DetailDeleteButton class="mr-auto" :aria-label="$t('tires.tireHistoryModal.deleteEntryError')" @delete="emit('delete-tire')" />
       <button
         type="button"
         @click="open = false"

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { MapPin, Trash2 } from '@/icons'
+import { MapPin } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import { api } from '@/services/api'
 import { apiErrorMessage } from '@/services/apiError'
 import { useConfirm } from '@/composables/useConfirm'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
 import { useSubmit } from '@/composables/useSubmit'
 import { formatNumber } from '@/utils/numbers'
@@ -129,16 +130,7 @@ function removePlace(place: ChargingPlace) {
       <ul class="space-y-1.5">
         <li v-for="p in places" :key="p.id" class="flex items-center justify-between gap-2 p-2 bg-slate-800/40 border border-slate-700/40 rounded-xl text-xs">
           <span class="min-w-0 truncate"><span class="font-semibold text-white">{{ p.name }}</span> <span class="text-slate-400">· {{ $t(placeCategoryKey(p.category)) }}</span></span>
-          <button
-            v-if="canEdit"
-            type="button"
-            class="tap p-1.5 text-rose-400/80 hover:text-rose-300 rounded-lg"
-            :title="$t('expenses.chargingPlaces.delete')"
-            :aria-label="$t('expenses.chargingPlaces.delete')"
-            @click="removePlace(p)"
-          >
-            <Trash2 class="w-3.5 h-3.5" />
-          </button>
+          <DetailDeleteButton :can-edit="canEdit" :aria-label="$t('expenses.chargingPlaces.delete')" @delete="removePlace(p)" />
         </li>
       </ul>
       <form v-if="canEdit" class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end" @submit.prevent="addPlace">
