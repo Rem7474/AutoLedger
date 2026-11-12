@@ -8,7 +8,8 @@ import ActionMenu from '@/components/ActionMenu.vue'
 import CardOpenButton from '@/components/CardOpenButton.vue'
 import { api } from '@/services/api'
 import { Car, Plus, Trash2, Edit2, CheckCircle2, AlertCircle, X, Gauge, Link2, FileText, Zap, Users, Pencil, Database, Check } from '@/icons'
-import { canCharge, hasEnergyEstimate, isElectricOnly, ownershipSummary, roleLabel } from '@/utils/vehicles'
+import { capabilitiesOf } from '@/utils/capabilities'
+import { hasEnergyEstimate, ownershipSummary, roleLabel } from '@/utils/vehicles'
 
 // One vehicle of the list, with its contract summary and a TeslaMate connection test of its own
 const props = defineProps<{ v: any; ownership: any | null }>()
@@ -130,7 +131,7 @@ function clearCardTestResult() {
         <dd class="mt-0.5 text-sm font-semibold text-slate-200">{{ $t(`vehicles.powertrains.${v.powertrain}`) }}</dd>
       </div>
 
-      <div v-if="canCharge(v.powertrain)">
+      <div v-if="capabilitiesOf(v).charges">
         <dt class="text-slate-400">{{ $t('vehicles.vehicleCard.teslamateConnection') }}</dt>
         <dd class="mt-0.5 text-sm font-semibold">
           <span v-if="v.role !== 'OWNER'" class="text-slate-400">{{ $t('vehicles.vehicleCard.managedByAdmin') }}</span>
@@ -155,7 +156,7 @@ function clearCardTestResult() {
         </dd>
       </div>
 
-      <div v-if="isElectricOnly(v.powertrain)">
+      <div v-if="capabilitiesOf(v).charges && !capabilitiesOf(v).refuels">
         <dt class="text-slate-400">{{ $t('vehicles.vehicleCard.estimatedEnergy') }}</dt>
         <dd v-if="hasEnergyEstimate(v)" class="mt-0.5 flex items-center gap-1 text-xs font-semibold text-slate-200">
           <Zap class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />

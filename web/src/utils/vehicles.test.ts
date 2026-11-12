@@ -8,12 +8,9 @@ import {
   copiedConnection,
   canLinkTeslaMate,
   canRefuel,
-  isElectricOnly,
-  isFuelOnly,
   emptyOwnership,
   emptyVehicleForm,
   hasEnergyEstimate,
-  hasTeslaMate,
   isLeaseType,
   isOwnedPhase,
   isPurchaseType,
@@ -92,25 +89,6 @@ describe('vehicle form', () => {
     expect(f.current_odometer).toBe(0)
     expect(f.teslamate_car_id).toBe(1)
     expect(f.teslamate_auth_type).toBe('NONE')
-  })
-})
-
-describe('hasTeslaMate', () => {
-  it('needs an electric vehicle with a teslamateapi URL', () => {
-    expect(hasTeslaMate({ powertrain: 'EV', teslamate_api_url: 'http://tm:8080' })).toBe(true)
-    expect(hasTeslaMate({ teslamate_api_url: 'http://tm:8080' })).toBe(true)
-  })
-
-  it('is off without a usable URL', () => {
-    expect(hasTeslaMate({ powertrain: 'EV' })).toBe(false)
-    expect(hasTeslaMate({ powertrain: 'EV', teslamate_api_url: null })).toBe(false)
-    expect(hasTeslaMate({ powertrain: 'EV', teslamate_api_url: '   ' })).toBe(false)
-  })
-
-  it('is off for a combustion vehicle and when there is no vehicle', () => {
-    expect(hasTeslaMate({ powertrain: 'ICE', teslamate_api_url: 'http://tm:8080' })).toBe(false)
-    expect(hasTeslaMate(null)).toBe(false)
-    expect(hasTeslaMate(undefined)).toBe(false)
   })
 })
 
@@ -254,7 +232,6 @@ describe('powertrain capabilities', () => {
     expect([canCharge(undefined), canRefuel(undefined)]).toEqual([true, false])
     expect([canCharge('PHEV'), canRefuel('PHEV'), canLinkTeslaMate('PHEV')]).toEqual([true, true, true])
     expect([canCharge('REEV'), canRefuel('REEV')]).toEqual([true, true])
-    expect(['EV', 'ICE', 'PHEV'].map((p) => [isElectricOnly(p), isFuelOnly(p)])).toEqual([[true, false], [false, true], [false, false]])
   })
 })
 

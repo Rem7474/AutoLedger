@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
+import { capabilitiesOf } from './capabilities'
 import { csvTemplate, csvTemplateFilename, csvTemplateTypes, webhookSnippet } from './dataSources'
 
 describe('csvTemplateTypes', () => {
   it('offers charges and drives to an electric vehicle, fill-ups to a combustion one', () => {
-    expect(csvTemplateTypes('EV')).toEqual(['CHARGES', 'DRIVES', 'ODOMETER'])
-    expect(csvTemplateTypes('ICE')).toEqual(['FUEL', 'ODOMETER'])
-    expect(csvTemplateTypes('PHEV')).toEqual(['CHARGES', 'DRIVES', 'FUEL', 'ODOMETER'])
+    expect(csvTemplateTypes(capabilitiesOf({ powertrain: 'EV' }))).toEqual(['CHARGES', 'DRIVES', 'ODOMETER'])
+    expect(csvTemplateTypes(capabilitiesOf({ powertrain: 'ICE' }))).toEqual(['FUEL', 'ODOMETER'])
+    expect(csvTemplateTypes(capabilitiesOf({ powertrain: 'PHEV' }))).toEqual(['CHARGES', 'DRIVES', 'FUEL', 'ODOMETER'])
+  })
+  it('offers trips to a combustion vehicle a source feeds', () => {
+    const ice = capabilitiesOf({ powertrain: 'ICE' })
+    expect(csvTemplateTypes({ ...ice, drives: true })).toEqual(['DRIVES', 'FUEL', 'ODOMETER'])
   })
 })
 

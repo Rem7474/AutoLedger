@@ -24,7 +24,7 @@ import { distanceUnit, formatDistance, formatDistanceValue } from '@/units'
 import { useSubmit } from '@/composables/useSubmit'
 import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
-import { canRefuel } from '@/utils/vehicles'
+import { capabilitiesOf } from '@/utils/capabilities'
 import { mergeOdometerHistory } from '@/utils/odometerHistory'
 
 const props = defineProps<{
@@ -62,7 +62,7 @@ const form = ref({
 async function load(silent = false) {
   if (!silent) loading.value = true
   try {
-    const refuels = canRefuel(props.vehicle.powertrain)
+    const refuels = capabilitiesOf(props.vehicle).refuels
     const [list, fuel] = await Promise.all([
       api.getOdometerCheckpoints(props.vehicle.id),
       refuels ? api.getFuelLogs(props.vehicle.id).catch((err: any) => { console.error('Failed to load fill-ups', err); return null }) : Promise.resolve(null),

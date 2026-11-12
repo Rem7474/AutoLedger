@@ -19,7 +19,7 @@ import { api } from '@/services/api'
 import { currencySymbol } from '@/currency'
 import { CURRENCIES } from '@/utils/expenses'
 import { comparisonCurrency, canCompareCurrencies } from '@/utils/comparisonCurrency'
-import { canCharge } from '@/utils/vehicles'
+import { capabilitiesOf } from '@/utils/capabilities'
 import { scenarioSide } from '@/utils/comparisonSide'
 import ComparisonCompare from '@/components/comparison/ComparisonCompare.vue'
 import ComparisonResult from '@/components/comparison/ComparisonResult.vue'
@@ -67,7 +67,7 @@ const emptyForm = () => ({ ...emptyComparisonForm(canCompareTrackedVehicle.value
 const form = reactive(emptyForm())
 const showAdvanced = ref(false)
 const formVehicle = computed(() => comparisonReferenceVehicle(form.vehicle_id, vehicleStore.activeVehicle, vehicleStore.vehicles))
-const canCompareFormVehicle = computed(() => !!formVehicle.value && canCharge(formVehicle.value.powertrain))
+const canCompareFormVehicle = computed(() => !!formVehicle.value && capabilitiesOf(formVehicle.value).charges)
 
 const isRetro = computed(() => form.mode === 'RETROSPECTIVE')
 
