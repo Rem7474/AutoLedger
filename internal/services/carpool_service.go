@@ -131,21 +131,29 @@ func (r *UnitRates) FuelLitres(distanceKm float64) float64 {
 // tolls (insurance is a fixed daily cost allocated separately via AllocateInsuranceCosts; tolls
 // are direct expenses looked up per drive).
 type CostComponents struct {
+	// ElectricityCost and FuelCost are the two parts of the energy cost: a vehicle that charges only has the first,
+	// one that burns fuel only the second (a hybrid may carry both). EnergyCost is their sum.
 	ElectricityCost money.Cents
+	FuelCost        money.Cents
 	TiresCost       money.Cents
 	MaintenanceCost money.Cents
 }
 
+// EnergyCost is the whole energy cost, whatever the energy.
+func (c CostComponents) EnergyCost() money.Cents { return c.ElectricityCost + c.FuelCost }
+
 // ComputeCostComponents applies a vehicle's unit rates to a given distance/energy, shared by the
 // drive list and the carpool cost estimate so the two never drift apart.
 func ComputeCostComponents(rates *UnitRates, distanceKm, kwh float64) CostComponents {
-	energy := money.FromFloat(kwh * rates.ElectricityPerKwh)
+	var electricity, fuel money.Cents
 	if rates.FuelOnly {
-		// ElectricityCost carries the energy cost of every vehicle: the fuel cost for one that burns fuel
-		energy = money.FromFloat(distanceKm * rates.FuelCostPerKm())
+		fuel = money.FromFloat(distanceKm * rates.FuelCostPerKm())
+	} else {
+		electricity = money.FromFloat(kwh * rates.ElectricityPerKwh)
 	}
 	return CostComponents{
-		ElectricityCost: energy,
+		ElectricityCost: electricity,
+		FuelCost:        fuel,
 		TiresCost:       money.FromFloat(distanceKm * rates.TiresPerKm),
 		MaintenanceCost: money.FromFloat(distanceKm * rates.MaintenancePerKm),
 	}
@@ -154,8 +162,14 @@ func ComputeCostComponents(rates *UnitRates, distanceKm, kwh float64) CostCompon
 // DriveCost is the cost of one drive as the drive list shows it: the vehicle's unit rates applied to the drive, its
 // share of the insurance and the tolls allocated to it.
 type DriveCost struct {
+	// EnergyCost is the whole energy cost, the sum of its electric part (ElectricityCost, from ElectricityKwh) and its
+	// fuel part (FuelCost, from FuelLitres).
+	EnergyCost      money.Cents
 	ElectricityCost money.Cents
-	ElectricityKwh  float64
+	FuelCost        money.Cents
+	// FuelOnly marks a drive of a vehicle that burns fuel only.
+	FuelOnly       bool
+	ElectricityKwh float64
 	// FuelLitres is the fuel of a fuel-only vehicle's drive, derived from its fill-ups (0: unknown).
 	FuelLitres      float64
 	EnergySource    string
@@ -177,14 +191,16 @@ func ComputeDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.C
 	kwh, source := DriveEnergyKwh(d.Distance(), d.EnergyConsumedKwh, d.ConsumptionKwh100km)
 	components := ComputeCostComponents(rates, d.Distance(), kwh)
 	return DriveCost{
+		EnergyCost:      components.EnergyCost(),
 		ElectricityCost: components.ElectricityCost,
+		FuelCost:        components.FuelCost,
 		ElectricityKwh:  kwh,
 		EnergySource:    source,
 		TiresCost:       components.TiresCost,
 		MaintenanceCost: components.MaintenanceCost,
 		InsuranceCost:   insurance,
 		TollsCost:       tolls,
-		TotalCost:       components.ElectricityCost + components.TiresCost + components.MaintenanceCost + insurance + tolls,
+		TotalCost:       components.EnergyCost() + components.TiresCost + components.MaintenanceCost + insurance + tolls,
 		HasEstimates:    source == EnergySourceDefault || rates.HasUnknownRate(),
 	}
 }
@@ -198,14 +214,17 @@ func fuelDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.Cent
 		source = EnergySourceFuel
 	}
 	return DriveCost{
+		EnergyCost:      components.EnergyCost(),
 		ElectricityCost: components.ElectricityCost,
+		FuelCost:        components.FuelCost,
+		FuelOnly:        true,
 		FuelLitres:      rates.FuelLitres(d.Distance()),
 		EnergySource:    source,
 		TiresCost:       components.TiresCost,
 		MaintenanceCost: components.MaintenanceCost,
 		InsuranceCost:   insurance,
 		TollsCost:       tolls,
-		TotalCost:       components.ElectricityCost + components.TiresCost + components.MaintenanceCost + insurance + tolls,
+		TotalCost:       components.EnergyCost() + components.TiresCost + components.MaintenanceCost + insurance + tolls,
 		HasEstimates:    rates.HasUnknownRate(),
 	}
 }
@@ -270,13 +289,16 @@ func (s *CarpoolService) EstimateCosts(ctx context.Context, vehicleID string, dr
 	energySource := EnergySourceMeasured
 	costLeg := func(rates *UnitRates, distance, kwh float64) models.CarpoolLeg {
 		c := ComputeCostComponents(rates, distance, kwh)
-		return models.CarpoolLeg{
+		leg := models.CarpoolLeg{
 			DistanceKm:      math.Round(distance*100) / 100,
-			ElectricityCost: c.ElectricityCost,
+			EnergyCost:      c.EnergyCost(),
+			FuelCost:        c.FuelCost,
 			TiresCost:       c.TiresCost,
 			MaintenanceCost: c.MaintenanceCost,
 			InsuranceCost:   money.FromFloat(distance * rates.InsurancePerKm),
 		}
+		leg.SyncElectricity()
+		return leg
 	}
 
 	if len(drives) > 0 {
@@ -347,7 +369,8 @@ func (s *CarpoolService) EstimateCosts(ctx context.Context, vehicleID string, dr
 		legs[i].OrderIndex = i
 		legs[i].TotalCost = legs[i].Total()
 		est.DistanceKm += legs[i].DistanceKm
-		est.ElectricityCost += legs[i].ElectricityCost
+		est.EnergyCost += legs[i].EnergyCost
+		est.FuelCost += legs[i].FuelCost
 		est.TollsCost += legs[i].TollsCost
 		est.TiresCost += legs[i].TiresCost
 		est.MaintenanceCost += legs[i].MaintenanceCost
@@ -357,14 +380,15 @@ func (s *CarpoolService) EstimateCosts(ctx context.Context, vehicleID string, dr
 	if len(drives) > 0 && est.DistanceKm > 0 && (rates.MonthlyInsuranceCost > 0 || rates.DailyInsuranceCost > 0) {
 		est.InsuranceRatePerKm = round3(est.InsuranceCost.Float() / est.DistanceKm)
 	}
-	est.TotalCost = est.ElectricityCost + est.TollsCost + est.TiresCost + est.MaintenanceCost + est.InsuranceCost
+	est.ElectricityCost = est.EnergyCost - est.FuelCost
+	est.TotalCost = est.EnergyCost + est.TollsCost + est.TiresCost + est.MaintenanceCost + est.InsuranceCost
 	return est, nil
 }
 
 // legCosts is the cost of a drive as the categories of a carpool leg (a drive has no "other" cost).
 func legCosts(c DriveCost) models.CarpoolLegCosts {
 	return models.CarpoolLegCosts{
-		ElectricityCost: c.ElectricityCost, TollsCost: c.TollsCost, TiresCost: c.TiresCost,
+		EnergyCost: c.EnergyCost, FuelCost: c.FuelCost, ElectricityCost: c.ElectricityCost, TollsCost: c.TollsCost, TiresCost: c.TiresCost,
 		MaintenanceCost: c.MaintenanceCost, InsuranceCost: c.InsuranceCost,
 	}
 }
@@ -648,7 +672,8 @@ func (s *CarpoolService) RecalculateTrip(ctx context.Context, vehicleID string, 
 		if err != nil {
 			return nil, err
 		}
-		trip.Legs[0].ElectricityCost = est.Legs[0].ElectricityCost
+		trip.Legs[0].EnergyCost, trip.Legs[0].FuelCost = est.Legs[0].EnergyCost, est.Legs[0].FuelCost
+		trip.Legs[0].SyncElectricity()
 		trip.Legs[0].TiresCost = est.Legs[0].TiresCost
 		trip.Legs[0].MaintenanceCost = est.Legs[0].MaintenanceCost
 		trip.Legs[0].InsuranceCost = est.Legs[0].InsuranceCost

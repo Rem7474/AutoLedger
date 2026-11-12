@@ -75,7 +75,7 @@ func TestManualDriveOnCombustionVehicleCarriesFuelNotKwh(t *testing.T) {
 	var l listed
 	do(http.MethodGet, "/vehicles/"+v.ID+"/drives", "", http.StatusOK, &l)
 	c := l.Drives[0].Costs
-	if !c.FuelOnly || c.FuelLiters != nil || c.EnergySource != services.EnergySourceUnknown || c.ElectricityCost != 0 || c.ElectricityKwh != 0 || !c.HasEstimates {
+	if !c.FuelOnly || c.FuelLiters != nil || c.EnergySource != services.EnergySourceUnknown || c.EnergyCost != 0 || c.FuelCost != 0 || c.ElectricityCost != 0 || c.ElectricityKwh != 0 || !c.HasEstimates {
 		t.Fatalf("without fill-ups the fuel is unknown: %+v", c)
 	}
 
@@ -94,8 +94,33 @@ func TestManualDriveOnCombustionVehicleCarriesFuelNotKwh(t *testing.T) {
 	if c.FuelLiters == nil || *c.FuelLiters != 6.4 || c.FuelRatePerLiter != 1.5 || c.EnergySource != services.EnergySourceFuel || c.ElectricityKwh != 0 {
 		t.Fatalf("80 km at 8 L/100 km and 1.5 EUR/L: %+v", c)
 	}
-	if c.ElectricityCost != money.FromFloat(9.6) {
-		t.Fatalf("fuel cost: got %v, want 9.60", c.ElectricityCost)
+	if c.EnergyCost != money.FromFloat(9.6) || c.FuelCost != money.FromFloat(9.6) || c.ElectricityCost != 0 {
+		t.Fatalf("energy cost is the fuel cost, no electric part: energy %v fuel %v electricity %v, want 9.60 / 9.60 / 0", c.EnergyCost, c.FuelCost, c.ElectricityCost)
+	}
+
+	// The fuel figures are those of the drive date: a drive before the first fill-up pair is unknown, and a fill-up
+	// entered afterwards moves the later drives only.
+	var early, late models.Drive
+	do(http.MethodPost, "/vehicles/"+v.ID+"/drives", `{"start_time":"2026-07-01T08:00:00Z","distance_km":100}`, http.StatusCreated, &early)
+	odo3, l3 := 2000.0, 50.0
+	if err := repo.CreateFuelLog(ctx, &models.FuelLog{VehicleID: v.ID, Date: time.Date(2026, 9, 15, 9, 0, 0, 0, time.UTC), Odometer: &odo3, Amount: money.FromFloat(120), Liters: &l3, IsFullTank: true}); err != nil {
+		t.Fatal(err)
+	}
+	do(http.MethodPost, "/vehicles/"+v.ID+"/drives", `{"start_time":"2026-10-01T08:00:00Z","distance_km":100}`, http.StatusCreated, &late)
+	do(http.MethodGet, "/vehicles/"+v.ID+"/drives", "", http.StatusOK, &l)
+	byID := map[string]DriveCostBreakdown{}
+	for _, d := range l.Drives {
+		byID[d.ID] = d.Costs
+	}
+	if c := byID[created.ID]; c.FuelLiters == nil || *c.FuelLiters != 6.4 || c.FuelRatePerLiter != 1.5 || c.EnergyCost != money.FromFloat(9.6) {
+		t.Errorf("a fill-up after the drive does not move its cost: %+v", c)
+	}
+	if c := byID[early.ID]; c.FuelLiters != nil || c.EnergyCost != 0 || c.EnergySource != services.EnergySourceUnknown {
+		t.Errorf("before any fill-up pair the fuel is unknown: %+v", c)
+	}
+	// (40 + 50) L over 1000 km: 9 L/100 km; (30 + 60 + 120) EUR over 110 L: 1.909 EUR/L
+	if c := byID[late.ID]; c.FuelLiters == nil || *c.FuelLiters != 9 || c.FuelRatePerLiter != 1.909 {
+		t.Errorf("a later drive sees every fill-up before it: %+v", c)
 	}
 }
 

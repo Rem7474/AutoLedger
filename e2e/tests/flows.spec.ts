@@ -704,7 +704,7 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
   await dialog.locator('#leg-start-0').fill('Lyon')
   await dialog.locator('#leg-end-0').fill('Annecy')
   await dialog.locator('#leg-distance-0').fill('100')
-  await dialog.locator('#leg-electricity_cost-0').fill('20')
+  await dialog.locator('#leg-energy_cost-0').fill('20')
   await dialog.locator('#leg-tolls_cost-0').fill('10')
 
   // 30 of actual cost shared between the driver and one passenger: the fair share is 15
@@ -806,7 +806,7 @@ test('carpools are listed 30 at a time and the totals cover all of them', async 
     const day = String(28 - Math.floor(i / 2)).padStart(2, '0')
     const res = await request.post(`/api/vehicles/${ev.id}/carpools`, {
       headers,
-      data: { title: `E2E paged ${String(i).padStart(2, '0')}`, date: `2098-01-${day}`, legs: [{ distance_km: 10, electricity_cost: 1 }], passengers: [{ passenger_name: 'Paged', seats: 1, amount_paid: 0.5 }] },
+      data: { title: `E2E paged ${String(i).padStart(2, '0')}`, date: `2098-01-${day}`, legs: [{ distance_km: 10, energy_cost: 1 }], passengers: [{ passenger_name: 'Paged', seats: 1, amount_paid: 0.5 }] },
     })
     expect(res.ok()).toBeTruthy()
   }
@@ -835,7 +835,7 @@ test('the carpools open on the current month and follow the period bar', async (
   const title = `E2E dated ${Date.now()}`
   const created = await request.post(`/api/vehicles/${ev.id}/carpools`, {
     headers,
-    data: { title, date: '2019-05-10', legs: [{ distance_km: 10, electricity_cost: 1 }], passengers: [{ passenger_name: 'Old', seats: 1, amount_paid: 0.5 }] },
+    data: { title, date: '2019-05-10', legs: [{ distance_km: 10, energy_cost: 1 }], passengers: [{ passenger_name: 'Old', seats: 1, amount_paid: 0.5 }] },
   })
   expect(created.ok()).toBeTruthy()
   const id = (await created.json()).id
@@ -1249,7 +1249,7 @@ test('a combustion vehicle with no trip adds one by hand, reads it in fuel and s
     await carpool.getByRole('button', { name: /^Leg 1/ }).click()
     await expect(carpool.getByText('Fuel (€)').first()).toBeVisible()
     await expect(carpool.getByText('Electricity (€)')).toHaveCount(0)
-    await carpool.locator('#leg-electricity_cost-0').fill('6')
+    await carpool.locator('#leg-energy_cost-0').fill('6')
     await carpool.getByRole('button', { name: 'Exact amount' }).click()
     await carpool.getByRole('button', { name: 'Save', exact: true }).click()
     await expect(carpool).toHaveCount(0)

@@ -12,8 +12,8 @@ func TestIntegrationCarpoolNamesThePassengersAndTheirStops(t *testing.T) {
 	trip := models.CarpoolTripWithPassengers{
 		CarpoolTrip: models.CarpoolTrip{Title: "Weekend", Date: time.Date(2026, 5, 2, 8, 0, 0, 0, time.UTC), DistanceKm: 300, TotalCost: 3000, TotalRevenue: 1800, NetCost: 1200, Notes: label("  ")},
 		Legs: []models.CarpoolLeg{
-			{OrderIndex: 0, StartLabel: label("Lyon"), EndLabel: label("45.7, 4.8"), DistanceKm: 150, ElectricityCost: 1500},
-			{OrderIndex: 1, StartLabel: label("45.7, 4.8"), EndLabel: label("Paris"), DistanceKm: 150, ElectricityCost: 1500},
+			{OrderIndex: 0, StartLabel: label("Lyon"), EndLabel: label("45.7, 4.8"), DistanceKm: 150, EnergyCost: 1500},
+			{OrderIndex: 1, StartLabel: label("45.7, 4.8"), EndLabel: label("Paris"), DistanceKm: 150, EnergyCost: 1500},
 		},
 		Passengers: []models.CarpoolPassenger{
 			{PassengerName: "Alice", Seats: 1, BoardStopIndex: 0, AlightStopIndex: 2, AmountPaid: 1800, CostShare: 1500, Balance: 300},

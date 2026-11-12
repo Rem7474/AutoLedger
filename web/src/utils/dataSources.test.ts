@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { capabilitiesOf } from './capabilities'
-import { csvColumns, csvTemplate, csvTemplateFilename, csvTemplateTypes, webhookSnippet } from './dataSources'
+import { csvColumns, csvTemplate, csvTemplateForPowertrain, csvTemplateFilename, csvTemplateTypes, webhookSnippet } from './dataSources'
 
 describe('csvTemplateTypes', () => {
   it('offers charges and drives to an electric vehicle, drives and fill-ups to a combustion one', () => {
@@ -15,6 +15,12 @@ describe('csvTemplateTypes', () => {
     expect(fuel.rows[0]).toHaveLength(fuel.headers.length)
     expect(csvColumns('DRIVES', 'FUEL').optional).not.toContain('kwh')
     expect(csvColumns('DRIVES', 'ELECTRIC').optional).toContain('kwh')
+  })
+  it('picks the energy from the powertrain the onboarding wizard knows', () => {
+    expect(csvTemplateForPowertrain('DRIVES', 'en', 'ICE').headers).not.toContain('kwh')
+    for (const powertrain of ['EV', 'PHEV', 'REEV'] as const) {
+      expect(csvTemplateForPowertrain('DRIVES', 'en', powertrain).headers).toContain('kwh')
+    }
   })
 })
 

@@ -139,7 +139,7 @@
   "destination": "Arrivée",
   "passenger": "Passager {n}",
   "costFields": {
-    "electricity": "Électricité",
+    "energy": "Énergie",
     "tolls": "Péages",
     "tires": "Pneus",
     "maintenance": "Entretien",

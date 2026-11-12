@@ -26,7 +26,7 @@ const props = defineProps<{
 const emit = defineEmits<{ recalculate: []; 'restore-all': []; 'add-leg': []; estimate: [index: number]; remove: [index: number]; 'update:followDrives': [value: boolean] }>()
 // The energy cost of a combustion vehicle is its fuel
 const fuelEnergy = computed(() => energyKind(useVehicleStore().capabilities) === 'FUEL')
-const costLabel = (label: string) => (label === 'electricity' && fuelEnergy.value ? 'fuel' : label)
+const costLabel = (label: string) => (label === 'energy' && fuelEnergy.value ? 'fuel' : label)
 const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
 const linked = computed(() => props.legs.some((l) => !!l.drive_id))
 // Legs whose state was toggled by the user: a drive leg opens, a manual leg closes

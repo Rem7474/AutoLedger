@@ -71,13 +71,13 @@ func (r *Repository) saveCarpoolTrip(ctx context.Context, trip *models.CarpoolTr
 			INSERT INTO carpool_trips (
 				vehicle_id, drive_id, trip_group_id, title, date, distance_km,
 				electricity_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost,
-				total_cost, total_revenue, net_cost, notes, costs_frozen_at
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+				total_cost, total_revenue, net_cost, notes, costs_frozen_at, energy_cost, fuel_cost
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
 			RETURNING id, created_at, updated_at, version;
 		`,
 			trip.VehicleID, trip.DriveID, trip.TripGroupID, trip.Title, trip.Date, trip.DistanceKm,
 			trip.ElectricityCost, trip.TollsCost, trip.TiresCost, trip.MaintenanceCost, trip.InsuranceCost, trip.OtherCost,
-			trip.TotalCost, trip.TotalRevenue, trip.NetCost, trip.Notes, trip.CostsFrozenAt,
+			trip.TotalCost, trip.TotalRevenue, trip.NetCost, trip.Notes, trip.CostsFrozenAt, trip.EnergyCost, trip.FuelCost,
 		).Scan(&trip.ID, &trip.CreatedAt, &trip.UpdatedAt, &trip.Version)
 	} else {
 		err = tx.QueryRow(ctx, `
@@ -86,14 +86,15 @@ func (r *Repository) saveCarpoolTrip(ctx context.Context, trip *models.CarpoolTr
 			    electricity_cost = $6, tolls_cost = $7, tires_cost = $8, maintenance_cost = $9,
 			    insurance_cost = $10, other_cost = $11, total_cost = $12, total_revenue = $13,
 			    net_cost = $14, notes = $15, updated_at = NOW(), version = version + 1,
-			    costs_frozen_at = CASE WHEN $18::timestamptz IS NULL THEN NULL ELSE COALESCE(costs_frozen_at, $18::timestamptz) END
+			    costs_frozen_at = CASE WHEN $18::timestamptz IS NULL THEN NULL ELSE COALESCE(costs_frozen_at, $18::timestamptz) END,
+			    energy_cost = $20, fuel_cost = $21
 			WHERE id::text = $16 AND vehicle_id = $17 AND ($19::bigint IS NULL OR version = $19::bigint)
 			RETURNING created_at, updated_at, costs_frozen_at, version;
 		`,
 			trip.DriveID, trip.TripGroupID, trip.Title, trip.Date, trip.DistanceKm,
 			trip.ElectricityCost, trip.TollsCost, trip.TiresCost, trip.MaintenanceCost,
 			trip.InsuranceCost, trip.OtherCost, trip.TotalCost, trip.TotalRevenue,
-			trip.NetCost, trip.Notes, trip.ID, trip.VehicleID, trip.CostsFrozenAt, trip.ExpectedVersion,
+			trip.NetCost, trip.Notes, trip.ID, trip.VehicleID, trip.CostsFrozenAt, trip.ExpectedVersion, trip.EnergyCost, trip.FuelCost,
 		).Scan(&trip.CreatedAt, &trip.UpdatedAt, &trip.CostsFrozenAt, &trip.Version)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return staleOrNotFound(ctx, tx, "carpool_trips", trip.ID, trip.VehicleID, trip.ExpectedVersion)
@@ -113,14 +114,15 @@ func (r *Repository) saveCarpoolTrip(ctx context.Context, trip *models.CarpoolTr
 	for i := range legs {
 		l := &legs[i]
 		l.CarpoolTripID, l.OrderIndex = trip.ID, i
+		l.SyncElectricity()
 		if err := tx.QueryRow(ctx, `
 			INSERT INTO carpool_legs (
 				carpool_trip_id, order_index, drive_id, start_label, end_label, distance_km,
-				electricity_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost, cost_overrides
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+				electricity_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost, cost_overrides, energy_cost, fuel_cost
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 			RETURNING id;
 		`, l.CarpoolTripID, l.OrderIndex, l.DriveID, l.StartLabel, l.EndLabel, l.DistanceKm,
-			l.ElectricityCost, l.TollsCost, l.TiresCost, l.MaintenanceCost, l.InsuranceCost, l.OtherCost, overridesOrEmpty(l.Overrides),
+			l.ElectricityCost, l.TollsCost, l.TiresCost, l.MaintenanceCost, l.InsuranceCost, l.OtherCost, overridesOrEmpty(l.Overrides), l.EnergyCost, l.FuelCost,
 		).Scan(&l.ID); err != nil {
 			return fmt.Errorf("failed to insert carpool leg: %w", err)
 		}
@@ -176,22 +178,23 @@ func (r *Repository) UpdateCarpoolLegCosts(ctx context.Context, trip *models.Car
 	}
 	defer tx.Rollback(ctx)
 	for _, l := range trip.Legs {
+		l.SyncElectricity()
 		if _, err := tx.Exec(ctx, `
 			UPDATE carpool_legs
 			SET distance_km = $1, electricity_cost = $2, tolls_cost = $3, tires_cost = $4, maintenance_cost = $5,
-			    insurance_cost = $6, other_cost = $7
+			    insurance_cost = $6, other_cost = $7, energy_cost = $9, fuel_cost = $10
 			WHERE id = $8;
-		`, l.DistanceKm, l.ElectricityCost, l.TollsCost, l.TiresCost, l.MaintenanceCost, l.InsuranceCost, l.OtherCost, l.ID); err != nil {
+		`, l.DistanceKm, l.ElectricityCost, l.TollsCost, l.TiresCost, l.MaintenanceCost, l.InsuranceCost, l.OtherCost, l.ID, l.EnergyCost, l.FuelCost); err != nil {
 			return fmt.Errorf("failed to update carpool leg costs: %w", err)
 		}
 	}
 	if _, err := tx.Exec(ctx, `
 		UPDATE carpool_trips
 		SET distance_km = $1, electricity_cost = $2, tolls_cost = $3, tires_cost = $4, maintenance_cost = $5,
-		    insurance_cost = $6, other_cost = $7, total_cost = $8, net_cost = $9
+		    insurance_cost = $6, other_cost = $7, total_cost = $8, net_cost = $9, energy_cost = $11, fuel_cost = $12
 		WHERE id = $10;
 	`, trip.DistanceKm, trip.ElectricityCost, trip.TollsCost, trip.TiresCost, trip.MaintenanceCost,
-		trip.InsuranceCost, trip.OtherCost, trip.TotalCost, trip.NetCost, trip.ID); err != nil {
+		trip.InsuranceCost, trip.OtherCost, trip.TotalCost, trip.NetCost, trip.ID, trip.EnergyCost, trip.FuelCost); err != nil {
 		return fmt.Errorf("failed to update carpool costs: %w", err)
 	}
 	return tx.Commit(ctx)
@@ -237,15 +240,17 @@ func ensureCarpoolLinksOwned(ctx context.Context, tx pgx.Tx, trip *models.Carpoo
 const carpoolTripColumns = `
 	id, vehicle_id, drive_id, trip_group_id, title, date, distance_km,
 	electricity_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost,
-	total_cost, total_revenue, net_cost, notes, costs_frozen_at, created_at, updated_at, version
+	total_cost, total_revenue, net_cost, notes, costs_frozen_at, created_at, updated_at, version, energy_cost, fuel_cost
 `
 
 func scanCarpoolTrip(row pgx.Row, t *models.CarpoolTripWithPassengers) error {
-	return row.Scan(
+	err := row.Scan(
 		&t.ID, &t.VehicleID, &t.DriveID, &t.TripGroupID, &t.Title, &t.Date, &t.DistanceKm,
 		&t.ElectricityCost, &t.TollsCost, &t.TiresCost, &t.MaintenanceCost, &t.InsuranceCost, &t.OtherCost,
-		&t.TotalCost, &t.TotalRevenue, &t.NetCost, &t.Notes, &t.CostsFrozenAt, &t.CreatedAt, &t.UpdatedAt, &t.Version,
+		&t.TotalCost, &t.TotalRevenue, &t.NetCost, &t.Notes, &t.CostsFrozenAt, &t.CreatedAt, &t.UpdatedAt, &t.Version, &t.EnergyCost, &t.FuelCost,
 	)
+	t.SyncElectricity()
+	return err
 }
 
 // CarpoolFilter narrows the carpools of a vehicle; the zero value keeps them all.
@@ -328,7 +333,7 @@ func (r *Repository) CarpoolShareInputs(ctx context.Context, vehicleID string, f
 	index := map[string]int{}
 	where, args := filter.where("t", vehicleID)
 	legRows, err := r.pool.Query(ctx, `
-		SELECT l.carpool_trip_id::text, l.electricity_cost, l.tolls_cost, l.tires_cost, l.maintenance_cost, l.insurance_cost, l.other_cost
+		SELECT l.carpool_trip_id::text, l.energy_cost, l.fuel_cost, l.tolls_cost, l.tires_cost, l.maintenance_cost, l.insurance_cost, l.other_cost
 		FROM carpool_legs l
 		JOIN carpool_trips t ON t.id = l.carpool_trip_id
 		WHERE `+where+`
@@ -340,10 +345,11 @@ func (r *Repository) CarpoolShareInputs(ctx context.Context, vehicleID string, f
 	for legRows.Next() {
 		var tripID string
 		var l models.CarpoolLeg
-		if err := legRows.Scan(&tripID, &l.ElectricityCost, &l.TollsCost, &l.TiresCost, &l.MaintenanceCost, &l.InsuranceCost, &l.OtherCost); err != nil {
+		if err := legRows.Scan(&tripID, &l.EnergyCost, &l.FuelCost, &l.TollsCost, &l.TiresCost, &l.MaintenanceCost, &l.InsuranceCost, &l.OtherCost); err != nil {
 			legRows.Close()
 			return nil, err
 		}
+		l.SyncElectricity()
 		i, ok := index[tripID]
 		if !ok {
 			i = len(trips)
@@ -444,7 +450,7 @@ func (r *Repository) loadCarpoolDetails(ctx context.Context, trips []models.Carp
 
 	legRows, err := r.pool.Query(ctx, `
 		SELECT id, carpool_trip_id, order_index, drive_id, start_label, end_label, distance_km,
-		       electricity_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost, cost_overrides
+		       energy_cost, fuel_cost, tolls_cost, tires_cost, maintenance_cost, insurance_cost, other_cost, cost_overrides
 		FROM carpool_legs
 		WHERE carpool_trip_id::text = ANY($1::text[])
 		ORDER BY carpool_trip_id, order_index;
@@ -455,10 +461,11 @@ func (r *Repository) loadCarpoolDetails(ctx context.Context, trips []models.Carp
 	for legRows.Next() {
 		var l models.CarpoolLeg
 		if err := legRows.Scan(&l.ID, &l.CarpoolTripID, &l.OrderIndex, &l.DriveID, &l.StartLabel, &l.EndLabel, &l.DistanceKm,
-			&l.ElectricityCost, &l.TollsCost, &l.TiresCost, &l.MaintenanceCost, &l.InsuranceCost, &l.OtherCost, &l.Overrides); err != nil {
+			&l.EnergyCost, &l.FuelCost, &l.TollsCost, &l.TiresCost, &l.MaintenanceCost, &l.InsuranceCost, &l.OtherCost, &l.Overrides); err != nil {
 			legRows.Close()
 			return err
 		}
+		l.SyncElectricity()
 		t := &trips[index[l.CarpoolTripID]]
 		t.Legs = append(t.Legs, l)
 	}

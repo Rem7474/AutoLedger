@@ -171,7 +171,7 @@ async function estimateManualLeg(index: number) {
     const est = await api.estimateCarpoolCosts(props.vehicleId, { distance_km: Number(leg.distance_km) })
     currentRates.value = est
     const estimated = est.legs?.[0] || est
-    leg.electricity_cost = estimated.electricity_cost
+    leg.energy_cost = estimated.energy_cost
     leg.tires_cost = estimated.tires_cost
     leg.maintenance_cost = estimated.maintenance_cost
     leg.insurance_cost = estimated.insurance_cost

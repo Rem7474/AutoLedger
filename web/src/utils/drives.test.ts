@@ -219,8 +219,8 @@ describe('mergeExpensesByDrive', () => {
 
 describe('buildTripCostDrive', () => {
   const drives = [
-    { start_time: '2026-05-02T08:00:00Z', start_address: 'Paris, France', end_address: 'Dijon, France', distance_km: 300, duration_min: 200, costs: { electricity_kwh: 50, electricity_cost: 11, tires_cost: 3, maintenance_cost: 2, insurance_cost: 1, has_estimates: false } },
-    { start_time: '2026-05-03T08:00:00Z', start_address: 'Dijon, France', end_address: 'Lyon, France', distance_km: 200, duration_min: 150, costs: { electricity_kwh: 30, electricity_cost: 7, tires_cost: 2, maintenance_cost: 1, insurance_cost: 1, has_estimates: true } },
+    { start_time: '2026-05-02T08:00:00Z', start_address: 'Paris, France', end_address: 'Dijon, France', distance_km: 300, duration_min: 200, costs: { electricity_kwh: 50, electricity_cost: 11, energy_cost: 11, tires_cost: 3, maintenance_cost: 2, insurance_cost: 1, has_estimates: false } },
+    { start_time: '2026-05-03T08:00:00Z', start_address: 'Dijon, France', end_address: 'Lyon, France', distance_km: 200, duration_min: 150, costs: { electricity_kwh: 30, electricity_cost: 7, energy_cost: 7, tires_cost: 2, maintenance_cost: 1, insurance_cost: 1, has_estimates: true } },
   ]
 
   it('sums the drives and adds the trip expenses to the total', () => {
@@ -233,6 +233,7 @@ describe('buildTripCostDrive', () => {
     expect(t.start_address).toBe('Paris')
     expect(t.end_address).toBe('Lyon')
     expect(t.costs.electricity_cost).toBe(18)
+    expect(t.costs.energy_cost).toBe(18)
     expect(t.costs.tolls_cost).toBe(20)
     expect(t.costs.total_cost).toBe(18 + 5 + 3 + 2 + 20)
     expect(t.costs.cost_per_km).toBeCloseTo(48 / 500)
@@ -301,8 +302,8 @@ describe('filterTrips', () => {
 
 describe('buildSuggestionCostDrive', () => {
   const legs = [
-    { id: 'd1', start_time: '2026-09-17T16:00:00Z', start_address: 'A, France', end_address: 'B, France', distance_km: 80, costs: { electricity_cost: 8, tolls_cost: 7.53, tires_cost: 1, maintenance_cost: 1, insurance_cost: 0 } },
-    { id: 'd2', start_time: '2026-09-17T18:00:00Z', start_address: 'B, France', end_address: 'C, France', distance_km: 70, costs: { electricity_cost: 7, tolls_cost: 4.37, tires_cost: 1, maintenance_cost: 1, insurance_cost: 0 } },
+    { id: 'd1', start_time: '2026-09-17T16:00:00Z', start_address: 'A, France', end_address: 'B, France', distance_km: 80, costs: { electricity_cost: 8, energy_cost: 8, tolls_cost: 7.53, tires_cost: 1, maintenance_cost: 1, insurance_cost: 0 } },
+    { id: 'd2', start_time: '2026-09-17T18:00:00Z', start_address: 'B, France', end_address: 'C, France', distance_km: 70, costs: { electricity_cost: 7, energy_cost: 7, tolls_cost: 4.37, tires_cost: 1, maintenance_cost: 1, insurance_cost: 0 } },
   ]
   const s = { drive_ids: ['d1', 'd2'], start_time: '2026-09-17T16:00:00Z' }
 

@@ -27,7 +27,7 @@ function fuelSub(): string {
     :icon="Zap"
     :label="drive.costs?.fuel_only ? $t('drives.driveCostModal.fuelEnergy') : $t('drives.driveCostModal.electricEnergy')"
     :sub="drive.costs?.fuel_only ? fuelSub() : $t('drives.driveCostModal.kwhKwh', { electricity_kwh: formatQuantity(Number(drive.costs?.electricity_kwh) || 0), electricity_rate: formatAmount(drive.costs?.electricity_rate ?? 0, currency, 3) })"
-    :amount="drive.costs?.electricity_cost || 0"
+    :amount="drive.costs?.energy_cost || 0"
     :share-pct="breakdown.byKey.energy.sharePct"
     :cost-per-km="breakdown.byKey.energy.costPerKm"
     :color="breakdown.byKey.energy.color"

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildCarpoolBreakdown, buildDriveBreakdown, COST_COLORS } from './costBreakdown'
 
 describe('buildDriveBreakdown', () => {
-  const costs = { electricity_cost: 3, tires_cost: 1, maintenance_cost: 0.5, insurance_cost: 0.5, tolls_cost: 5 }
+  const costs = { energy_cost: 3, tires_cost: 1, maintenance_cost: 0.5, insurance_cost: 0.5, tolls_cost: 5 }
 
   it('gives each item its share of the total and its cost per km', () => {
     const b = buildDriveBreakdown(costs, 100)
@@ -27,7 +27,7 @@ describe('buildDriveBreakdown', () => {
 
 describe('buildCarpoolBreakdown', () => {
   it('adds the other costs to the drive categories', () => {
-    const b = buildCarpoolBreakdown({ electricity_cost: 4, tolls_cost: 3, tires_cost: 1, maintenance_cost: 1, insurance_cost: 0, other_cost: 1, distance_km: 200 })
+    const b = buildCarpoolBreakdown({ energy_cost: 4, tolls_cost: 3, tires_cost: 1, maintenance_cost: 1, insurance_cost: 0, other_cost: 1, distance_km: 200 })
     expect(b.total).toBe(10)
     expect(b.byKey.other.sharePct).toBeCloseTo(10)
     expect(b.byKey.energy.costPerKm).toBeCloseTo(0.02)

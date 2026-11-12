@@ -139,7 +139,7 @@
   "destination": "Destination",
   "passenger": "Passenger {n}",
   "costFields": {
-    "electricity": "Electricity",
+    "energy": "Energy",
     "tolls": "Tolls",
     "tires": "Tires",
     "maintenance": "Maintenance",

@@ -9,9 +9,9 @@ import (
 func TestAllocateCarpoolCostsWithBoardingAndAlighting(t *testing.T) {
 	// Annecy → Chambéry (30 €) → Grenoble (30 €) → Valence (60 €)
 	legs := []models.CarpoolLeg{
-		{TollsCost: 1000, ElectricityCost: 2000},
-		{ElectricityCost: 3000},
-		{TollsCost: 2000, ElectricityCost: 4000},
+		{TollsCost: 1000, EnergyCost: 2000},
+		{EnergyCost: 3000},
+		{TollsCost: 2000, EnergyCost: 4000},
 	}
 	passengers := []models.CarpoolPassenger{
 		{PassengerName: "Anna", Seats: 1, BoardStopIndex: 0, AlightStopIndex: 3, AmountPaid: 4000},  // whole trip
@@ -39,7 +39,7 @@ func TestAllocateCarpoolCostsWithBoardingAndAlighting(t *testing.T) {
 }
 
 func TestAllocateCarpoolCostsRoundingGoesToDriver(t *testing.T) {
-	legs := []models.CarpoolLeg{{ElectricityCost: 1000}} // 10 € for 3 people
+	legs := []models.CarpoolLeg{{EnergyCost: 1000}} // 10 € for 3 people
 	passengers := []models.CarpoolPassenger{
 		{Seats: 1, BoardStopIndex: 0, AlightStopIndex: 1},
 		{Seats: 1, BoardStopIndex: 0, AlightStopIndex: 1},
@@ -51,7 +51,7 @@ func TestAllocateCarpoolCostsRoundingGoesToDriver(t *testing.T) {
 }
 
 func TestAllocateCarpoolCostsEmptyLegIsDriverOnly(t *testing.T) {
-	legs := []models.CarpoolLeg{{ElectricityCost: 500}, {ElectricityCost: 900}}
+	legs := []models.CarpoolLeg{{EnergyCost: 500}, {EnergyCost: 900}}
 	passengers := []models.CarpoolPassenger{{Seats: 1, BoardStopIndex: 1, AlightStopIndex: 2}}
 	driver, _ := AllocateCarpoolCosts(legs, passengers)
 	if legs[0].PassengerSeats != 0 || driver != 500+450 || passengers[0].CostShare != 450 {

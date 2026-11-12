@@ -261,8 +261,8 @@ func buildDrivingTelemetryQuery(vehicleID string, ranges []OdometerRange) (strin
 		SELECT
 			COALESCE(AVG(NULLIF(power_max, 0)), 0),
 			COALESCE(AVG(NULLIF(power_min, 0)), 0),
-			COALESCE(AVG(NULLIF(consumption_kwh_100km, 0)), 0),
-			COUNT(*)
+			COALESCE(AVG(NULLIF(consumption_kwh_100km, 0)) FILTER (WHERE NOT is_manual), 0),
+			COUNT(*) FILTER (WHERE COALESCE(power_max, 0) <> 0 OR COALESCE(power_min, 0) <> 0)
 		FROM drives
 		WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL
 		  AND (%s)
@@ -274,6 +274,8 @@ func buildDrivingTelemetryQuery(vehicleID string, ranges []OdometerRange) (strin
 // GetDrivingTelemetryStats returns driving dynamics averaged over the provided odometer ranges.
 // Each range corresponds to a tire mount session: only drives whose end_odometer falls within
 // [range.Min, range.Max) (or >= range.Min when Max is nil) are included.
+// Only drives that carry power telemetry count, and an estimated consumption (a manual drive's) is not averaged: a
+// vehicle fed by hand, a combustion one included, has no driving style to derive.
 // Returns zeros and count=0 when ranges is empty or no matching drives exist.
 func (r *Repository) GetDrivingTelemetryStats(ctx context.Context, vehicleID string, ranges []OdometerRange) (avgPowerMax, avgPowerMin, avgConsumption float64, count int, err error) {
 	if len(ranges) == 0 {
