@@ -3,6 +3,7 @@ import NumberInput from '@/components/NumberInput.vue'
 import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { api, type MileageRate } from '@/services/api'
+import { reportingYear } from '@/utils/reportingTime'
 import { Trash2 } from '@/icons'
 
 const emit = defineEmits<{ (e: 'change', labels: string[]): void }>()
@@ -10,7 +11,7 @@ const emit = defineEmits<{ (e: 'change', labels: string[]): void }>()
 const rates = ref<MileageRate[]>([])
 const error = ref('')
 const label = ref('')
-const year = ref(new Date().getFullYear())
+const year = ref(reportingYear())
 const fromKm = ref(0)
 const toKm = ref<number | null>(null)
 const rate = ref<number | null>(null)

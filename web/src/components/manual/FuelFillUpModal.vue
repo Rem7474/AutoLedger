@@ -11,7 +11,7 @@ import { useStaleWrite } from '@/composables/useStaleWrite'
 import { useVehicleStore } from '@/stores/vehicle'
 import { currencySymbol, formatAmount } from '@/currency'
 import { distanceUnit, litresToDisplayVolume, perVolume, volumeUnitLabel } from '@/units'
-import { toLocalDay } from '@/utils/dates'
+import { dayKey } from '@/utils/dates'
 
 // The detail of a fill-up, one sheet for every list that shows one: it records a new fill-up, or edits `editing` (a log
 // as the fuel-logs endpoint returns it, with its version). Delete is asked of the host (`delete`), which closes nothing
@@ -37,7 +37,7 @@ const fuelTypes = [
 
 function emptyForm() {
   return {
-    date: toLocalDay(),
+    date: dayKey(),
     odometer: null as number | null,
     amount: null as number | null,
     liters: null as number | null,
@@ -70,7 +70,7 @@ watch(open, (isOpen) => {
   const log = props.editing
   form.value = log
     ? {
-        date: toLocalDay(log.date),
+        date: dayKey(log.date),
         odometer: log.odometer ?? null,
         amount: log.amount,
         liters: log.liters ?? null,

@@ -1,8 +1,9 @@
 import { intlLocale, t } from '@/i18n'
 import { formatMonthLabel, monthRange, todayIso } from '@/utils/drives'
+import { reportingYear } from '@/utils/reportingTime'
 
 // The period shared by the home page, the energy page and the expenses: a run of whole months ending now or earlier,
-// a calendar year, two days picked freely, or the whole history. Days are YYYY-MM-DD in local time and `to` is
+// a calendar year, two days picked freely, or the whole history. Days are YYYY-MM-DD in the reporting timezone and `to` is
 // inclusive, like `monthRange` and `unitRange`.
 export type MonthCount = 1 | 3 | 6 | 12
 export type Period =
@@ -48,7 +49,7 @@ export function periodBounds(p: Period, now: Date = new Date()): { from?: string
   const today = todayIso(now)
   if (p.kind === 'all') return {}
   if (p.kind === 'custom') return { from: p.from, to: p.to }
-  if (p.kind === 'year') return { from: `${p.year}-01-01`, to: p.year === now.getFullYear() ? today : `${p.year}-12-31` }
+  if (p.kind === 'year') return { from: `${p.year}-01-01`, to: p.year === reportingYear(now) ? today : `${p.year}-12-31` }
   const end = endMonthOf(p, today)
   const last = end === monthOf(today) ? today : monthRange(end).to
   return { from: `${addMonths(end, -(p.count - 1))}-01`, to: last }
@@ -76,7 +77,7 @@ export function stepPeriod(p: Period, dir: -1 | 1, now: Date = new Date()): Peri
   if (p.kind === 'all') return p
   if (p.kind === 'year') {
     const year = p.year + dir
-    return year > now.getFullYear() ? p : { kind: 'year', year }
+    return year > reportingYear(now) ? p : { kind: 'year', year }
   }
   if (p.kind === 'months') {
     const end = addMonths(endMonthOf(p, today), dir * p.count)
@@ -114,7 +115,7 @@ export function presetPeriod(preset: PeriodPreset, now: Date = new Date()): Peri
     case 'last12':
       return { kind: 'months', count: 12, end: null }
     case 'thisYear':
-      return { kind: 'year', year: now.getFullYear() }
+      return { kind: 'year', year: reportingYear(now) }
     default:
       return { kind: 'all' }
   }
@@ -163,7 +164,7 @@ export function periodFromQuery(q: Query, now: Date = new Date()): Period | null
   if (!period) return null
   if (period === 'all') return { kind: 'all' }
   const year = /^Y(\d{4})$/.exec(period)
-  if (year) return Number(year[1]) <= now.getFullYear() ? { kind: 'year', year: Number(year[1]) } : null
+  if (year) return Number(year[1]) <= reportingYear(now) ? { kind: 'year', year: Number(year[1]) } : null
   const months = /^(\d{1,2})M$/.exec(period)
   if (!months || !isMonthCount(Number(months[1]))) return null
   const count = Number(months[1]) as MonthCount
@@ -179,7 +180,7 @@ export function parsePeriod(raw: unknown, now: Date = new Date()): Period | null
   const p = raw as Record<string, unknown>
   const today = todayIso(now)
   if (p.kind === 'all') return { kind: 'all' }
-  if (p.kind === 'year') return typeof p.year === 'number' && Number.isInteger(p.year) && p.year <= now.getFullYear() ? { kind: 'year', year: p.year } : null
+  if (p.kind === 'year') return typeof p.year === 'number' && Number.isInteger(p.year) && p.year <= reportingYear(now) ? { kind: 'year', year: p.year } : null
   if (p.kind === 'custom') {
     return typeof p.from === 'string' && typeof p.to === 'string' && isRealDay(p.from) && isRealDay(p.to) && p.from <= p.to && p.to <= today
       ? { kind: 'custom', from: p.from, to: p.to }
