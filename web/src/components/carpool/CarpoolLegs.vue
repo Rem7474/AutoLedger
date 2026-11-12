@@ -6,6 +6,8 @@ import { Navigation, Plus, Trash2, Calculator, RotateCw, Lock, Undo2, ChevronDow
 import { COST_FIELDS, differsFromDrive, euros, legState, type CostKey, type LegForm } from '@/utils/carpool'
 import { currencySymbol, formatAmount } from '@/currency'
 import { distanceUnit, formatDistanceValue } from '@/units'
+import { useVehicleStore } from '@/stores/vehicle'
+import { energyKind } from '@/utils/capabilities'
 
 // The legs of a carpool with their actual costs. Estimating, adding and removing a leg belong to the form, so they are
 // asked of it; the fields of a leg are edited in place. A leg made from a drive is a summary line that opens on its
@@ -22,6 +24,9 @@ const props = defineProps<{
   followDrives: boolean
 }>()
 const emit = defineEmits<{ recalculate: []; 'restore-all': []; 'add-leg': []; estimate: [index: number]; remove: [index: number]; 'update:followDrives': [value: boolean] }>()
+// The energy cost of a combustion vehicle is its fuel
+const fuelEnergy = computed(() => energyKind(useVehicleStore().capabilities) === 'FUEL')
+const costLabel = (label: string) => (label === 'electricity' && fuelEnergy.value ? 'fuel' : label)
 const fmt = (v: number) => formatAmount(Number(v || 0), props.currency)
 const linked = computed(() => props.legs.some((l) => !!l.drive_id))
 // Legs whose state was toggled by the user: a drive leg opens, a manual leg closes
@@ -155,7 +160,7 @@ function restore(leg: LegForm, key: CostKey) {
         </div>
         <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
           <div v-for="f in COST_FIELDS" :key="f.key">
-            <label :for="`leg-${f.key}-${i}`" class="block text-xs text-slate-400 mb-0.5">{{ $t(`carpool.costFields.${f.label}`) }} ({{ currencySymbol(currency) }})</label>
+            <label :for="`leg-${f.key}-${i}`" class="block text-xs text-slate-400 mb-0.5">{{ $t(`carpool.costFields.${costLabel(f.label)}`) }} ({{ currencySymbol(currency) }})</label>
             <NumberInput
               :id="`leg-${f.key}-${i}`"
               v-model="(leg as any)[f.key]"

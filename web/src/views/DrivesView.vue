@@ -92,6 +92,11 @@ const showManualDriveModal = ref(false)
 const driveToEdit = ref<any | null>(null)
 const showCSVImportModal = ref(false)
 
+// A filter, a period or a search narrows the list: an empty result then is not an empty vehicle
+const hasActiveFilters = computed(
+  () => !!(searchQuery.value || periodMode.value !== 'ALL' || selectedTag.value || unqualifiedOnly.value || hasTollOnly.value || carpoolFilter.value),
+)
+
 function openManualDriveModal(drive?: any) {
   driveToEdit.value = drive || null
   showManualDriveModal.value = true
@@ -607,8 +612,13 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
     <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadDrives()" />
 
     <!-- EMPTY STATE -->
-    <EmptyState v-else-if="!drives.length" :icon="PageIcon" :title="$t('drives.drivesView.noDriveFoundForThis')">
+    <EmptyState v-else-if="!drives.length" :icon="PageIcon" :title="hasActiveFilters ? $t('drives.drivesView.noDriveFoundForThis') : $t('drives.drivesView.noDriveYet')">
+      <template v-if="!hasActiveFilters">{{ $t('drives.drivesView.noDriveYetHint') }}</template>
       <template #actions>
+      <button v-if="!hasActiveFilters && vehicleStore.canEdit" type="button" class="btn btn-secondary" data-testid="empty-add-trip" @click="openManualDriveModal()">
+        <Plus class="w-3.5 h-3.5" />
+        {{ $t('drives.drivesView.addATrip') }}
+      </button>
       <EmptySourceHints v-if="!(searchQuery || periodMode !== 'ALL' || selectedTag || unqualifiedOnly || hasTollOnly || carpoolFilter)" @import-csv="openCSVImportModal" />
       <button
         v-if="searchQuery || periodMode !== 'ALL' || selectedTag || unqualifiedOnly || hasTollOnly"

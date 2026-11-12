@@ -182,15 +182,18 @@ func (t *CarpoolTrip) SumLegs(legs []CarpoolLeg) {
 
 // CarpoolCostEstimate provides suggested real cost breakdown based on vehicle TCO metrics.
 type CarpoolCostEstimate struct {
-	StartDate             *time.Time   `json:"start_date,omitempty"`
-	DistanceKm            float64      `json:"distance_km"`
-	ElectricityCost       money.Cents  `json:"electricity_cost"`
-	TollsCost             money.Cents  `json:"tolls_cost"`
-	TiresCost             money.Cents  `json:"tires_cost"`
-	MaintenanceCost       money.Cents  `json:"maintenance_cost"`
-	InsuranceCost         money.Cents  `json:"insurance_cost"`
-	OtherCost             money.Cents  `json:"other_cost"`
-	TotalCost             money.Cents  `json:"total_cost"`
+	StartDate       *time.Time  `json:"start_date,omitempty"`
+	DistanceKm      float64     `json:"distance_km"`
+	ElectricityCost money.Cents `json:"electricity_cost"`
+	TollsCost       money.Cents `json:"tolls_cost"`
+	TiresCost       money.Cents `json:"tires_cost"`
+	MaintenanceCost money.Cents `json:"maintenance_cost"`
+	InsuranceCost   money.Cents `json:"insurance_cost"`
+	OtherCost       money.Cents `json:"other_cost"`
+	TotalCost       money.Cents `json:"total_cost"`
+	// FuelOnly marks a vehicle that burns fuel: electricity_cost is then its fuel cost and the rate per kWh is 0.
+	FuelOnly              bool         `json:"fuel_only"`
+	FuelRatePerLiter      float64      `json:"fuel_rate_per_liter"`
 	ElectricityRatePerKwh float64      `json:"electricity_rate_per_kwh"`
 	TiresRatePerKm        float64      `json:"tires_rate_per_km"`
 	MaintenanceRatePerKm  float64      `json:"maintenance_rate_per_km"`

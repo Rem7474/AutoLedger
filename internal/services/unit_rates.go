@@ -284,7 +284,40 @@ func (s *CarpoolService) GetVehicleUnitRatesAtMany(ctx context.Context, vehicleI
 	for i := range refs {
 		out[i] = ratesFromInputs(&in[i], refs[i], ownership)
 	}
+	if err := s.applyFuelRates(ctx, vehicleID, ownership, out); err != nil {
+		return nil, err
+	}
 	return out, nil
+}
+
+// applyFuelRates switches the rates of a fuel-only vehicle to its fuel: the consumption measured between full tanks
+// and the average price per litre of its fill-ups (over the whole history, not as of each reference). Without a
+// consumption or a price the energy stays unknown, never replaced by a default.
+func (s *CarpoolService) applyFuelRates(ctx context.Context, vehicleID string, ownership *models.VehicleOwnership, rates []*UnitRates) error {
+	var powertrain string
+	if err := s.pool.QueryRow(ctx, `SELECT powertrain FROM vehicles WHERE id = $1`, vehicleID).Scan(&powertrain); err != nil {
+		return err
+	}
+	if !models.PowertrainIsFuelOnly(powertrain) {
+		return nil
+	}
+	logs, err := s.repo.ListFuelLogs(ctx, vehicleID)
+	if err != nil {
+		return err
+	}
+	readings, err := s.repo.ListOdometerCheckpoints(ctx, vehicleID)
+	if err != nil {
+		return err
+	}
+	stats := ComputeFuelStats(logs, BuildOdometerRefs(readings, ownership))
+	for _, r := range rates {
+		r.FuelOnly = true
+		r.FuelPricePerLiter = stats.AvgPricePerLiter
+		if stats.ConsumptionL100 != nil {
+			r.FuelLitresPer100 = *stats.ConsumptionL100
+		}
+	}
+	return nil
 }
 
 // driveOdometer is the distance of a vehicle's drives by start time, as running totals.

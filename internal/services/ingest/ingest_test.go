@@ -63,6 +63,16 @@ func TestNormalizeDriveEnergy(t *testing.T) {
 	}
 }
 
+func TestNormalizeDriveFuelOnlyCarriesNoKwh(t *testing.T) {
+	got := NormalizeDrive(DriveInput{Start: t0, DistanceKm: 100, EnergyKwh: fptr(15), VehicleKwh100km: fptr(20), FuelOnly: true})
+	if got.EnergyKnown || got.EnergyEstimated || got.EnergyKwh != 0 || got.Kwh100km != 0 {
+		t.Fatalf("a fuel-only drive has no kWh, typed or estimated: %+v", got)
+	}
+	if got.DurationMin == 0 || got.End.IsZero() {
+		t.Fatalf("its timings are still completed: %+v", got)
+	}
+}
+
 func TestEstimateDriveEnergyScalesWithDistance(t *testing.T) {
 	energy, cons := EstimateDriveEnergy(fptr(20), 50)
 	if energy != 10 || cons != 20 {

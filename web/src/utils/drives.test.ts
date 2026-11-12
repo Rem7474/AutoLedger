@@ -140,6 +140,25 @@ describe('selectionSummary and CSV rows', () => {
     expect(selectionSummary([], 'EUR')).toBe('')
   })
 
+  it('counts litres, not kWh, for a vehicle that burns fuel, and nothing while the fuel is unknown', () => {
+    const fuel = [
+      { id: 'a', distance_km: 100, costs: { fuel_only: true, fuel_liters: 7, electricity_kwh: 0, total_cost: 12 } },
+      { id: 'b', distance_km: 50, costs: { fuel_only: true, fuel_liters: 3.5, electricity_kwh: 0, total_cost: 6 } },
+    ]
+    const out = selectionSummary(fuel, 'EUR')
+    expect(out).toContain('11 L')
+    expect(out).not.toContain('kWh')
+    const unknown = selectionSummary([{ id: 'c', distance_km: 10, costs: { fuel_only: true, fuel_liters: null, total_cost: 0 } }], 'EUR')
+    expect(unknown).not.toContain(' L')
+    expect(unknown).not.toContain('kWh')
+  })
+
+  it('leaves the kWh columns of the CSV empty for a vehicle that burns fuel', () => {
+    const [row] = driveCsvRows([{ id: 'f', distance_km: 10, consumption_kwh_100km: null, costs: { fuel_only: true, cost_per_km: 0.1 } }])
+    expect(row[6]).toBe('')
+    expect(row[7]).toBe('')
+  })
+
   it('formats the total in the vehicle\'s own currency', () => {
     expect(selectionSummary(list, 'USD')).toContain(new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(7.75))
   })

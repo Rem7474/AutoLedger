@@ -55,7 +55,10 @@
     "shownOf": "{count} of {total} drives",
     "loadMore": "Show more drives",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "noDriveYet": "No trips yet",
+    "noDriveYetHint": "Trips you add by hand, import or receive from a connected source are listed here.",
+    "addATrip": "Add a trip"
   },
   "addToTripModal": {
     "add": "Add",
@@ -220,7 +223,11 @@
     "deleteCostTitle": "Delete the cost",
     "deleteCostMessage": "Delete this cost of {amount}{scope}?",
     "driveCarpools": "Carpools of this drive ({count})",
-    "carpoolPassengers": "{passengers} passenger | {passengers} passengers"
+    "carpoolPassengers": "{passengers} passenger | {passengers} passengers",
+    "fuelEnergy": "Fuel",
+    "fuelVolume": "{volume} {unit} × {rate}/{unit}",
+    "fuelUnknown": "no consumption yet",
+    "fuelLitres": "• {volume}"
   },
   "driveGroupModal": {
     "saveTheGroup": "Save the group",

@@ -3,7 +3,8 @@ import ModalShell from '@/components/ModalShell.vue'
 import { ref, watch } from 'vue'
 import { computed } from 'vue'
 import { currentLocale, intlLocale, t } from '@/i18n'
-import { CSV_COLUMNS, csvTemplate, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
+import { energyKind } from '@/utils/capabilities'
+import { csvColumns, csvTemplate, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
 import { downloadCsv } from '@/utils/csv'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
@@ -39,9 +40,10 @@ const loading = ref(false)
 const error = ref('')
 
 const templateTypes = computed(() => csvTemplateTypes(vehicleStore.capabilities))
+const energy = computed(() => energyKind(vehicleStore.capabilities))
 
 function downloadTemplate(type: CsvTemplateType) {
-  const { headers, rows } = csvTemplate(type, currentLocale())
+  const { headers, rows } = csvTemplate(type, currentLocale(), energy.value)
   downloadCsv(csvTemplateFilename(type), headers, rows)
 }
 
@@ -289,8 +291,8 @@ async function handleExecute() {
             <button type="button" @click="downloadTemplate(type)" class="shrink-0 text-rose-400 hover:text-rose-300 font-semibold">{{ $t('import.downloadTemplate') }}</button>
           </div>
           <p class="break-words text-slate-400">
-            <code class="text-success-300">{{ CSV_COLUMNS[type].required.join(', ') }}</code>
-            <span v-if="CSV_COLUMNS[type].optional.length"> + <code>{{ CSV_COLUMNS[type].optional.join(', ') }}</code></span>
+            <code class="text-success-300">{{ csvColumns(type, energy).required.join(', ') }}</code>
+            <span v-if="csvColumns(type, energy).optional.length"> + <code>{{ csvColumns(type, energy).optional.join(', ') }}</code></span>
           </p>
         </div>
       </details>

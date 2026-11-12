@@ -15,7 +15,7 @@ import { driveGlyph } from '@/utils/driveGlyph'
 import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
 import { formatDayTime, formatTimeOfDay } from '@/utils/dates'
 import { formatAmount } from '@/currency'
-import { distanceUnit, formatDistance, formatPerDistanceValue } from '@/units'
+import { distanceUnit, formatDistance, formatPerDistanceValue, formatVolume } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 
 // One drive of the list: the glyph of the drive, where it went and when, what it cost. A click anywhere on the row opens
@@ -70,6 +70,8 @@ const subtitleParts = computed(() => {
       }),
     })
   }
+  // The fuel of a drive of a vehicle that burns fuel, derived from its fill-ups (absent while they give no consumption)
+  if (d.costs?.fuel_liters) parts.push({ wide: true, text: formatVolume(Number(d.costs.fuel_liters)) })
   if (prefs.proPersoEnabled && d.tags?.includes('Pro')) parts.push({ text: t('drives.driveCard.work') })
   if (prefs.proPersoEnabled && d.tags?.includes('Perso')) parts.push({ text: t('drives.driveCard.personal') })
   if (d.is_manual && showManualBadge.value) parts.push({ text: t('drives.drivesView.manual') })

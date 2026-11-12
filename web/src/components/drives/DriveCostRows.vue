@@ -2,19 +2,31 @@
 import { Zap, Disc, Wrench, Shield } from '@/icons'
 import { formatAmount } from '@/currency'
 import { formatQuantity } from '@/utils/numbers'
-import { distanceUnit, formatDistance, perDistance } from '@/units'
+import { t } from '@/i18n'
+import { distanceUnit, formatDistance, formatVolumeValue, perDistance, perVolume, volumeUnitLabel } from '@/units'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 
 // The energy, tires, maintenance and insurance lines of the cost breakdown of a drive or a trip
-defineProps<{ drive: any; breakdown: any; currency: string }>()
+const props = defineProps<{ drive: any; breakdown: any; currency: string }>()
+
+// The fuel line of a fuel-only vehicle: litres burnt at the average price of its fill-ups, nothing while they are unknown
+function fuelSub(): string {
+  const c = props.drive.costs
+  if (c?.fuel_liters == null) return ''
+  return t('drives.driveCostModal.fuelVolume', {
+    volume: formatVolumeValue(Number(c.fuel_liters)),
+    unit: volumeUnitLabel(),
+    rate: formatAmount(perVolume(Number(c.fuel_rate_per_liter) || 0), props.currency, 3),
+  })
+}
 </script>
 
 <template>
   <!-- 1. Électricité -->
   <CostItemRow
     :icon="Zap"
-    :label="$t('drives.driveCostModal.electricEnergy')"
-    :sub="$t('drives.driveCostModal.kwhKwh', { electricity_kwh: formatQuantity(Number(drive.costs?.electricity_kwh) || 0), electricity_rate: formatAmount(drive.costs?.electricity_rate ?? 0, currency, 3) })"
+    :label="drive.costs?.fuel_only ? $t('drives.driveCostModal.fuelEnergy') : $t('drives.driveCostModal.electricEnergy')"
+    :sub="drive.costs?.fuel_only ? fuelSub() : $t('drives.driveCostModal.kwhKwh', { electricity_kwh: formatQuantity(Number(drive.costs?.electricity_kwh) || 0), electricity_rate: formatAmount(drive.costs?.electricity_rate ?? 0, currency, 3) })"
     :amount="drive.costs?.electricity_cost || 0"
     :share-pct="breakdown.byKey.energy.sharePct"
     :cost-per-km="breakdown.byKey.energy.costPerKm"
@@ -22,7 +34,9 @@ defineProps<{ drive: any; breakdown: any; currency: string }>()
     :currency="currency"
   >
     <template #badge>
-      <span v-if="drive.costs?.electricity_rate_source === 'UNKNOWN'" class="text-[9px] px-1.5 py-0.5 rounded bg-warning-500/10 text-warning-400 font-medium">{{ $t('drives.driveCostModal.rateUnknown') }}</span>
+      <span v-if="drive.costs?.fuel_only && drive.costs?.energy_source === 'UNKNOWN'" class="text-[9px] px-1.5 py-0.5 rounded bg-warning-500/10 text-warning-400 font-medium">{{ $t('drives.driveCostModal.fuelUnknown') }}</span>
+      <span v-else-if="drive.costs?.fuel_only" />
+      <span v-else-if="drive.costs?.electricity_rate_source === 'UNKNOWN'" class="text-[9px] px-1.5 py-0.5 rounded bg-warning-500/10 text-warning-400 font-medium">{{ $t('drives.driveCostModal.rateUnknown') }}</span>
       <span v-else-if="drive.costs?.energy_source === 'DEFAULT'" class="text-[9px] px-1.5 py-0.5 rounded bg-warning-500/10 text-warning-400 font-medium">{{ $t('drives.driveCostModal.estimate') }}</span>
     </template>
   </CostItemRow>

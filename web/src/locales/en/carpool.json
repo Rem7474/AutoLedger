@@ -144,7 +144,8 @@
     "tires": "Tires",
     "maintenance": "Maintenance",
     "insurance": "Insurance",
-    "other": "Other"
+    "other": "Other",
+    "fuel": "Fuel"
   },
   "stop": "Stop {n}",
   "legCount": "{count} legs",

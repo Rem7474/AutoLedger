@@ -596,7 +596,7 @@ test('the account sheet opens from the top bar, with sign out last and set apart
   await expect(sheet.getByText(/\bdev$/)).toHaveCount(0)
 })
 
-test('the bottom bar has four tabs and the quick add button, and the second tab follows the vehicle', async ({ page, request }) => {
+test('the bottom bar has four tabs and the quick add button, the second one the trips of every vehicle', async ({ page, request }) => {
   await useVehicle(page, ev.id, '/')
   const bar = page.getByRole('navigation', { name: 'Main navigation' }).last()
   await expect(bar.getByRole('link')).toHaveText(['Home', 'Drives', 'Expenses', 'Vehicle'])
@@ -604,7 +604,7 @@ test('the bottom bar has four tabs and the quick add button, and the second tab 
   await expect(bar.getByRole('button', { name: 'Quick add' })).toBeVisible()
   const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')!
   await useVehicle(page, ice.id, '/')
-  await expect(bar.getByRole('link')).toHaveText(['Home', 'Consumption', 'Expenses', 'Vehicle'])
+  await expect(bar.getByRole('link')).toHaveText(['Home', 'Drives', 'Expenses', 'Vehicle'])
 })
 
 test('controls of the interface are not selectable text, values are', async ({ page }) => {

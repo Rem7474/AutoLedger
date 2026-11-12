@@ -28,6 +28,8 @@ type carpoolStore interface {
 	UpdateCarpoolLegCosts(ctx context.Context, trip *models.CarpoolTripWithPassengers) error
 	ListCarpoolTrips(ctx context.Context, vehicleID string) ([]models.CarpoolTripWithPassengers, error)
 	ListOdometerAnchors(ctx context.Context, vehicleID string) ([]database.OdometerAnchor, error)
+	ListFuelLogs(ctx context.Context, vehicleID string) ([]models.FuelLog, error)
+	ListOdometerCheckpoints(ctx context.Context, vehicleID string) ([]models.OdometerCheckpoint, error)
 }
 
 type CarpoolService struct {
@@ -54,6 +56,10 @@ const (
 	EnergySourceMeasured    = "MEASURED"
 	EnergySourceConsumption = "CONSUMPTION"
 	EnergySourceDefault     = "DEFAULT"
+	// EnergySourceFuel is a fuel-only vehicle's energy priced from its fill-ups; EnergySourceUnknown is one whose
+	// fill-ups give no consumption or price yet.
+	EnergySourceFuel    = "FUEL"
+	EnergySourceUnknown = "UNKNOWN"
 )
 
 // Fallback consumption used only when a drive has neither measured energy nor a vehicle consumption.
@@ -64,6 +70,11 @@ const (
 )
 
 type UnitRates struct {
+	// FuelOnly marks a vehicle that burns fuel and cannot charge: its energy is priced from its fill-ups
+	// (FuelLitresPer100 and FuelPricePerLiter, zero when the fill-ups do not give them), never from a kWh rate.
+	FuelOnly          bool
+	FuelLitresPer100  float64
+	FuelPricePerLiter float64
 	ElectricityPerKwh float64
 	ElectricitySource string
 	TiresPerKm        float64
@@ -93,7 +104,27 @@ func DefaultUnitRates() *UnitRates {
 // HasUnknownRate reports whether a priced component of a drive has no rate behind it, so its cost is missing from the
 // total rather than estimated.
 func (r *UnitRates) HasUnknownRate() bool {
+	if r.FuelOnly {
+		return r.FuelCostPerKm() == 0 || r.TiresSource == RateSourceUnknown || r.MaintenanceSource == RateSourceUnknown
+	}
 	return r.ElectricitySource == RateSourceUnknown || r.TiresSource == RateSourceUnknown || r.MaintenanceSource == RateSourceUnknown
+}
+
+// FuelCostPerKm is the fuel cost of one kilometre of a fuel-only vehicle, 0 while its fill-ups give no consumption
+// or no price.
+func (r *UnitRates) FuelCostPerKm() float64 {
+	if r.FuelLitresPer100 <= 0 || r.FuelPricePerLiter <= 0 {
+		return 0
+	}
+	return r.FuelLitresPer100 / 100 * r.FuelPricePerLiter
+}
+
+// FuelLitres is the fuel a fuel-only vehicle burns over a distance, 0 while its consumption is unknown.
+func (r *UnitRates) FuelLitres(distanceKm float64) float64 {
+	if r.FuelLitresPer100 <= 0 {
+		return 0
+	}
+	return distanceKm * r.FuelLitresPer100 / 100
 }
 
 // CostComponents holds the per-km/per-kWh cost components of a drive, excluding insurance and
@@ -108,8 +139,13 @@ type CostComponents struct {
 // ComputeCostComponents applies a vehicle's unit rates to a given distance/energy, shared by the
 // drive list and the carpool cost estimate so the two never drift apart.
 func ComputeCostComponents(rates *UnitRates, distanceKm, kwh float64) CostComponents {
+	energy := money.FromFloat(kwh * rates.ElectricityPerKwh)
+	if rates.FuelOnly {
+		// ElectricityCost carries the energy cost of every vehicle: the fuel cost for one that burns fuel
+		energy = money.FromFloat(distanceKm * rates.FuelCostPerKm())
+	}
 	return CostComponents{
-		ElectricityCost: money.FromFloat(kwh * rates.ElectricityPerKwh),
+		ElectricityCost: energy,
 		TiresCost:       money.FromFloat(distanceKm * rates.TiresPerKm),
 		MaintenanceCost: money.FromFloat(distanceKm * rates.MaintenancePerKm),
 	}
@@ -120,6 +156,8 @@ func ComputeCostComponents(rates *UnitRates, distanceKm, kwh float64) CostCompon
 type DriveCost struct {
 	ElectricityCost money.Cents
 	ElectricityKwh  float64
+	// FuelLitres is the fuel of a fuel-only vehicle's drive, derived from its fill-ups (0: unknown).
+	FuelLitres      float64
 	EnergySource    string
 	TiresCost       money.Cents
 	MaintenanceCost money.Cents
@@ -133,6 +171,9 @@ type DriveCost struct {
 // ComputeDriveCost is the single definition of a drive's cost, shared by the drive list and the per-tag totals of
 // the TCO so a total by tag always adds up the drives the list shows for that tag.
 func ComputeDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.Cents) DriveCost {
+	if rates.FuelOnly {
+		return fuelDriveCost(rates, d, insurance, tolls)
+	}
 	kwh, source := DriveEnergyKwh(d.Distance(), d.EnergyConsumedKwh, d.ConsumptionKwh100km)
 	components := ComputeCostComponents(rates, d.Distance(), kwh)
 	return DriveCost{
@@ -145,6 +186,27 @@ func ComputeDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.C
 		TollsCost:       tolls,
 		TotalCost:       components.ElectricityCost + components.TiresCost + components.MaintenanceCost + insurance + tolls,
 		HasEstimates:    source == EnergySourceDefault || rates.HasUnknownRate(),
+	}
+}
+
+// fuelDriveCost is the cost of a drive of a fuel-only vehicle: its fuel comes from the vehicle's measured consumption
+// and average price, and is left unknown (not estimated from a default) while the fill-ups do not give them.
+func fuelDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.Cents) DriveCost {
+	components := ComputeCostComponents(rates, d.Distance(), 0)
+	source := EnergySourceUnknown
+	if rates.FuelCostPerKm() > 0 {
+		source = EnergySourceFuel
+	}
+	return DriveCost{
+		ElectricityCost: components.ElectricityCost,
+		FuelLitres:      rates.FuelLitres(d.Distance()),
+		EnergySource:    source,
+		TiresCost:       components.TiresCost,
+		MaintenanceCost: components.MaintenanceCost,
+		InsuranceCost:   insurance,
+		TollsCost:       tolls,
+		TotalCost:       components.ElectricityCost + components.TiresCost + components.MaintenanceCost + insurance + tolls,
+		HasEstimates:    rates.HasUnknownRate(),
 	}
 }
 
@@ -250,11 +312,19 @@ func (s *CarpoolService) EstimateCosts(ctx context.Context, vehicleID string, dr
 		}
 	} else {
 		kwh, src := DriveEnergyKwh(manualDistanceKm, nil, nil)
+		if rates.FuelOnly {
+			kwh, src = 0, EnergySourceUnknown
+			if rates.FuelCostPerKm() > 0 {
+				src = EnergySourceFuel
+			}
+		}
 		energySource = src
 		legs = append(legs, costLeg(rates, manualDistanceKm, kwh))
 	}
 
 	est := &models.CarpoolCostEstimate{
+		FuelOnly:              rates.FuelOnly,
+		FuelRatePerLiter:      rates.FuelPricePerLiter,
 		ElectricityRatePerKwh: rates.ElectricityPerKwh,
 		TiresRatePerKm:        rates.TiresPerKm,
 		MaintenanceRatePerKm:  rates.MaintenancePerKm,

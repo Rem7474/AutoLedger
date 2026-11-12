@@ -14,18 +14,18 @@ Every vehicle returned by `GET /api/vehicles`, `GET /api/vehicles/{id}` and by t
 | :--- | :--- |
 | `charges` | powertrain other than `ICE` |
 | `refuels` | `ICE`, `PHEV` or `REEV` (a plug-in hybrid has both) |
-| `drives` | `charges`, or at least one drive stored whatever its origin (a combustion vehicle fed trips by a push source) |
+| `drives` | every vehicle (trips can be entered by hand or written by a source) |
 | `sync` | a rechargeable vehicle with a teslamateapi URL; true for every role, though only the owner receives the URL |
 | `odometer_auto` | `sync`, or at least one odometer reading reported by a source (`HA`) |
 | `battery_health` | `charges` (readings can be recorded by hand or come from a source) |
-| `tolls_auto` | `drives` and `toll_detection_active` |
+| `tolls_auto` | `toll_detection_active` |
 | `write` | role `OWNER` or `EDITOR` |
 
-`FillVehicleCapabilities` (`internal/database/repository_vehicle_capabilities.go`) reads the facts for a set of vehicles with one query and runs before the connection is hidden from a member who is not the owner.
+`FillVehicleCapabilities` (`internal/database/repository_vehicle_capabilities.go`) reads the stored facts (an odometer reading reported by a source) for a set of vehicles with one query and runs before the connection is hidden from a member who is not the owner.
 
 ## Manual drives
 
-Manual drives (`is_manual`) carry no energy cost. When no energy is typed, the server derives it from the vehicle's average consumption (`services.EstimateDriveEnergy`) and sets `energy_estimated`; the energy statistics ignore estimated energy. In the TCO mileage smoothing, tracking starts with the first synchronized drive or charge (the first manual charge without any), never with a manual drive, and a manual drive's distance still has its energy estimated before tracking starts.
+Every vehicle enters drives by hand, a combustion one included, so Trips, trip groups and carpools exist for every powertrain (`drives` is always true). Manual drives (`is_manual`) carry no energy cost. A vehicle that burns fuel and cannot charge has no kWh on a drive: the form has no kWh field, a typed or imported kWh is ignored (`ingest.DriveInput.FuelOnly`) and `energy_consumed_kwh` stays null. Its energy is fuel in litres: `fuel_liters` is the drive distance times the L/100 km of the fill-ups (full-to-full segments, all time), and the cost is those litres times the average price per litre (`fuel_rate_per_liter`). Without a fill-up pair the litres and the cost stay null (`UNKNOWN`), never an electricity price. The legacy `electricity_cost` field carries that fuel cost, and `fuel_only` tells a client to label it as fuel. A hybrid charges, so its drives stay on kWh with no fuel part. When no energy is typed, the server derives it from the vehicle's average consumption (`services.EstimateDriveEnergy`) and sets `energy_estimated`; the energy statistics ignore estimated energy. In the TCO mileage smoothing, tracking starts with the first synchronized drive or charge (the first manual charge without any), never with a manual drive, and a manual drive's distance still has its energy estimated before tracking starts.
 
 ## TeslaMate connection and sync
 
