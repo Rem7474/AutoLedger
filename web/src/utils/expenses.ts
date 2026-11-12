@@ -1,4 +1,5 @@
 import { intlLocale, t } from '@/i18n'
+import { monthKey, reportingToday } from '@/utils/reportingTime'
 
 // A curated shortlist for the currency pickers (a vehicle's own currency, or a manual expense's
 // foreign currency); the backend accepts any ISO-4217-shaped code, so this is a convenience.
@@ -95,8 +96,8 @@ export const reminderPresets = (): ReminderPreset[] => [
 /** The next occurrence of the given month/day on or after `from`, as YYYY-MM-DD. */
 export function nextOccurrenceDate(month: number, day: number, from = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, '0')
-  const thisYear = from.getFullYear()
-  const todayKey = `${thisYear}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`
+  const todayKey = reportingToday(from)
+  const thisYear = Number(todayKey.slice(0, 4))
   const candidate = `${thisYear}-${pad(month)}-${pad(day)}`
   return candidate >= todayKey ? candidate : `${thisYear + 1}-${pad(month)}-${pad(day)}`
 }
@@ -250,13 +251,12 @@ export interface ChargeMonth<T extends ChargeLike> {
   pricePerKwh: number | null
 }
 
-/** Charges grouped by calendar month (local time, as their dates are shown), in the order they come. Costs are in the vehicle's currency. */
+/** Charges grouped by calendar month (reporting timezone), in the order they come. Costs are in the vehicle's currency. */
 export function groupChargesByMonth<T extends ChargeLike>(charges: T[], baseCurrency: string): ChargeMonth<T>[] {
   const months = new Map<string, ChargeMonth<T>>()
   const pricedKwh = new Map<string, number>()
   for (const c of charges) {
-    const d = new Date(c.date)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const key = monthKey(c.date)
     let month = months.get(key)
     if (!month) {
       month = { key, date: c.date, charges: [], kwh: 0, cost: 0, withoutCost: 0, pricePerKwh: null }

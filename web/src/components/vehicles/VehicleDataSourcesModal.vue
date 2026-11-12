@@ -5,7 +5,7 @@ import { capabilitiesOf } from '@/utils/capabilities'
 import { connectedVehiclesExcept, connectionFormFrom, connectionPayload, type ConnectionForm } from '@/utils/vehicles'
 import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
-import { Database, RefreshCw, Link2, CheckCircle2, AlertCircle, Pencil } from '@/icons'
+import { RefreshCw, Link2, CheckCircle2, AlertCircle, Pencil } from '@/icons'
 import ModalShell from '@/components/ModalShell.vue'
 import TeslaMateConnectionFields from '@/components/vehicles/TeslaMateConnectionFields.vue'
 import { useConfirm } from '@/composables/useConfirm'
@@ -113,15 +113,12 @@ function formatLast(iso?: string) {
 </script>
 
 <template>
-  <ModalShell v-model:open="open" size="md" body-class="space-y-4 text-xs">
+  <ModalShell pane v-model:open="open" size="md" body-class="space-y-4 text-xs">
     <template #title>
-        <div class="flex min-w-0 items-center gap-3">
-          <div class="p-2 bg-sky-500/10 text-sky-400 rounded-xl"><Database class="w-5 h-5" /></div>
-          <div class="min-w-0">
-            <h3 class="text-base font-bold text-white">{{ $t('vehicles.vehicleDataSourcesModal.title') }}</h3>
-            <p class="text-xs text-slate-400 truncate">{{ vehicle?.name }}</p>
-          </div>
-        </div>
+      <div class="min-w-0">
+        <h3 class="text-base font-bold text-white">{{ $t('vehicles.vehicleDataSourcesModal.title') }}</h3>
+        <p class="text-xs text-slate-400 truncate">{{ vehicle?.name }}</p>
+      </div>
     </template>
 
       <form v-if="editing && connection" id="teslamate-connection-form" class="space-y-4" @submit.prevent="handleSave">
@@ -153,7 +150,7 @@ function formatLast(iso?: string) {
               v-if="summary.teslamate_configured"
               @click="testConnection"
               :disabled="test?.loading"
-              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg flex items-center gap-1.5 border border-slate-700"
+              class="btn btn-secondary border border-slate-700"
             >
               <RefreshCw v-if="test?.loading" class="w-3.5 h-3.5 animate-spin" />
               <Link2 v-else class="w-3.5 h-3.5" />
@@ -161,7 +158,7 @@ function formatLast(iso?: string) {
             </button>
             <button
               @click="editConnection"
-              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg flex items-center gap-1.5 border border-slate-700"
+              class="btn btn-secondary border border-slate-700"
             >
               <Pencil class="w-3.5 h-3.5" />
               {{ summary.teslamate_configured ? $t('vehicles.vehicleDataSourcesModal.editConnection') : $t('vehicles.vehicleDataSourcesModal.connect') }}

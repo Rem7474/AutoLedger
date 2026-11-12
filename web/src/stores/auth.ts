@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { api } from '@/services/api'
 import { currentLocale } from '@/i18n'
 import { setDistanceUnit, setVolumeUnit } from '@/units'
+import { setReportingTimezone } from '@/utils/reportingTime'
 
 // The access/refresh tokens live in HttpOnly cookies set by the API — this store never
 // holds a token value, only whether the current cookie-backed session is valid.
@@ -28,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = await api.getMe()
       setDistanceUnit(user.value?.distance_unit)
       setVolumeUnit(user.value?.volume_unit)
+      setReportingTimezone(user.value?.reporting_timezone)
       status.value = 'authenticated'
       syncAccountLanguage(user.value)
     } catch {
@@ -41,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = res.user
     setDistanceUnit(user.value?.distance_unit)
     setVolumeUnit(user.value?.volume_unit)
+    setReportingTimezone(user.value?.reporting_timezone)
     status.value = 'authenticated'
     syncAccountLanguage(user.value)
   }
@@ -50,6 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = res.user
     setDistanceUnit(user.value?.distance_unit)
     setVolumeUnit(user.value?.volume_unit)
+    setReportingTimezone(user.value?.reporting_timezone)
     status.value = 'authenticated'
     syncAccountLanguage(user.value)
   }
@@ -64,6 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     status.value = 'unauthenticated'
     setDistanceUnit(null)
     setVolumeUnit(null)
+    setReportingTimezone(null)
   }
 
   return {
