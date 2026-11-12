@@ -4,6 +4,7 @@ import { api, type VehiclePerson } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
 import { useVehicleStore } from '@/stores/vehicle'
 import { downloadCsv } from '@/utils/csv'
+import { todayIso } from '@/utils/dates'
 import { applyBatchTag, driveCsvHeaders, driveCsvRows } from '@/utils/drives'
 
 // What the bulk bar does with the selected drives: tag, driver, export, carpool and toll estimates.
@@ -78,7 +79,7 @@ export function useDriveBulkActions(options: {
   // Export selected drives to CSV
   function exportSelectedDrives() {
     if (!selectedList.value.length) return
-    downloadCsv(`${t('drives.drivesView.csvFileName')}_${new Date().toISOString().slice(0, 10)}.csv`, driveCsvHeaders(vehicleStore.currency), driveCsvRows(selectedList.value))
+    downloadCsv(`${t('drives.drivesView.csvFileName')}_${todayIso()}.csv`, driveCsvHeaders(vehicleStore.currency), driveCsvRows(selectedList.value))
   }
 
   // Each selected drive becomes a leg of the carpool, in chronological order. The selection stays until the carpool is saved.

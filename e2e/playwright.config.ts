@@ -14,9 +14,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:8080',
     locale: 'en-GB',
-    // The server cuts its days in its reporting timezone (APP_TIMEZONE, Europe/Paris unless set) and the period bar
-    // cuts "today" with the browser clock: the two must agree, or between midnight in Paris and midnight in UTC a
-    // record created by a test is dated tomorrow and falls outside the period the page asks for.
+    // The server cuts its days in its reporting timezone (APP_TIMEZONE, Europe/Paris unless set); the suite's browser
+    // uses the same one so that dates typed into forms read the same on both sides.
     timezoneId: process.env.APP_TIMEZONE ?? 'Europe/Paris',
     trace: 'retain-on-failure',
   },

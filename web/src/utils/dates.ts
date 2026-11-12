@@ -1,7 +1,8 @@
 import { intlLocale } from '@/i18n'
+import { dayKey as reportingDayKey, reportingToday } from '@/utils/reportingTime'
 
-/** Today as YYYY-MM-DD (UTC), the format the date pickers and the API use. */
-export const todayIso = (): string => new Date().toISOString().substring(0, 10)
+/** Today as YYYY-MM-DD in the server's reporting timezone, the format the date pickers and the API use. */
+export const todayIso = (): string => reportingToday()
 
 /** The YYYY-MM-DD (UTC) day of a date or an ISO string. */
 export const toIsoDay = (d: string | Date): string => new Date(d).toISOString().substring(0, 10)
@@ -13,9 +14,9 @@ export function toLocalDateTimeInput(d: string | Date = new Date()): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-/** The local calendar day of a timestamp, or today when omitted. */
-export function toLocalDay(d: string | Date = new Date()): string {
-  return toLocalDateTimeInput(d).substring(0, 10)
+/** The calendar day (YYYY-MM-DD) of a timestamp in the server's reporting timezone, or today when omitted. A bare day is returned as it is. */
+export function dayKey(d: string | Date = new Date()): string {
+  return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : reportingDayKey(d)
 }
 
 /** A "YYYY-MM" month key as a short month in the current language ("févr. 26"); anything else is returned untouched. */

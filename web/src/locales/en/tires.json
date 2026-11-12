@@ -235,7 +235,7 @@
     "index": "(Index: x{index})",
     "pasteCopied": "Paste the copied session ({date})",
     "sessionOver": "Session over",
-    "currentlyFitted": "🟢 Currently fitted",
+    "currentlyFitted": "Currently fitted",
     "removedAt": "{date} at {odometer} {unit}",
     "currentlyOnVehicle": "Currently on the vehicle",
     "dateAtKm": "{date} at {km} {unit}"

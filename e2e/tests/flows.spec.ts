@@ -1163,3 +1163,27 @@ test('on a wide screen the vehicle card menu opens above the content of the card
     await page.keyboard.press('Escape')
   }
 })
+
+test.describe("the period bar in a browser timezone other than the server's", () => {
+  // The server cuts days in its reporting timezone (Europe/Paris unless APP_TIMEZONE says otherwise); the browser sits
+  // eight or nine hours behind it. At 23:30 UTC on 4 March 2020 it is 00:30 on the 5th in Paris and 15:30 on the 4th
+  // in Los Angeles: a fill-up made then belongs to the 5th, the day the period bar must call today.
+  test.skip(!!process.env.APP_TIMEZONE && process.env.APP_TIMEZONE !== 'Europe/Paris', 'the instants below are chosen for Europe/Paris')
+  test.use({ timezoneId: 'America/Los_Angeles' })
+
+  test('lists a fill-up the server dated today', async ({ page, request }) => {
+    const headers = await authHeaders(request)
+    const created = await request.post('/api/vehicles', { headers, data: { name: 'Timezone reference', powertrain: 'ICE', currency: 'EUR' } })
+    expect(created.ok()).toBeTruthy()
+    const vehicle = await created.json()
+    try {
+      const fill = await request.post(`/api/vehicles/${vehicle.id}/fuel-logs`, { headers, data: { date: '2020-03-04T23:30:00Z', amount: 17, liters: 10, fuel_type: 'SP95_E10' } })
+      expect(fill.ok()).toBeTruthy()
+      await page.clock.setFixedTime(new Date('2020-03-04T23:30:00Z'))
+      await useVehicle(page, vehicle.id, '/costs?period=1M')
+      await expect(page.getByTestId('cost-entry')).toHaveCount(1)
+    } finally {
+      await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+    }
+  })
+})

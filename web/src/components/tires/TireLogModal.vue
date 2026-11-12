@@ -5,6 +5,7 @@ import { t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, ref, watch } from 'vue'
 import { Ruler } from '@/icons'
+import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
@@ -16,7 +17,7 @@ import { useSubmit } from '@/composables/useSubmit'
 
 // Adds or edits (editingLogId set) a tread depth measurement of selectedTire; initialForm seeds the fields when the modal opens
 const props = defineProps<{ vehicleId: string; selectedTire: any | null; editingLogId: string | null; editingLogVersion: number | null; initialForm: TireLogForm }>()
-const emit = defineEmits<{ saved: [] }>()
+const emit = defineEmits<{ saved: []; delete: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const { showAlert } = useConfirm()
 const { explainStaleWrite } = useStaleWrite()
@@ -115,6 +116,7 @@ const handleAddLog = () => runOnce(handleAddLogAction)
       />
     </div>
     <template #footer>
+      <DetailDeleteButton v-if="editingLogId" class="mr-auto" :aria-label="$t('tires.tireHistoryModal.deleteTheReading')" @delete="emit('delete')" />
       <button
         type="button"
         @click="open = false"
