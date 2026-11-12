@@ -171,10 +171,17 @@ func (r *Repository) ListVehiclesByUserID(ctx context.Context, userID string) ([
 	if err := r.loadSourcesInto(ctx, list); err != nil {
 		return nil, err
 	}
+	ptrs := make([]*models.Vehicle, len(list))
 	for i := range list {
 		if err := r.fillTollDetectionActive(ctx, &list[i]); err != nil {
 			return nil, err
 		}
+		ptrs[i] = &list[i]
+	}
+	if err := r.FillVehicleCapabilities(ctx, ptrs...); err != nil {
+		return nil, err
+	}
+	for i := range list {
 		sanitizeVehicleForRole(&list[i])
 	}
 	return list, nil
@@ -218,6 +225,9 @@ func (r *Repository) GetVehicleByID(ctx context.Context, id, userID string) (*mo
 		return nil, err
 	}
 	if err := r.fillTollDetectionActive(ctx, &v); err != nil {
+		return nil, err
+	}
+	if err := r.FillVehicleCapabilities(ctx, &v); err != nil {
 		return nil, err
 	}
 	sanitizeVehicleForRole(&v)
