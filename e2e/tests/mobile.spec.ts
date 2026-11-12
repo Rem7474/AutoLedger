@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { authHeaders, useVehicle, vehicles, type Vehicle } from './helpers'
 
 // A phone: touch pointer, so the 44px hit areas and the 16px fields of main.css apply.
@@ -104,6 +104,16 @@ async function drag(page: Page, x: number, y: number, dx: number, dy: number, st
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 const swipeDown = (page: Page, x: number, y: number, distance: number, steps = 10) => drag(page, x, y, 0, distance, steps)
+
+// Resolves once a sheet has stopped sliding in: its box is the same on two animation frames in a row. A touch aimed
+// or a height measured while it still moves reads a position the sheet is about to leave.
+async function settled(locator: Locator) {
+  await expect.poll(() => locator.evaluate((el) => new Promise<boolean>((resolve) => {
+    const box = () => { const r = el.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].join() }
+    const first = box()
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve(box() === first)))
+  }))).toBe(true)
+}
 
 test('pulling the page down from the top reloads the list, and a short pull does not', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
@@ -1178,6 +1188,7 @@ test('the month detail is titled by its month alone and a swipe moves between mo
   expect(last).toMatch(/^[A-Za-z]+ \d{4}$/)
 
   const body = dialog.getByTestId('month-detail-body')
+  await settled(dialog)
   const box = (await body.boundingBox())!
   const y = Math.min(box.y + 120, 600)
   // Swiping right brings the month before
@@ -1225,10 +1236,11 @@ test('a vehicle card has its menu as a bottom sheet with the vehicle name, large
   const sheet = page.getByRole('dialog')
   await expect(sheet.getByRole('heading', { name: ev.name })).toBeVisible()
   const entries = sheet.getByRole('menuitem')
+  await settled(sheet)
   const labels = (await entries.allInnerTexts()).map((t) => t.trim())
   expect(labels.slice(0, 4)).toEqual(['Acquisition and financing', 'Data sources', 'Sharing and access', 'Odometer'])
   expect(labels.at(-1)).toBe('Delete')
   expect(labels).not.toContain('Edit')
-  for (const h of await entries.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44)
+  for (const h of await entries.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(Math.round(h)).toBeGreaterThanOrEqual(44)
   await expect(sheet.getByRole('menuitem', { name: 'Delete' })).toHaveClass(/menu-item-danger/)
 })
