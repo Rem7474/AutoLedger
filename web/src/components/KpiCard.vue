@@ -26,6 +26,9 @@ const props = withDefaults(defineProps<{
   compact?: boolean
   // The figure the page is read for: set larger than its neighbours
   lead?: boolean
+  // A tile set inside a panel (`.card`): a block of the same tone would not stand out, so it takes the tone of the
+  // surfaces that sit inside a card, one step lighter, with a visible outline. On the page background it stays a card.
+  nested?: boolean
   // Lines the header, the figure and the rest up with the cards of the same grid row. The grid must give each card
   // three rows (`row-span-3`'s subgrid); a label that wraps on a phone then no longer pushes its figure down.
   aligned?: boolean
@@ -50,7 +53,7 @@ const actionClass = "tap-text mt-auto self-start pt-1 text-xs font-semibold text
     :class="[
       aligned ? 'row-span-3 grid grid-rows-subgrid gap-y-0' : 'flex flex-col',
       compact ? 'rounded-xl border p-3' : 'rounded-2xl border p-4 shadow-sm transition-colors hover:border-slate-600',
-      tintClass ?? (compact ? 'border-transparent bg-slate-800' : 'card'),
+      tintClass ?? (compact ? 'border-transparent bg-slate-800' : nested ? 'border-slate-700 bg-slate-800' : 'card'),
     ]"
   >
     <div class="flex items-start justify-between gap-2" :class="compact ? '' : 'mb-2 min-h-8'">
