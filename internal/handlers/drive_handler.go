@@ -18,10 +18,22 @@ import (
 )
 
 type DriveCostBreakdown struct {
-	ElectricityCost       money.Cents `json:"electricity_cost"`
-	ElectricityKwh        float64     `json:"electricity_kwh"`
-	ElectricityRate       float64     `json:"electricity_rate"`
-	EnergySource          string      `json:"energy_source"`           // MEASURED | CONSUMPTION | DEFAULT
+	// EnergyCost is the whole energy cost of the drive, whatever the energy: the sum of its electric part
+	// (ElectricityCost, from ElectricityKwh) and its fuel part (FuelCost, from FuelLiters). A vehicle that charges only
+	// has no fuel part, one that burns fuel only has no electric part. electricity_cost is the electric part alone,
+	// and is deprecated as a name for the energy: read energy_cost.
+	EnergyCost      money.Cents `json:"energy_cost"`
+	ElectricityCost money.Cents `json:"electricity_cost"`
+	FuelCost        money.Cents `json:"fuel_cost"`
+	ElectricityKwh  float64     `json:"electricity_kwh"`
+	ElectricityRate float64     `json:"electricity_rate"`
+	EnergySource    string      `json:"energy_source"` // MEASURED | CONSUMPTION | DEFAULT; FUEL | UNKNOWN for a fuel-only vehicle
+	// FuelOnly marks a vehicle that burns fuel only: its energy is its fuel (FuelCost, FuelLiters, null while its
+	// fill-ups give no consumption) and FuelRatePerLiter the average price per litre of its fill-ups before the drive (0
+	// while unknown).
+	FuelOnly              bool        `json:"fuel_only"`
+	FuelLiters            *float64    `json:"fuel_liters"`
+	FuelRatePerLiter      float64     `json:"fuel_rate_per_liter"`
 	ElectricityRateSource string      `json:"electricity_rate_source"` // HISTORY | DEFAULT
 	TiresCost             money.Cents `json:"tires_cost"`
 	TiresRate             float64     `json:"tires_rate"`
@@ -164,10 +176,15 @@ func (h *DriveHandler) List(w http.ResponseWriter, r *http.Request) {
 			NeedsTollQualification: needsQualification[d.ID],
 			Carpools:               carpoolsOrEmpty(carpoolsByDrive[d.ID]),
 			Costs: DriveCostBreakdown{
+				EnergyCost:            cost.EnergyCost,
 				ElectricityCost:       elecCost,
+				FuelCost:              cost.FuelCost,
 				ElectricityKwh:        math.Round(kwh*10) / 10,
 				ElectricityRate:       dr.ElectricityPerKwh,
 				EnergySource:          energySource,
+				FuelOnly:              dr.FuelOnly,
+				FuelLiters:            fuelLiters(dr, cost),
+				FuelRatePerLiter:      dr.FuelPricePerLiter,
 				ElectricityRateSource: dr.ElectricitySource,
 				TiresCost:             tiresCost,
 				TiresRate:             dr.TiresPerKm,
@@ -304,4 +321,14 @@ func parseDriveFilter(r *http.Request) database.DriveFilter {
 
 	filter.From, filter.To = parseTimeRange(r)
 	return filter
+}
+
+// fuelLiters is the fuel of a drive of a fuel-only vehicle, nil when the vehicle burns no fuel or its consumption is
+// unknown.
+func fuelLiters(rates *services.UnitRates, cost services.DriveCost) *float64 {
+	if !rates.FuelOnly || cost.FuelLitres <= 0 {
+		return nil
+	}
+	v := math.Round(cost.FuelLitres*10) / 10
+	return &v
 }

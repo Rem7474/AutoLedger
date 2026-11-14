@@ -31,7 +31,7 @@ func (s *TCOService) tagBreakdown(ctx context.Context, vehicleID string, totalDi
 		return nil, err
 	}
 
-	var costs map[string]money.Cents
+	var costs map[string]DriveCost
 	if anyTagged {
 		if costs, err = s.driveCosts(ctx, vehicleID, drives, tolls); err != nil {
 			return nil, err
@@ -42,7 +42,7 @@ func (s *TCOService) tagBreakdown(ctx context.Context, vehicleID string, totalDi
 }
 
 // splitByTag groups drives by tag; costs may be nil, which leaves every cost at zero.
-func splitByTag(drives []models.Drive, costs map[string]money.Cents, tolls map[string]money.Cents, totalDistance float64) []TagCostBreakdown {
+func splitByTag(drives []models.Drive, costs map[string]DriveCost, tolls map[string]money.Cents, totalDistance float64) []TagCostBreakdown {
 	byTag := map[string]*TagCostBreakdown{}
 	for _, d := range drives {
 		tags := d.Tags
@@ -61,7 +61,13 @@ func splitByTag(drives []models.Drive, costs map[string]money.Cents, tolls map[s
 				tb.EnergyKwh += *d.EnergyConsumedKwh
 			}
 			tb.TollsAmount += tolls[d.ID]
-			tb.Cost += cost
+			tb.Cost += cost.TotalCost
+			if cost.FuelOnly {
+				tb.FuelOnly = true
+				if cost.FuelLitres > 0 {
+					tb.FuelLiters += cost.FuelLitres
+				}
+			}
 			if len(d.Tags) > 1 {
 				tb.SharedDrives++
 			}
@@ -78,6 +84,7 @@ func splitByTag(drives []models.Drive, costs map[string]money.Cents, tolls map[s
 		}
 		tb.DistanceKm = round1(tb.DistanceKm)
 		tb.EnergyKwh = round1(tb.EnergyKwh)
+		tb.FuelLiters = round1(tb.FuelLiters)
 		list = append(list, *tb)
 	}
 	sort.Slice(list, func(i, j int) bool {
@@ -92,7 +99,7 @@ func splitByTag(drives []models.Drive, costs map[string]money.Cents, tolls map[s
 // driveCosts is the cost of each drive as the drive list shows it: energy, wear, insurance share and tolls at the
 // vehicle's unit rates. The insurance is shared over all the drives, so they must all be passed, whatever period the
 // caller reports on.
-func (s *TCOService) driveCosts(ctx context.Context, vehicleID string, drives []models.Drive, tolls map[string]money.Cents) (map[string]money.Cents, error) {
+func (s *TCOService) driveCosts(ctx context.Context, vehicleID string, drives []models.Drive, tolls map[string]money.Cents) (map[string]DriveCost, error) {
 	rates, err := s.carpool.DriveRates(ctx, vehicleID, drives)
 	if err != nil {
 		return nil, err
@@ -101,9 +108,9 @@ func (s *TCOService) driveCosts(ctx context.Context, vehicleID string, drives []
 	if err != nil {
 		return nil, err
 	}
-	costs := make(map[string]money.Cents, len(drives))
+	costs := make(map[string]DriveCost, len(drives))
 	for _, d := range drives {
-		costs[d.ID] = ComputeDriveCost(rates[d.ID], d, insurance[d.ID], tolls[d.ID]).TotalCost
+		costs[d.ID] = ComputeDriveCost(rates[d.ID], d, insurance[d.ID], tolls[d.ID])
 	}
 	return costs, nil
 }

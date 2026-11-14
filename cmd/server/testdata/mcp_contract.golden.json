@@ -434,8 +434,9 @@
     "drives": "number",
     "drives_to_qualify": "number",
     "drives_without_distance": "number",
-    "energy_kwh": "number",
+    "energy_kwh": null,
     "from": "string",
+    "fuel_liters": null,
     "tags": [],
     "to": "string",
     "tolls": {
@@ -465,6 +466,7 @@
     "drives_without_distance": "number",
     "energy_kwh": "number",
     "from": "string",
+    "fuel_liters": null,
     "tags": [
       {
         "cost": {
@@ -481,6 +483,7 @@
         },
         "distance_share_pct": "number",
         "energy_kwh": "number",
+        "fuel_liters": null,
         "shared_drives": "number",
         "tag": null,
         "tolls": {
@@ -512,8 +515,9 @@
     "drives": "number",
     "drives_to_qualify": "number",
     "drives_without_distance": "number",
-    "energy_kwh": "number",
+    "energy_kwh": null,
     "from": "string",
+    "fuel_liters": null,
     "tags": [],
     "to": "string",
     "tolls": {
@@ -543,6 +547,7 @@
     "drives_without_distance": "number",
     "energy_kwh": "number",
     "from": "string",
+    "fuel_liters": null,
     "tags": [
       {
         "cost": {
@@ -559,6 +564,7 @@
         },
         "distance_share_pct": "number",
         "energy_kwh": "number",
+        "fuel_liters": null,
         "shared_drives": "number",
         "tag": null,
         "tolls": {
@@ -1533,6 +1539,7 @@
         },
         "distance_share_pct": "number",
         "energy_kwh": "number",
+        "fuel_liters": null,
         "shared_drives": "number",
         "tag": null,
         "tolls": {
@@ -1566,6 +1573,7 @@
         },
         "distance_share_pct": "number",
         "energy_kwh": "number",
+        "fuel_liters": null,
         "shared_drives": "number",
         "tag": null,
         "tolls": {

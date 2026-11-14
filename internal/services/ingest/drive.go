@@ -24,6 +24,9 @@ type DriveInput struct {
 	DistanceKm      float64
 	EnergyKwh       *float64
 	VehicleKwh100km *float64
+	// FuelOnly is a vehicle that burns fuel and cannot charge: a drive carries no kWh, neither typed nor estimated,
+	// since the drive's fuel is derived from the fuel fill-ups when it is read.
+	FuelOnly bool
 }
 
 // DriveTimings is the normalized result of a DriveInput.
@@ -83,7 +86,7 @@ func NormalizeDrive(in DriveInput) DriveTimings {
 	}
 	out.DurationMin = DurationMinutes(in.Start, out.End)
 
-	hasEnergy := in.EnergyKwh != nil && *in.EnergyKwh > 0
+	hasEnergy := !in.FuelOnly && in.EnergyKwh != nil && *in.EnergyKwh > 0
 	switch {
 	case hasEnergy:
 		out.EnergyKnown = true
@@ -91,7 +94,7 @@ func NormalizeDrive(in DriveInput) DriveTimings {
 		if in.DistanceKm > 0 {
 			out.Kwh100km = Consumption100km(out.EnergyKwh, in.DistanceKm)
 		}
-	case in.DistanceKm > 0:
+	case in.DistanceKm > 0 && !in.FuelOnly:
 		out.EnergyKnown = true
 		out.EnergyEstimated = true
 		out.EnergyKwh, out.Kwh100km = EstimateDriveEnergy(in.VehicleKwh100km, in.DistanceKm)

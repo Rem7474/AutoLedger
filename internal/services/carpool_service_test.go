@@ -3,6 +3,7 @@ package services
 import (
 	"testing"
 
+	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
 
@@ -82,3 +83,25 @@ func TestMonthlyInsuranceAllocationFormula(t *testing.T) {
 		t.Fatalf("expected 200 cents, got %d", currentMonthCost)
 	}
 }
+
+func TestFuelOnlyDriveCostIsPricedFromFuelNeverKwh(t *testing.T) {
+	d := models.Drive{DistanceKm: ptrFloat(100)}
+	known := &UnitRates{FuelOnly: true, FuelLitresPer100: 7, FuelPricePerLiter: 1.8, ElectricityPerKwh: 0.3, TiresSource: RateSourceHistory, MaintenanceSource: RateSourceHistory}
+	c := ComputeDriveCost(known, d, 0, 0)
+	if c.ElectricityKwh != 0 || c.FuelLitres != 7 || c.ElectricityCost != 0 || c.FuelCost != money.FromFloat(12.6) || c.EnergyCost != money.FromFloat(12.6) || !c.FuelOnly || c.EnergySource != EnergySourceFuel || c.HasEstimates {
+		t.Fatalf("fuel priced from the fill-ups: %+v", c)
+	}
+	unknown := &UnitRates{FuelOnly: true, FuelPricePerLiter: 1.8, TiresSource: RateSourceHistory, MaintenanceSource: RateSourceHistory}
+	c = ComputeDriveCost(unknown, d, 0, 0)
+	if c.FuelLitres != 0 || c.EnergyCost != 0 || c.EnergySource != EnergySourceUnknown || !c.HasEstimates {
+		t.Fatalf("without a consumption nothing is invented: %+v", c)
+	}
+	// A hybrid is not fuel-only: its drive keeps the kWh figures
+	hybrid := &UnitRates{ElectricityPerKwh: 0.25, TiresSource: RateSourceHistory, MaintenanceSource: RateSourceHistory, ElectricitySource: RateSourceHistory}
+	c = ComputeDriveCost(hybrid, models.Drive{DistanceKm: ptrFloat(100), EnergyConsumedKwh: ptrFloat(16)}, 0, 0)
+	if c.FuelLitres != 0 || c.ElectricityKwh != 16 || c.ElectricityCost != money.FromFloat(4) || c.EnergyCost != c.ElectricityCost || c.FuelCost != 0 {
+		t.Fatalf("a hybrid drive stays electric: %+v", c)
+	}
+}
+
+func ptrFloat(v float64) *float64 { return &v }

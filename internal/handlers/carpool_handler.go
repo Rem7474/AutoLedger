@@ -42,16 +42,21 @@ type PassengerPayload struct {
 }
 
 type LegPayload struct {
-	DriveID         *string     `json:"drive_id"`
-	StartLabel      *string     `json:"start_label"`
-	EndLabel        *string     `json:"end_label"`
-	DistanceKm      float64     `json:"distance_km"`
-	ElectricityCost money.Cents `json:"electricity_cost"`
-	TollsCost       money.Cents `json:"tolls_cost"`
-	TiresCost       money.Cents `json:"tires_cost"`
-	MaintenanceCost money.Cents `json:"maintenance_cost"`
-	InsuranceCost   money.Cents `json:"insurance_cost"`
-	OtherCost       money.Cents `json:"other_cost"`
+	DriveID    *string `json:"drive_id"`
+	StartLabel *string `json:"start_label"`
+	EndLabel   *string `json:"end_label"`
+	DistanceKm float64 `json:"distance_km"`
+	// EnergyCost is the whole energy cost, whatever the energy; FuelCost its fuel part (a vehicle that burns fuel only
+	// takes it from EnergyCost when left out). ElectricityCost is the deprecated electric-part name: it is read, as
+	// the energy to which FuelCost is added, only when EnergyCost is left out.
+	EnergyCost      *money.Cents `json:"energy_cost"`
+	FuelCost        *money.Cents `json:"fuel_cost"`
+	ElectricityCost money.Cents  `json:"electricity_cost"`
+	TollsCost       money.Cents  `json:"tolls_cost"`
+	TiresCost       money.Cents  `json:"tires_cost"`
+	MaintenanceCost money.Cents  `json:"maintenance_cost"`
+	InsuranceCost   money.Cents  `json:"insurance_cost"`
+	OtherCost       money.Cents  `json:"other_cost"`
 	// Overrides are the categories (by cost field name) of a leg made from a drive whose amount differs from the
 	// drive's on purpose
 	Overrides map[string]money.Cents `json:"overrides"`
@@ -60,18 +65,23 @@ type LegPayload struct {
 // UpsertCarpoolRequest describes a carpool trip. Legs are the ordered stages of the trip; when omitted,
 // the trip-level distance and costs form a single leg.
 type UpsertCarpoolRequest struct {
-	Title           string      `json:"title"`
-	Date            string      `json:"date"`
-	DistanceKm      float64     `json:"distance_km"`
-	DriveID         *string     `json:"drive_id"`
-	TripGroupID     *string     `json:"trip_group_id"`
-	ElectricityCost money.Cents `json:"electricity_cost"`
-	TollsCost       money.Cents `json:"tolls_cost"`
-	TiresCost       money.Cents `json:"tires_cost"`
-	MaintenanceCost money.Cents `json:"maintenance_cost"`
-	InsuranceCost   money.Cents `json:"insurance_cost"`
-	OtherCost       money.Cents `json:"other_cost"`
-	Notes           *string     `json:"notes"`
+	Title       string  `json:"title"`
+	Date        string  `json:"date"`
+	DistanceKm  float64 `json:"distance_km"`
+	DriveID     *string `json:"drive_id"`
+	TripGroupID *string `json:"trip_group_id"`
+	// EnergyCost is the whole energy cost, whatever the energy; FuelCost its fuel part (a vehicle that burns fuel only
+	// takes it from EnergyCost when left out). ElectricityCost is the deprecated electric-part name: it is read, as
+	// the energy to which FuelCost is added, only when EnergyCost is left out.
+	EnergyCost      *money.Cents `json:"energy_cost"`
+	FuelCost        *money.Cents `json:"fuel_cost"`
+	ElectricityCost money.Cents  `json:"electricity_cost"`
+	TollsCost       money.Cents  `json:"tolls_cost"`
+	TiresCost       money.Cents  `json:"tires_cost"`
+	MaintenanceCost money.Cents  `json:"maintenance_cost"`
+	InsuranceCost   money.Cents  `json:"insurance_cost"`
+	OtherCost       money.Cents  `json:"other_cost"`
+	Notes           *string      `json:"notes"`
 	// ExpectedVersion is the version of the trip as the editor loaded it: an update is refused with 409 when the trip
 	// was saved since. Left out, the update replaces whatever is stored.
 	ExpectedVersion *int64 `json:"expected_version"`
@@ -96,7 +106,7 @@ func nonEmptyLabel(s *string) *string {
 }
 
 // buildCarpool validates the payload and returns the trip, its legs and its passengers.
-func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolTrip, []models.CarpoolLeg, []models.CarpoolPassenger, error) {
+func buildCarpool(vehicleID string, fuelOnly bool, req *UpsertCarpoolRequest) (*models.CarpoolTrip, []models.CarpoolLeg, []models.CarpoolPassenger, error) {
 	if strings.TrimSpace(req.Title) == "" {
 		return nil, nil, nil, apierror.New("carpool.title_required", "The carpool title is required")
 	}
@@ -113,7 +123,7 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 	if len(payloads) == 0 {
 		payloads = []LegPayload{{
 			DriveID: req.DriveID, DistanceKm: req.DistanceKm,
-			ElectricityCost: req.ElectricityCost, TollsCost: req.TollsCost, TiresCost: req.TiresCost,
+			EnergyCost: req.EnergyCost, FuelCost: req.FuelCost, ElectricityCost: req.ElectricityCost, TollsCost: req.TollsCost, TiresCost: req.TiresCost,
 			MaintenanceCost: req.MaintenanceCost, InsuranceCost: req.InsuranceCost, OtherCost: req.OtherCost,
 		}}
 	}
@@ -126,7 +136,8 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 		if err := validateQuantity(lp.DistanceKm, 5000); err != nil {
 			return nil, nil, nil, apierror.Newf("carpool.leg_distance", "Invalid distance for leg %d", i+1)
 		}
-		for _, c := range []money.Cents{lp.ElectricityCost, lp.TollsCost, lp.TiresCost, lp.MaintenanceCost, lp.InsuranceCost, lp.OtherCost} {
+		energy, fuel := resolveEnergy(lp, fuelOnly)
+		for _, c := range []money.Cents{energy, fuel, lp.TollsCost, lp.TiresCost, lp.MaintenanceCost, lp.InsuranceCost, lp.OtherCost} {
 			if err := validateAmount(c, true); err != nil {
 				return nil, nil, nil, apierror.Newf("carpool.leg_error", "Leg %d: %w", i+1, err)
 			}
@@ -141,9 +152,10 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 		}
 		legs[i] = models.CarpoolLeg{Overrides: overrides,
 			OrderIndex: i, DriveID: driveID, StartLabel: nonEmptyLabel(lp.StartLabel), EndLabel: nonEmptyLabel(lp.EndLabel),
-			DistanceKm: lp.DistanceKm, ElectricityCost: lp.ElectricityCost, TollsCost: lp.TollsCost, TiresCost: lp.TiresCost,
+			DistanceKm: lp.DistanceKm, EnergyCost: energy, FuelCost: fuel, TollsCost: lp.TollsCost, TiresCost: lp.TiresCost,
 			MaintenanceCost: lp.MaintenanceCost, InsuranceCost: lp.InsuranceCost, OtherCost: lp.OtherCost,
 		}
+		legs[i].SyncElectricity()
 	}
 	stopLabel := func(stop int) *string {
 		if stop < len(legs) {
@@ -211,6 +223,27 @@ func buildCarpool(vehicleID string, req *UpsertCarpoolRequest) (*models.CarpoolT
 	return trip, legs, passengers, nil
 }
 
+// resolveEnergy is the energy of a leg and its fuel part. energy_cost, when sent, is the total; the deprecated
+// electricity_cost then stands for the electric part alone, added to the fuel part. A vehicle that burns fuel only
+// has all its energy in fuel.
+func resolveEnergy(lp LegPayload, fuelOnly bool) (energy, fuel money.Cents) {
+	if lp.FuelCost != nil {
+		fuel = *lp.FuelCost
+	}
+	if lp.EnergyCost != nil {
+		energy = *lp.EnergyCost
+		if lp.FuelCost == nil && fuelOnly {
+			fuel = energy
+		}
+	} else {
+		energy = lp.ElectricityCost + fuel
+		if lp.FuelCost == nil && fuelOnly {
+			fuel = energy
+		}
+	}
+	return energy, min(fuel, energy)
+}
+
 // buildOverrides validates the overridden categories of a leg; only a leg made from a drive has any.
 func buildOverrides(in map[string]money.Cents, linked bool) (map[string]money.Cents, error) {
 	out := map[string]money.Cents{}
@@ -218,6 +251,9 @@ func buildOverrides(in map[string]money.Cents, linked bool) (map[string]money.Ce
 		return out, nil
 	}
 	for name, v := range in {
+		if name == models.CarpoolCostElectricityLegacy {
+			name = models.CarpoolCostEnergy
+		}
 		if !slices.Contains(models.CarpoolCostFields, name) {
 			return nil, apierror.Newf("carpool.invalid_override", "Unknown cost category %s", name)
 		}
@@ -337,7 +373,8 @@ func (h *CarpoolHandler) writeTrip(w http.ResponseWriter, r *http.Request, vehic
 func (h *CarpoolHandler) save(w http.ResponseWriter, r *http.Request, tripID string) {
 	vehicleID := chi.URLParam(r, "vehicleId")
 
-	if v := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleEditor); v == nil {
+	vehicle := requireVehicleAccess(w, r, h.repo, vehicleID, models.RoleEditor)
+	if vehicle == nil {
 		return
 	}
 
@@ -346,7 +383,7 @@ func (h *CarpoolHandler) save(w http.ResponseWriter, r *http.Request, tripID str
 		writeAPIError(w, http.StatusBadRequest, apierror.New("request.invalid_body", "Invalid request body"))
 		return
 	}
-	trip, legs, passengers, err := buildCarpool(vehicleID, &req)
+	trip, legs, passengers, err := buildCarpool(vehicleID, models.PowertrainIsFuelOnly(vehicle.Powertrain), &req)
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err)
 		return

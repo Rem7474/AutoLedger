@@ -1,16 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { capabilitiesOf } from './capabilities'
-import { csvTemplate, csvTemplateFilename, csvTemplateTypes, webhookSnippet } from './dataSources'
+import { csvColumns, csvTemplate, csvTemplateForPowertrain, csvTemplateFilename, csvTemplateTypes, webhookSnippet } from './dataSources'
 
 describe('csvTemplateTypes', () => {
-  it('offers charges and drives to an electric vehicle, fill-ups to a combustion one', () => {
+  it('offers charges and drives to an electric vehicle, drives and fill-ups to a combustion one', () => {
     expect(csvTemplateTypes(capabilitiesOf({ powertrain: 'EV' }))).toEqual(['CHARGES', 'DRIVES', 'ODOMETER'])
-    expect(csvTemplateTypes(capabilitiesOf({ powertrain: 'ICE' }))).toEqual(['FUEL', 'ODOMETER'])
+    expect(csvTemplateTypes(capabilitiesOf({ powertrain: 'ICE' }))).toEqual(['DRIVES', 'FUEL', 'ODOMETER'])
     expect(csvTemplateTypes(capabilitiesOf({ powertrain: 'PHEV' }))).toEqual(['CHARGES', 'DRIVES', 'FUEL', 'ODOMETER'])
   })
-  it('offers trips to a combustion vehicle a source feeds', () => {
-    const ice = capabilitiesOf({ powertrain: 'ICE' })
-    expect(csvTemplateTypes({ ...ice, drives: true })).toEqual(['DRIVES', 'FUEL', 'ODOMETER'])
+  it('leaves the kWh column out of the drives template of a vehicle that burns fuel', () => {
+    expect(csvTemplate('DRIVES', 'en', 'ELECTRIC').headers).toContain('kwh')
+    const fuel = csvTemplate('DRIVES', 'en', 'FUEL')
+    expect(fuel.headers).toEqual(['start_time', 'end_time', 'distance_km', 'tag'])
+    expect(fuel.rows[0]).toHaveLength(fuel.headers.length)
+    expect(csvColumns('DRIVES', 'FUEL').optional).not.toContain('kwh')
+    expect(csvColumns('DRIVES', 'ELECTRIC').optional).toContain('kwh')
+  })
+  it('picks the energy from the powertrain the onboarding wizard knows', () => {
+    expect(csvTemplateForPowertrain('DRIVES', 'en', 'ICE').headers).not.toContain('kwh')
+    for (const powertrain of ['EV', 'PHEV', 'REEV'] as const) {
+      expect(csvTemplateForPowertrain('DRIVES', 'en', powertrain).headers).toContain('kwh')
+    }
   })
 })
 

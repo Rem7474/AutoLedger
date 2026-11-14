@@ -1,5 +1,5 @@
 import { intlLocale, t } from '@/i18n'
-import { distanceUnit, formatDistance, kmToDisplayDistance, perDistance } from '@/units'
+import { distanceUnit, formatDistance, formatVolume, kmToDisplayDistance, perDistance } from '@/units'
 import { formatAmount } from '@/currency'
 import { dayParts, monthKey, reportingToday } from '@/utils/reportingTime'
 /** Drive of the "to qualify" toll queue: highway-like (speed heuristic or a toll found by the GPS detection), no toll
@@ -179,8 +179,11 @@ export function selectionSummary(list: any[], currency: string): string {
   if (!list.length) return ''
   const totalKm = list.reduce((s, d) => s + (Number(d.distance_km) || 0), 0)
   const totalKwh = list.reduce((s, d) => s + (Number(d.costs?.electricity_kwh) || 0), 0)
+  const totalLitres = list.reduce((s, d) => s + (Number(d.costs?.fuel_liters) || 0), 0)
   const totalCost = sumDriveCosts(list)
-  return `${formatDistance(totalKm)} • ${Math.round(totalKwh)} kWh • ${formatAmount(totalCost, currency)}`
+  // kWh for a vehicle that charges, litres for one that burns fuel; an unknown fuel adds no figure
+  const energy = list.some((d) => d.costs?.fuel_only) ? (totalLitres > 0 ? ` • ${formatVolume(totalLitres, 0)}` : '') : ` • ${Math.round(totalKwh)} kWh`
+  return `${formatDistance(totalKm)}${energy} • ${formatAmount(totalCost, currency)}`
 }
 
 export const driveCsvHeaders = (currency: string) => t('drives.csvHeaders', { unit: distanceUnit(), cur: currency }).split(',')
@@ -194,8 +197,9 @@ export function driveCsvRows(list: any[]) {
     d.end_address || '',
     Math.round(kmToDisplayDistance(d.distance_km || 0) * 100) / 100,
     d.duration_min || 0,
-    Math.round(perDistance(d.consumption_kwh_100km || 0) * 10) / 10,
-    d.costs?.electricity_kwh || 0,
+    // The kWh columns are empty, not 0, for a vehicle that burns fuel
+    d.costs?.fuel_only ? '' : Math.round(perDistance(d.consumption_kwh_100km || 0) * 10) / 10,
+    d.costs?.fuel_only ? '' : d.costs?.electricity_kwh || 0,
     (d.costs?.total_cost || 0).toFixed(2),
     perDistance(d.costs?.cost_per_km || 0).toFixed(3),
     (d.tags || []).join(', '),
@@ -271,12 +275,13 @@ export function buildTripCostDrive(tg: any, tgDrives: any[]) {
   const totalDuration = tgDrives.reduce((s, d) => s + (Number(d.duration_min) || 0), 0)
   const totalKwh = tgDrives.reduce((s, d) => s + (Number(d.costs?.electricity_kwh) || 0), 0)
   const elecCost = tgDrives.reduce((s, d) => s + (Number(d.costs?.electricity_cost) || 0), 0)
+  const energyCost = tgDrives.reduce((s, d) => s + (Number(d.costs?.energy_cost) || 0), 0)
   const tiresCost = tgDrives.reduce((s, d) => s + (Number(d.costs?.tires_cost) || 0), 0)
   const maintCost = tgDrives.reduce((s, d) => s + (Number(d.costs?.maintenance_cost) || 0), 0)
   const insurCost = tgDrives.reduce((s, d) => s + (Number(d.costs?.insurance_cost) || 0), 0)
   // tolls_total covers expenses attached to a drive of the trip as well as those attached to the trip itself
   const tollsCost = Number(tg.tolls_total ?? tg.expenses_total ?? 0)
-  const totalCost = elecCost + tiresCost + maintCost + insurCost + tollsCost
+  const totalCost = energyCost + tiresCost + maintCost + insurCost + tollsCost
   const costPerKm = totalKm > 0 ? totalCost / totalKm : 0
 
   const firstDrive = tgDrives[0]
@@ -297,6 +302,7 @@ export function buildTripCostDrive(tg: any, tgDrives: any[]) {
     costs: {
       electricity_kwh: Math.round(totalKwh),
       electricity_rate: totalKwh > 0 ? elecCost / totalKwh : 0,
+      energy_cost: energyCost,
       electricity_cost: elecCost,
       tires_rate: totalKm > 0 ? tiresCost / totalKm : 0,
       tires_cost: tiresCost,

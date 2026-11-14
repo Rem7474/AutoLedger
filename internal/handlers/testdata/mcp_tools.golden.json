@@ -2411,12 +2411,22 @@
           "type": "integer"
         },
         "energy_kwh": {
-          "description": "electric energy those drives used, in kWh",
-          "type": "number"
+          "description": "electric energy those drives used, in kWh; null for a vehicle that burns fuel only (see fuel_liters)",
+          "type": [
+            "null",
+            "number"
+          ]
         },
         "from": {
           "description": "first day counted, YYYY-MM-DD (UTC); empty when the period has no start",
           "type": "string"
+        },
+        "fuel_liters": {
+          "description": "fuel those drives used, in litres, for a vehicle that burns fuel only (from the consumption its fill-ups gave before each drive; drives with no known consumption are not counted); null for any other vehicle and while no consumption is known",
+          "type": [
+            "null",
+            "number"
+          ]
         },
         "tags": {
           "description": "the same split by tag as get_tag_breakdown, over the period only; a drive with several tags appears in each, so do not add the rows up when shared_drives is above zero",
@@ -2488,8 +2498,18 @@
                 "type": "number"
               },
               "energy_kwh": {
-                "description": "electric energy those drives used, in kWh",
-                "type": "number"
+                "description": "electric energy those drives used, in kWh; null for a vehicle that burns fuel only (see fuel_liters)",
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "fuel_liters": {
+                "description": "fuel those drives used, in litres, for a vehicle that burns fuel only (drives with no known consumption are not counted); null for any other vehicle and while no consumption is known",
+                "type": [
+                  "null",
+                  "number"
+                ]
               },
               "shared_drives": {
                 "description": "drives that carry several tags and so count in each of them: tag rows must not be added up when this is above zero",
@@ -2526,6 +2546,7 @@
               "tag",
               "distance",
               "energy_kwh",
+              "fuel_liters",
               "tolls",
               "cost",
               "cost_per_km",
@@ -2584,6 +2605,7 @@
         "drives_without_distance",
         "distance",
         "energy_kwh",
+        "fuel_liters",
         "tolls",
         "cost",
         "cost_per_km",
@@ -5049,8 +5071,18 @@
                 "type": "number"
               },
               "energy_kwh": {
-                "description": "electric energy those drives used, in kWh",
-                "type": "number"
+                "description": "electric energy those drives used, in kWh; null for a vehicle that burns fuel only (see fuel_liters)",
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "fuel_liters": {
+                "description": "fuel those drives used, in litres, for a vehicle that burns fuel only (drives with no known consumption are not counted); null for any other vehicle and while no consumption is known",
+                "type": [
+                  "null",
+                  "number"
+                ]
               },
               "shared_drives": {
                 "description": "drives that carry several tags and so count in each of them: tag rows must not be added up when this is above zero",
@@ -5087,6 +5119,7 @@
               "tag",
               "distance",
               "energy_kwh",
+              "fuel_liters",
               "tolls",
               "cost",
               "cost_per_km",

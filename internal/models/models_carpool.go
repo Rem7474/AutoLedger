@@ -9,13 +9,17 @@ import (
 
 // CarpoolTrip represents a shared trip with detailed real cost breakdown and passenger revenues.
 type CarpoolTrip struct {
-	ID              string      `json:"id"`
-	VehicleID       string      `json:"vehicle_id"`
-	DriveID         *string     `json:"drive_id,omitempty"`
-	TripGroupID     *string     `json:"trip_group_id,omitempty"`
-	Title           string      `json:"title"`
-	Date            time.Time   `json:"date"`
-	DistanceKm      float64     `json:"distance_km"`
+	ID          string    `json:"id"`
+	VehicleID   string    `json:"vehicle_id"`
+	DriveID     *string   `json:"drive_id,omitempty"`
+	TripGroupID *string   `json:"trip_group_id,omitempty"`
+	Title       string    `json:"title"`
+	Date        time.Time `json:"date"`
+	DistanceKm  float64   `json:"distance_km"`
+	// EnergyCost is the whole energy cost whatever the energy, FuelCost its fuel part. ElectricityCost is the electric
+	// part (EnergyCost - FuelCost), kept for the readers that predate energy_cost: deprecated, use energy_cost.
+	EnergyCost      money.Cents `json:"energy_cost"`
+	FuelCost        money.Cents `json:"fuel_cost"`
 	ElectricityCost money.Cents `json:"electricity_cost"`
 	TollsCost       money.Cents `json:"tolls_cost"`
 	TiresCost       money.Cents `json:"tires_cost"`
@@ -59,13 +63,17 @@ type CarpoolPassenger struct {
 
 // CarpoolLeg is one leg of a carpool trip, usually one TeslaMate drive, with its own costs.
 type CarpoolLeg struct {
-	ID              string      `json:"id"`
-	CarpoolTripID   string      `json:"carpool_trip_id"`
-	OrderIndex      int         `json:"order_index"`
-	DriveID         *string     `json:"drive_id,omitempty"`
-	StartLabel      *string     `json:"start_label,omitempty"`
-	EndLabel        *string     `json:"end_label,omitempty"`
-	DistanceKm      float64     `json:"distance_km"`
+	ID            string  `json:"id"`
+	CarpoolTripID string  `json:"carpool_trip_id"`
+	OrderIndex    int     `json:"order_index"`
+	DriveID       *string `json:"drive_id,omitempty"`
+	StartLabel    *string `json:"start_label,omitempty"`
+	EndLabel      *string `json:"end_label,omitempty"`
+	DistanceKm    float64 `json:"distance_km"`
+	// EnergyCost is the whole energy cost whatever the energy, FuelCost its fuel part. ElectricityCost is the electric
+	// part (EnergyCost - FuelCost), kept for the readers that predate energy_cost: deprecated, use energy_cost.
+	EnergyCost      money.Cents `json:"energy_cost"`
+	FuelCost        money.Cents `json:"fuel_cost"`
 	ElectricityCost money.Cents `json:"electricity_cost"`
 	TollsCost       money.Cents `json:"tolls_cost"`
 	TiresCost       money.Cents `json:"tires_cost"`
@@ -87,6 +95,10 @@ type CarpoolLeg struct {
 
 // CarpoolLegCosts is the six cost categories of a leg.
 type CarpoolLegCosts struct {
+	// EnergyCost is the whole energy cost whatever the energy, FuelCost its fuel part. ElectricityCost is the electric
+	// part (EnergyCost - FuelCost), kept for the readers that predate energy_cost: deprecated, use energy_cost.
+	EnergyCost      money.Cents `json:"energy_cost"`
+	FuelCost        money.Cents `json:"fuel_cost"`
 	ElectricityCost money.Cents `json:"electricity_cost"`
 	TollsCost       money.Cents `json:"tolls_cost"`
 	TiresCost       money.Cents `json:"tires_cost"`
@@ -97,39 +109,53 @@ type CarpoolLegCosts struct {
 
 // Cost field names, as used by the overrides of a leg.
 const (
-	CarpoolCostElectricity = "electricity_cost"
-	CarpoolCostTolls       = "tolls_cost"
-	CarpoolCostTires       = "tires_cost"
-	CarpoolCostMaintenance = "maintenance_cost"
-	CarpoolCostInsurance   = "insurance_cost"
-	CarpoolCostOther       = "other_cost"
+	CarpoolCostEnergy = "energy_cost"
+	// CarpoolCostElectricityLegacy is the name the energy category had before it was neutral: overrides saved under it
+	// are still read.
+	CarpoolCostElectricityLegacy = "electricity_cost"
+	CarpoolCostTolls             = "tolls_cost"
+	CarpoolCostTires             = "tires_cost"
+	CarpoolCostMaintenance       = "maintenance_cost"
+	CarpoolCostInsurance         = "insurance_cost"
+	CarpoolCostOther             = "other_cost"
 )
 
 // CarpoolCostFields lists the cost field names.
-var CarpoolCostFields = []string{CarpoolCostElectricity, CarpoolCostTolls, CarpoolCostTires, CarpoolCostMaintenance, CarpoolCostInsurance, CarpoolCostOther}
+var CarpoolCostFields = []string{CarpoolCostEnergy, CarpoolCostTolls, CarpoolCostTires, CarpoolCostMaintenance, CarpoolCostInsurance, CarpoolCostOther}
 
 // Costs returns the amounts of the leg as they are stored.
 func (l *CarpoolLeg) Costs() CarpoolLegCosts {
-	return CarpoolLegCosts{l.ElectricityCost, l.TollsCost, l.TiresCost, l.MaintenanceCost, l.InsuranceCost, l.OtherCost}
+	return CarpoolLegCosts{EnergyCost: l.EnergyCost, FuelCost: l.FuelCost, ElectricityCost: l.EnergyCost - l.FuelCost,
+		TollsCost: l.TollsCost, TiresCost: l.TiresCost, MaintenanceCost: l.MaintenanceCost, InsuranceCost: l.InsuranceCost, OtherCost: l.OtherCost}
 }
 
 // SetCosts replaces the amounts of the leg.
 func (l *CarpoolLeg) SetCosts(c CarpoolLegCosts) {
-	l.ElectricityCost, l.TollsCost, l.TiresCost, l.MaintenanceCost, l.InsuranceCost, l.OtherCost =
-		c.ElectricityCost, c.TollsCost, c.TiresCost, c.MaintenanceCost, c.InsuranceCost, c.OtherCost
+	l.EnergyCost, l.FuelCost = c.EnergyCost, c.FuelCost
+	l.TollsCost, l.TiresCost, l.MaintenanceCost, l.InsuranceCost, l.OtherCost =
+		c.TollsCost, c.TiresCost, c.MaintenanceCost, c.InsuranceCost, c.OtherCost
+	l.SyncElectricity()
 }
+
+// SyncElectricity sets the deprecated electricity_cost alias from the energy and its fuel part.
+func (l *CarpoolLeg) SyncElectricity() { l.ElectricityCost = l.EnergyCost - l.FuelCost }
+
+// SyncElectricity sets the deprecated electricity_cost alias from the energy and its fuel part.
+func (t *CarpoolTrip) SyncElectricity() { t.ElectricityCost = t.EnergyCost - t.FuelCost }
 
 // Total returns the sum of the categories.
 func (c CarpoolLegCosts) Total() money.Cents {
-	return c.ElectricityCost + c.TollsCost + c.TiresCost + c.MaintenanceCost + c.InsuranceCost + c.OtherCost
+	return c.EnergyCost + c.TollsCost + c.TiresCost + c.MaintenanceCost + c.InsuranceCost + c.OtherCost
 }
 
 // With returns the amounts with the overridden categories replaced.
 func (c CarpoolLegCosts) With(overrides map[string]money.Cents) CarpoolLegCosts {
 	for name, v := range overrides {
 		switch name {
-		case CarpoolCostElectricity:
-			c.ElectricityCost = v
+		case CarpoolCostEnergy, CarpoolCostElectricityLegacy:
+			c.EnergyCost = v
+			c.FuelCost = min(c.FuelCost, v)
+			c.ElectricityCost = v - c.FuelCost
 		case CarpoolCostTolls:
 			c.TollsCost = v
 		case CarpoolCostTires:
@@ -147,7 +173,7 @@ func (c CarpoolLegCosts) With(overrides map[string]money.Cents) CarpoolLegCosts 
 
 // Total returns the sum of the leg cost components.
 func (l *CarpoolLeg) Total() money.Cents {
-	return l.ElectricityCost + l.TollsCost + l.TiresCost + l.MaintenanceCost + l.InsuranceCost + l.OtherCost
+	return l.EnergyCost + l.TollsCost + l.TiresCost + l.MaintenanceCost + l.InsuranceCost + l.OtherCost
 }
 
 // CarpoolTripWithPassengers bundles a trip with its passengers.
@@ -164,11 +190,12 @@ type CarpoolTripWithPassengers struct {
 // SumLegs sets the trip distance and costs to the sums of its legs, and the net cost to what is left after the
 // passengers' payments.
 func (t *CarpoolTrip) SumLegs(legs []CarpoolLeg) {
-	t.DistanceKm, t.ElectricityCost, t.TollsCost, t.TiresCost = 0, 0, 0, 0
+	t.DistanceKm, t.EnergyCost, t.FuelCost, t.TollsCost, t.TiresCost = 0, 0, 0, 0, 0
 	t.MaintenanceCost, t.InsuranceCost, t.OtherCost = 0, 0, 0
 	for _, l := range legs {
 		t.DistanceKm += l.DistanceKm
-		t.ElectricityCost += l.ElectricityCost
+		t.EnergyCost += l.EnergyCost
+		t.FuelCost += l.FuelCost
 		t.TollsCost += l.TollsCost
 		t.TiresCost += l.TiresCost
 		t.MaintenanceCost += l.MaintenanceCost
@@ -176,21 +203,29 @@ func (t *CarpoolTrip) SumLegs(legs []CarpoolLeg) {
 		t.OtherCost += l.OtherCost
 	}
 	t.DistanceKm = math.Round(t.DistanceKm*100) / 100
-	t.TotalCost = t.ElectricityCost + t.TollsCost + t.TiresCost + t.MaintenanceCost + t.InsuranceCost + t.OtherCost
+	t.SyncElectricity()
+	t.TotalCost = t.EnergyCost + t.TollsCost + t.TiresCost + t.MaintenanceCost + t.InsuranceCost + t.OtherCost
 	t.NetCost = t.TotalCost - t.TotalRevenue
 }
 
 // CarpoolCostEstimate provides suggested real cost breakdown based on vehicle TCO metrics.
 type CarpoolCostEstimate struct {
-	StartDate             *time.Time   `json:"start_date,omitempty"`
-	DistanceKm            float64      `json:"distance_km"`
-	ElectricityCost       money.Cents  `json:"electricity_cost"`
-	TollsCost             money.Cents  `json:"tolls_cost"`
-	TiresCost             money.Cents  `json:"tires_cost"`
-	MaintenanceCost       money.Cents  `json:"maintenance_cost"`
-	InsuranceCost         money.Cents  `json:"insurance_cost"`
-	OtherCost             money.Cents  `json:"other_cost"`
-	TotalCost             money.Cents  `json:"total_cost"`
+	StartDate  *time.Time `json:"start_date,omitempty"`
+	DistanceKm float64    `json:"distance_km"`
+	// EnergyCost is the whole energy cost whatever the energy, FuelCost its fuel part. ElectricityCost is the electric
+	// part (EnergyCost - FuelCost), kept for the readers that predate energy_cost: deprecated, use energy_cost.
+	EnergyCost      money.Cents `json:"energy_cost"`
+	FuelCost        money.Cents `json:"fuel_cost"`
+	ElectricityCost money.Cents `json:"electricity_cost"`
+	TollsCost       money.Cents `json:"tolls_cost"`
+	TiresCost       money.Cents `json:"tires_cost"`
+	MaintenanceCost money.Cents `json:"maintenance_cost"`
+	InsuranceCost   money.Cents `json:"insurance_cost"`
+	OtherCost       money.Cents `json:"other_cost"`
+	TotalCost       money.Cents `json:"total_cost"`
+	// FuelOnly marks a vehicle that burns fuel: energy_cost is then its fuel cost (fuel_cost) and the rate per kWh is 0.
+	FuelOnly              bool         `json:"fuel_only"`
+	FuelRatePerLiter      float64      `json:"fuel_rate_per_liter"`
 	ElectricityRatePerKwh float64      `json:"electricity_rate_per_kwh"`
 	TiresRatePerKm        float64      `json:"tires_rate_per_km"`
 	MaintenanceRatePerKm  float64      `json:"maintenance_rate_per_km"`

@@ -139,12 +139,13 @@
   "destination": "Arrivée",
   "passenger": "Passager {n}",
   "costFields": {
-    "electricity": "Électricité",
+    "energy": "Énergie",
     "tolls": "Péages",
     "tires": "Pneus",
     "maintenance": "Entretien",
     "insurance": "Assurance",
-    "other": "Divers"
+    "other": "Divers",
+    "fuel": "Carburant"
   },
   "stop": "Arrêt {n}",
   "legCount": "{count} étapes",

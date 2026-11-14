@@ -47,7 +47,7 @@ describe('money helpers', () => {
   })
 
   it('sums the six cost fields of a leg in cents', () => {
-    expect(legTotalCents({ electricity_cost: 8.4, tolls_cost: 15.2, tires_cost: 2.1, maintenance_cost: 1.5, insurance_cost: 1.2, other_cost: 0 })).toBe(2840)
+    expect(legTotalCents({ energy_cost: 8.4, tolls_cost: 15.2, tires_cost: 2.1, maintenance_cost: 1.5, insurance_cost: 1.2, other_cost: 0 })).toBe(2840)
     expect(legTotalCents({})).toBe(0)
   })
 })
@@ -75,21 +75,21 @@ describe('stopNames', () => {
 
 describe('allocate', () => {
   it('leaves the whole cost to the driver without passengers', () => {
-    const a = allocate([leg({ electricity_cost: 10 })], [])
+    const a = allocate([leg({ energy_cost: 10 })], [])
     expect(a.total).toBe(1000)
     expect(a.passengersShare).toBe(0)
     expect(a.driverShare).toBe(1000)
   })
 
   it('splits a leg between the driver and the people on board', () => {
-    const a = allocate([leg({ electricity_cost: 9 })], [pax(), pax()])
+    const a = allocate([leg({ energy_cost: 9 })], [pax(), pax()])
     expect(a.legDetails[0]).toEqual({ total: 900, seats: 2, perPerson: 300 })
     expect(a.shares).toEqual([300, 300])
     expect(a.driverShare).toBe(300)
   })
 
   it('counts seats and only the legs a passenger rides', () => {
-    const legs = [leg({ electricity_cost: 10 }), leg({ electricity_cost: 20 })]
+    const legs = [leg({ energy_cost: 10 }), leg({ energy_cost: 20 })]
     const a = allocate(legs, [pax({ alight_stop_index: 2 }), pax({ seats: 2, board_stop_index: 1, alight_stop_index: 2 })])
     // leg 0: driver + 1 seat; leg 1: driver + 1 + 2 seats
     expect(a.legDetails[0].seats).toBe(1)
@@ -101,7 +101,7 @@ describe('allocate', () => {
   })
 
   it('rounds each person share down to the cent, like the backend', () => {
-    const a = allocate([leg({ electricity_cost: 10 })], [pax(), pax()])
+    const a = allocate([leg({ energy_cost: 10 })], [pax(), pax()])
     expect(a.legDetails[0].perPerson).toBe(333)
     expect(a.driverShare).toBe(1000 - 666)
   })
@@ -178,8 +178,8 @@ describe('forms from data', () => {
   })
 
   it('maps estimate and trip legs, defaulting the missing fields', () => {
-    const l = legsFromEstimate({ legs: [{ drive_id: 'a', distance_km: 12, electricity_cost: 3 }] })[0]
-    expect(l).toMatchObject({ drive_id: 'a', start_label: '', distance_km: 12, electricity_cost: 3, other_cost: 0 })
+    const l = legsFromEstimate({ legs: [{ drive_id: 'a', distance_km: 12, energy_cost: 3 }] })[0]
+    expect(l).toMatchObject({ drive_id: 'a', start_label: '', distance_km: 12, energy_cost: 3, other_cost: 0 })
     expect(legsFromEstimate({})).toEqual([])
     expect(legsFromTrip({ legs: [{ start_label: 'A', end_label: 'B', distance_km: 5 }] })[0].drive_id).toBeNull()
   })
@@ -278,7 +278,7 @@ describe('passenger names', () => {
 
 describe('legs made from drives', () => {
   const linked = (over: Partial<LegForm> = {}) =>
-    leg({ drive_id: 'd1', tolls_cost: 8, electricity_cost: 3, drive_cost: { electricity_cost: 3, tolls_cost: 8 }, ...over })
+    leg({ drive_id: 'd1', tolls_cost: 8, energy_cost: 3, drive_cost: { energy_cost: 3, tolls_cost: 8 }, ...over })
 
   it('sends only the categories that differ from the drive as overrides', () => {
     expect(legOverrides(linked())).toEqual({})
@@ -297,7 +297,7 @@ describe('legs made from drives', () => {
 
   it('keeps the adjusted amounts of a leg when the legs are estimated again', () => {
     const previous = [linked({ tolls_cost: 5 })]
-    const next = [linked({ tolls_cost: 10, drive_cost: { electricity_cost: 3, tolls_cost: 10 } }), linked({ drive_id: 'd2' })]
+    const next = [linked({ tolls_cost: 10, drive_cost: { energy_cost: 3, tolls_cost: 10 } }), linked({ drive_id: 'd2' })]
     keepOverrides(previous, next)
     expect(next[0].tolls_cost).toBe(5)
     expect(next[1].tolls_cost).toBe(8)
@@ -317,7 +317,7 @@ describe('legs made from drives', () => {
     expect(legsFromTrip(saved).map((l) => l.drive_cost)).toEqual([{ tolls_cost: 8 }, null])
     expect(hasLinkedLegs(saved)).toBe(true)
     expect(hasLinkedLegs({ legs: [{ drive_id: null }] })).toBe(false)
-    const est = legsFromEstimate({ legs: [{ drive_id: 'd1', tolls_cost: 8, electricity_cost: 3 }] })
+    const est = legsFromEstimate({ legs: [{ drive_id: 'd1', tolls_cost: 8, energy_cost: 3 }] })
     expect(est[0].drive_cost?.tolls_cost).toBe(8)
   })
 })

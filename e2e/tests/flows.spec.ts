@@ -347,15 +347,15 @@ test('an electric vehicle lists no fill-up on the odometer page', async ({ page 
   await expect(page.getByText('Fill-up', { exact: true })).toHaveCount(0)
 })
 
-test('the trips address of a vehicle without trips opens the home of the vehicle, an electric one opens the trips', async ({ page, request }) => {
+test('the trips address opens the trips of a combustion vehicle as it does for an electric one', async ({ page, request }) => {
   const headers = await authHeaders(request)
-  const created = await request.post('/api/vehicles', { headers, data: { name: 'No trips reference', powertrain: 'ICE', currency: 'EUR' } })
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Combustion trips address', powertrain: 'ICE', currency: 'EUR' } })
   expect(created.ok()).toBeTruthy()
   const vehicle = (await created.json()) as Vehicle
   try {
     await useVehicle(page, vehicle.id, '/drives')
-    await expect(page).toHaveURL(/\/vehicle$/)
-    await expect(page.getByRole('heading', { name: 'No trips reference' })).toBeVisible()
+    await expect(page).toHaveURL(/\/drives/)
+    await expect(page.getByRole('heading', { name: 'No trips yet' })).toBeVisible()
 
     await useVehicle(page, ev.id, '/drives')
     await expect(page).toHaveURL(/\/drives/)
@@ -704,7 +704,7 @@ test('a carpool is entered with its legs and passengers, priced and saved, then 
   await dialog.locator('#leg-start-0').fill('Lyon')
   await dialog.locator('#leg-end-0').fill('Annecy')
   await dialog.locator('#leg-distance-0').fill('100')
-  await dialog.locator('#leg-electricity_cost-0').fill('20')
+  await dialog.locator('#leg-energy_cost-0').fill('20')
   await dialog.locator('#leg-tolls_cost-0').fill('10')
 
   // 30 of actual cost shared between the driver and one passenger: the fair share is 15
@@ -806,7 +806,7 @@ test('carpools are listed 30 at a time and the totals cover all of them', async 
     const day = String(28 - Math.floor(i / 2)).padStart(2, '0')
     const res = await request.post(`/api/vehicles/${ev.id}/carpools`, {
       headers,
-      data: { title: `E2E paged ${String(i).padStart(2, '0')}`, date: `2098-01-${day}`, legs: [{ distance_km: 10, electricity_cost: 1 }], passengers: [{ passenger_name: 'Paged', seats: 1, amount_paid: 0.5 }] },
+      data: { title: `E2E paged ${String(i).padStart(2, '0')}`, date: `2098-01-${day}`, legs: [{ distance_km: 10, energy_cost: 1 }], passengers: [{ passenger_name: 'Paged', seats: 1, amount_paid: 0.5 }] },
     })
     expect(res.ok()).toBeTruthy()
   }
@@ -835,7 +835,7 @@ test('the carpools open on the current month and follow the period bar', async (
   const title = `E2E dated ${Date.now()}`
   const created = await request.post(`/api/vehicles/${ev.id}/carpools`, {
     headers,
-    data: { title, date: '2019-05-10', legs: [{ distance_km: 10, electricity_cost: 1 }], passengers: [{ passenger_name: 'Old', seats: 1, amount_paid: 0.5 }] },
+    data: { title, date: '2019-05-10', legs: [{ distance_km: 10, energy_cost: 1 }], passengers: [{ passenger_name: 'Old', seats: 1, amount_paid: 0.5 }] },
   })
   expect(created.ok()).toBeTruthy()
   const id = (await created.json()).id
@@ -1203,4 +1203,88 @@ test.describe("the period bar in a browser timezone other than the server's", ()
       await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
     }
   })
+})
+
+test('a combustion vehicle with no trip adds one by hand, reads it in fuel and shares it as a carpool', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'E2E combustion trips', powertrain: 'ICE', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  expect(vehicle.capabilities.drives).toBe(true)
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, vehicle.id, '/drives')
+
+    // The Trips page opens on an empty state that offers to add a trip
+    await expect(page.getByRole('heading', { name: 'No trips yet' })).toBeVisible()
+    await page.getByTestId('empty-add-trip').click()
+    const form = page.getByRole('dialog', { name: 'New drive' })
+    // A combustion trip has no kWh field
+    await expect(form.locator('#manual-drive-energy')).toHaveCount(0)
+    await expect(form.getByText('kWh')).toHaveCount(0)
+    await form.locator('#manual-drive-distance').fill('42')
+    await form.locator('#manual-drive-start-address').fill('Garage')
+    await form.locator('#manual-drive-end-address').fill('Office')
+    await form.getByRole('button', { name: 'Save drive' }).click()
+    await expect(form).toHaveCount(0)
+
+    const row = page.getByTestId('drive-card').filter({ hasText: 'Office' })
+    await expect(row).toHaveCount(1)
+    await expect(row).not.toContainText('kWh')
+    const drives = (await (await request.get(`/api/vehicles/${vehicle.id}/drives`, { headers })).json()).drives
+    expect(drives).toHaveLength(1)
+    expect(drives[0].energy_consumed_kwh ?? null).toBeNull()
+    expect(drives[0].costs.fuel_only).toBe(true)
+    expect(drives[0].costs.fuel_liters ?? null).toBeNull()
+
+    // A carpool is created from the trip: its energy line is the fuel
+    await row.getByRole('button', { name: /^Open the cost breakdown/ }).click()
+    await expect(page.getByRole('dialog').getByText(/^Fuel\b/).first()).toBeVisible()
+    await expect(page.getByRole('dialog').getByText('Electric energy')).toHaveCount(0)
+    await page.getByRole('dialog').getByRole('button', { name: 'Share as a carpool' }).click()
+    const carpool = page.getByRole('dialog', { name: /carpool/i }).last()
+    await carpool.locator('#carpool-title').fill('E2E combustion carpool')
+    // The trip costs nothing yet (no fill-up gives a consumption): the fuel of the leg is typed by hand
+    await carpool.getByRole('checkbox', { name: /Follow the cost of the drives/ }).uncheck()
+    await carpool.getByRole('button', { name: /^Leg 1/ }).click()
+    await expect(carpool.getByText('Fuel (€)').first()).toBeVisible()
+    await expect(carpool.getByText('Electricity (€)')).toHaveCount(0)
+    await carpool.locator('#leg-energy_cost-0').fill('6')
+    await carpool.getByRole('button', { name: 'Exact amount' }).click()
+    await carpool.getByRole('button', { name: 'Save', exact: true }).click()
+    await expect(carpool).toHaveCount(0)
+    const trips = (await (await request.get(`/api/vehicles/${vehicle.id}/carpools`, { headers })).json()).trips ?? []
+    expect(trips.map((c: { title: string }) => c.title)).toContain('E2E combustion carpool')
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})
+
+test('a plug-in hybrid enters a trip in kWh, with no fuel part', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'E2E hybrid trips', powertrain: 'PHEV', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, vehicle.id, '/drives')
+    await expect(page.getByRole('heading', { name: 'No trips yet' })).toBeVisible()
+    await page.getByTestId('empty-add-trip').click()
+    const form = page.getByRole('dialog', { name: 'New drive' })
+    await expect(form.locator('#manual-drive-energy')).toBeVisible()
+    await expect(form.getByText('Energy consumed (kWh)')).toBeVisible()
+    await form.locator('#manual-drive-distance').fill('30')
+    await form.locator('#manual-drive-end-address').fill('Hybrid office')
+    await form.getByRole('button', { name: 'Save drive' }).click()
+    await expect(form).toHaveCount(0)
+    const [drive] = (await (await request.get(`/api/vehicles/${vehicle.id}/drives`, { headers })).json()).drives
+    expect(drive.energy_consumed_kwh).toBeGreaterThan(0)
+    expect(drive.costs.fuel_only).toBe(false)
+    expect(drive.costs.fuel_liters ?? null).toBeNull()
+    await page.getByTestId('drive-card').filter({ hasText: 'Hybrid office' }).getByRole('button', { name: /^Open the cost breakdown/ }).click()
+    await expect(page.getByRole('dialog').getByText('Electric energy')).toBeVisible()
+    await expect(page.getByRole('dialog').getByText(/^Fuel\b/)).toHaveCount(0)
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
 })

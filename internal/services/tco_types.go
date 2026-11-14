@@ -63,9 +63,13 @@ type MonthlyCost struct {
 
 // TagCostBreakdown represents costs split by tag (e.g. Pro vs Perso).
 type TagCostBreakdown struct {
-	Tag         string      `json:"tag"` // empty for the drives that carry no tag
-	DistanceKm  float64     `json:"distance_km"`
-	EnergyKwh   float64     `json:"energy_kwh"`
+	Tag        string  `json:"tag"` // empty for the drives that carry no tag
+	DistanceKm float64 `json:"distance_km"`
+	EnergyKwh  float64 `json:"energy_kwh"`
+	// FuelOnly marks the drives of a vehicle that burns fuel only: they carry no kWh, their energy is FuelLiters (the
+	// litres of the drives whose consumption is known).
+	FuelOnly    bool        `json:"fuel_only,omitempty"`
+	FuelLiters  float64     `json:"fuel_liters,omitempty"`
 	TollsAmount money.Cents `json:"tolls_amount"`
 	Percentage  float64     `json:"percentage"`
 	// Cost is the sum of the cost of the tag's drives as the drive list shows it (energy, wear, insurance share and

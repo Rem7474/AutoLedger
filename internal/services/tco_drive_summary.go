@@ -16,10 +16,14 @@ type DriveSummary struct {
 	DrivesWithoutDistance int
 	DistanceKm            float64
 	EnergyKwh             float64
-	TollsAmount           money.Cents
-	Cost                  money.Cents
-	CostPerKm             float64
-	UntaggedDrives        int
+	// FuelOnly marks a vehicle that burns fuel only: its drives carry no kWh (EnergyKwh stays 0 and is not reported), the
+	// fuel they used is FuelLiters, summed over the drives whose consumption is known.
+	FuelOnly       bool
+	FuelLiters     float64
+	TollsAmount    money.Cents
+	Cost           money.Cents
+	CostPerKm      float64
+	UntaggedDrives int
 	// ToQualify counts the motorway-type drives of the period still waiting for a toll or a "no toll" review.
 	ToQualify int
 	// TripGroups counts the groups with at least one drive in the period.
@@ -69,12 +73,16 @@ func (s *TCOService) DriveSummaryFor(ctx context.Context, vehicleID string, from
 			out.EnergyKwh += *d.EnergyConsumedKwh
 		}
 		out.TollsAmount += tolls[d.ID]
-		out.Cost += costs[d.ID]
+		out.Cost += costs[d.ID].TotalCost
+		if costs[d.ID].FuelOnly {
+			out.FuelOnly = true
+			out.FuelLiters += costs[d.ID].FuelLitres
+		}
 	}
 	if out.DistanceKm > 0 && out.Cost > 0 {
 		out.CostPerKm = round3(out.Cost.Float() / out.DistanceKm)
 	}
-	out.DistanceKm, out.EnergyKwh = round1(out.DistanceKm), round1(out.EnergyKwh)
+	out.DistanceKm, out.EnergyKwh, out.FuelLiters = round1(out.DistanceKm), round1(out.EnergyKwh), round1(out.FuelLiters)
 	out.ByTag = splitByTag(drives, costs, tolls, out.DistanceKm)
 
 	if out.ToQualify, err = s.repo.CountUnqualifiedDrivesBetween(ctx, vehicleID, from, to); err != nil {

@@ -5,13 +5,13 @@ import { api } from '@/services/api'
 import { distanceUnit, formatDistanceValue } from '@/units'
 import { downloadCsv } from '@/utils/csv'
 import { capabilitiesOf } from '@/utils/capabilities'
-import { csvTemplate, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
+import { csvTemplateForPowertrain, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
 import { supportsTeslaMate, teslaMateCarId, teslaMateCredentials, type emptyTeslaMateForm, type Powertrain } from '@/utils/onboarding'
 import { AlertCircle, ArrowRight, CheckCircle2, Download, FileSpreadsheet, KeyRound, Link2, RefreshCw, Webhook } from '@/icons'
 
 // Optional last step of the wizard: the TeslaMate link, a Home Assistant webhook and CSV templates.
 // The form is edited in place; the wizard reads it when it creates the vehicle.
-defineProps<{ powertrain: Powertrain; saving: boolean }>()
+const props = defineProps<{ powertrain: Powertrain; saving: boolean }>()
 const emit = defineEmits<{ back: []; finalize: [] }>()
 const teslamate = defineModel<ReturnType<typeof emptyTeslaMateForm>>('teslamate', { required: true })
 const useWebhook = defineModel<boolean>('useWebhook', { required: true })
@@ -20,7 +20,7 @@ const testing = ref(false)
 const testResult = ref<{ ok: boolean; message: string } | null>(null)
 
 function downloadTemplate(type: CsvTemplateType) {
-  const { headers, rows } = csvTemplate(type, currentLocale())
+  const { headers, rows } = csvTemplateForPowertrain(type, currentLocale(), props.powertrain)
   downloadCsv(csvTemplateFilename(type), headers, rows)
 }
 

@@ -1,4 +1,5 @@
-import type { VehicleCapabilities } from './capabilities'
+import { capabilitiesOf, energyKind, type VehicleCapabilities } from './capabilities'
+import type { Powertrain } from './onboarding'
 
 export type CsvTemplateType = 'CHARGES' | 'DRIVES' | 'FUEL' | 'ODOMETER'
 
@@ -38,9 +39,26 @@ export function csvTemplateTypes(capabilities: Pick<VehicleCapabilities, 'charge
 }
 
 // Header and one example row, in the shape downloadCsv takes.
-export function csvTemplate(type: CsvTemplateType, language: TemplateLanguage = 'en'): { headers: string[]; rows: string[][] } {
+// A vehicle that burns fuel has no kWh column on its drives: the import ignores one, the fuel comes from its fill-ups.
+export function csvTemplate(type: CsvTemplateType, language: TemplateLanguage = 'en', energy: 'ELECTRIC' | 'FUEL' = 'ELECTRIC'): { headers: string[]; rows: string[][] } {
   const { headers, example } = CSV_TEMPLATES[language][type]
+  if (type === 'DRIVES' && energy === 'FUEL') {
+    const drop = headers.indexOf('kwh')
+    return { headers: headers.filter((_, i) => i !== drop), rows: [example.filter((_, i) => i !== drop)] }
+  }
   return { headers, rows: [example] }
+}
+
+/** The template of a vehicle that does not exist yet (the onboarding wizard knows only its powertrain). */
+export function csvTemplateForPowertrain(type: CsvTemplateType, language: TemplateLanguage, powertrain: Powertrain) {
+  return csvTemplate(type, language, energyKind(capabilitiesOf({ powertrain })))
+}
+
+/** The columns the import reads for a kind of file, without the kWh of a drive for a vehicle that burns fuel. */
+export function csvColumns(type: CsvTemplateType, energy: 'ELECTRIC' | 'FUEL' = 'ELECTRIC'): { required: string[]; optional: string[] } {
+  const cols = CSV_COLUMNS[type]
+  if (type === 'DRIVES' && energy === 'FUEL') return { required: cols.required, optional: cols.optional.filter((c) => c !== 'kwh') }
+  return cols
 }
 
 export function csvTemplateFilename(type: CsvTemplateType): string {

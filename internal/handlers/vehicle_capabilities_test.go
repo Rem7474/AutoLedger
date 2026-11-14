@@ -1,13 +1,9 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
-	"time"
-
-	"github.com/teslacost/teslacost/internal/models"
 )
 
 func capabilitiesOf(t *testing.T, vehicle map[string]any) map[string]any {
@@ -37,23 +33,15 @@ func TestVehicleCapabilitiesAreReturnedByCreateUpdateGetAndList(t *testing.T) {
 		t.Fatalf("removing the connection removes the capability: %v", got)
 	}
 
+	// A combustion vehicle enters its drives by hand: it has the trips capability from its creation, with no drive stored.
 	ice := decodeObj(t, a.do(a.other, http.StatusCreated, "POST", "/", `{"name":"Clio","currency":"EUR","powertrain":"ICE"}`))
 	iceID := ice["id"].(string)
-	if got := capabilitiesOf(t, ice); got["refuels"] != true || got["charges"] != false || got["drives"] != false || got["battery_health"] != false {
+	if got := capabilitiesOf(t, ice); got["refuels"] != true || got["charges"] != false || got["drives"] != true || got["battery_health"] != false {
 		t.Fatalf("a combustion vehicle: %v", got)
-	}
-
-	// A drive written by a push source gives a combustion vehicle the trips capability.
-	start := time.Now().Add(-time.Hour)
-	dist := 12.0
-	externalID := "obd-1"
-	drive := &models.Drive{VehicleID: iceID, Origin: "WEBHOOK", ExternalID: &externalID, StartTime: start, EndTime: start.Add(20 * time.Minute), DistanceKm: &dist, Tags: []string{}, IsManual: true}
-	if err := a.repo.CreateManualDrive(context.Background(), drive); err != nil {
-		t.Fatal(err)
 	}
 	got := decodeObj(t, a.do(a.other, http.StatusOK, "GET", "/"+iceID, ""))
 	if c := capabilitiesOf(t, got); c["drives"] != true || c["refuels"] != true {
-		t.Fatalf("a combustion vehicle with a pushed drive: %v", c)
+		t.Fatalf("a combustion vehicle read back: %v", c)
 	}
 
 	var list []map[string]any

@@ -14,18 +14,26 @@ Every vehicle returned by `GET /api/vehicles`, `GET /api/vehicles/{id}` and by t
 | :--- | :--- |
 | `charges` | powertrain other than `ICE` |
 | `refuels` | `ICE`, `PHEV` or `REEV` (a plug-in hybrid has both) |
-| `drives` | `charges`, or at least one drive stored whatever its origin (a combustion vehicle fed trips by a push source) |
+| `drives` | every vehicle (trips can be entered by hand or written by a source) |
 | `sync` | a rechargeable vehicle with a teslamateapi URL; true for every role, though only the owner receives the URL |
 | `odometer_auto` | `sync`, or at least one odometer reading reported by a source (`HA`) |
 | `battery_health` | `charges` (readings can be recorded by hand or come from a source) |
-| `tolls_auto` | `drives` and `toll_detection_active` |
+| `tolls_auto` | `toll_detection_active` |
 | `write` | role `OWNER` or `EDITOR` |
 
-`FillVehicleCapabilities` (`internal/database/repository_vehicle_capabilities.go`) reads the facts for a set of vehicles with one query and runs before the connection is hidden from a member who is not the owner.
+`FillVehicleCapabilities` (`internal/database/repository_vehicle_capabilities.go`) reads the stored facts (an odometer reading reported by a source) for a set of vehicles with one query and runs before the connection is hidden from a member who is not the owner.
 
 ## Manual drives
 
-Manual drives (`is_manual`) carry no energy cost. When no energy is typed, the server derives it from the vehicle's average consumption (`services.EstimateDriveEnergy`) and sets `energy_estimated`; the energy statistics ignore estimated energy. In the TCO mileage smoothing, tracking starts with the first synchronized drive or charge (the first manual charge without any), never with a manual drive, and a manual drive's distance still has its energy estimated before tracking starts.
+Every vehicle enters drives by hand, a combustion one included, so Trips, trip groups and carpools exist for every powertrain (`drives` is always true). Manual drives (`is_manual`) carry no energy cost. A vehicle that burns fuel and cannot charge has no kWh on a drive: the form has no kWh field, a typed or imported kWh is ignored (`ingest.DriveInput.FuelOnly`) and `energy_consumed_kwh` stays null. Its energy is fuel in litres: `fuel_liters` is the drive distance times the L/100 km of the fill-ups (full-to-full segments), and the cost is those litres times the average price per litre (`fuel_rate_per_liter`). Both are taken as of the drive, like the electricity rate: only the fill-ups and odometer readings dated at or before the end of the drive count, so a fill-up entered later does not move the cost of an earlier drive (`services.fuelLogsUntil`, applied by `applyFuelRates` to each reference point of `GetVehicleUnitRatesAtMany`). Without a fill-up pair the litres and the cost stay null (`UNKNOWN`), never an electricity price. `fuel_only` tells a client to label the energy as fuel. A hybrid charges, so its drives stay on kWh with no fuel part. Naming of the energy cost: see [Energy cost naming](#energy-cost-naming). When no energy is typed, the server derives it from the vehicle's average consumption (`services.EstimateDriveEnergy`) and sets `energy_estimated`; the energy statistics ignore estimated energy. In the TCO mileage smoothing, tracking starts with the first synchronized drive or charge (the first manual charge without any), never with a manual drive, and a manual drive's distance still has its energy estimated before tracking starts.
+
+### Energy cost naming
+
+The energy cost of a drive is named for what it is, whatever the energy. `costs.energy_cost` of a drive (`GET /api/vehicles/{id}/drives`) is the total; its parts are named explicitly: `electricity_cost` with `electricity_kwh` (the electric part) and `fuel_cost` with `fuel_liters` (the fuel part). `energy_cost` is their sum, so a vehicle that carries both parts needs no change of shape: today a vehicle that charges has no fuel part, one that burns fuel only has no electric part, and a hybrid stays on its electric part. `electricity_cost` is deprecated as a name for the energy and is the electric part alone: a client that wants the energy of a drive reads `energy_cost`.
+
+Carpool trips, legs, cost estimates and `drive_cost` follow the same rule: `energy_cost` (total), `fuel_cost` (fuel part) and `electricity_cost` (electric part, `energy_cost - fuel_cost`, deprecated alias). The cost category of a leg that is overridden on purpose is named `energy_cost` (`overrides` still accepts `electricity_cost`). On a write, `energy_cost` is the amount; a client that only sends `electricity_cost` is read as the electric part (the energy to which `fuel_cost` is added), and a vehicle that burns fuel only takes its `fuel_cost` from the energy when none is sent. Storage: `carpool_trips` and `carpool_legs` keep `electricity_cost` (the electric part) and add `energy_cost` and `fuel_cost`. The integration view of a carpool (`energy`) reads `energy_cost`; the drive CSV export has no energy-cost column (it carries the total cost, and leaves its kWh columns empty for a vehicle that burns fuel only).
+
+The integration drive summary and tag breakdown report `energy_kwh` as `null` (not 0) for a vehicle that burns fuel only and add `fuel_liters` (null for any other vehicle and while no consumption is known).
 
 ## TeslaMate connection and sync
 
