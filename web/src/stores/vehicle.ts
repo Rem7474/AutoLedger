@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { api } from '@/services/api'
 import { t } from '@/i18n'
 import { apiErrorMessage } from '@/services/apiError'
-import { canCharge as canChargePowertrain, canRefuel as canRefuelPowertrain, isElectricOnly, isFuelOnly, hasTeslaMate as vehicleHasTeslaMate } from '@/utils/vehicles'
+import { capabilitiesOf } from '@/utils/capabilities'
 import { checkSyncProgress, POLL_INTERVAL_MS, STALE_AFTER_HIDDEN_MS, type SyncSeen } from '@/utils/syncWatch'
 
 export const useVehicleStore = defineStore('vehicle', () => {
@@ -25,16 +25,11 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const isOwner = computed(() => userRole.value === 'OWNER')
   const isEditor = computed(() => userRole.value === 'EDITOR')
   const isViewer = computed(() => userRole.value === 'VIEWER')
-  const canEdit = computed(() => isOwner.value || isEditor.value)
-  // Combustion vehicles are tracked manually (fuel fill-ups) and have no TeslaMate link
-  const canCharge = computed(() => canChargePowertrain(activeVehicle.value?.powertrain))
-  const canRefuel = computed(() => canRefuelPowertrain(activeVehicle.value?.powertrain))
-  const fuelOnly = computed(() => isFuelOnly(activeVehicle.value?.powertrain))
-  const electricOnly = computed(() => isElectricOnly(activeVehicle.value?.powertrain))
-  // TeslaMate-fed data (drives, battery, temperature, synchronization) only exists for a vehicle linked to a teslamateapi
+  // What the active vehicle records and offers, computed by the server; components read it instead of the powertrain
+  const capabilities = computed(() => capabilitiesOf(activeVehicle.value))
+  const canEdit = computed(() => capabilities.value.write)
   // The GPS toll detection and the qualification of the motorway drives (French dataset), decided by the server
   const tollDetectionActive = computed(() => activeVehicle.value?.toll_detection_active !== false)
-  const hasTeslaMate = computed(() => vehicleHasTeslaMate(activeVehicle.value))
   // Every amount of a vehicle is stored and shown in the currency chosen at its creation; empty until a vehicle is loaded
   const currency = computed<string>(() => activeVehicle.value?.currency ?? '')
 
@@ -125,7 +120,7 @@ export const useVehicleStore = defineStore('vehicle', () => {
 
   async function checkForNewData() {
     const vehicle = activeVehicle.value
-    if (!vehicle || !hasTeslaMate.value || isSyncing.value) return
+    if (!vehicle || !capabilities.value.sync || isSyncing.value) return
     try {
       const job = await api.getSyncStatus(vehicle.id)
       if (job?.status === 'RUNNING') {
@@ -183,11 +178,7 @@ export const useVehicleStore = defineStore('vehicle', () => {
     isViewer,
     canEdit,
     tollDetectionActive,
-    canCharge,
-    canRefuel,
-    fuelOnly,
-    electricOnly,
-    hasTeslaMate,
+    capabilities,
     currency,
     isSyncing,
     syncResult,

@@ -61,7 +61,7 @@ const fuelTypes = computed<any[]>(() => defaults.value?.ice || [])
 const fuelLabel = (f: { fuel_type: string; label: string }) => (te(`comparison.fuelTypes.${f.fuel_type}`) ? t(`comparison.fuelTypes.${f.fuel_type}`) : f.label)
 
 // Electric and plug-in hybrid vehicles use their recorded energy costs.
-const canCompareTrackedVehicle = computed(() => !!vehicleStore.activeVehicle && vehicleStore.canCharge)
+const canCompareTrackedVehicle = computed(() => !!vehicleStore.activeVehicle && vehicleStore.capabilities.charges)
 
 const emptyForm = () => ({ ...emptyComparisonForm(canCompareTrackedVehicle.value), currency: vehicleStore.currency })
 const form = reactive(emptyForm())
@@ -113,7 +113,7 @@ async function loadScenarios(silent?: boolean) {
 
 async function loadDefaults() {
   // A tracked combustion vehicle prefills the ICE side of a projection with its measured consumption and fuel price
-  const vehicleId = isRetro.value ? formVehicle.value?.id : vehicleStore.fuelOnly ? vehicleStore.activeVehicle?.id : undefined
+  const vehicleId = isRetro.value ? formVehicle.value?.id : (vehicleStore.capabilities.refuels && !vehicleStore.capabilities.charges) ? vehicleStore.activeVehicle?.id : undefined
   try {
     defaults.value = await api.getComparisonDefaults(vehicleId, currency.value)
   } catch (err) {

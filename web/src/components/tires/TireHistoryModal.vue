@@ -113,7 +113,7 @@ function sessionKm(s: any): number {
     </div>
 
     <!-- TeslaMate Driving Telemetry & Stress Analysis Card -->
-    <div v-if="vehicleStore.hasTeslaMate && selectedTireStats?.driving_stress_index > 0" class="bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+    <div v-if="vehicleStore.capabilities.sync && selectedTireStats?.driving_stress_index > 0" class="bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <Zap class="w-4 h-4 text-warning-400" />

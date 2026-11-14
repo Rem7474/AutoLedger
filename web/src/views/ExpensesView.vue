@@ -141,7 +141,7 @@ async function loadData(keepList = false) {
   try {
     if (activeTab.value === 'REMINDERS') {
       await loadReminders()
-    } else if (activeTab.value === 'CHARGES' && vehicleStore.canCharge) {
+    } else if (activeTab.value === 'CHARGES' && vehicleStore.capabilities.charges) {
       const pages = keepList ? chargesPage.value : 1
       const loaded: any[] = []
       let res: any
@@ -288,7 +288,7 @@ function openUploadDocumentModal() {
     />
 
     <div
-      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge && pendingChargesCount > 0"
+      v-if="activeTab === 'CHARGES' && vehicleStore.capabilities.charges && pendingChargesCount > 0"
       class="p-4 bg-warning-500/10 border border-warning-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
     >
       <div class="flex items-center gap-2.5 text-warning-300">
@@ -321,14 +321,14 @@ function openUploadDocumentModal() {
     />
 
     <FuelLogsPanel
-      v-if="activeTab === 'FUEL' && vehicleStore.canRefuel && vehicleStore.activeVehicle"
+      v-if="activeTab === 'FUEL' && vehicleStore.capabilities.refuels && vehicleStore.activeVehicle"
       :key="fuelReloadKey"
       :vehicle-id="vehicleStore.activeVehicle.id"
       :can-edit="vehicleStore.canEdit"
     />
 
     <router-link
-      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge"
+      v-if="activeTab === 'CHARGES' && vehicleStore.capabilities.charges"
       to="/costs?theme=energy"
       class="card flex items-center justify-between gap-3 px-4 py-3"
       data-testid="charges-list-link"
@@ -341,7 +341,7 @@ function openUploadDocumentModal() {
     </router-link>
 
     <ChargesPanel
-      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge"
+      v-if="activeTab === 'CHARGES' && vehicleStore.capabilities.charges"
       to-complete-only
       :charges="charges"
       :charges-total="chargesTotal"
