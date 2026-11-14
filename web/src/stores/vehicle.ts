@@ -33,7 +33,21 @@ export const useVehicleStore = defineStore('vehicle', () => {
   // Every amount of a vehicle is stored and shown in the currency chosen at its creation; empty until a vehicle is loaded
   const currency = computed<string>(() => activeVehicle.value?.currency ?? '')
 
-  async function fetchVehicles() {
+  // Calls made while a load is in flight share it: the first navigation and the app shell both ask at startup
+  let loading: Promise<void> | null = null
+  function fetchVehicles(): Promise<void> {
+    loading ??= loadVehicles().finally(() => {
+      loading = null
+    })
+    return loading
+  }
+
+  /** Resolves once the first load of the vehicles has finished, loading them if nothing did yet. */
+  async function ensureVehicles() {
+    if (!isInitialized.value) await fetchVehicles()
+  }
+
+  async function loadVehicles() {
     isLoading.value = true
     try {
       const list = await api.getVehicles()
@@ -187,6 +201,7 @@ export const useVehicleStore = defineStore('vehicle', () => {
     isInitialized,
     isLoading,
     fetchVehicles,
+    ensureVehicles,
     setActiveVehicle,
     syncActiveVehicle,
     resumeRunningSync,

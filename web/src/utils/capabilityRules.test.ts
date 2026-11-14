@@ -26,8 +26,6 @@ const ALLOWED: Record<string, string> = {
   'utils/capabilities.ts': 'fallback for an answer without capabilities',
   'utils/vehicles.ts': 'the powertrain helpers themselves',
   // not yet moved to the capabilities of the vehicle they show
-  'components/drives/DriveCard.vue': 'manual badge reads the connection',
-  'components/drives/DriveLegRow.vue': 'manual badge reads the connection',
   'components/dashboard/DataQualityCard.vue': 'reads the powertrain of the TCO answer',
   'components/dashboard/TcoDetailsList.vue': 'reads the powertrain of the TCO answer',
   'components/manual/OdometerReadingsPanel.vue': 'reads the powertrain of the vehicle prop',

@@ -11,7 +11,6 @@ import { useIsMobile } from '@/composables/useIsMobile'
 import { useLongPress } from '@/composables/useLongPress'
 import DriveCarpoolChip from '@/components/drives/DriveCarpoolChip.vue'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
-import { hasTeslaMate } from '@/utils/vehicles'
 import { driveGlyph } from '@/utils/driveGlyph'
 import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
 import { formatDayTime, formatTimeOfDay } from '@/utils/dates'
@@ -45,7 +44,7 @@ function onRowClick() {
   else emit('open', props.d)
 }
 // A vehicle fed by TeslaMate mixes synced and manual drives: the badge tells them apart. Without TeslaMate every drive is manual.
-const showManualBadge = computed(() => hasTeslaMate(vehicleStore.activeVehicle))
+const showManualBadge = computed(() => vehicleStore.capabilities.sync)
 const carpoolSummary = computed(() => summarizeDriveCarpools(props.d.carpools))
 // The glyph says what is particular to the drive (carpooled, work, personal); an ordinary drive keeps the plain trip glyph.
 const leadingIcon = computed(() => driveGlyph(props.d, !!carpoolSummary.value, prefs.proPersoEnabled))

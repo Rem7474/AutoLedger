@@ -347,6 +347,23 @@ test('an electric vehicle lists no fill-up on the odometer page', async ({ page 
   await expect(page.getByText('Fill-up', { exact: true })).toHaveCount(0)
 })
 
+test('the trips address of a vehicle without trips opens the home of the vehicle, an electric one opens the trips', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'No trips reference', powertrain: 'ICE', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = (await created.json()) as Vehicle
+  try {
+    await useVehicle(page, vehicle.id, '/drives')
+    await expect(page).toHaveURL(/\/vehicle$/)
+    await expect(page.getByRole('heading', { name: 'No trips reference' })).toBeVisible()
+
+    await useVehicle(page, ev.id, '/drives')
+    await expect(page).toHaveURL(/\/drives/)
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})
+
 test('a selectable odometer reading keeps its mileage next to the checkbox on a wide screen', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const notes = `Layout reading ${Date.now()}`
