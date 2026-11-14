@@ -40,7 +40,7 @@ const profileName = ref('')
 const loading = ref(false)
 const error = ref('')
 
-const templateTypes = computed(() => csvTemplateTypes(vehicleStore.activeVehicle?.powertrain))
+const templateTypes = computed(() => csvTemplateTypes(vehicleStore.capabilities))
 
 function downloadTemplate(type: CsvTemplateType) {
   const { headers, rows } = csvTemplate(type, currentLocale())

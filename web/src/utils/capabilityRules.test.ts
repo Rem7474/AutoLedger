@@ -22,17 +22,8 @@ const ALLOWED: Record<string, string> = {
   // the vehicle form and the onboarding describe a vehicle that does not exist yet: they read the powertrain being chosen
   'components/vehicles/VehicleFormModal.vue': 'draft powertrain of the vehicle form',
   'utils/onboarding.ts': 'draft powertrain of the onboarding',
-  'utils/dataSources.ts': 'CSV templates offered by the onboarding before the vehicle exists',
   'utils/capabilities.ts': 'fallback for an answer without capabilities',
   'utils/vehicles.ts': 'the powertrain helpers themselves',
-  // not yet moved to the capabilities of the vehicle they show
-  'components/dashboard/DataQualityCard.vue': 'reads the powertrain of the TCO answer',
-  'components/dashboard/TcoDetailsList.vue': 'reads the powertrain of the TCO answer',
-  'components/manual/OdometerReadingsPanel.vue': 'reads the powertrain of the vehicle prop',
-  'components/vehicles/VehicleCard.vue': 'reads the powertrain of the listed vehicle',
-  'components/vehicles/VehicleDataSourcesModal.vue': 'reads the powertrain of the vehicle prop',
-  'views/ComparisonView.vue': 'reads the powertrain of the form vehicle',
-  'utils/comparisonSide.ts': 'reads the powertrain of a scenario vehicle',
 }
 
 describe('capability rules', () => {

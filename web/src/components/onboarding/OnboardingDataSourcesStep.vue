@@ -4,6 +4,7 @@ import { currentLocale, t } from '@/i18n'
 import { api } from '@/services/api'
 import { distanceUnit, formatDistanceValue } from '@/units'
 import { downloadCsv } from '@/utils/csv'
+import { capabilitiesOf } from '@/utils/capabilities'
 import { csvTemplate, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
 import { supportsTeslaMate, teslaMateCarId, teslaMateCredentials, type emptyTeslaMateForm, type Powertrain } from '@/utils/onboarding'
 import { AlertCircle, ArrowRight, CheckCircle2, Download, FileSpreadsheet, KeyRound, Link2, RefreshCw, Webhook } from '@/icons'
@@ -179,7 +180,7 @@ async function testConnection() {
         </div>
         <div class="flex flex-wrap gap-2 mt-3">
           <button
-            v-for="type in csvTemplateTypes(powertrain)"
+            v-for="type in csvTemplateTypes(capabilitiesOf({ powertrain }))"
             :key="type"
             type="button"
             @click="downloadTemplate(type)"

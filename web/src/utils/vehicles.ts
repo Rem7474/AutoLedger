@@ -49,7 +49,8 @@ export function emptyOwnership() {
 
 export type OwnershipForm = ReturnType<typeof emptyOwnership>
 
-// What a powertrain can record. Components and stores ask for a capability instead of comparing the powertrain.
+// What a powertrain can record. Only the forms of a vehicle that does not exist yet and the fallback of
+// utils/capabilities.ts read it; everything else reads `vehicle.capabilities`.
 type PowertrainLike = string | null | undefined
 
 /** A battery to plug in: the vehicle has charging sessions. */
@@ -62,24 +63,9 @@ export function canRefuel(powertrain: PowertrainLike): boolean {
   return powertrain === 'ICE' || powertrain === 'PHEV' || powertrain === 'REEV'
 }
 
-/** Fuel only: fill-ups and no charging. */
-export function isFuelOnly(powertrain: PowertrainLike): boolean {
-  return canRefuel(powertrain) && !canCharge(powertrain)
-}
-
-/** Battery only: charging sessions and no fill-ups. */
-export function isElectricOnly(powertrain: PowertrainLike): boolean {
-  return canCharge(powertrain) && !canRefuel(powertrain)
-}
-
 /** A teslamateapi connection makes sense for the powertrain. */
 export function canLinkTeslaMate(powertrain: PowertrainLike): boolean {
   return canCharge(powertrain)
-}
-
-/** TeslaMate features (synchronization, drives, battery and temperature data) apply to an electric vehicle with a teslamateapi URL. */
-export function hasTeslaMate(v: { powertrain?: string; teslamate_api_url?: string | null } | null | undefined): boolean {
-  return !!v && canLinkTeslaMate(v.powertrain) && !!v.teslamate_api_url?.trim()
 }
 
 /**

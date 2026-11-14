@@ -1,5 +1,4 @@
-import type { Powertrain } from './onboarding'
-import { canCharge, canRefuel } from './vehicles'
+import type { VehicleCapabilities } from './capabilities'
 
 export type CsvTemplateType = 'CHARGES' | 'DRIVES' | 'FUEL' | 'ODOMETER'
 
@@ -29,10 +28,11 @@ export const CSV_COLUMNS: Record<CsvTemplateType, { required: string[]; optional
 }
 
 // What each kind of vehicle records: an electric one logs charges and drives, a combustion one fill-ups, a hybrid both.
-export function csvTemplateTypes(powertrain: Powertrain | null | undefined): CsvTemplateType[] {
+export function csvTemplateTypes(capabilities: Pick<VehicleCapabilities, 'charges' | 'refuels' | 'drives'>): CsvTemplateType[] {
   const types: CsvTemplateType[] = []
-  if (canCharge(powertrain)) types.push('CHARGES', 'DRIVES')
-  if (canRefuel(powertrain)) types.push('FUEL')
+  if (capabilities.charges) types.push('CHARGES')
+  if (capabilities.drives) types.push('DRIVES')
+  if (capabilities.refuels) types.push('FUEL')
   types.push('ODOMETER')
   return types
 }
