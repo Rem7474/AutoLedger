@@ -827,8 +827,8 @@ test('the carpools open on the current month and follow the period bar', async (
     const bar = page.getByTestId('period-bar')
     await expect(bar).toBeVisible()
     await expect(page).toHaveURL(/period=1M/)
-    // A carpool of 2019 is outside the month: the list says so and offers the other periods
-    await expect(page.getByText('No carpool in this period')).toBeVisible()
+    // A carpool of 2019 is outside the month. The month is not necessarily empty: the demo carpool is dated relative to
+    // today, so it falls in the current month for most of the month.
     await expect(page.getByText(title)).toHaveCount(0)
 
     await bar.getByRole('button', { name: /Choose the period/ }).click()
