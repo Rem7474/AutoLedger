@@ -21,7 +21,7 @@ const STORE_FLAGS = /\b[a-zA-Z]*[sS]tore\.(canCharge|canRefuel|hasTeslaMate|fuel
 const ALLOWED: Record<string, string> = {
   // the vehicle form and the onboarding describe a vehicle that does not exist yet: they read the powertrain being chosen
   'components/vehicles/VehicleFormModal.vue': 'draft powertrain of the vehicle form',
-  'utils/onboarding.ts': 'draft powertrain of the onboarding',
+  'components/onboarding/OnboardingDataSourcesStep.vue': 'draft powertrain of the onboarding',
   'utils/capabilities.ts': 'fallback for an answer without capabilities',
   'utils/vehicles.ts': 'the powertrain helpers themselves',
 }

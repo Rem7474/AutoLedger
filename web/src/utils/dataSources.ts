@@ -1,5 +1,4 @@
-import { capabilitiesOf, energyKind, type VehicleCapabilities } from './capabilities'
-import type { Powertrain } from './onboarding'
+import type { VehicleCapabilities } from './capabilities'
 
 export type CsvTemplateType = 'CHARGES' | 'DRIVES' | 'FUEL' | 'ODOMETER'
 
@@ -49,11 +48,6 @@ export function csvTemplate(type: CsvTemplateType, language: TemplateLanguage = 
   return { headers, rows: [example] }
 }
 
-/** The template of a vehicle that does not exist yet (the onboarding wizard knows only its powertrain). */
-export function csvTemplateForPowertrain(type: CsvTemplateType, language: TemplateLanguage, powertrain: Powertrain) {
-  return csvTemplate(type, language, energyKind(capabilitiesOf({ powertrain })))
-}
-
 /** The columns the import reads for a kind of file, without the kWh of a drive for a vehicle that burns fuel. */
 export function csvColumns(type: CsvTemplateType, energy: 'ELECTRIC' | 'FUEL' = 'ELECTRIC'): { required: string[]; optional: string[] } {
   const cols = CSV_COLUMNS[type]
@@ -63,15 +57,4 @@ export function csvColumns(type: CsvTemplateType, energy: 'ELECTRIC' | 'FUEL' = 
 
 export function csvTemplateFilename(type: CsvTemplateType): string {
   return `${type.toLowerCase()}-template.csv`
-}
-
-// A ready-to-run odometer reading for the webhook endpoint, built from a token the user has just created.
-export function webhookSnippet(origin: string, token: string, vehicleId = 'VEHICLE_ID'): string {
-  const body = JSON.stringify({ vehicle_id: vehicleId, event_type: 'odometer_update', data: { odometer_km: 15200 } })
-  return [
-    `curl -X POST ${origin}/api/integrations/homeassistant/event \\`,
-    `  -H "Authorization: Bearer ${token}" \\`,
-    `  -H "Content-Type: application/json" \\`,
-    `  -d '${body}'`,
-  ].join('\n')
 }
