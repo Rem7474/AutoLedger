@@ -200,7 +200,7 @@ func hybridSuggest(in HybridShareInput, segs []hybridSegment, capacity float64, 
 		}
 		return n
 	}
-	since := in.Now.AddDate(0, -hybridWindowMonths, 0)
+	since := models.AddCalendarMonths(in.Now, -hybridWindowMonths)
 	if usableIn(since) >= hybridMinSegments {
 		q.WindowMonths = hybridWindowMonths
 	} else {
