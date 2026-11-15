@@ -27,14 +27,14 @@ func TestComputeCapabilitiesMatrix(t *testing.T) {
 			want: VehicleCapabilities{Charges: true, Drives: true, BatteryHealth: true, Write: true},
 		},
 		{
-			name: "combustion vehicle, owner",
+			name: "combustion vehicle without any drive, owner: trips can be entered by hand",
 			v:    Vehicle{Powertrain: PowertrainICE, Role: RoleOwner, TollDetectionActive: true},
-			want: VehicleCapabilities{Refuels: true, Write: true},
+			want: VehicleCapabilities{Refuels: true, Drives: true, TollsAuto: true, Write: true},
 		},
 		{
-			name:  "combustion vehicle with trips pushed by a source, viewer",
+			name:  "combustion vehicle with an odometer pushed by a source, viewer",
 			v:     Vehicle{Powertrain: PowertrainICE, Role: RoleViewer, TollDetectionActive: true},
-			facts: CapabilityFacts{HasDrives: true, HasSourceOdometer: true},
+			facts: CapabilityFacts{HasSourceOdometer: true},
 			want:  VehicleCapabilities{Refuels: true, Drives: true, OdometerAuto: true, TollsAuto: true},
 		},
 		{
@@ -50,7 +50,7 @@ func TestComputeCapabilitiesMatrix(t *testing.T) {
 		{
 			name: "a connection address on a combustion vehicle is ignored",
 			v:    Vehicle{Powertrain: PowertrainICE, Role: RoleOwner, TeslaMateAPIURL: &url},
-			want: VehicleCapabilities{Refuels: true, Write: true},
+			want: VehicleCapabilities{Refuels: true, Drives: true, Write: true},
 		},
 		{
 			name:  "an odometer reported by a source without a connection",

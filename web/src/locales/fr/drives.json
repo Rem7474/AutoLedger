@@ -55,7 +55,10 @@
     "shownOf": "{count} trajets sur {total}",
     "loadMore": "Afficher plus de trajets",
     "today": "Aujourd'hui",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "noDriveYet": "Aucun trajet pour le moment",
+    "noDriveYetHint": "Les trajets que vous ajoutez à la main, importez ou recevez d'une source connectée apparaissent ici.",
+    "addATrip": "Ajouter un trajet"
   },
   "addToTripModal": {
     "add": "Ajouter",
@@ -220,7 +223,11 @@
     "deleteCostTitle": "Supprimer le frais",
     "deleteCostMessage": "Supprimer ce frais de {amount}{scope} ?",
     "driveCarpools": "Covoiturages de ce trajet ({count})",
-    "carpoolPassengers": "{passengers} passager | {passengers} passagers"
+    "carpoolPassengers": "{passengers} passager | {passengers} passagers",
+    "fuelEnergy": "Carburant",
+    "fuelVolume": "{volume} {unit} × {rate}/{unit}",
+    "fuelUnknown": "consommation inconnue",
+    "fuelLitres": "• {volume}"
   },
   "driveGroupModal": {
     "saveTheGroup": "Enregistrer le groupe",

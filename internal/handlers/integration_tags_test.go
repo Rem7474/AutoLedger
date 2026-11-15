@@ -7,7 +7,7 @@ import (
 )
 
 func TestIntegrationTagsSplitTheDrivesAndLeaveTheUntaggedOnesWithoutAName(t *testing.T) {
-	out := buildIntegrationTags("v1", "CHF", []services.TagCostBreakdown{
+	out := buildIntegrationTags("v1", "CHF", false, []services.TagCostBreakdown{
 		{Tag: "pro", DistanceKm: 1200, EnergyKwh: 210, TollsAmount: 3500, Percentage: 60, Cost: 42000, CostPerKm: 0.35, SharedDrives: 2},
 		{Tag: "", DistanceKm: 0, Cost: 0},
 	})
@@ -19,7 +19,7 @@ func TestIntegrationTagsSplitTheDrivesAndLeaveTheUntaggedOnesWithoutAName(t *tes
 	if out.Tags[1].Tag != nil || out.Tags[1].CostPerKm != nil {
 		t.Errorf("untagged drives have no name and no rate without distance: %+v", out.Tags[1])
 	}
-	if empty := buildIntegrationTags("v1", "CHF", nil); empty.Tags == nil || len(empty.Tags) != 0 {
+	if empty := buildIntegrationTags("v1", "CHF", false, nil); empty.Tags == nil || len(empty.Tags) != 0 {
 		t.Errorf("no tag is an empty list: %+v", empty.Tags)
 	}
 }

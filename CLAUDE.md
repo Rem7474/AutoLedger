@@ -43,7 +43,7 @@ The full run takes several minutes (`internal/services` ~5 min). A `go test` tha
 
 - Money is stored and computed in integer cents (`internal/money`); convert at the edges only.
 - A vehicle has a `Powertrain` (`EV`, `ICE`, `PHEV`, `REEV`) and a server-derived `telemetry_mode` (clients never send it); `make` and `model` are free text. Every vehicle carries server-computed `capabilities` (`charges`, `refuels`, `drives`, `sync`, `odometer_auto`, `battery_health`, `tolls_auto`, `write`); the UI reads them instead of testing the powertrain or a TeslaMate connection. Details in [docs/dev/reference.md](docs/dev/reference.md#vehicle-model).
-- Manual drives carry no energy cost; the server estimates their energy and the energy statistics ignore it. See [docs/dev/reference.md](docs/dev/reference.md#manual-drives).
+- Manual drives carry no energy cost; the server estimates their energy and the energy statistics ignore it. A vehicle that burns fuel and cannot charge has litres from its fill-ups instead of kWh. See [docs/dev/reference.md](docs/dev/reference.md#manual-drives).
 - `cost_ledger` is the single view the TCO engine reads; charges, fuel, tolls, maintenance, insurance, tire amortization and acquisition cost all flow into it.
 - A vehicle's TeslaMate connection is a `vehicle_data_sources` row, read and written only by the repository; changing what the sync reads means resetting `sync_state.full_import_completed_at` in a migration. See [docs/dev/reference.md](docs/dev/reference.md#teslamate-connection-and-sync).
 - Manual charges require a cost. `UpdateCharge` overwrites notes/`document_id` with what it receives: send the existing values back when only completing a cost. Foreign currency (`fx_rate`) exists only on manual entries.

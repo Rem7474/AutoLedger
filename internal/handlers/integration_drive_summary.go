@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/teslacost/teslacost/internal/middleware"
+	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/services"
 )
 
@@ -20,7 +21,8 @@ type IntegrationDriveSummary struct {
 	Drives                int                 `json:"drives" jsonschema:"number of drives that began in the period"`
 	DrivesWithoutDistance int                 `json:"drives_without_distance" jsonschema:"drives whose distance was not recorded: they are counted in drives but add nothing to distance, so cost_per_km covers only the others"`
 	Distance              IntegrationDistance `json:"distance" jsonschema:"distance of the drives that have one"`
-	EnergyKwh             float64             `json:"energy_kwh" jsonschema:"electric energy those drives used, in kWh"`
+	EnergyKwh             *float64            `json:"energy_kwh" jsonschema:"electric energy those drives used, in kWh; null for a vehicle that burns fuel only (see fuel_liters)"`
+	FuelLiters            *float64            `json:"fuel_liters" jsonschema:"fuel those drives used, in litres, for a vehicle that burns fuel only (from the consumption its fill-ups gave before each drive; drives with no known consumption are not counted); null for any other vehicle and while no consumption is known"`
 	Tolls                 IntegrationAmount   `json:"tolls" jsonschema:"tolls and parking attributed to those drives"`
 	Cost                  IntegrationAmount   `json:"cost" jsonschema:"allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid"`
 	CostPerKm             *IntegrationAmount  `json:"cost_per_km" jsonschema:"that cost divided by the distance; null while the distance is zero"`
@@ -30,14 +32,15 @@ type IntegrationDriveSummary struct {
 	Tags                  []IntegrationTag    `json:"tags" jsonschema:"the same split by tag as get_tag_breakdown, over the period only; a drive with several tags appears in each, so do not add the rows up when shared_drives is above zero"`
 }
 
-func buildIntegrationDriveSummary(vehicleID, currency, from, to string, sum services.DriveSummary) IntegrationDriveSummary {
+func buildIntegrationDriveSummary(vehicleID, currency string, fuelOnly bool, from, to string, sum services.DriveSummary) IntegrationDriveSummary {
 	out := IntegrationDriveSummary{
 		VehicleID: vehicleID, Currency: currency, From: from, To: to,
 		Drives: sum.Drives, DrivesWithoutDistance: sum.DrivesWithoutDistance, Distance: kilometres(sum.DistanceKm),
-		EnergyKwh: sum.EnergyKwh, Tolls: amountOf(sum.TollsAmount, currency), Cost: amountOf(sum.Cost, currency),
+		Tolls: amountOf(sum.TollsAmount, currency), Cost: amountOf(sum.Cost, currency),
 		UntaggedDrives: sum.UntaggedDrives, DrivesToQualify: sum.ToQualify, TripGroups: sum.TripGroups,
-		Tags: buildIntegrationTags(vehicleID, currency, sum.ByTag).Tags,
+		Tags: buildIntegrationTags(vehicleID, currency, fuelOnly, sum.ByTag).Tags,
 	}
+	out.EnergyKwh, out.FuelLiters = energyFigures(fuelOnly, sum.EnergyKwh, sum.FuelLiters)
 	if sum.DistanceKm > 0 {
 		out.CostPerKm = decimalAmount(&sum.CostPerKm, currency, 4)
 	}
@@ -62,7 +65,7 @@ func (h *IntegrationReadHandler) DriveSummary(ctx context.Context, userID, vehic
 	if err != nil {
 		return nil, err
 	}
-	out := buildIntegrationDriveSummary(vehicle.ID, vehicle.Currency, from, to, *sum)
+	out := buildIntegrationDriveSummary(vehicle.ID, vehicle.Currency, models.PowertrainIsFuelOnly(vehicle.Powertrain), from, to, *sum)
 	return &out, nil
 }
 
@@ -75,4 +78,17 @@ func (h *IntegrationReadHandler) GetDriveSummary(w http.ResponseWriter, r *http.
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// energyFigures is the energy of drives as a client reads it: the kWh for a vehicle that charges (never null there,
+// 0 when none was measured), the litres for one that burns fuel only, the other figure being null because it does not
+// apply. Litres that are not known yet are null, not 0.
+func energyFigures(fuelOnly bool, kwh, litres float64) (*float64, *float64) {
+	if !fuelOnly {
+		return &kwh, nil
+	}
+	if litres <= 0 {
+		return nil, nil
+	}
+	return nil, &litres
 }

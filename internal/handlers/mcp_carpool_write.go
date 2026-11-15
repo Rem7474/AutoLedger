@@ -133,11 +133,11 @@ func (h *IntegrationReadHandler) CreateCarpoolFromDrives(ctx context.Context, us
 	for _, l := range estimate.Legs {
 		req.Legs = append(req.Legs, LegPayload{
 			DriveID: l.DriveID, StartLabel: l.StartLabel, EndLabel: l.EndLabel, DistanceKm: l.DistanceKm,
-			ElectricityCost: l.ElectricityCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
+			EnergyCost: &l.EnergyCost, FuelCost: &l.FuelCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
 			MaintenanceCost: l.MaintenanceCost, InsuranceCost: l.InsuranceCost, OtherCost: l.OtherCost,
 		})
 	}
-	trip, legs, passengers, err := buildCarpool(vehicle.ID, &req)
+	trip, legs, passengers, err := buildCarpool(vehicle.ID, models.PowertrainIsFuelOnly(vehicle.Powertrain), &req)
 	if err != nil {
 		return nil, err
 	}

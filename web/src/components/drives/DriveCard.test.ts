@@ -65,4 +65,16 @@ describe('DriveCard', () => {
     const cost = html.slice(html.indexOf('€5.26') - 300, html.indexOf('€5.26'))
     expect(cost).not.toContain('z-10')
   })
+
+  it('montre le carburant d\'un trajet de véhicule thermique en litres, jamais en kWh', async () => {
+    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: 1.6 } })
+    expect(html).toMatch(/1,6\s(<!--.*?-->)?\s?L/)
+    expect(html).not.toContain('kWh')
+  })
+
+  it('ne montre aucun carburant tant que les pleins ne donnent pas de consommation', async () => {
+    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: null } })
+    expect(html).not.toMatch(/\sL\b/)
+    expect(html).not.toContain('kWh')
+  })
 })

@@ -116,7 +116,7 @@ func integrationCarpoolTrip(t models.CarpoolTripWithPassengers, currency string)
 	stops := carpoolStops(t.Legs)
 	item := IntegrationCarpoolTrip{
 		ID: t.ID, Title: t.Title, Date: t.Date.UTC().Format(time.RFC3339), Distance: kilometres(t.DistanceKm), Stops: stops,
-		TotalCost: amountOf(t.TotalCost, currency), Energy: amountOf(t.ElectricityCost, currency), Tolls: amountOf(t.TollsCost, currency),
+		TotalCost: amountOf(t.TotalCost, currency), Energy: amountOf(t.EnergyCost, currency), Tolls: amountOf(t.TollsCost, currency),
 		Revenue: amountOf(t.TotalRevenue, currency), NetCost: amountOf(t.NetCost, currency), DriverCost: amountOf(t.DriverCostShare, currency),
 		Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes), Version: t.Version,
 	}

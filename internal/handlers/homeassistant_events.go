@@ -158,7 +158,7 @@ func (h *HomeAssistantHandler) recordDrive(w http.ResponseWriter, r *http.Reques
 	}
 	timings := ingest.NormalizeDrive(ingest.DriveInput{
 		Start: *start, End: end, DurationMin: req.Data.DurationMin, DistanceKm: distance,
-		EnergyKwh: req.Data.EnergyKwh, VehicleKwh100km: vehicle.EstimatedKwh100km,
+		EnergyKwh: req.Data.EnergyKwh, VehicleKwh100km: vehicle.EstimatedKwh100km, FuelOnly: models.PowertrainIsFuelOnly(vehicle.Powertrain),
 	})
 	startOdo, endOdo := startOdoKm, endOdoKm
 	if distance > 0 {

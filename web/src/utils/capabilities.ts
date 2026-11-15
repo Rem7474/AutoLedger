@@ -60,11 +60,20 @@ export function capabilitiesOf(vehicle: VehicleLike): VehicleCapabilities {
   return {
     charges,
     refuels: canRefuel(powertrain),
-    drives: charges,
+    drives: true,
     sync,
     odometer_auto: sync,
     battery_health: charges,
-    tolls_auto: charges && vehicle?.toll_detection_active !== false,
+    tolls_auto: vehicle?.toll_detection_active !== false,
     write: role === 'OWNER' || role === 'EDITOR',
   }
+}
+
+/**
+ * The energy a vehicle's drives carry: `FUEL` for a vehicle that burns fuel and cannot charge (its drives show
+ * litres, never kWh, and no kWh is entered), `ELECTRIC` for every other one. A hybrid charges, so it stays on kWh.
+ */
+export type EnergyKind = 'ELECTRIC' | 'FUEL'
+export function energyKind(caps: Pick<VehicleCapabilities, 'charges' | 'refuels'>): EnergyKind {
+  return !caps.charges && caps.refuels ? 'FUEL' : 'ELECTRIC'
 }

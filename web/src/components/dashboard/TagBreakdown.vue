@@ -4,8 +4,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount } from '@/currency'
 import { computed } from 'vue'
 import { Tag } from '@/icons'
-import { distanceUnit, formatDistanceValue } from '@/units'
-import { formatNumber } from '@/utils/numbers'
+import { tagEnergyLine } from '@/utils/tagBreakdown'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 
 // Split of the drives by tag: distance, energy and the running cost the drive list shows for the drives of the tag
@@ -32,7 +31,7 @@ const hasSharedDrives = computed(() => (props.tco?.tag_breakdown ?? []).some((it
             <Tag class="w-4 h-4 shrink-0 text-slate-400" aria-hidden="true" />
             <span class="truncate text-sm font-bold text-white">{{ item.tag || $t('dashboard.tagBreakdown.untagged') }}</span>
           </div>
-          <p class="text-xs text-slate-400 mt-1">{{ $t('dashboard.tagBreakdown.kmKwh', { unit: distanceUnit(), distance_km: formatDistanceValue(item.distance_km, 1), energy_kwh: formatNumber(item.energy_kwh, 1) }) }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ tagEnergyLine(item) }}</p>
           <p class="text-xs text-slate-300 mt-0.5">
             {{ item.cost > 0 ? formatAmount(item.cost, vehicleStore.currency) : '—' }}
             · {{ formatCostPerDistance(item.cost_per_km, vehicleStore.currency, 3, true) }}

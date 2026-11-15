@@ -224,6 +224,7 @@ func parseDriveRow(rc *rowContext, row []string, line int) (*parsedRow, *apierro
 		DistanceKm:      dist,
 		EnergyKwh:       typedEnergy,
 		VehicleKwh100km: rc.vehicle.EstimatedKwh100km,
+		FuelOnly:        models.PowertrainIsFuelOnly(rc.vehicle.Powertrain),
 	})
 
 	tags := []string{}
@@ -232,18 +233,19 @@ func parseDriveRow(rc *rowContext, row []string, line int) (*parsedRow, *apierro
 	}
 
 	drive := &models.Drive{
-		VehicleID:           rc.vehicle.ID,
-		StartTime:           startTime,
-		EndTime:             timings.End,
-		DistanceKm:          ingest.KnownDistance(dist),
-		DurationMin:         timings.DurationMin,
-		StartAddress:        optionalText(rc.col(row, "start_address", "start_location", "origin")),
-		EndAddress:          optionalText(rc.col(row, "end_address", "end_location", "destination")),
-		EnergyConsumedKwh:   &timings.EnergyKwh,
-		ConsumptionKwh100km: &timings.Kwh100km,
-		Tags:                tags,
-		EnergyEstimated:     timings.EnergyEstimated,
-		Origin:              "CSV",
+		VehicleID:       rc.vehicle.ID,
+		StartTime:       startTime,
+		EndTime:         timings.End,
+		DistanceKm:      ingest.KnownDistance(dist),
+		DurationMin:     timings.DurationMin,
+		StartAddress:    optionalText(rc.col(row, "start_address", "start_location", "origin")),
+		EndAddress:      optionalText(rc.col(row, "end_address", "end_location", "destination")),
+		Tags:            tags,
+		EnergyEstimated: timings.EnergyEstimated,
+		Origin:          "CSV",
+	}
+	if timings.EnergyKnown {
+		drive.EnergyConsumedKwh, drive.ConsumptionKwh100km = &timings.EnergyKwh, &timings.Kwh100km
 	}
 	return &parsedRow{
 		insert: func(ctx context.Context, tx *database.Repository, batchID string) error {

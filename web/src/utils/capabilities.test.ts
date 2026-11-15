@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capabilitiesOf } from './capabilities'
+import { capabilitiesOf, energyKind } from './capabilities'
 
 const caps = (over: Record<string, boolean>) => ({
   charges: false, refuels: false, drives: false, sync: false, odometer_auto: false, battery_health: false, tolls_auto: false, write: false, ...over,
@@ -20,7 +20,7 @@ describe('capabilitiesOf', () => {
     expect(ev).toEqual(caps({ charges: true, drives: true, sync: true, odometer_auto: true, battery_health: true, tolls_auto: true, write: true }))
 
     const ice = capabilitiesOf({ powertrain: 'ICE', role: 'EDITOR', toll_detection_active: false })
-    expect(ice).toEqual(caps({ refuels: true, write: true }))
+    expect(ice).toEqual(caps({ refuels: true, drives: true, write: true }))
 
     const phev = capabilitiesOf({ powertrain: 'PHEV', role: 'VIEWER', teslamate_api_url: '  ' })
     expect(phev).toEqual(caps({ charges: true, refuels: true, drives: true, battery_health: true, tolls_auto: true }))
@@ -32,5 +32,14 @@ describe('capabilitiesOf', () => {
 
   it('reads no vehicle as an electric vehicle owned by the user', () => {
     expect(capabilitiesOf(null)).toEqual(caps({ charges: true, drives: true, battery_health: true, tolls_auto: true, write: true }))
+  })
+})
+
+describe('energyKind', () => {
+  it('reads fuel for a vehicle that burns fuel only, kWh for every vehicle that charges, a hybrid included', () => {
+    expect(energyKind(capabilitiesOf({ powertrain: 'ICE' }))).toBe('FUEL')
+    expect(energyKind(capabilitiesOf({ powertrain: 'EV' }))).toBe('ELECTRIC')
+    expect(energyKind(capabilitiesOf({ powertrain: 'PHEV' }))).toBe('ELECTRIC')
+    expect(energyKind(capabilitiesOf({ powertrain: 'REEV' }))).toBe('ELECTRIC')
   })
 })

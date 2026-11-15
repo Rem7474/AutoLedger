@@ -134,11 +134,11 @@ func (h *IntegrationReadHandler) UpdateCarpool(ctx context.Context, userID, vehi
 	for _, l := range existing.Legs {
 		req.Legs = append(req.Legs, LegPayload{
 			DriveID: l.DriveID, StartLabel: l.StartLabel, EndLabel: l.EndLabel, DistanceKm: l.DistanceKm,
-			ElectricityCost: l.ElectricityCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
+			EnergyCost: &l.EnergyCost, FuelCost: &l.FuelCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
 			MaintenanceCost: l.MaintenanceCost, InsuranceCost: l.InsuranceCost, OtherCost: l.OtherCost, Overrides: l.Overrides,
 		})
 	}
-	trip, legs, built, err := buildCarpool(vehicle.ID, &req)
+	trip, legs, built, err := buildCarpool(vehicle.ID, models.PowertrainIsFuelOnly(vehicle.Powertrain), &req)
 	if err != nil {
 		return nil, err
 	}

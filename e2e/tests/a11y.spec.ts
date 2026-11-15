@@ -52,12 +52,12 @@ test('the sidebar is a named landmark and marks the current page', async ({ page
   await expect(nav.getByRole('group', { name: 'Management' }).getByRole('link', { name: 'Account' })).toBeVisible()
 })
 
-test('a combustion vehicle sidebar has no empty section and no drives page', async ({ page }) => {
+test('a combustion vehicle sidebar has no empty section and a drives page', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await useVehicle(page, ice.id, '/odometer')
   const nav = page.getByRole('navigation', { name: 'Main navigation' })
   await expect(nav.getByRole('group', { name: 'Tracking' }).getByRole('link', { name: 'Odometer' })).toBeVisible()
-  await expect(nav.getByRole('link', { name: 'Drives', exact: true })).toHaveCount(0)
+  await expect(nav.getByRole('group', { name: 'Tracking' }).getByRole('link', { name: 'Drives', exact: true })).toBeVisible()
 })
 
 test('a focused field shows a visible ring', async ({ page }) => {
