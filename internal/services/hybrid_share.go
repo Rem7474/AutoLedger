@@ -39,7 +39,9 @@ type HybridShareInput struct {
 	Refs    []OdometerRef // odometer references other than the fill-ups (readings, contract start)
 	// ReferenceKwh100 is the electric consumption entered on the vehicle, read on the plug side (kWh/100 km).
 	ReferenceKwh100 *float64
-	Now             time.Time
+	// BatteryKwh is the capacity the owner corrected; it takes precedence over the one deduced from percentages.
+	BatteryKwh *float64
+	Now        time.Time
 }
 
 // HybridShareQuality says how far the suggestion can be trusted, and why not when it cannot.
@@ -90,6 +92,10 @@ type hybridSegment struct {
 func ComputeHybridShare(in HybridShareInput) HybridShareResult {
 	stats := ComputeFuelStats(in.Fuel, in.Refs)
 	capacity, fromPercents := hybridBatteryKwh(in.Charges)
+	known := fromPercents // a capacity is known: deduced from percentages, or corrected by the owner
+	if in.BatteryKwh != nil && *in.BatteryKwh > 0 {
+		capacity, known, fromPercents = *in.BatteryKwh, true, false
+	}
 	var segs []hybridSegment
 
 	anchor := -1
@@ -133,7 +139,7 @@ func ComputeHybridShare(in HybridShareInput) HybridShareResult {
 		}
 		anchor, segLiters, litersOK = i, 0, true
 	}
-	return hybridSuggest(in, segs, capacity, fromPercents)
+	return hybridSuggest(in, segs, capacity, known, fromPercents)
 }
 
 // hybridSegmentEnergy sums the plug-side energy of the charges that belong to a period: by odometer when the charge
@@ -181,11 +187,11 @@ func hybridBatteryKwh(charges []models.ChargeLog) (float64, bool) {
 	return median(caps), true
 }
 
-func hybridSuggest(in HybridShareInput, segs []hybridSegment, capacity float64, fromPercents bool) HybridShareResult {
+func hybridSuggest(in HybridShareInput, segs []hybridSegment, capacity float64, known, fromPercents bool) HybridShareResult {
 	res := HybridShareResult{}
 	q := &res.Quality
 	q.CapacityFromPercents = fromPercents
-	if fromPercents {
+	if known {
 		c := round1(capacity)
 		res.BatteryKwh = &c
 	}
@@ -228,7 +234,7 @@ func hybridSuggest(in HybridShareInput, segs []hybridSegment, capacity float64, 
 
 	reference := in.ReferenceKwh100 != nil && *in.ReferenceKwh100 > 0
 	if reference {
-		used = hybridWithReference(in, used, capacity, fromPercents, q)
+		used = hybridWithReference(in, used, capacity, known, q)
 	}
 	q.SegmentsDiscarded = q.DiscardedNoOdometer + q.DiscardedNoLiters + q.DiscardedTooShort + q.DiscardedIncoherent
 	q.SegmentsUsed = len(used)
@@ -341,12 +347,12 @@ func hybridCoherenceGap(used []*hybridSegment, res HybridShareResult) float64 {
 // hybridWithReference converts each period's energy into electric kilometres with the entered consumption. Where the
 // charges carry battery percentages, the energy actually used between the first and the last charge of the period
 // replaces the plug-side sum, which ignores what was left in the battery at the borders.
-func hybridWithReference(in HybridShareInput, used []*hybridSegment, capacity float64, fromPercents bool, q *HybridShareQuality) []*hybridSegment {
+func hybridWithReference(in HybridShareInput, used []*hybridSegment, capacity float64, known bool, q *HybridShareQuality) []*hybridSegment {
 	perKm := *in.ReferenceKwh100 / 100
 	kept := used[:0:0]
 	for _, s := range used {
 		km, kwh := s.km, s.kwh
-		if fromPercents {
+		if known {
 			if wKm, wKwh, ok := hybridSocWindow(in.Charges, s, capacity); ok {
 				km, kwh, s.socUsed = wKm, wKwh, true
 			}

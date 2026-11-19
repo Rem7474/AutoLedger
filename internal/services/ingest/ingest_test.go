@@ -171,3 +171,34 @@ func TestKnownDistanceStoresNothingForAnUnknownDistance(t *testing.T) {
 		t.Errorf("12.5 km: %v", got)
 	}
 }
+
+func TestNormalizeDriveHybridSplitsTheEstimatedEnergy(t *testing.T) {
+	tests := []struct {
+		name      string
+		in        DriveInput
+		known     bool
+		estimated bool
+		kwh       float64
+		kwh100    float64
+		share     *float64
+	}{
+		{"accepted share scales the estimate", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), Hybrid: true, HybridShare: fptr(0.4)}, true, true, 8, 8, fptr(0.4)},
+		{"share zero is a drive on fuel, not an unknown energy", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), Hybrid: true, HybridShare: fptr(0)}, true, true, 0, 0, fptr(0)},
+		{"no share: nothing is estimated", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), Hybrid: true}, false, false, 0, 0, nil},
+		{"typed energy is kept, the share is carried", DriveInput{DistanceKm: 100, EnergyKwh: fptr(5), Hybrid: true, HybridShare: fptr(0.4)}, true, false, 5, 5, fptr(0.4)},
+		{"typed energy without a share", DriveInput{DistanceKm: 100, EnergyKwh: fptr(5), Hybrid: true}, true, false, 5, 5, nil},
+		{"another powertrain ignores the share", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), HybridShare: fptr(0.4)}, true, true, 20, 20, nil},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.in.Start = t0
+			got := NormalizeDrive(tc.in)
+			if got.EnergyKnown != tc.known || got.EnergyEstimated != tc.estimated || got.EnergyKwh != tc.kwh || got.Kwh100km != tc.kwh100 {
+				t.Fatalf("got %+v", got)
+			}
+			if (got.ElectricShare == nil) != (tc.share == nil) || (tc.share != nil && *got.ElectricShare != *tc.share) {
+				t.Fatalf("share %v, want %v", got.ElectricShare, tc.share)
+			}
+		})
+	}
+}

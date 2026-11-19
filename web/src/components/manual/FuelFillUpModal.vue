@@ -12,6 +12,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 import { currencySymbol, formatAmount } from '@/currency'
 import { distanceUnit, litresToDisplayVolume, perVolume, volumeUnitLabel } from '@/units'
 import { dayKey } from '@/utils/dates'
+import { isHybridCapabilities } from '@/utils/hybridForms'
 
 // The detail of a fill-up, one sheet for every list that shows one: it records a new fill-up, or edits `editing` (a log
 // as the fuel-logs endpoint returns it, with its version). Delete is asked of the host (`delete`), which closes nothing
@@ -22,6 +23,8 @@ const open = defineModel<boolean>('open', { required: true })
 
 const vehicleStore = useVehicleStore()
 const currency = computed(() => vehicleStore.currency)
+// A plug-in hybrid splits its kilometres by the odometer and measures a period from full tank to full tank
+const isHybrid = computed(() => isHybridCapabilities(vehicleStore.capabilities))
 const { explainStaleWrite } = useStaleWrite()
 const saving = ref(false)
 const formError = ref('')
@@ -102,6 +105,10 @@ async function save() {
     formError.value = t('manual.fuelLogsPanel.dateRequired')
     return
   }
+  if (isHybrid.value && !(hasOdometer(form.value.odometer) && Number(form.value.odometer) > 0)) {
+    formError.value = t('manual.fuelLogsPanel.odometerRequired')
+    return
+  }
   saving.value = true
   try {
     if (props.editing) {
@@ -134,8 +141,8 @@ async function save() {
           <AppDatePicker id="fuel-date" v-model="form.date" required size="sm" />
         </div>
         <div>
-          <label for="fuel-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('manual.fuelLogsPanel.mileageKmOptional', { unit: distanceUnit() }) }}</label>
-          <DistanceInput id="fuel-odometer" v-model="form.odometer" inputmode="numeric" min="0" step="1" class="field" />
+          <label for="fuel-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ isHybrid ? $t('manual.fuelLogsPanel.mileageKm', { unit: distanceUnit() }) : $t('manual.fuelLogsPanel.mileageKmOptional', { unit: distanceUnit() }) }}</label>
+          <DistanceInput id="fuel-odometer" v-model="form.odometer" inputmode="numeric" min="0" step="1" :required="isHybrid" class="field" />
         </div>
       </div>
 
@@ -156,7 +163,10 @@ async function save() {
       <p class="text-xs text-slate-400 -mt-1.5">
         {{ $t('manual.fuelLogsPanel.enterTheAmountOrThe', { derivedHint, unit: volumeUnitLabel() }) }}
       </p>
-      <p v-if="!hasOdometer(form.odometer)" class="text-xs text-slate-400 -mt-2">
+      <p v-if="isHybrid" class="text-xs text-slate-400 -mt-2" data-testid="fuel-hybrid-hint">
+        {{ $t('manual.fuelLogsPanel.hybridMileageHint') }}
+      </p>
+      <p v-else-if="!hasOdometer(form.odometer)" class="text-xs text-slate-400 -mt-2">
         {{ $t('manual.fuelLogsPanel.withoutAMileageItIs') }}
       </p>
 

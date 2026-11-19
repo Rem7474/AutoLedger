@@ -323,10 +323,10 @@ func parseDriveFilter(r *http.Request) database.DriveFilter {
 	return filter
 }
 
-// fuelLiters is the fuel of a drive of a fuel-only vehicle, nil when the vehicle burns no fuel or its consumption is
-// unknown.
+// fuelLiters is the fuel of a drive of a fuel-only vehicle or the fuel part of a hybrid's, nil when the vehicle burns
+// no fuel on that drive or its consumption is unknown.
 func fuelLiters(rates *services.UnitRates, cost services.DriveCost) *float64 {
-	if !rates.FuelOnly || cost.FuelLitres <= 0 {
+	if !(rates.FuelOnly || rates.Hybrid) || cost.FuelLitres <= 0 {
 		return nil
 	}
 	v := math.Round(cost.FuelLitres*10) / 10

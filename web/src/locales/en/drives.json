@@ -227,7 +227,13 @@
     "fuelEnergy": "Fuel",
     "fuelVolume": "{volume} {unit} × {rate}/{unit}",
     "fuelUnknown": "no consumption yet",
-    "fuelLitres": "• {volume}"
+    "fuelLitres": "• {volume}",
+    "hybridEnergy": "Electricity and fuel",
+    "hybridSplit": "{percent} % electric · {kwh} kWh × {rate}/kWh",
+    "hybridFuelPart": "{volume} {unit} × {rate}/{unit} on fuel",
+    "hybridFuelPartUnknown": "fuel part: enter the fuel consumption on the vehicle sheet",
+    "hybridUnknownSub": "Enter the electric share on the vehicle sheet to price this trip",
+    "hybridUnknown": "share unknown"
   },
   "driveGroupModal": {
     "saveTheGroup": "Save the group",

@@ -21,7 +21,9 @@
     "message": "Recharge de {kwh} kWh",
     "saveFailed": "Impossible d'enregistrer la recharge.",
     "pricePerKwh": "Prix au kWh ({cur})",
-    "calculatedWithTariff": "Calculé avec le tarif « {plan} » selon les heures de charge"
+    "calculatedWithTariff": "Calculé avec le tarif « {plan} » selon les heures de charge",
+    "startBattery": "Batterie au début (%)",
+    "endBattery": "Batterie à la fin (%)"
   },
   "quickExpenseForm": {
     "moreDetails": "Plus de détails",
@@ -70,7 +72,10 @@
     "kwh": "Indiquez l'énergie ajoutée (kWh).",
     "cost": "Indiquez le coût (0 si la recharge était gratuite).",
     "fuelAmount": "Indiquez le montant du plein.",
-    "amount": "Indiquez le montant."
+    "amount": "Indiquez le montant.",
+    "hybridOdometer": "Indiquez le kilométrage : un hybride en a besoin pour distinguer ses kilomètres électriques de ses kilomètres au carburant.",
+    "batteryRange": "Un pourcentage de batterie est compris entre 0 et 100.",
+    "batteryOrder": "La batterie doit finir la recharge plus haut qu'elle n'a commencé."
   },
   "quickFormShell": {
     "saving": "Enregistrement…"
