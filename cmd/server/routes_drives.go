@@ -14,6 +14,7 @@ func (h *apiHandlers) registerDriveRoutes(r chi.Router) {
 
 	// Electric share of a plug-in hybrid, suggested from the history (read-only)
 	r.Get("/{vehicleId}/hybrid-share", h.hybridShare.Get)
+	r.Put("/{vehicleId}/hybrid-share", h.hybridShare.Save)
 
 	// Drives
 	r.Get("/{vehicleId}/drives", h.drive.List)

@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/middleware"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
@@ -124,8 +125,9 @@ func TestManualDriveOnCombustionVehicleCarriesFuelNotKwh(t *testing.T) {
 	}
 }
 
-// A hybrid keeps the electric figures: kWh estimated from its consumption, no fuel part invented.
-func TestManualDriveOnHybridStaysElectric(t *testing.T) {
+// A manual drive of a hybrid splits its distance with the share accepted on the vehicle, frozen with the drive. Without
+// an accepted share there is no split and no energy cost, never an invented one.
+func TestManualDriveOnHybridSplitsWithTheAcceptedShare(t *testing.T) {
 	repo := authTestRepo(t)
 	ctx := context.Background()
 	u, err := repo.CreateUser(ctx, "phev-manual-drive@example.com", "hash")
@@ -149,6 +151,7 @@ func TestManualDriveOnHybridStaysElectric(t *testing.T) {
 	h := NewDriveHandler(repo, services.NewCarpoolService(repo.Pool(), repo), nil)
 	router := chi.NewRouter()
 	router.Post("/vehicles/{vehicleId}/drives", h.Create)
+	router.Put("/vehicles/{vehicleId}/drives/{driveId}", h.Update)
 	router.Get("/vehicles/{vehicleId}/drives", h.List)
 	do := func(method, path, body string, out any) {
 		t.Helper()
@@ -163,18 +166,79 @@ func TestManualDriveOnHybridStaysElectric(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	var created models.Drive
-	do(http.MethodPost, "/vehicles/"+v.ID+"/drives", `{"start_time":"2026-09-01T08:00:00Z","distance_km":50}`, &created)
-	if created.EnergyConsumedKwh == nil || *created.EnergyConsumedKwh != 10 || !created.EnergyEstimated {
-		t.Fatalf("a hybrid drive estimates kWh from its consumption: %+v", created)
-	}
-	var l struct {
+	type listed struct {
 		Drives []struct {
+			ID    string             `json:"id"`
 			Costs DriveCostBreakdown `json:"costs"`
 		} `json:"drives"`
 	}
-	do(http.MethodGet, "/vehicles/"+v.ID+"/drives", "", &l)
-	if c := l.Drives[0].Costs; c.FuelOnly || c.FuelLiters != nil || c.ElectricityKwh != 10 {
-		t.Fatalf("no fuel part on a hybrid drive: %+v", c)
+	costs := func() map[string]DriveCostBreakdown {
+		t.Helper()
+		var l listed
+		do(http.MethodGet, "/vehicles/"+v.ID+"/drives", "", &l)
+		out := map[string]DriveCostBreakdown{}
+		for _, d := range l.Drives {
+			out[d.ID] = d.Costs
+		}
+		return out
+	}
+
+	// No accepted share: no split, no energy estimated, the energy cost is unknown
+	var bare models.Drive
+	do(http.MethodPost, "/vehicles/"+v.ID+"/drives", `{"start_time":"2026-09-01T08:00:00Z","distance_km":100}`, &bare)
+	if bare.ElectricShare != nil || bare.EnergyConsumedKwh != nil || bare.EnergyEstimated {
+		t.Fatalf("a hybrid drive without an accepted share has no split and no energy: %+v", bare)
+	}
+	if c := costs()[bare.ID]; c.EnergySource != services.EnergySourceUnknown || c.EnergyCost != 0 || c.FuelLiters != nil || !c.HasEstimates {
+		t.Fatalf("its energy cost stays empty: %+v", c)
+	}
+
+	// Share 0.4 on the electric kilometres, 5 L/100 km on the others
+	share, fuel := 0.4, 5.0
+	if err := repo.SetHybridSettings(ctx, v.ID, database.HybridSettings{ElectricShare: &share, FuelL100km: &fuel}); err != nil {
+		t.Fatal(err)
+	}
+	var split models.Drive
+	do(http.MethodPost, "/vehicles/"+v.ID+"/drives", `{"start_time":"2026-09-02T08:00:00Z","distance_km":100}`, &split)
+	if split.ElectricShare == nil || *split.ElectricShare != 0.4 || split.EnergyConsumedKwh == nil || *split.EnergyConsumedKwh != 8 || !split.EnergyEstimated {
+		t.Fatalf("100 km at 40%% electric and 20 kWh/100 km: 8 kWh: %+v", split)
+	}
+	c := costs()[split.ID]
+	if c.ElectricityKwh != 8 || c.FuelLiters == nil || *c.FuelLiters != 3 || c.FuelRatePerLiter != 1.5 || c.FuelCost != money.FromFloat(4.5) {
+		t.Fatalf("60 km on fuel at 5 L/100 km and 1.5 EUR/L: 3 L, 4.50: %+v", c)
+	}
+	if c.EnergyCost != c.ElectricityCost+c.FuelCost || c.EnergySource != services.EnergySourceConsumption {
+		t.Fatalf("the energy cost is the sum of both parts: %+v", c)
+	}
+
+	// The share is frozen: changing the vehicle's does not move a drive already saved
+	moved := 0.9
+	if err := repo.SetHybridSettings(ctx, v.ID, database.HybridSettings{ElectricShare: &moved, FuelL100km: &fuel}); err != nil {
+		t.Fatal(err)
+	}
+	if after := costs()[split.ID]; after.ElectricityKwh != 8 || after.FuelCost != money.FromFloat(4.5) {
+		t.Fatalf("a drive keeps the share it was saved with: %+v", after)
+	}
+
+	// An edit follows the distance with the drive's own share; a drive saved before any share takes the current one
+	var edited models.Drive
+	do(http.MethodPut, "/vehicles/"+v.ID+"/drives/"+split.ID, `{"distance_km":50}`, &edited)
+	if edited.ElectricShare == nil || *edited.ElectricShare != 0.4 || edited.EnergyConsumedKwh == nil || *edited.EnergyConsumedKwh != 4 {
+		t.Fatalf("50 km at the drive's 40%%: 4 kWh: %+v", edited)
+	}
+	var adopted models.Drive
+	do(http.MethodPut, "/vehicles/"+v.ID+"/drives/"+bare.ID, `{"distance_km":100}`, &adopted)
+	if adopted.ElectricShare == nil || *adopted.ElectricShare != 0.9 || adopted.EnergyConsumedKwh == nil || *adopted.EnergyConsumedKwh != 18 || !adopted.EnergyEstimated {
+		t.Fatalf("saved again once a share is accepted, the drive takes it: %+v", adopted)
+	}
+
+	// A typed kWh stays the electric part; the share only gives the fuel part
+	var typed models.Drive
+	do(http.MethodPost, "/vehicles/"+v.ID+"/drives", `{"start_time":"2026-09-03T08:00:00Z","distance_km":100,"energy_consumed_kwh":5}`, &typed)
+	if typed.EnergyEstimated || typed.EnergyConsumedKwh == nil || *typed.EnergyConsumedKwh != 5 || typed.ElectricShare == nil || *typed.ElectricShare != 0.9 {
+		t.Fatalf("a typed energy is kept: %+v", typed)
+	}
+	if c := costs()[typed.ID]; c.ElectricityKwh != 5 || c.EnergySource != services.EnergySourceMeasured || c.FuelLiters == nil || *c.FuelLiters != 0.5 {
+		t.Fatalf("10 km on fuel at 5 L/100 km: 0.5 L: %+v", c)
 	}
 }

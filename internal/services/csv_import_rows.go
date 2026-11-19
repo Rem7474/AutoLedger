@@ -225,6 +225,8 @@ func parseDriveRow(rc *rowContext, row []string, line int) (*parsedRow, *apierro
 		EnergyKwh:       typedEnergy,
 		VehicleKwh100km: rc.vehicle.EstimatedKwh100km,
 		FuelOnly:        models.PowertrainIsFuelOnly(rc.vehicle.Powertrain),
+		Hybrid:          rc.vehicle.IsHybrid(),
+		HybridShare:     rc.vehicle.HybridElectricShare,
 	})
 
 	tags := []string{}
@@ -242,6 +244,7 @@ func parseDriveRow(rc *rowContext, row []string, line int) (*parsedRow, *apierro
 		EndAddress:      optionalText(rc.col(row, "end_address", "end_location", "destination")),
 		Tags:            tags,
 		EnergyEstimated: timings.EnergyEstimated,
+		ElectricShare:   timings.ElectricShare,
 		Origin:          "CSV",
 	}
 	if timings.EnergyKnown {

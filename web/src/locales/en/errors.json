@@ -259,7 +259,9 @@
     "invalid_period": "The session ends before it starts",
     "invalid_energy": "The session energy must be above 0 and at most {p0} kWh",
     "electric_only": "Charging sessions only apply to electric vehicles",
-    "place_invalid": "The charging place does not exist"
+    "place_invalid": "The charging place does not exist",
+    "battery_level_invalid": "A battery percentage must be between 0 and 100",
+    "battery_levels_order": "The battery must end the charge higher than it started"
   },
   "tariff": {
     "band_invalid": "Invalid band",
@@ -406,5 +408,12 @@
   },
   "currency": {
     "required": "Choose a currency"
+  },
+  "hybrid_share": {
+    "not_hybrid": "The electric share only applies to vehicles that both charge and refuel",
+    "no_suggestion": "There is not enough history to suggest an electric share",
+    "share_range": "The electric share must be between 0 and 100 %",
+    "fuel_range": "Invalid fuel consumption",
+    "battery_range": "Invalid battery capacity"
   }
 }

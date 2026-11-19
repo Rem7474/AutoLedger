@@ -135,6 +135,7 @@ func (r *Repository) ListVehiclesByUserID(ctx context.Context, userID string) ([
 		       v.estimated_kwh_100km, v.estimated_price_per_kwh, v.currency, v.powertrain,
 		       v.telemetry_mode, v.make, v.model,
 		       v.default_driver_id, v.tariff_plan_id, v.is_home_charger_default, v.toll_detection,
+		       v.hybrid_electric_share, v.hybrid_fuel_l_100km, v.battery_usable_kwh,
 		       v.created_at, v.updated_at, v.version,
 		       vm.role
 		FROM vehicles v
@@ -157,6 +158,7 @@ func (r *Repository) ListVehiclesByUserID(ctx context.Context, userID string) ([
 			&v.EstimatedKwh100km, &v.EstimatedPricePerKwh, &v.Currency, &v.Powertrain,
 			&v.TelemetryMode, &v.Make, &v.Model,
 			&v.DefaultDriverID, &v.TariffPlanID, &v.IsHomeChargerDefault, &v.TollDetection,
+			&v.HybridElectricShare, &v.HybridFuelL100km, &v.BatteryUsableKwh,
 			&v.CreatedAt, &v.UpdatedAt, &v.Version, &role,
 		); err != nil {
 			return nil, err
@@ -200,6 +202,7 @@ func (r *Repository) GetVehicleByID(ctx context.Context, id, userID string) (*mo
 		       v.estimated_kwh_100km, v.estimated_price_per_kwh, v.currency, v.powertrain,
 		       v.telemetry_mode, v.make, v.model,
 		       v.default_driver_id, v.tariff_plan_id, v.is_home_charger_default, v.toll_detection,
+		       v.hybrid_electric_share, v.hybrid_fuel_l_100km, v.battery_usable_kwh,
 		       v.created_at, v.updated_at, v.version,
 		       vm.role
 		FROM vehicles v
@@ -212,6 +215,7 @@ func (r *Repository) GetVehicleByID(ctx context.Context, id, userID string) (*mo
 		&v.EstimatedKwh100km, &v.EstimatedPricePerKwh, &v.Currency, &v.Powertrain,
 		&v.TelemetryMode, &v.Make, &v.Model,
 		&v.DefaultDriverID, &v.TariffPlanID, &v.IsHomeChargerDefault, &v.TollDetection,
+		&v.HybridElectricShare, &v.HybridFuelL100km, &v.BatteryUsableKwh,
 		&v.CreatedAt, &v.UpdatedAt, &v.Version, &role,
 	)
 	if err != nil {
@@ -555,5 +559,28 @@ func (r *Repository) fillTollDetectionActive(ctx context.Context, v *models.Vehi
 		return err
 	}
 	v.TollDetectionActive = active
+	return nil
+}
+
+// HybridSettings is what an owner accepted for a plug-in hybrid: nil clears a value.
+type HybridSettings struct {
+	ElectricShare *float64
+	FuelL100km    *float64
+	BatteryKwh    *float64
+}
+
+// SetHybridSettings stores the accepted electric share, the fuel consumption on the fuel part and the optional
+// battery capacity of a vehicle. The vehicle version is not advanced: they are not part of the vehicle form.
+func (r *Repository) SetHybridSettings(ctx context.Context, vehicleID string, s HybridSettings) error {
+	tag, err := r.pool.Exec(ctx, `
+		UPDATE vehicles
+		SET hybrid_electric_share = $1, hybrid_fuel_l_100km = $2, battery_usable_kwh = $3, updated_at = NOW()
+		WHERE id::text = $4;`, s.ElectricShare, s.FuelL100km, s.BatteryKwh, vehicleID)
+	if err != nil {
+		return fmt.Errorf("failed to save hybrid settings: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
 	return nil
 }
