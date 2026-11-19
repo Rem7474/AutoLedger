@@ -1320,3 +1320,30 @@ test('a plug-in hybrid sheet explains why nothing is suggested and keeps a typed
     await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
   }
 })
+
+test('a plug-in hybrid asks for the odometer on a quick charge and keeps the battery percentages', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'E2E hybrid forms', powertrain: 'PHEV', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  try {
+    await useVehicle(page, vehicle.id, '/consumption')
+    await page.getByRole('button', { name: 'Quick add' }).first().click()
+    await page.fill('#qc-kwh', '8.5')
+    await page.fill('#qc-cost', '2.10')
+    await page.fill('#qc-start-battery', '30')
+    await page.fill('#qc-end-battery', '90')
+    // The odometer is outside the details and required: without it nothing is saved
+    await page.getByRole('button', { name: 'Save the charge' }).click()
+    await expect(page.getByText('a hybrid needs it', { exact: false })).toBeVisible()
+    await page.fill('#qc-odometer-required', '15200')
+    await page.getByRole('button', { name: 'Save the charge' }).click()
+    await expect(toast(page)).toContainText('8.5')
+    const charges = await (await request.get(`/api/vehicles/${vehicle.id}/charges`, { headers })).json()
+    const list = Array.isArray(charges) ? charges : charges.charges ?? charges.items
+    expect(list).toHaveLength(1)
+    expect(list[0]).toMatchObject({ odometer: 15200, start_battery_level: 30, end_battery_level: 90 })
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})

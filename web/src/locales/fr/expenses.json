@@ -82,7 +82,14 @@
     "originTeslaMateCost": "Synchronisée depuis {link} : la date, l'énergie, le lieu et le compteur sont en lecture seule. Le coût se saisit dans TeslaMate et est relu à la prochaine synchronisation ; les notes sont à vous.",
     "originManual": "Saisie manuellement.",
     "originCsv": "Importée depuis un fichier CSV.",
-    "originAutomatic": "Importée automatiquement."
+    "originAutomatic": "Importée automatiquement.",
+    "odometer": "Kilométrage",
+    "odometerHybridHint": "Un hybride a besoin du kilométrage pour répartir ses kilomètres entre électricité et carburant.",
+    "startBattery": "Batterie au début (%, optionnel)",
+    "endBattery": "Batterie à la fin (%, optionnel)",
+    "batteryHint": "À lire sur le tableau de bord. Avec les deux, la capacité de la batterie est déduite et l'électricité consommée est plus exacte.",
+    "batteryRange": "Un pourcentage de batterie est compris entre 0 et 100.",
+    "batteryOrder": "La batterie doit finir la recharge plus haut qu'elle n'a commencé."
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} recharge(s) affichée(s) sur {chargesTotal}",

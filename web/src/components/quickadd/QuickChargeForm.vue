@@ -9,6 +9,9 @@ import QuickPhotoField from './QuickPhotoField.vue'
 import QuickOdometerField from './QuickOdometerField.vue'
 import QuickDateLine from './QuickDateLine.vue'
 import { formatDistance } from '@/units'
+import { isHybridCapabilities } from '@/utils/hybridForms'
+import { capabilitiesOf } from '@/utils/capabilities'
+import NumberInput from '@/components/NumberInput.vue'
 import { formatNumber } from '@/utils/numbers'
 import {
   buildChargePayload,
@@ -26,12 +29,17 @@ const emit = defineEmits<{ saved: [result: { queued: boolean; message: string }]
 const memory = loadMemory(props.vehicle.id)
 const odometer = props.vehicle.current_odometer ? String(Math.round(props.vehicle.current_odometer)) : ''
 
+// A plug-in hybrid needs the odometer to split its kilometres: the field leaves the details and is required
+const hybrid = isHybridCapabilities(capabilitiesOf(props.vehicle))
+
 const form = reactive({
   date: toLocalDateTimeInput(new Date()),
   kwh: '',
   cost: '',
   address: memory.address ?? '',
   odometer,
+  startBattery: '',
+  endBattery: '',
   notes: '',
   documentId: null as string | null,
   documentFilename: null as string | null,
@@ -51,13 +59,13 @@ const suggestedPrice = memory.pricePerKwh
 async function submit() {
   error.value = ''
   if (checkOdometer(form.odometer, props.vehicle.current_odometer) === 'below' && !odometerConfirmed.value) {
-    showDetails.value = true
+    showDetails.value = !hybrid || showDetails.value
     error.value = t('quickadd.odometerField.confirmRequired', { last: formatDistance(Math.round(props.vehicle.current_odometer)) })
     return
   }
   let payload: ReturnType<typeof buildChargePayload>
   try {
-    payload = buildChargePayload({ ...form }, currency)
+    payload = buildChargePayload({ ...form }, currency, { hybrid })
   } catch (err: any) {
     error.value = err.message
     return
@@ -91,6 +99,20 @@ async function submit() {
 
     <QuickDateLine id="qc-date" v-model="form.date" with-time />
 
+    <template v-if="hybrid">
+      <QuickOdometerField id="qc-odometer-required" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="qc-start-battery" class="quick-label">{{ $t('quickadd.quickChargeForm.startBattery') }}</label>
+          <NumberInput text id="qc-start-battery" v-model="form.startBattery" inputmode="numeric" min="0" max="100" class="quick-input" />
+        </div>
+        <div>
+          <label for="qc-end-battery" class="quick-label">{{ $t('quickadd.quickChargeForm.endBattery') }}</label>
+          <NumberInput text id="qc-end-battery" v-model="form.endBattery" inputmode="numeric" min="0" max="100" class="quick-input" />
+        </div>
+      </div>
+    </template>
+
     <button
       type="button"
       class="flex min-h-11 w-full items-center justify-between rounded-xl px-1 text-sm font-semibold text-slate-300"
@@ -107,7 +129,7 @@ async function submit() {
         <label for="qc-address" class="quick-label">{{ $t('quickadd.quickChargeForm.place') }}</label>
         <input id="qc-address" v-model="form.address" :placeholder="$t('quickadd.quickChargeForm.chargerHome')" autocomplete="off" class="quick-input" />
       </div>
-      <QuickOdometerField id="qc-odometer" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
+      <QuickOdometerField v-if="!hybrid" id="qc-odometer" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
       <div>
         <label for="qc-notes" class="quick-label">{{ $t('common.notes') }}</label>
         <input id="qc-notes" v-model="form.notes" autocomplete="off" class="quick-input" />
