@@ -94,3 +94,23 @@ export const capacityBody = (accepted: HybridSettings | null | undefined, capaci
   fuel_l_100km: accepted?.fuel_l_100km ?? null,
   battery_usable_kwh: fieldNumber(capacity),
 })
+
+export type HybridDriveEnergy =
+  | { kind: 'split'; electricPercent: number; kwh: number; litres: number | null }
+  | { kind: 'unknown' }
+
+/**
+ * How the energy of a drive of a plug-in hybrid is split, read from the drive as the API returns it (null for any other
+ * drive: an electric vehicle, a fuel-only one, or a hybrid drive synchronised from a source, which is all electric).
+ * A manual drive carries the share frozen when it was saved; without one the server leaves its energy unknown.
+ */
+export function hybridDriveEnergy(drive: { electric_share?: number | null; costs?: any } | null | undefined): HybridDriveEnergy | null {
+  const costs = drive?.costs
+  if (!costs || costs.fuel_only) return null
+  const share = drive?.electric_share
+  if (share !== null && share !== undefined) {
+    const litres = costs.fuel_liters === null || costs.fuel_liters === undefined ? null : Number(costs.fuel_liters)
+    return { kind: 'split', electricPercent: sharePercent(share), kwh: Number(costs.electricity_kwh) || 0, litres }
+  }
+  return costs.energy_source === 'UNKNOWN' ? { kind: 'unknown' } : null
+}
