@@ -283,5 +283,42 @@
     "sharing": "Partage et accès",
     "edit": "Modifier le véhicule",
     "manage": "Gérer les véhicules"
+  },
+  "hybridShare": {
+    "title": "Part électrique",
+    "row": "Part électrique",
+    "rowAccepted": "{percent} % en électrique",
+    "rowSuggested": "{percent} % suggérés",
+    "rowNone": "Pas encore définie",
+    "intro": "La part de vos kilomètres roulés sur la batterie. Elle répartit le coût d'énergie de chaque trajet entre électricité et carburant.",
+    "electric": "roulés en électrique",
+    "fuelPart": "{percent} % en carburant",
+    "noneAccepted": "Aucune valeur n'est utilisée : vos trajets n'ont pas de coût d'énergie tant que vous n'en acceptez ou n'en saisissez pas une.",
+    "nothingYet": "Rien à suggérer pour l'instant",
+    "because": {
+      "not_enough_data": "Saisissez vos pleins (plein complet, avec le kilométrage) et vos recharges avec le kilométrage : il faut au moins 3 périodes entre pleins complets et 500 km.",
+      "energy_and_fuel_not_separable": "Vos pleins et vos recharges ne varient pas assez pour distinguer l'électricité du carburant. Indiquez votre consommation électrique dans la fiche du véhicule, ou continuez à les saisir."
+    },
+    "suggested": "Suggestion : {percent} % en électrique",
+    "levelGood": "Fiable",
+    "levelLow": "Indicatif",
+    "basis": "Calculée sur {periods} périodes entre pleins complets, {km} analysés.",
+    "window": " {months} derniers mois.",
+    "lowHint": "Indiquez le niveau de batterie au début et à la fin de vos recharges pour la fiabiliser.",
+    "lessPrecise": "{count} recharges synchronisées n'ont pas l'énergie prise à la prise : elles sont lues côté batterie, un peu moins précis.",
+    "use": "Utiliser cette valeur",
+    "alreadyUsed": "C'est la valeur utilisée par vos trajets.",
+    "appliesLater": "Une valeur s'applique aux trajets que vous enregistrez ensuite. Les trajets déjà enregistrés gardent la leur.",
+    "capacityDeduced": "Capacité de la batterie : environ {kwh} kWh, déduite de vos recharges.",
+    "capacityTyped": "Capacité de la batterie : {kwh} kWh, telle que vous l'avez saisie.",
+    "capacityUnknown": "Capacité de la batterie : pas encore déduite. Indiquez le niveau de batterie au début et à la fin de quelques recharges.",
+    "edit": "Saisir une valeur",
+    "percentLabel": "Roulés en électrique (%)",
+    "fuelLabel": "Consommation en carburant ({unit})",
+    "save": "Enregistrer la valeur",
+    "clear": "Ne plus utiliser de valeur",
+    "capacityLabel": "Capacité de la batterie (kWh)",
+    "saveCapacity": "Enregistrer la capacité",
+    "capacityHint": "Facultatif : seulement pour corriger la capacité déduite de vos recharges. Laissez vide pour garder celle qui est déduite."
   }
 }

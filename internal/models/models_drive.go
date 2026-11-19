@@ -43,10 +43,13 @@ type Drive struct {
 	DriverName        *string  `json:"driver_name,omitempty"`
 	IsManual          bool     `json:"is_manual"`
 	// EnergyEstimated marks an energy derived from the vehicle's average consumption rather than measured or typed.
-	EnergyEstimated bool       `json:"energy_estimated"`
-	TollReviewedAt  *time.Time `json:"toll_reviewed_at,omitempty"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       time.Time  `json:"updated_at"`
+	EnergyEstimated bool `json:"energy_estimated"`
+	// ElectricShare is the share of the distance driven on electricity (0 to 1) of a manual drive of a hybrid, frozen
+	// when the drive was saved; nil when the drive has no split.
+	ElectricShare  *float64   `json:"electric_share,omitempty"`
+	TollReviewedAt *time.Time `json:"toll_reviewed_at,omitempty"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 // Distance is the distance of the drive in km, 0 when it is unknown (DistanceKm is nil): a source with no odometer

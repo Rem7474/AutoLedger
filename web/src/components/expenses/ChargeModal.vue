@@ -20,6 +20,7 @@ import { useSubmit } from '@/composables/useSubmit'
 import { useSessionTariffCost } from '@/composables/useSessionTariffCost'
 import { sessionPriceRequest } from '@/utils/tariffSession'
 import { chargeDeletable, chargeFieldAccess, chargeOrigin } from '@/utils/chargeProvenance'
+import { isHybridCapabilities, odometerRequired, readBatteryLevels } from '@/utils/hybridForms'
 import { chargeCostToReview, teslamateChargeUrl, teslamateCostEditUrl } from '@/utils/teslamateCharges'
 
 // Records a charge, or edits `editing`: the facts reported by TeslaMate are read-only, the cost and the notes are AutoLedger's.
@@ -44,6 +45,11 @@ const { explainStaleWrite } = useStaleWrite()
 const editingCharge = computed(() => props.editing)
 const baseCurrency = computed(() => vehicleStore.currency)
 const sourceLocked = computed(() => chargeFieldAccess(editingCharge.value).sourceLocked)
+// A plug-in hybrid splits its kilometres by the odometer, so it is required on a charge typed here; the battery
+// percentages are optional and let the capacity be deduced
+const isHybrid = computed(() => isHybridCapabilities(vehicleStore.capabilities))
+const odometerNeeded = computed(() => odometerRequired(isHybrid.value, sourceLocked.value))
+const batteryProblem = computed(() => (isHybrid.value ? readBatteryLevels(chargeForm.value.start_battery, chargeForm.value.end_battery).problem : null))
 const deletable = computed(() => !!editingCharge.value && chargeDeletable(editingCharge.value))
 function removeEditing() {
   const charge = editingCharge.value
@@ -60,6 +66,8 @@ const chargeForm = ref({
   fx_rate: '',
   address: '',
   odometer: '',
+  start_battery: '',
+  end_battery: '',
   notes: '',
   document_id: null as string | null,
   document_filename: null as string | null,
@@ -105,6 +113,8 @@ watch(open, (isOpen) => {
       fx_rate: '',
       address: '',
       odometer: props.currentOdometer ? String(Math.round(props.currentOdometer)) : '',
+      start_battery: '',
+      end_battery: '',
       notes: '',
       document_id: null,
       document_filename: null,
@@ -120,6 +130,8 @@ watch(open, (isOpen) => {
       fx_rate: c.fx_rate ? String(c.fx_rate) : '',
       address: c.address || '',
       odometer: c.odometer ? String(Math.round(c.odometer)) : '',
+      start_battery: c.start_battery_level != null ? String(c.start_battery_level) : '',
+      end_battery: c.end_battery_level != null ? String(c.end_battery_level) : '',
       notes: c.notes || '',
       document_id: c.document_id || null,
       document_filename: c.document_filename || null,
@@ -134,6 +146,8 @@ const { pending: submitting, run: runOnce } = useSubmit()
 
 async function handleSaveChargeAction() {
   if (!props.vehicleId) return
+  if (batteryProblem.value) return
+  const levels = isHybrid.value ? readBatteryLevels(chargeForm.value.start_battery, chargeForm.value.end_battery) : null
   const payload = {
     date: new Date(chargeForm.value.date).toISOString(),
     end_date: chargeForm.value.end_date ? new Date(chargeForm.value.end_date).toISOString() : null,
@@ -145,6 +159,7 @@ async function handleSaveChargeAction() {
     notes: chargeForm.value.notes || null,
     document_id: chargeForm.value.document_id || null,
     place_id: chargeForm.value.place_id || null,
+    ...(levels ? { start_battery_level: levels.start, end_battery_level: levels.end } : {}),
   }
   try {
     if (editingCharge.value) {
@@ -240,9 +255,24 @@ const originNoteKey = computed(() => {
             <input id="charge-form-address" v-model="chargeForm.address" :placeholder="$t('expenses.chargeModal.chargerHome')" :disabled="sourceLocked" class="field" />
           </div>
           <div>
-            <label for="charge-form-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.chargeModal.odometerOptional') }}</label>
-            <DistanceInput text id="charge-form-odometer" v-model="chargeForm.odometer" inputmode="numeric" min="0" :disabled="sourceLocked" class="field" />
+            <label for="charge-form-odometer" class="block text-xs font-semibold text-slate-300 mb-1">{{ odometerNeeded ? $t('expenses.chargeModal.odometer') : $t('expenses.chargeModal.odometerOptional') }}</label>
+            <DistanceInput text id="charge-form-odometer" v-model="chargeForm.odometer" inputmode="numeric" min="0" :required="odometerNeeded" :disabled="sourceLocked" class="field" />
           </div>
+        </div>
+        <p v-if="odometerNeeded" class="text-xs text-slate-400 -mt-2" data-testid="charge-hybrid-odometer-hint">{{ $t('expenses.chargeModal.odometerHybridHint') }}</p>
+        <div v-if="isHybrid" class="space-y-1.5" data-testid="charge-battery-levels">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="charge-form-start-battery" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.chargeModal.startBattery') }}</label>
+              <NumberInput text id="charge-form-start-battery" v-model="chargeForm.start_battery" inputmode="numeric" min="0" max="100" :disabled="sourceLocked" class="field" />
+            </div>
+            <div>
+              <label for="charge-form-end-battery" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.chargeModal.endBattery') }}</label>
+              <NumberInput text id="charge-form-end-battery" v-model="chargeForm.end_battery" inputmode="numeric" min="0" max="100" :disabled="sourceLocked" class="field" />
+            </div>
+          </div>
+          <p v-if="batteryProblem" class="text-xs text-critical-400" role="alert">{{ batteryProblem === 'range' ? $t('expenses.chargeModal.batteryRange') : $t('expenses.chargeModal.batteryOrder') }}</p>
+          <p v-else class="text-xs text-slate-400">{{ $t('expenses.chargeModal.batteryHint') }}</p>
         </div>
 
         <ChargeAmountFields

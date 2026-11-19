@@ -27,6 +27,10 @@ type DriveInput struct {
 	// FuelOnly is a vehicle that burns fuel and cannot charge: a drive carries no kWh, neither typed nor estimated,
 	// since the drive's fuel is derived from the fuel fill-ups when it is read.
 	FuelOnly bool
+	// Hybrid is a vehicle that charges and burns fuel (PHEV, REEV): the energy of a drive without typed kWh is the
+	// electric part of the distance, HybridShare of it, and a vehicle without an accepted share has no such energy.
+	Hybrid      bool
+	HybridShare *float64
 }
 
 // DriveTimings is the normalized result of a DriveInput.
@@ -39,6 +43,8 @@ type DriveTimings struct {
 	Kwh100km    float64
 	// EnergyEstimated is true when the energy was derived from the vehicle's average consumption.
 	EnergyEstimated bool
+	// ElectricShare is the share of a hybrid's drive to store with it (the vehicle's accepted share), nil otherwise.
+	ElectricShare *float64
 }
 
 // ValidDriveDistance reports whether a distance in km is accepted for a drive.
@@ -86,6 +92,9 @@ func NormalizeDrive(in DriveInput) DriveTimings {
 	}
 	out.DurationMin = DurationMinutes(in.Start, out.End)
 
+	if in.Hybrid {
+		out.ElectricShare = in.HybridShare
+	}
 	hasEnergy := !in.FuelOnly && in.EnergyKwh != nil && *in.EnergyKwh > 0
 	switch {
 	case hasEnergy:
@@ -94,10 +103,16 @@ func NormalizeDrive(in DriveInput) DriveTimings {
 		if in.DistanceKm > 0 {
 			out.Kwh100km = Consumption100km(out.EnergyKwh, in.DistanceKm)
 		}
-	case in.DistanceKm > 0 && !in.FuelOnly:
+	case in.DistanceKm > 0 && !in.FuelOnly && (!in.Hybrid || in.HybridShare != nil):
 		out.EnergyKnown = true
 		out.EnergyEstimated = true
 		out.EnergyKwh, out.Kwh100km = EstimateDriveEnergy(in.VehicleKwh100km, in.DistanceKm)
+		if in.Hybrid {
+			// Only the electric part of the distance draws on the battery; the consumption stays that of a kilometre
+			// driven on electricity.
+			out.EnergyKwh *= *in.HybridShare
+			out.Kwh100km *= *in.HybridShare
+		}
 	}
 	return out
 }

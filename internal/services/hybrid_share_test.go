@@ -430,3 +430,47 @@ func TestHybridShareBatteryWindowWithAMiddleCharge(t *testing.T) {
 	}
 	near(t, r.Suggested, 0.5, 0.02)
 }
+
+func TestHybridShareBatteryCapacityCorrection(t *testing.T) {
+	fuel, _ := hsSeries(steady(6, 400, 0.5), hsOpts{startDaysAgo: 80})
+	var charges []models.ChargeLog
+	odo := 10000.0
+	day := hsNow.AddDate(0, 0, -80)
+	for i := 0; i < 6; i++ {
+		mk := func(off float64, start, end, d int) models.ChargeLog {
+			added := 40 * float64(end-start) / 100
+			return models.ChargeLog{Date: day.AddDate(0, 0, d), Odometer: f64(odo + off), StartBatteryLevel: i32(start), EndBatteryLevel: i32(end), KwhAdded: added, KwhUsed: f64(added)}
+		}
+		charges = append(charges, mk(100, 40, 90, 1), mk(300, 70, 90, 5))
+		odo += 400
+		day = day.AddDate(0, 0, 10)
+	}
+	in := HybridShareInput{Fuel: fuel, Charges: charges, ReferenceKwh100: f64(hsElec), Now: hsNow}
+	deduced := ComputeHybridShare(in)
+	if !deduced.Quality.CapacityFromPercents || deduced.BatteryKwh == nil || *deduced.BatteryKwh != 40 {
+		t.Fatalf("deduced: %+v", deduced)
+	}
+	// The owner's correction wins over the deduced capacity, and is not "from percentages".
+	in.BatteryKwh = f64(20)
+	fixed := ComputeHybridShare(in)
+	if fixed.Quality.CapacityFromPercents || fixed.BatteryKwh == nil || *fixed.BatteryKwh != 20 || fixed.Quality.SocCoverage != 1 {
+		t.Fatalf("corrected: %+v", fixed)
+	}
+	if *fixed.Suggested == *deduced.Suggested {
+		t.Fatalf("a different capacity should move the measured share: %v", *fixed.Suggested)
+	}
+	// Without percentages a typed capacity changes nothing.
+	for i := range charges {
+		charges[i].StartBatteryLevel, charges[i].EndBatteryLevel = nil, nil
+	}
+	in.Charges = charges
+	plain := ComputeHybridShare(in)
+	if plain.Quality.SocCoverage != 0 {
+		t.Fatalf("no percentage, no window: %+v", plain.Quality)
+	}
+	// A zero or negative correction is ignored.
+	in.BatteryKwh = f64(0)
+	if r := ComputeHybridShare(in); r.BatteryKwh != nil {
+		t.Fatalf("%+v", r)
+	}
+}

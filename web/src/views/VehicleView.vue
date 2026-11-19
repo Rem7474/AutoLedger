@@ -6,6 +6,7 @@ import VehicleTile from '@/components/vehicle/VehicleTile.vue'
 import SheetRow from '@/components/SheetRow.vue'
 import BatteryHealthCard from '@/components/dashboard/BatteryHealthCard.vue'
 import ResaleValueCard from '@/components/dashboard/ResaleValueCard.vue'
+import HybridShareCard from '@/components/vehicle/HybridShareCard.vue'
 import ModalShell from '@/components/ModalShell.vue'
 import TariffPlansPanel from '@/components/tariffs/TariffPlansPanel.vue'
 import LeaseContractCard from '@/components/dashboard/LeaseContractCard.vue'
@@ -23,6 +24,7 @@ import { formatPercent } from '@/utils/numbers'
 import { fmt, perUnit } from '@/components/dashboard/energyStats'
 import { distanceUnit, formatFuelConsumptionValue, fuelConsumptionUnit, perDistance } from '@/units'
 import { fuelConsumptionFigures } from '@/utils/fuelConsumption'
+import { hybridShareHint, sharePercent, type HybridShare } from '@/utils/hybridShare'
 import { summarizeFittedTires, wearAndRemaining } from '@/utils/tires'
 import { useTireList } from '@/composables/useTireList'
 import { nextDueReminder } from '@/utils/dashboard'
@@ -41,6 +43,9 @@ const consumption = ref<number | null>(null)
 const fuelFigures = ref<ReturnType<typeof fuelConsumptionFigures>>(null)
 const batteryPercent = ref<number | null>(null)
 const resaleValue = ref<number | null>(null)
+// The electric share of a hybrid, for the line that opens its card
+const hybridShare = ref<HybridShare | null>(null)
+const isHybrid = computed(() => vehicleStore.capabilities.charges && vehicleStore.capabilities.refuels)
 // Bumped when a battery reading changes: the resale estimate depends on the health
 const resaleRefresh = ref(0)
 const { mountedTires, hasMountedTires, loadTires } = useTireList()
@@ -48,7 +53,7 @@ async function load() {
   const v = vehicle.value
   if (!v) return
   void loadTires(true)
-  const [r, o, c, health, residual, energy, fuel] = await Promise.all([
+  const [r, o, c, health, residual, energy, fuel, share] = await Promise.all([
     api.getReminders(v.id).catch(() => []),
     isOwner.value ? api.getOwnership(v.id).catch(() => null) : Promise.resolve(null),
     api.getTCO(v.id).catch(() => null),
@@ -56,6 +61,7 @@ async function load() {
     api.getResidualValue(v.id, { km_share: 0.5, health_weight: 1 }).catch(() => null),
     vehicleStore.capabilities.charges ? api.getEnergyStats(v.id).catch(() => null) : Promise.resolve(null),
     !vehicleStore.capabilities.charges && vehicleStore.capabilities.refuels ? api.getFuelLogs(v.id).catch(() => null) : Promise.resolve(null),
+    isHybrid.value ? api.getHybridShare(v.id).catch(() => null) : Promise.resolve(null),
   ])
   if (v.id !== vehicle.value?.id) return
   reminders.value = r
@@ -64,6 +70,7 @@ async function load() {
   const kwh100 = perUnit(energy?.summary?.consumption_kwh_100km)
   consumption.value = typeof kwh100 === 'number' && kwh100 > 0 ? kwh100 : null
   fuelFigures.value = fuelConsumptionFigures(fuel)
+  hybridShare.value = share
   batteryPercent.value = typeof health?.health_percent === 'number' ? health.health_percent : null
   resaleValue.value = typeof residual?.current_value === 'number' ? residual.current_value : null
 }
@@ -98,6 +105,12 @@ const consumptionDetail = computed(() => {
   if (figures.costPer100 === null) return consumptionText
   const cost = `${formatAmount(perDistance(figures.costPer100), vehicleStore.currency, 2)} / 100 ${distanceUnit()}`
   return t('vehicles.vehicleView.consumptionFuel', { consumption: consumptionText, cost })
+})
+const hybridHint = computed(() => {
+  const kind = hybridShareHint(hybridShare.value)
+  if (kind === 'accepted') return t('vehicles.hybridShare.rowAccepted', { percent: sharePercent(hybridShare.value?.accepted.electric_share ?? 0) })
+  if (kind === 'suggested') return t('vehicles.hybridShare.rowSuggested', { percent: sharePercent(hybridShare.value?.suggested_electric_share ?? 0) })
+  return t('vehicles.hybridShare.rowNone')
 })
 const batteryHint = computed(() => (batteryPercent.value === null ? t('dashboard.sheets.batteryHint') : t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })))
 const resaleHint = computed(() => (resaleValue.value === null ? t('dashboard.sheets.resaleHint') : t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })))
@@ -138,6 +151,9 @@ async function onSaved() {
     <div class="space-y-2">
       <SheetRow v-if="vehicleStore.capabilities.charges" v-slot="{ bare }" :title="$t('dashboard.sheets.battery')" :hint="batteryHint" :icon="BatteryCharging">
         <BatteryHealthCard :vehicle-id="vehicle.id" :bare="bare" @updated="resaleRefresh++" />
+      </SheetRow>
+      <SheetRow v-if="isHybrid" v-slot="{ bare }" :title="$t('vehicles.hybridShare.row')" :hint="hybridHint" :icon="Zap">
+        <HybridShareCard :vehicle-id="vehicle.id" :can-edit="vehicleStore.canEdit" :bare="bare" @saved="load" />
       </SheetRow>
       <SheetRow v-slot="{ bare }" :title="$t('dashboard.sheets.resale')" :hint="resaleHint" :icon="TrendingDown">
         <ResaleValueCard :vehicle-id="vehicle.id" :has-battery="vehicleStore.capabilities.charges" :refresh-key="resaleRefresh" :bare="bare" />
