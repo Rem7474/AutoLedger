@@ -419,6 +419,10 @@ export const api = {
   getTCO: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/tco`),
   getMonthlyContributions: (vehicleId: string, month: string, category: string) =>
     request<any>(`/vehicles/${vehicleId}/tco/months/${month}/contributions?category=${encodeURIComponent(category)}`),
+  // The electric share of a hybrid: the suggestion computed from the history and what the owner accepted
+  getHybridShare: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/hybrid-share`),
+  saveHybridShare: (vehicleId: string, data: { accept_suggestion?: boolean; electric_share?: number | null; fuel_l_100km?: number | null; battery_usable_kwh?: number | null }) =>
+    request<any>(`/vehicles/${vehicleId}/hybrid-share`, { method: 'PUT', body: JSON.stringify(data) }),
   getBatteryHealth: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/battery-health`),
   saveBatteryReading: (vehicleId: string, data: { date: string; health_percent?: number; current_capacity_kwh?: number; max_capacity_kwh?: number }) =>
     request<any>(`/vehicles/${vehicleId}/battery-health`, { method: 'POST', body: JSON.stringify(data) }),

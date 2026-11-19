@@ -1292,3 +1292,31 @@ test('a plug-in hybrid enters a trip split with the accepted electric share', as
     await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
   }
 })
+
+test('a plug-in hybrid sheet explains why nothing is suggested and keeps a typed electric share', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'E2E hybrid share', powertrain: 'PHEV', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await useVehicle(page, vehicle.id, '/vehicle')
+    const card = page.locator('section[aria-labelledby="hybrid-share-title"]')
+    await expect(card).toBeVisible()
+    await expect(card.getByTestId('hybrid-none')).toBeVisible()
+    await expect(card.getByTestId('hybrid-suggestion')).toContainText('Nothing to suggest yet')
+    await expect(card.getByRole('button', { name: 'Use this value' })).toHaveCount(0)
+    await card.getByRole('button', { name: 'Enter a value' }).click()
+    await card.locator('#hybrid-share-percent').fill('35')
+    await card.locator('#hybrid-share-fuel').fill('6,5')
+    await card.getByRole('button', { name: 'Save the value' }).click()
+    await expect(card.getByTestId('hybrid-accepted')).toContainText('35 %')
+    await expect(card.getByTestId('hybrid-accepted')).toContainText('65 % on fuel')
+    const saved = await (await request.get(`/api/vehicles/${vehicle.id}/hybrid-share`, { headers })).json()
+    expect(saved.accepted).toEqual({ electric_share: 0.35, fuel_l_100km: 6.5, battery_usable_kwh: null })
+    await card.getByRole('button', { name: 'Stop using a value' }).click()
+    await expect(card.getByTestId('hybrid-none')).toBeVisible()
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})
