@@ -1,5 +1,4 @@
-import type { Powertrain } from './onboarding'
-import { canCharge, canRefuel } from './vehicles'
+import type { VehicleCapabilities } from './capabilities'
 
 export type CsvTemplateType = 'CHARGES' | 'DRIVES' | 'FUEL' | 'ODOMETER'
 
@@ -29,31 +28,33 @@ export const CSV_COLUMNS: Record<CsvTemplateType, { required: string[]; optional
 }
 
 // What each kind of vehicle records: an electric one logs charges and drives, a combustion one fill-ups, a hybrid both.
-export function csvTemplateTypes(powertrain: Powertrain | null | undefined): CsvTemplateType[] {
+export function csvTemplateTypes(capabilities: Pick<VehicleCapabilities, 'charges' | 'refuels' | 'drives'>): CsvTemplateType[] {
   const types: CsvTemplateType[] = []
-  if (canCharge(powertrain)) types.push('CHARGES', 'DRIVES')
-  if (canRefuel(powertrain)) types.push('FUEL')
+  if (capabilities.charges) types.push('CHARGES')
+  if (capabilities.drives) types.push('DRIVES')
+  if (capabilities.refuels) types.push('FUEL')
   types.push('ODOMETER')
   return types
 }
 
 // Header and one example row, in the shape downloadCsv takes.
-export function csvTemplate(type: CsvTemplateType, language: TemplateLanguage = 'en'): { headers: string[]; rows: string[][] } {
+// A vehicle that burns fuel has no kWh column on its drives: the import ignores one, the fuel comes from its fill-ups.
+export function csvTemplate(type: CsvTemplateType, language: TemplateLanguage = 'en', energy: 'ELECTRIC' | 'FUEL' = 'ELECTRIC'): { headers: string[]; rows: string[][] } {
   const { headers, example } = CSV_TEMPLATES[language][type]
+  if (type === 'DRIVES' && energy === 'FUEL') {
+    const drop = headers.indexOf('kwh')
+    return { headers: headers.filter((_, i) => i !== drop), rows: [example.filter((_, i) => i !== drop)] }
+  }
   return { headers, rows: [example] }
+}
+
+/** The columns the import reads for a kind of file, without the kWh of a drive for a vehicle that burns fuel. */
+export function csvColumns(type: CsvTemplateType, energy: 'ELECTRIC' | 'FUEL' = 'ELECTRIC'): { required: string[]; optional: string[] } {
+  const cols = CSV_COLUMNS[type]
+  if (type === 'DRIVES' && energy === 'FUEL') return { required: cols.required, optional: cols.optional.filter((c) => c !== 'kwh') }
+  return cols
 }
 
 export function csvTemplateFilename(type: CsvTemplateType): string {
   return `${type.toLowerCase()}-template.csv`
-}
-
-// A ready-to-run odometer reading for the webhook endpoint, built from a token the user has just created.
-export function webhookSnippet(origin: string, token: string, vehicleId = 'VEHICLE_ID'): string {
-  const body = JSON.stringify({ vehicle_id: vehicleId, event_type: 'odometer_update', data: { odometer_km: 15200 } })
-  return [
-    `curl -X POST ${origin}/api/integrations/homeassistant/event \\`,
-    `  -H "Authorization: Bearer ${token}" \\`,
-    `  -H "Content-Type: application/json" \\`,
-    `  -d '${body}'`,
-  ].join('\n')
 }

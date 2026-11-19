@@ -284,7 +284,81 @@ func (s *CarpoolService) GetVehicleUnitRatesAtMany(ctx context.Context, vehicleI
 	for i := range refs {
 		out[i] = ratesFromInputs(&in[i], refs[i], ownership)
 	}
+	if err := s.applyFuelRates(ctx, vehicleID, ownership, out, refs, historical); err != nil {
+		return nil, err
+	}
 	return out, nil
+}
+
+// applyFuelRates switches the rates of a fuel-only vehicle to its fuel (a hybrid gets the fuel rates of its fuel part
+// next to its electricity rate): the consumption measured between full tanks
+// and the average price per litre of its fill-ups, as of each reference like the electricity rate: a fill-up or a
+// reading dated after a drive does not move the rates of that drive. A reference that is now (not historical) sees
+// the whole history. Without a consumption or a price the energy stays unknown, never replaced by a default.
+func (s *CarpoolService) applyFuelRates(ctx context.Context, vehicleID string, ownership *models.VehicleOwnership, rates []*UnitRates, refs []time.Time, historical []bool) error {
+	var powertrain string
+	var hybridL100 *float64
+	if err := s.pool.QueryRow(ctx, `SELECT powertrain, hybrid_fuel_l_100km::float8 FROM vehicles WHERE id = $1`, vehicleID).Scan(&powertrain, &hybridL100); err != nil {
+		return err
+	}
+	hybrid := models.PowertrainIsHybrid(powertrain)
+	if !hybrid && !models.PowertrainIsFuelOnly(powertrain) {
+		return nil
+	}
+	logs, err := s.repo.ListFuelLogs(ctx, vehicleID)
+	if err != nil {
+		return err
+	}
+	readings, err := s.repo.ListOdometerCheckpoints(ctx, vehicleID)
+	if err != nil {
+		return err
+	}
+	odoRefs := BuildOdometerRefs(readings, ownership)
+	for i, r := range rates {
+		stats := ComputeFuelStats(fuelLogsUntil(logs, refs[i], historical[i]), odometerRefsUntil(odoRefs, refs[i], historical[i]))
+		r.FuelPricePerLiter = stats.AvgPricePerLiter
+		if hybrid {
+			// A hybrid keeps its electricity rate; its fuel part is the accepted consumption on the kilometres driven
+			// on fuel, at the price of the fill-ups as of the drive. The fill-up consumption is not used: it mixes
+			// the electric kilometres in.
+			r.Hybrid = true
+			if hybridL100 != nil {
+				r.FuelLitresPer100 = *hybridL100
+			}
+			continue
+		}
+		r.FuelOnly = true
+		if stats.ConsumptionL100 != nil {
+			r.FuelLitresPer100 = *stats.ConsumptionL100
+		}
+	}
+	return nil
+}
+
+func fuelLogsUntil(logs []models.FuelLog, ref time.Time, historical bool) []models.FuelLog {
+	if !historical {
+		return logs
+	}
+	out := make([]models.FuelLog, 0, len(logs))
+	for _, l := range logs {
+		if !l.Date.After(ref) {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+func odometerRefsUntil(refs []OdometerRef, ref time.Time, historical bool) []OdometerRef {
+	if !historical {
+		return refs
+	}
+	out := make([]OdometerRef, 0, len(refs))
+	for _, r := range refs {
+		if !r.Date.After(ref) {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 // driveOdometer is the distance of a vehicle's drives by start time, as running totals.

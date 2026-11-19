@@ -6,7 +6,7 @@ import { allocate, emptyLeg, newPassenger } from '@/utils/carpool'
 import CarpoolOverview from './CarpoolOverview.vue'
 
 const legs = [emptyLeg(), emptyLeg(), emptyLeg()]
-legs.forEach((leg, i) => { leg.electricity_cost = 6 * (i + 1) })
+legs.forEach((leg, i) => { leg.energy_cost = 6 * (i + 1) })
 const stops = ['A', 'B', 'C', 'D']
 const passengers = [
   { ...newPassenger(0, 3), passenger_name: 'Lea', board_stop_index: 0, alight_stop_index: 2 },

@@ -6,7 +6,7 @@ export interface LegForm {
   start_label: string
   end_label: string
   distance_km: number
-  electricity_cost: number
+  energy_cost: number
   tolls_cost: number
   tires_cost: number
   maintenance_cost: number
@@ -16,7 +16,7 @@ export interface LegForm {
   drive_cost: Partial<Record<CostKey, number>> | null
 }
 
-export type CostKey = 'electricity_cost' | 'tolls_cost' | 'tires_cost' | 'maintenance_cost' | 'insurance_cost' | 'other_cost'
+export type CostKey = 'energy_cost' | 'tolls_cost' | 'tires_cost' | 'maintenance_cost' | 'insurance_cost' | 'other_cost'
 
 export interface PassengerForm {
   passenger_name: string
@@ -28,7 +28,7 @@ export interface PassengerForm {
 }
 
 export const COST_FIELDS: Array<{ key: CostKey; label: string }> = [
-  { key: 'electricity_cost', label: 'electricity' },
+  { key: 'energy_cost', label: 'energy' },
   { key: 'tolls_cost', label: 'tolls' },
   { key: 'tires_cost', label: 'tires' },
   { key: 'maintenance_cost', label: 'maintenance' },
@@ -58,7 +58,7 @@ export function emptyLeg(): LegForm {
     start_label: '',
     end_label: '',
     distance_km: 0,
-    electricity_cost: 0,
+    energy_cost: 0,
     tolls_cost: 0,
     tires_cost: 0,
     maintenance_cost: 0,
@@ -153,7 +153,7 @@ export function legsFromEstimate(est: any): LegForm[] {
     start_label: l.start_label || '',
     end_label: l.end_label || '',
     distance_km: l.distance_km,
-    electricity_cost: l.electricity_cost,
+    energy_cost: l.energy_cost,
     tolls_cost: l.tolls_cost,
     tires_cost: l.tires_cost,
     maintenance_cost: l.maintenance_cost,
@@ -170,7 +170,7 @@ export function legsFromTrip(trip: any): LegForm[] {
     start_label: l.start_label || '',
     end_label: l.end_label || '',
     distance_km: l.distance_km,
-    electricity_cost: l.electricity_cost,
+    energy_cost: l.energy_cost,
     tolls_cost: l.tolls_cost,
     tires_cost: l.tires_cost,
     maintenance_cost: l.maintenance_cost,

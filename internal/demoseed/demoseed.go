@@ -286,7 +286,7 @@ func carpoolPayload(cp *demodata.Carpool) map[string]any {
 	for _, l := range cp.Legs {
 		legs = append(legs, map[string]any{
 			"start_label": l.From, "end_label": l.To, "distance_km": l.DistanceKm,
-			"electricity_cost": units(l.ElectricityCents), "tolls_cost": units(l.TollsCents),
+			"energy_cost": units(l.ElectricityCents), "tolls_cost": units(l.TollsCents),
 		})
 		total += l.DistanceKm
 	}

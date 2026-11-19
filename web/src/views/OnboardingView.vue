@@ -5,15 +5,14 @@ import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { CURRENCIES } from '@/utils/expenses'
 import { APP_NAME } from '@/brand'
 import { distanceUnit } from '@/units'
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useQuickAddStore } from '@/stores/quickAdd'
 import { api } from '@/services/api'
 import { Eye, EyeOff, Zap, ShieldCheck, Car, ArrowRight, CheckCircle2, AlertCircle } from '@/icons'
-import { buildVehiclePayload, emptyTeslaMateForm, type Powertrain } from '@/utils/onboarding'
-import { webhookSnippet } from '@/utils/dataSources'
+import { buildVehiclePayload, type Powertrain } from '@/utils/onboarding'
 import OnboardingDataSourcesStep from '@/components/onboarding/OnboardingDataSourcesStep.vue'
 import OnboardingDone from '@/components/onboarding/OnboardingDone.vue'
 
@@ -54,12 +53,6 @@ function updateVehicleNameDefault() {
   if (vehicleNameEdited.value && vehicleName.value) return
   vehicleName.value = [vehicleMake.value.trim(), vehicleModel.value.trim()].filter(Boolean).join(' ')
 }
-
-// Step 3: data sources (optional, nothing preselected)
-const teslamate = reactive(emptyTeslaMateForm())
-const useWebhook = ref(false)
-const webhook = ref<{ token: string; snippet: string } | null>(null)
-const webhookFailed = ref(false)
 
 onMounted(async () => {
   if (authStore.isAuthenticated) {
@@ -116,18 +109,9 @@ async function handleFinalSubmit() {
       powertrain: vehiclePowertrain.value,
       odometer: Number(vehicleOdometer.value),
       currency: vehicleCurrency.value,
-      teslamate,
     })
 
-    const vehicle = await api.createVehicle(payload)
-    if (useWebhook.value) {
-      try {
-        const { token } = await api.createAPIToken({ name: 'Home Assistant', scope: 'ingest' })
-        webhook.value = { token, snippet: webhookSnippet(window.location.origin, token, vehicle.id) }
-      } catch {
-        webhookFailed.value = true
-      }
-    }
+    await api.createVehicle(payload)
     await vehicleStore.fetchVehicles()
     currentStep.value = 4
   } catch (err: any) {
@@ -366,13 +350,11 @@ async function addFirstEntry() {
         </form>
       </div>
 
-      <!-- STEP 3: Data sources (optional) -->
+      <!-- STEP 3: Data sources (information only) -->
       <OnboardingDataSourcesStep
         v-else-if="currentStep === 3"
-        v-model:teslamate="teslamate"
-        v-model:use-webhook="useWebhook"
         :powertrain="vehiclePowertrain"
-                :saving="loading"
+        :saving="loading"
         @back="currentStep = 2"
         @finalize="handleFinalSubmit"
       />
@@ -380,8 +362,6 @@ async function addFirstEntry() {
       <!-- STEP 4: Completed -->
       <OnboardingDone
         v-else-if="currentStep === 4"
-        :webhook="webhook"
-        :webhook-failed="webhookFailed"
         @finish="finishOnboarding"
         @add-entry="addFirstEntry"
       />

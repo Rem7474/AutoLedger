@@ -58,13 +58,15 @@ type ChargeLog struct {
 	Currency       string     `json:"currency"`
 	FxRate         *float64   `json:"fx_rate,omitempty"`
 	Odometer       *float64   `json:"odometer,omitempty"`
+	// Battery percentages before and after the charge: stored by the synchronization, or typed (optional) on a
+	// manual charge, where they let the electric share of a hybrid be measured between two charges.
+	StartBatteryLevel *int `json:"start_battery_level,omitempty"`
+	EndBatteryLevel   *int `json:"end_battery_level,omitempty"`
 	// Stored by the synchronization and read by the energy statistics, not exposed with the charge.
-	StartBatteryLevel *int     `json:"-"`
-	EndBatteryLevel   *int     `json:"-"`
-	OutsideTempC      *float64 `json:"-"`
-	IsManual          bool     `json:"is_manual"`
-	Notes             *string  `json:"notes,omitempty"`
-	DocumentID        *string  `json:"document_id,omitempty"`
+	OutsideTempC *float64 `json:"-"`
+	IsManual     bool     `json:"is_manual"`
+	Notes        *string  `json:"notes,omitempty"`
+	DocumentID   *string  `json:"document_id,omitempty"`
 	// ExternalID is the event_id an integration sent with the charge, to recognise a resent event.
 	ExternalID *string `json:"-"`
 	// Origin is the source that wrote the charge (TESLAMATE, WEBHOOK, CSV, MANUAL); empty means MANUAL on insert.

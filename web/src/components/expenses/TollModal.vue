@@ -219,7 +219,7 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
       </div>
 
       <!-- Association à un/des trajets TeslaMate -->
-      <div v-if="vehicleStore.hasTeslaMate || associationMode !== 'NONE'" class="space-y-2 bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/60">
+      <div v-if="vehicleStore.capabilities.sync || associationMode !== 'NONE'" class="space-y-2 bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/60">
         <span class="block text-xs font-semibold text-slate-200">
           {{ $t('expenses.tollModal.attachToATeslamateDrive') }}
         </span>

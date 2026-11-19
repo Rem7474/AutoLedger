@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { intlLocale, t } from '@/i18n'
 import { formatDistance } from '@/units'
-import { canRefuel, isElectricOnly } from '@/utils/vehicles'
 import { ref, computed, watch } from 'vue'
 import { api } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -126,13 +125,13 @@ const actions = computed<Action[]>(() => {
       label: t('dashboard.dataQualityCard.enterTheExchangeRate'),
       show: c.unconverted_expenses > 0,
     },
-    { key: 'fillUp', to: '/consumption?tab=FUEL', label: t('dashboard.dataQualityCard.enterAFillUp'), show: canRefuel(props.tco.powertrain) && !props.tco.fuel_fill_ups },
+    { key: 'fillUp', to: '/consumption?tab=FUEL', label: t('dashboard.dataQualityCard.enterAFillUp'), show: vehicleStore.capabilities.refuels && !props.tco.fuel_fill_ups },
     {
       key: 'consumption',
       to: '/consumption?tab=ESTIMATE',
       label: t('dashboard.dataQualityCard.enterAverageConsumption'),
       hint: t('dashboard.dataQualityCard.enterAverageConsumptionHint'),
-      show: isElectricOnly(props.tco.powertrain) && c.untracked_distance_km > 0 && !props.tco.estimated_energy_cost,
+      show: vehicleStore.capabilities.charges && !vehicleStore.capabilities.refuels && c.untracked_distance_km > 0 && !props.tco.estimated_energy_cost,
     },
   ]
   return orderActionsByGap(list.filter((a) => a.show), c.gaps).map((a) => ({ ...a, note: gapNote(a.gap) }))
@@ -162,7 +161,7 @@ const needsAttention = computed(() => !!props.tco?.completeness && (!props.tco.c
         <span v-if="scored">{{ $t('dashboard.dataQualityCard.tcoComplete', { score_pct: tco.completeness.score_pct }) }}</span>
         <span v-else data-testid="completeness-no-score">{{ $t('dashboard.dataQualityCard.noScore') }}</span>
         <span
-          v-if="['MANUAL', 'SEMI_AUTO'].includes(vehicleStore.activeVehicle?.telemetry_mode)"
+          v-if="!vehicleStore.capabilities.sync"
           class="ml-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700"
         >
           {{ $t('dashboard.dataQualityCard.manualTrackingNotice') }}

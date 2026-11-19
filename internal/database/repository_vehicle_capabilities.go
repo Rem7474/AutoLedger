@@ -20,7 +20,6 @@ func (r *Repository) FillVehicleCapabilities(ctx context.Context, vehicles ...*m
 	}
 	rows, err := r.pool.Query(ctx, `
 		SELECT v.id::text,
-		       EXISTS (SELECT 1 FROM drives d WHERE d.vehicle_id = v.id),
 		       EXISTS (SELECT 1 FROM odometer_checkpoints o WHERE o.vehicle_id = v.id AND o.source = 'HA')
 		FROM vehicles v WHERE v.id::text = ANY($1)`, ids)
 	if err != nil {
@@ -31,7 +30,7 @@ func (r *Repository) FillVehicleCapabilities(ctx context.Context, vehicles ...*m
 	for rows.Next() {
 		var id string
 		var f models.CapabilityFacts
-		if err := rows.Scan(&id, &f.HasDrives, &f.HasSourceOdometer); err != nil {
+		if err := rows.Scan(&id, &f.HasSourceOdometer); err != nil {
 			return err
 		}
 		facts[id] = f

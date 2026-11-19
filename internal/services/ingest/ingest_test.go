@@ -63,6 +63,16 @@ func TestNormalizeDriveEnergy(t *testing.T) {
 	}
 }
 
+func TestNormalizeDriveFuelOnlyCarriesNoKwh(t *testing.T) {
+	got := NormalizeDrive(DriveInput{Start: t0, DistanceKm: 100, EnergyKwh: fptr(15), VehicleKwh100km: fptr(20), FuelOnly: true})
+	if got.EnergyKnown || got.EnergyEstimated || got.EnergyKwh != 0 || got.Kwh100km != 0 {
+		t.Fatalf("a fuel-only drive has no kWh, typed or estimated: %+v", got)
+	}
+	if got.DurationMin == 0 || got.End.IsZero() {
+		t.Fatalf("its timings are still completed: %+v", got)
+	}
+}
+
 func TestEstimateDriveEnergyScalesWithDistance(t *testing.T) {
 	energy, cons := EstimateDriveEnergy(fptr(20), 50)
 	if energy != 10 || cons != 20 {
@@ -159,5 +169,36 @@ func TestKnownDistanceStoresNothingForAnUnknownDistance(t *testing.T) {
 	}
 	if got := KnownDistance(12.5); got == nil || *got != 12.5 {
 		t.Errorf("12.5 km: %v", got)
+	}
+}
+
+func TestNormalizeDriveHybridSplitsTheEstimatedEnergy(t *testing.T) {
+	tests := []struct {
+		name      string
+		in        DriveInput
+		known     bool
+		estimated bool
+		kwh       float64
+		kwh100    float64
+		share     *float64
+	}{
+		{"accepted share scales the estimate", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), Hybrid: true, HybridShare: fptr(0.4)}, true, true, 8, 8, fptr(0.4)},
+		{"share zero is a drive on fuel, not an unknown energy", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), Hybrid: true, HybridShare: fptr(0)}, true, true, 0, 0, fptr(0)},
+		{"no share: nothing is estimated", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), Hybrid: true}, false, false, 0, 0, nil},
+		{"typed energy is kept, the share is carried", DriveInput{DistanceKm: 100, EnergyKwh: fptr(5), Hybrid: true, HybridShare: fptr(0.4)}, true, false, 5, 5, fptr(0.4)},
+		{"typed energy without a share", DriveInput{DistanceKm: 100, EnergyKwh: fptr(5), Hybrid: true}, true, false, 5, 5, nil},
+		{"another powertrain ignores the share", DriveInput{DistanceKm: 100, VehicleKwh100km: fptr(20), HybridShare: fptr(0.4)}, true, true, 20, 20, nil},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.in.Start = t0
+			got := NormalizeDrive(tc.in)
+			if got.EnergyKnown != tc.known || got.EnergyEstimated != tc.estimated || got.EnergyKwh != tc.kwh || got.Kwh100km != tc.kwh100 {
+				t.Fatalf("got %+v", got)
+			}
+			if (got.ElectricShare == nil) != (tc.share == nil) || (tc.share != nil && *got.ElectricShare != *tc.share) {
+				t.Fatalf("share %v, want %v", got.ElectricShare, tc.share)
+			}
+		})
 	}
 }

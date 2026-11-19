@@ -53,7 +53,7 @@ async function loadRowFigures() {
   const id = vehicleId.value
   if (!id) return
   const [health, residual, carpools] = await Promise.all([
-    vehicleStore.canCharge ? api.getBatteryHealth(id).catch(() => null) : null,
+    vehicleStore.capabilities.charges ? api.getBatteryHealth(id).catch(() => null) : null,
     api.getResidualValue(id, { km_share: 0.5, health_weight: 1 }).catch(() => null),
     api.getCarpoolSummary(id).catch(() => null),
   ])

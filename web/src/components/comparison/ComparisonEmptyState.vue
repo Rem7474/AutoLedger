@@ -7,7 +7,7 @@ import { useVehicleStore } from '@/stores/vehicle'
 defineEmits<{ start: [mode: 'RETROSPECTIVE' | 'PROJECTION'] }>()
 
 const vehicleStore = useVehicleStore()
-const canTrack = computed(() => !!vehicleStore.activeVehicle && vehicleStore.canCharge)
+const canTrack = computed(() => !!vehicleStore.activeVehicle && vehicleStore.capabilities.charges)
 const cur = computed(() => currencySymbol(vehicleStore.currency))
 
 // Illustrative figures only: nothing here is read from, or saved to, the user's data.

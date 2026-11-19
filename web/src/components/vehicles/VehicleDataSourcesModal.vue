@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { intlLocale } from '@/i18n'
 import { t } from '@/i18n'
-import { canCharge, connectedVehiclesExcept, connectionFormFrom, connectionPayload, type ConnectionForm } from '@/utils/vehicles'
+import { capabilitiesOf } from '@/utils/capabilities'
+import { connectedVehiclesExcept, connectionFormFrom, connectionPayload, type ConnectionForm } from '@/utils/vehicles'
 import { computed, ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { RefreshCw, Link2, CheckCircle2, AlertCircle, Pencil } from '@/icons'
@@ -136,7 +137,7 @@ function formatLast(iso?: string) {
       <div v-else-if="loading" class="flex justify-center py-6"><RefreshCw class="w-5 h-5 animate-spin text-slate-400" /></div>
       <p v-else-if="error" class="text-danger-400">{{ error }}</p>
       <template v-else-if="summary">
-        <div v-if="canCharge(vehicle?.powertrain)" class="bg-slate-800 rounded-xl p-4 space-y-3">
+        <div v-if="capabilitiesOf(vehicle).charges" class="bg-slate-800 rounded-xl p-4 space-y-3">
           <div class="flex items-center justify-between gap-2">
             <h4 class="font-bold text-white">{{ $t('vehicles.vehicleDataSourcesModal.teslamate') }}</h4>
             <span class="font-semibold" :class="summary.teslamate_configured ? 'text-success-400' : 'text-slate-400'">

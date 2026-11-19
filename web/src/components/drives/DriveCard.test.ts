@@ -4,10 +4,10 @@ import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import DriveCard from './DriveCard.vue'
 
-const vehicleStore = reactive<{ canEdit: boolean; currency: string; activeVehicle: any }>({
+const vehicleStore = reactive<{ canEdit: boolean; currency: string; capabilities: { sync: boolean } }>({
   canEdit: true,
   currency: 'EUR',
-  activeVehicle: { powertrain: 'EV', teslamate_api_url: null },
+  capabilities: { sync: false },
 })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
 vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => ({ proPersoEnabled: false }) }))
@@ -18,7 +18,7 @@ const render = (d: any = drive) => renderToString(createSSRApp({ render: () => h
 
 afterEach(() => {
   vehicleStore.canEdit = true
-  vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: null }
+  vehicleStore.capabilities = { sync: false }
 })
 
 describe('DriveCard', () => {
@@ -27,7 +27,7 @@ describe('DriveCard', () => {
   })
 
   it('mentionne « manuel » sur un véhicule alimenté par TeslaMate, où cela distingue les trajets', async () => {
-    vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: 'http://teslamate.local' }
+    vehicleStore.capabilities = { sync: true }
     expect(await render()).toContain('Manuel')
     expect(await render({ ...drive, is_manual: false })).not.toContain('Manuel')
   })
@@ -64,5 +64,17 @@ describe('DriveCard', () => {
     expect(html).toContain('inset-0')
     const cost = html.slice(html.indexOf('€5.26') - 300, html.indexOf('€5.26'))
     expect(cost).not.toContain('z-10')
+  })
+
+  it('montre le carburant d\'un trajet de véhicule thermique en litres, jamais en kWh', async () => {
+    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: 1.6 } })
+    expect(html).toMatch(/1,6\s(<!--.*?-->)?\s?L/)
+    expect(html).not.toContain('kWh')
+  })
+
+  it('ne montre aucun carburant tant que les pleins ne donnent pas de consommation', async () => {
+    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: null } })
+    expect(html).not.toMatch(/\sL\b/)
+    expect(html).not.toContain('kWh')
   })
 })
