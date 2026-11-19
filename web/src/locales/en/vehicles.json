@@ -283,5 +283,42 @@
     "sharing": "Sharing and access",
     "edit": "Edit the vehicle",
     "manage": "Manage vehicles"
+  },
+  "hybridShare": {
+    "title": "Electric share",
+    "row": "Electric share",
+    "rowAccepted": "{percent} % on electricity",
+    "rowSuggested": "{percent} % suggested",
+    "rowNone": "Not set yet",
+    "intro": "The part of your kilometres driven on the battery. It splits the energy cost of each trip between electricity and fuel.",
+    "electric": "driven on electricity",
+    "fuelPart": "{percent} % on fuel",
+    "noneAccepted": "No value is used yet: your trips have no energy cost until you accept or enter one.",
+    "nothingYet": "Nothing to suggest yet",
+    "because": {
+      "not_enough_data": "Enter your fill-ups (full tank, with the odometer) and your charges with the odometer: at least 3 full-tank periods and 500 km are needed.",
+      "energy_and_fuel_not_separable": "Your fill-ups and charges do not vary enough to tell electricity from fuel. Enter your consumption on electricity in the vehicle form, or keep entering them."
+    },
+    "suggested": "Suggested: {percent} % on electricity",
+    "levelGood": "Reliable",
+    "levelLow": "Indicative",
+    "basis": "From {periods} full-tank periods, {km} analysed.",
+    "window": " Last {months} months.",
+    "lowHint": "Enter the battery level at the start and end of your charges to make it more reliable.",
+    "lessPrecise": "{count} synchronized charges lack the energy taken from the plug: they are read on the battery side, a little less precise.",
+    "use": "Use this value",
+    "alreadyUsed": "This is the value your trips use.",
+    "appliesLater": "A value applies to the trips you save afterwards. Trips already recorded keep theirs.",
+    "capacityDeduced": "Battery capacity: about {kwh} kWh, deduced from your charges.",
+    "capacityTyped": "Battery capacity: {kwh} kWh, as you entered it.",
+    "capacityUnknown": "Battery capacity: not deduced yet. Enter the battery level at the start and end of a few charges.",
+    "edit": "Enter a value",
+    "percentLabel": "Driven on electricity (%)",
+    "fuelLabel": "Consumption on fuel ({unit})",
+    "save": "Save the value",
+    "clear": "Stop using a value",
+    "capacityLabel": "Battery capacity (kWh)",
+    "saveCapacity": "Save the capacity",
+    "capacityHint": "Optional: only to correct the capacity deduced from your charges. Leave empty to keep the deduced one."
   }
 }
