@@ -39,6 +39,7 @@ import gDatabase from '@material-symbols/svg-400/rounded/database.svg?raw'
 import gDelete from '@material-symbols/svg-400/rounded/delete.svg?raw'
 import gDescription from '@material-symbols/svg-400/rounded/description.svg?raw'
 import gDirectionsCar from '@material-symbols/svg-400/rounded/directions_car.svg?raw'
+import gGarage from '@material-symbols/svg-400/rounded/garage.svg?raw'
 import gDownload from '@material-symbols/svg-400/rounded/download.svg?raw'
 import gEdit from '@material-symbols/svg-400/rounded/edit.svg?raw'
 import gEditCalendar from '@material-symbols/svg-400/rounded/edit_calendar.svg?raw'
@@ -165,6 +166,7 @@ const gDatabaseIcon = defineIcon('database', gDatabase)
 const gDeleteIcon = defineIcon('delete', gDelete)
 const gDescriptionIcon = defineIcon('description', gDescription)
 const gDirectionsCarIcon = defineIcon('directions_car', gDirectionsCar)
+const gGarageIcon = defineIcon('garage', gGarage)
 const gDownloadIcon = defineIcon('download', gDownload)
 const gEditIcon = defineIcon('edit', gEdit)
 const gEditCalendarIcon = defineIcon('edit_calendar', gEditCalendar)
@@ -270,6 +272,7 @@ export const CalendarDays = gCalendarMonthIcon
 export const CalendarPlus = gEditCalendarIcon
 export const Camera = gPhotoCameraIcon
 export const Car = gDirectionsCarIcon
+export const Garage = gGarageIcon
 export const ChartColumn = gBarChartIcon
 export const ChartGantt = gViewTimelineIcon
 export const Check = gCheckIcon

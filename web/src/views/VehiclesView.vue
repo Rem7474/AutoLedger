@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Car as PageIcon, Plus } from '@/icons'
+import { Garage as PageIcon, Plus } from '@/icons'
 import PageHeader from '@/components/PageHeader.vue'
 import { t } from '@/i18n'
 import { ref, onMounted, watch } from 'vue'
