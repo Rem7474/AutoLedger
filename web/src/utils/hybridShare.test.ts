@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { acceptBody, capacityBody, clearBody, fieldNumber, hybridShareHint, percentIsValid, percentToShare, sharePercent, suggestionStatus, typedBody } from './hybridShare'
+import { acceptBody, capacityBody, clearBody, fieldNumber, hybridDriveEnergy, hybridShareHint, percentIsValid, percentToShare, sharePercent, suggestionStatus, typedBody } from './hybridShare'
 
 const none = { electric_share: null, fuel_l_100km: null, battery_usable_kwh: null }
 
@@ -70,5 +70,28 @@ describe('hybrid share requests', () => {
     expect(clearBody('')).toEqual({ electric_share: null, fuel_l_100km: null, battery_usable_kwh: null })
     expect(capacityBody({ electric_share: 0.4, fuel_l_100km: 6, battery_usable_kwh: null }, '12,5')).toEqual({ electric_share: 0.4, fuel_l_100km: 6, battery_usable_kwh: 12.5 })
     expect(capacityBody(null, '')).toEqual({ electric_share: null, fuel_l_100km: null, battery_usable_kwh: null })
+  })
+})
+
+describe('hybridDriveEnergy', () => {
+  const split = (over: any = {}) => ({ electric_share: 0.45, costs: { fuel_only: false, electricity_kwh: 6.3, fuel_liters: 2.1, energy_source: 'MEASURED', ...over } })
+  it('splits a drive that carries a share', () => {
+    expect(hybridDriveEnergy(split())).toEqual({ kind: 'split', electricPercent: 45, kwh: 6.3, litres: 2.1 })
+  })
+  it('keeps a drive entirely on electricity without litres', () => {
+    expect(hybridDriveEnergy({ electric_share: 1, costs: { fuel_only: false, electricity_kwh: 9, fuel_liters: null } })).toEqual({ kind: 'split', electricPercent: 100, kwh: 9, litres: null })
+  })
+  it('keeps a share of zero, which is all fuel', () => {
+    expect(hybridDriveEnergy({ electric_share: 0, costs: { fuel_only: false, electricity_kwh: 0, fuel_liters: 7 } })).toEqual({ kind: 'split', electricPercent: 0, kwh: 0, litres: 7 })
+  })
+  it('says the energy is unknown for a manual drive without a share', () => {
+    expect(hybridDriveEnergy({ costs: { fuel_only: false, energy_source: 'UNKNOWN' } })).toEqual({ kind: 'unknown' })
+    expect(hybridDriveEnergy({ electric_share: null, costs: { fuel_only: false, energy_source: 'UNKNOWN' } })).toEqual({ kind: 'unknown' })
+  })
+  it('reads nothing on other drives', () => {
+    expect(hybridDriveEnergy({ costs: { fuel_only: false, energy_source: 'MEASURED', electricity_kwh: 5 } })).toBeNull()
+    expect(hybridDriveEnergy({ electric_share: 0.5, costs: { fuel_only: true } })).toBeNull()
+    expect(hybridDriveEnergy({})).toBeNull()
+    expect(hybridDriveEnergy(null)).toBeNull()
   })
 })

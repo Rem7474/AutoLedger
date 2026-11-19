@@ -1287,7 +1287,10 @@ test('a plug-in hybrid enters a trip split with the accepted electric share', as
     expect(drive.costs.fuel_only).toBe(false)
     expect(drive.costs.fuel_liters).toBe(0.9)
     await page.getByTestId('drive-card').filter({ hasText: 'Hybrid office' }).getByRole('button', { name: /^Open the cost breakdown/ }).click()
-    await expect(page.getByRole('dialog').getByText('Electric energy')).toBeVisible()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByText('Electricity and fuel')).toBeVisible()
+    await expect(dialog.getByText('50 % electric')).toBeVisible()
+    await expect(dialog.getByText('on fuel')).toBeVisible()
   } finally {
     await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
   }
