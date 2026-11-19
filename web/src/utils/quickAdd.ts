@@ -1,5 +1,6 @@
 import { t } from '@/i18n'
 import { dayKey } from '@/utils/reportingTime'
+import { readBatteryLevels } from '@/utils/hybridForms'
 // Pure helpers of the quick entry sheet: payload builders, tariff memory and small numeric utilities.
 // Kept free of Vue and of the API layer so they can be unit tested.
 
@@ -116,16 +117,22 @@ export interface ChargeFormValues {
   odometer: string
   notes: string
   documentId: string | null
+  // Optional battery percentages, only on a hybrid's form
+  startBattery?: string
+  endBattery?: string
 }
 
 // A manual charge always carries a cost: the API requires it (0 when the charge was free). currency is the
 // vehicle's own (the quick sheet has no fx_rate field, so it never enters a foreign one).
-export function buildChargePayload(f: ChargeFormValues, currency: string) {
+export function buildChargePayload(f: ChargeFormValues, currency: string, opts: { hybrid?: boolean } = {}) {
   const kwh = toNumber(f.kwh)
   const cost = toNumber(f.cost)
   if (kwh === null || kwh <= 0) throw new Error(t('quickadd.errors.kwh'))
   if (cost === null || cost < 0) throw new Error(t('quickadd.errors.cost'))
   const odometer = toNumber(f.odometer)
+  if (opts.hybrid && !(odometer !== null && odometer > 0)) throw new Error(t('quickadd.errors.hybridOdometer'))
+  const levels = readBatteryLevels(f.startBattery, f.endBattery)
+  if (levels.problem) throw new Error(t(levels.problem === 'range' ? 'quickadd.errors.batteryRange' : 'quickadd.errors.batteryOrder'))
   return {
     date: new Date(f.date).toISOString(),
     kwh_added: kwh,
@@ -136,6 +143,8 @@ export function buildChargePayload(f: ChargeFormValues, currency: string) {
     odometer: odometer !== null && odometer > 0 ? odometer : null,
     notes: clean(f.notes),
     document_id: f.documentId || null,
+    ...(levels.start !== null ? { start_battery_level: levels.start } : {}),
+    ...(levels.end !== null ? { end_battery_level: levels.end } : {}),
   }
 }
 
@@ -148,11 +157,12 @@ export interface FuelFormValues {
   notes: string
 }
 
-export function buildFuelPayload(f: FuelFormValues) {
+export function buildFuelPayload(f: FuelFormValues, opts: { hybrid?: boolean } = {}) {
   const amount = toNumber(f.amount)
   const liters = toNumber(f.liters)
   if (amount === null || amount <= 0) throw new Error(t('quickadd.errors.fuelAmount'))
   const odometer = toNumber(f.odometer)
+  if (opts.hybrid && !(odometer !== null && odometer > 0)) throw new Error(t('quickadd.errors.hybridOdometer'))
   return {
     date: f.date,
     amount,
