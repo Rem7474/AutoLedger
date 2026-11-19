@@ -488,6 +488,7 @@ const vehicleColumns = `
 	estimated_kwh_100km, estimated_price_per_kwh, currency, powertrain,
 	telemetry_mode, make, model,
 	default_driver_id, tariff_plan_id, is_home_charger_default,
+	hybrid_electric_share, hybrid_fuel_l_100km, battery_usable_kwh,
 	created_at, updated_at, version
 `
 
@@ -497,6 +498,7 @@ func scanVehicle(row pgx.Row, v *models.Vehicle) error {
 		&v.EstimatedKwh100km, &v.EstimatedPricePerKwh, &v.Currency, &v.Powertrain,
 		&v.TelemetryMode, &v.Make, &v.Model,
 		&v.DefaultDriverID, &v.TariffPlanID, &v.IsHomeChargerDefault,
+		&v.HybridElectricShare, &v.HybridFuelL100km, &v.BatteryUsableKwh,
 		&v.CreatedAt, &v.UpdatedAt, &v.Version,
 	)
 }

@@ -41,6 +41,7 @@ type apiHandlers struct {
 	carpool         *handlers.CarpoolHandler
 	checkpoint      *handlers.CheckpointHandler
 	fuel            *handlers.FuelHandler
+	hybridShare     *handlers.HybridShareHandler
 	reminder        *handlers.ReminderHandler
 	vehicleMember   *handlers.VehicleMemberHandler
 	csvImport       *handlers.ImportHandler
@@ -110,6 +111,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		carpool:         handlers.NewCarpoolHandler(repo, svc.carpool),
 		checkpoint:      handlers.NewCheckpointHandler(repo),
 		fuel:            handlers.NewFuelHandler(repo),
+		hybridShare:     handlers.NewHybridShareHandler(repo),
 		reminder:        handlers.NewReminderHandler(repo, svc.notification),
 		vehicleMember:   handlers.NewVehicleMemberHandler(repo),
 		csvImport:       handlers.NewImportHandler(repo, services.NewCSVImportService(repo, cfg.ReportingTimezone)),

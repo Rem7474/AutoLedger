@@ -4,7 +4,7 @@ import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import TripGroupsPanel from './TripGroupsPanel.vue'
 
-const vehicleStore = reactive<{ canEdit: boolean; currency: string }>({ canEdit: true, currency: 'EUR' })
+const vehicleStore = reactive<{ canEdit: boolean; currency: string; capabilities: { sync: boolean } }>({ canEdit: true, currency: 'EUR', capabilities: { sync: false } })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
 vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => ({ proPersoEnabled: false }) }))
 

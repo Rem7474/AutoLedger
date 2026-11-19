@@ -169,7 +169,7 @@ func TestDriveListCarpoolsAndFilter(t *testing.T) {
 	}
 
 	trip := &models.CarpoolTrip{VehicleID: a.vid, Title: "Weekend", Date: time.Date(2026, 9, 1, 8, 0, 0, 0, time.UTC), DistanceKm: 50}
-	legs := []models.CarpoolLeg{{DriveID: &shared, DistanceKm: 50, ElectricityCost: 1000}}
+	legs := []models.CarpoolLeg{{DriveID: &shared, DistanceKm: 50, EnergyCost: 1000}}
 	passengers := []models.CarpoolPassenger{
 		{PassengerName: "A", Seats: 1, AmountPaid: 400, BoardStopIndex: 0, AlightStopIndex: 1},
 		{PassengerName: "B", Seats: 1, AmountPaid: 300, BoardStopIndex: 0, AlightStopIndex: 1},

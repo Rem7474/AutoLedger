@@ -329,15 +329,15 @@ describe('unit price helpers', () => {
 })
 
 describe('quickKindForRoute', () => {
-  const ev = { canCharge: true, canRefuel: false }
-  const fuel = { canCharge: false, canRefuel: true }
-  const hybrid = { canCharge: true, canRefuel: true }
+  const ev = { charges: true, refuels: false }
+  const fuel = { charges: false, refuels: true }
+  const hybrid = { charges: true, refuels: true }
 
   it('opens on the charge or the fill-up from Energy, whichever the vehicle takes', () => {
     expect(quickKindForRoute('consumption', ev)).toBe('CHARGE')
     expect(quickKindForRoute('consumption', fuel)).toBe('FUEL')
     expect(quickKindForRoute('consumption', hybrid)).toBe('CHARGE')
-    expect(quickKindForRoute('consumption', { canCharge: false, canRefuel: false })).toBeNull()
+    expect(quickKindForRoute('consumption', { charges: false, refuels: false })).toBeNull()
   })
 
   it('opens on an expense from Expenses and Maintenance', () => {
@@ -349,5 +349,32 @@ describe('quickKindForRoute', () => {
     expect(quickKindForRoute('dashboard', ev)).toBeNull()
     expect(quickKindForRoute('drives', ev)).toBeNull()
     expect(quickKindForRoute(undefined, ev)).toBeNull()
+  })
+})
+
+describe('hybrid forms', () => {
+  const charge = { date: '2026-11-19T10:00', kwh: '10', cost: '2', address: '', odometer: '', notes: '', documentId: null }
+  it('requires the odometer of a hybrid charge, not of another vehicle', () => {
+    expect(() => buildChargePayload(charge, 'EUR', { hybrid: true })).toThrow()
+    expect(buildChargePayload(charge, 'EUR').odometer).toBeNull()
+    expect(buildChargePayload({ ...charge, odometer: '12000' }, 'EUR', { hybrid: true }).odometer).toBe(12000)
+  })
+  it('carries the battery percentages only when given', () => {
+    const base = { ...charge, odometer: '12000' }
+    expect(buildChargePayload(base, 'EUR', { hybrid: true })).not.toHaveProperty('start_battery_level')
+    const p = buildChargePayload({ ...base, startBattery: '20', endBattery: '80' }, 'EUR', { hybrid: true })
+    expect(p).toMatchObject({ start_battery_level: 20, end_battery_level: 80 })
+    expect(buildChargePayload({ ...base, endBattery: '80' }, 'EUR', { hybrid: true })).not.toHaveProperty('start_battery_level')
+  })
+  it('rejects battery percentages out of range or in the wrong order', () => {
+    const base = { ...charge, odometer: '12000' }
+    expect(() => buildChargePayload({ ...base, startBattery: '20', endBattery: '120' }, 'EUR', { hybrid: true })).toThrow()
+    expect(() => buildChargePayload({ ...base, startBattery: '80', endBattery: '20' }, 'EUR', { hybrid: true })).toThrow()
+  })
+  it('requires the odometer of a hybrid fill-up', () => {
+    const fuel = { date: '2026-11-19', amount: '50', liters: '30', fullTank: true, odometer: '', notes: '' }
+    expect(() => buildFuelPayload(fuel, { hybrid: true })).toThrow()
+    expect(buildFuelPayload(fuel).odometer).toBeUndefined()
+    expect(buildFuelPayload({ ...fuel, odometer: '12000' }, { hybrid: true }).odometer).toBe(12000)
   })
 })

@@ -12,6 +12,10 @@ func (h *apiHandlers) registerDriveRoutes(r chi.Router) {
 	r.Put("/{vehicleId}/fuel-logs/{fuelLogId}", h.fuel.Update)
 	r.Delete("/{vehicleId}/fuel-logs/{fuelLogId}", h.fuel.Delete)
 
+	// Electric share of a plug-in hybrid, suggested from the history (read-only)
+	r.Get("/{vehicleId}/hybrid-share", h.hybridShare.Get)
+	r.Put("/{vehicleId}/hybrid-share", h.hybridShare.Save)
+
 	// Drives
 	r.Get("/{vehicleId}/drives", h.drive.List)
 	r.Get("/{vehicleId}/drives/address-backfill", h.drive.AddressBackfillStatus)

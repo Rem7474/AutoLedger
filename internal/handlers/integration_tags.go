@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/teslacost/teslacost/internal/middleware"
+	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/services"
 )
 
@@ -14,7 +15,8 @@ import (
 type IntegrationTag struct {
 	Tag          *string             `json:"tag" jsonschema:"the tag as the owner typed it, user text; null for the drives that carry no tag"`
 	Distance     IntegrationDistance `json:"distance" jsonschema:"distance of the drives with this tag"`
-	EnergyKwh    float64             `json:"energy_kwh" jsonschema:"electric energy those drives used, in kWh"`
+	EnergyKwh    *float64            `json:"energy_kwh" jsonschema:"electric energy those drives used, in kWh; null for a vehicle that burns fuel only (see fuel_liters)"`
+	FuelLiters   *float64            `json:"fuel_liters" jsonschema:"fuel those drives used, in litres, for a vehicle that burns fuel only (drives with no known consumption are not counted); null for any other vehicle and while no consumption is known"`
 	Tolls        IntegrationAmount   `json:"tolls" jsonschema:"tolls and parking attributed to those drives"`
 	Cost         IntegrationAmount   `json:"cost" jsonschema:"allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid"`
 	CostPerKm    *IntegrationAmount  `json:"cost_per_km" jsonschema:"that cost divided by the distance; null while the distance is zero"`
@@ -29,13 +31,14 @@ type IntegrationTags struct {
 	Tags      []IntegrationTag `json:"tags" jsonschema:"one row per tag over the whole history, plus one for the untagged drives; a drive with several tags appears in each"`
 }
 
-func buildIntegrationTags(vehicleID, currency string, rows []services.TagCostBreakdown) IntegrationTags {
+func buildIntegrationTags(vehicleID, currency string, fuelOnly bool, rows []services.TagCostBreakdown) IntegrationTags {
 	out := IntegrationTags{VehicleID: vehicleID, Currency: currency, Tags: []IntegrationTag{}}
 	for _, r := range rows {
 		item := IntegrationTag{
-			Distance: kilometres(r.DistanceKm), EnergyKwh: r.EnergyKwh, Tolls: amountOf(r.TollsAmount, currency),
+			Distance: kilometres(r.DistanceKm), Tolls: amountOf(r.TollsAmount, currency),
 			Cost: amountOf(r.Cost, currency), SharePct: r.Percentage, SharedDrives: r.SharedDrives,
 		}
+		item.EnergyKwh, item.FuelLiters = energyFigures(fuelOnly, r.EnergyKwh, r.FuelLiters)
 		if r.Tag != "" {
 			tag := r.Tag
 			item.Tag = &tag
@@ -58,7 +61,7 @@ func (h *IntegrationReadHandler) Tags(ctx context.Context, userID, vehicleID str
 	if err != nil {
 		return nil, err
 	}
-	out := buildIntegrationTags(vehicle.ID, vehicle.Currency, sum.TagBreakdown)
+	out := buildIntegrationTags(vehicle.ID, vehicle.Currency, models.PowertrainIsFuelOnly(vehicle.Powertrain), sum.TagBreakdown)
 	return &out, nil
 }
 

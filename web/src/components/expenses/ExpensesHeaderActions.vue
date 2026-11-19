@@ -43,7 +43,7 @@ const vehicleStore = useVehicleStore()
       <UploadCloud class="w-3.5 h-3.5" />
       <span>{{ $t('expenses.expensesView.importCsv') }}</span>
     </button>
-    <template v-if="activeTab === 'CHARGES' && vehicleStore.canCharge">
+    <template v-if="activeTab === 'CHARGES' && vehicleStore.capabilities.charges">
       <button
         @click="$emit('importCsv')"
         class="btn btn-lg btn-secondary"

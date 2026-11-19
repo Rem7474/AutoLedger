@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import NumberInput from '@/components/NumberInput.vue'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
 import { useStaleWrite } from '@/composables/useStaleWrite'
@@ -11,6 +11,7 @@ import { toLocalDateTimeInput } from '@/utils/dates'
 import AppDatePicker from '@/components/AppDatePicker.vue'
 import DistanceInput from '@/components/DistanceInput.vue'
 import ModalShell from '@/components/ModalShell.vue'
+import { energyKind } from '@/utils/capabilities'
 import { Plus, Calendar, MapPin, Gauge, Zap } from '@/icons'
 
 const props = defineProps<{
@@ -27,6 +28,9 @@ const { explainStaleWrite } = useStaleWrite()
 
 const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
+
+// A fuel-only vehicle's drive carries no kWh: its fuel is derived from the fill-ups, so the energy field is not offered
+const showEnergy = computed(() => energyKind(vehicleStore.capabilities) === 'ELECTRIC')
 
 const loading = ref(false)
 const error = ref('')
@@ -96,7 +100,7 @@ async function handleSubmit() {
       end_address: endAddress.value.trim() || undefined,
       start_odometer: startOdometer.value ? Number(startOdometer.value) : undefined,
       end_odometer: endOdometer.value ? Number(endOdometer.value) : undefined,
-      energy_consumed_kwh: energyKwh.value ? Number(energyKwh.value) : undefined,
+      energy_consumed_kwh: showEnergy.value && energyKwh.value ? Number(energyKwh.value) : undefined,
       tags: selectedTag.value ? [selectedTag.value] : [],
     }
 
@@ -164,7 +168,7 @@ async function handleSubmit() {
               class="field"
             />
           </div>
-          <div>
+          <div v-if="showEnergy">
             <label for="manual-drive-energy" class="block text-xs font-semibold text-slate-300 mb-1.5">
               {{ $t('drives.manualModal.energy') }}
             </label>

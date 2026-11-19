@@ -11,10 +11,15 @@ import QuickDateLine from './QuickDateLine.vue'
 import { currencySymbol, formatAmount } from '@/currency'
 import { buildFuelPayload, checkOdometer, isQueued, toLocalDateInput, toNumber, totalFromUnitPrice, unitPriceText } from '@/utils/quickAdd'
 import { formatDistance, volumeUnitLabel } from '@/units'
+import { isHybridCapabilities } from '@/utils/hybridForms'
+import { capabilitiesOf } from '@/utils/capabilities'
 
 const props = defineProps<{ vehicle: any }>()
 const currency: string = props.vehicle.currency
 const emit = defineEmits<{ saved: [result: { queued: boolean; message: string }] }>()
+
+// A plug-in hybrid needs the odometer to split its kilometres: the field leaves the details and is required
+const hybrid = isHybridCapabilities(capabilitiesOf(props.vehicle))
 
 const form = reactive({
   date: toLocalDateInput(new Date()),
@@ -61,13 +66,13 @@ function onAmountInput() {
 async function submit() {
   error.value = ''
   if (checkOdometer(form.odometer, props.vehicle.current_odometer) === 'below' && !odometerConfirmed.value) {
-    showDetails.value = true
+    showDetails.value = !hybrid || showDetails.value
     error.value = t('quickadd.odometerField.confirmRequired', { last: formatDistance(Math.round(props.vehicle.current_odometer)) })
     return
   }
   let payload: ReturnType<typeof buildFuelPayload>
   try {
-    payload = buildFuelPayload({ ...form })
+    payload = buildFuelPayload({ ...form }, { hybrid })
   } catch (err: any) {
     error.value = err.message
     return
@@ -108,6 +113,8 @@ async function submit() {
 
     <QuickDateLine id="qf-date" v-model="form.date" />
 
+    <QuickOdometerField v-if="hybrid" id="qf-odometer-required" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
+
     <button
       type="button"
       class="flex min-h-11 w-full items-center justify-between rounded-xl px-1 text-sm font-semibold text-slate-300"
@@ -120,7 +127,7 @@ async function submit() {
     </button>
 
     <div v-show="showDetails" id="qf-details" class="space-y-4">
-      <QuickOdometerField id="qf-odometer" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
+      <QuickOdometerField v-if="!hybrid" id="qf-odometer" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
       <div>
         <label for="qf-notes" class="quick-label">{{ $t('common.notes') }}</label>
         <input id="qf-notes" v-model="form.notes" maxlength="200" autocomplete="off" class="quick-input" />
