@@ -1336,7 +1336,7 @@ test('a plug-in hybrid asks for the odometer on a quick charge and keeps the bat
     // The odometer is outside the details and required: without it nothing is saved
     await page.getByRole('button', { name: 'Save the charge' }).click()
     await expect(page.getByText('a hybrid needs it', { exact: false })).toBeVisible()
-    await page.fill('#qc-odometer', '15200')
+    await page.fill('#qc-odometer-required', '15200')
     await page.getByRole('button', { name: 'Save the charge' }).click()
     await expect(toast(page)).toContainText('8.5')
     const charges = await (await request.get(`/api/vehicles/${vehicle.id}/charges`, { headers })).json()

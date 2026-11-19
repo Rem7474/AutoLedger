@@ -113,7 +113,7 @@ async function submit() {
 
     <QuickDateLine id="qf-date" v-model="form.date" />
 
-    <QuickOdometerField v-if="hybrid" id="qf-odometer" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
+    <QuickOdometerField v-if="hybrid" id="qf-odometer-required" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
 
     <button
       type="button"

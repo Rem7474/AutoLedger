@@ -100,7 +100,7 @@ async function submit() {
     <QuickDateLine id="qc-date" v-model="form.date" with-time />
 
     <template v-if="hybrid">
-      <QuickOdometerField id="qc-odometer" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
+      <QuickOdometerField id="qc-odometer-required" v-model="form.odometer" v-model:confirmed="odometerConfirmed" :last="vehicle.current_odometer" />
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label for="qc-start-battery" class="quick-label">{{ $t('quickadd.quickChargeForm.startBattery') }}</label>
