@@ -1260,12 +1260,15 @@ test('a combustion vehicle with no trip adds one by hand, reads it in fuel and s
   }
 })
 
-test('a plug-in hybrid enters a trip in kWh, with no fuel part', async ({ page, request }) => {
+test('a plug-in hybrid enters a trip split with the accepted electric share', async ({ page, request }) => {
   const headers = await authHeaders(request)
   const created = await request.post('/api/vehicles', { headers, data: { name: 'E2E hybrid trips', powertrain: 'PHEV', currency: 'EUR' } })
   expect(created.ok()).toBeTruthy()
   const vehicle = await created.json()
   try {
+    // Half of the distance on electricity, 6 L/100 km on the other half
+    const accepted = await request.put(`/api/vehicles/${vehicle.id}/hybrid-share`, { headers, data: { electric_share: 0.5, fuel_l_100km: 6 } })
+    expect(accepted.ok()).toBeTruthy()
     await page.setViewportSize({ width: 1280, height: 900 })
     await useVehicle(page, vehicle.id, '/drives')
     await expect(page.getByRole('heading', { name: 'No trips yet' })).toBeVisible()
@@ -1278,12 +1281,13 @@ test('a plug-in hybrid enters a trip in kWh, with no fuel part', async ({ page, 
     await form.getByRole('button', { name: 'Save drive' }).click()
     await expect(form).toHaveCount(0)
     const [drive] = (await (await request.get(`/api/vehicles/${vehicle.id}/drives`, { headers })).json()).drives
+    // 30 km at 50 %: 15 km on electricity (the default consumption gives the kWh), 15 km on fuel at 6 L/100 km
+    expect(drive.electric_share).toBe(0.5)
     expect(drive.energy_consumed_kwh).toBeGreaterThan(0)
     expect(drive.costs.fuel_only).toBe(false)
-    expect(drive.costs.fuel_liters ?? null).toBeNull()
+    expect(drive.costs.fuel_liters).toBe(0.9)
     await page.getByTestId('drive-card').filter({ hasText: 'Hybrid office' }).getByRole('button', { name: /^Open the cost breakdown/ }).click()
     await expect(page.getByRole('dialog').getByText('Electric energy')).toBeVisible()
-    await expect(page.getByRole('dialog').getByText(/^Fuel\b/)).toHaveCount(0)
   } finally {
     await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
   }

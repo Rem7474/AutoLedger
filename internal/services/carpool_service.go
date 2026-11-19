@@ -72,7 +72,10 @@ const (
 type UnitRates struct {
 	// FuelOnly marks a vehicle that burns fuel and cannot charge: its energy is priced from its fill-ups
 	// (FuelLitresPer100 and FuelPricePerLiter, zero when the fill-ups do not give them), never from a kWh rate.
-	FuelOnly          bool
+	FuelOnly bool
+	// Hybrid marks a vehicle that charges and burns fuel: a drive splits between ElectricityPerKwh and the fuel rates
+	// (FuelLitresPer100 is the consumption on the kilometres driven on fuel).
+	Hybrid            bool
 	FuelLitresPer100  float64
 	FuelPricePerLiter float64
 	ElectricityPerKwh float64
@@ -188,6 +191,9 @@ func ComputeDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.C
 	if rates.FuelOnly {
 		return fuelDriveCost(rates, d, insurance, tolls)
 	}
+	if rates.Hybrid {
+		return hybridDriveCost(rates, d, insurance, tolls)
+	}
 	kwh, source := DriveEnergyKwh(d.Distance(), d.EnergyConsumedKwh, d.ConsumptionKwh100km)
 	components := ComputeCostComponents(rates, d.Distance(), kwh)
 	return DriveCost{
@@ -226,6 +232,54 @@ func fuelDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.Cent
 		TollsCost:       tolls,
 		TotalCost:       components.EnergyCost() + components.TiresCost + components.MaintenanceCost + insurance + tolls,
 		HasEstimates:    rates.HasUnknownRate(),
+	}
+}
+
+// hybridDriveCost is the cost of a drive of a hybrid: the electric part of the distance from its kWh, the rest from the
+// fuel burnt on the kilometres driven on fuel. The split is the share frozen with the drive. A manual drive without a
+// share has no split and no typed energy: its energy cost stays empty (unknown), never replaced by a default. A drive
+// synchronized from a source (no share) keeps the energy it measured, all of it electric.
+func hybridDriveCost(rates *UnitRates, d models.Drive, insurance, tolls money.Cents) DriveCost {
+	km := d.Distance()
+	var kwh float64
+	var source string
+	switch {
+	case d.EnergyConsumedKwh != nil && (*d.EnergyConsumedKwh > 0 || d.ElectricShare != nil):
+		kwh, source = *d.EnergyConsumedKwh, EnergySourceMeasured
+		if d.EnergyEstimated {
+			source = EnergySourceConsumption
+		}
+	case d.ElectricShare == nil && d.IsManual:
+		source = EnergySourceUnknown
+	default:
+		kwh, source = DriveEnergyKwh(km, d.EnergyConsumedKwh, d.ConsumptionKwh100km)
+	}
+	var litres float64
+	fuelKnown := true
+	if d.ElectricShare != nil && *d.ElectricShare < 1 {
+		fuelKnown = rates.FuelLitresPer100 > 0 && rates.FuelPricePerLiter > 0
+		if rates.FuelLitresPer100 > 0 {
+			litres = km * (1 - *d.ElectricShare) * rates.FuelLitresPer100 / 100
+		}
+	}
+	electricity := money.FromFloat(kwh * rates.ElectricityPerKwh)
+	fuel := money.FromFloat(litres * rates.FuelPricePerLiter)
+	tires := money.FromFloat(km * rates.TiresPerKm)
+	maintenance := money.FromFloat(km * rates.MaintenancePerKm)
+	energy := electricity + fuel
+	return DriveCost{
+		EnergyCost:      energy,
+		ElectricityCost: electricity,
+		FuelCost:        fuel,
+		ElectricityKwh:  kwh,
+		FuelLitres:      litres,
+		EnergySource:    source,
+		TiresCost:       tires,
+		MaintenanceCost: maintenance,
+		InsuranceCost:   insurance,
+		TollsCost:       tolls,
+		TotalCost:       energy + tires + maintenance + insurance + tolls,
+		HasEstimates:    source == EnergySourceDefault || source == EnergySourceUnknown || !fuelKnown || rates.HasUnknownRate(),
 	}
 }
 

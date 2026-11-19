@@ -138,11 +138,18 @@ func PowertrainIsFuelOnly(powertrain string) bool {
 	return PowertrainCanRefuel(powertrain) && !PowertrainCanCharge(powertrain)
 }
 
+// PowertrainIsHybrid reports whether the powertrain both charges and burns fuel (PHEV, REEV): the energy of its drives
+// is split between the two.
+func PowertrainIsHybrid(powertrain string) bool {
+	return PowertrainCanCharge(powertrain) && PowertrainCanRefuel(powertrain)
+}
+
 // PowertrainCanLinkTeslaMate reports whether a teslamateapi connection makes sense for the powertrain.
 func PowertrainCanLinkTeslaMate(powertrain string) bool { return PowertrainCanCharge(powertrain) }
 
 func (v *Vehicle) CanCharge() bool        { return PowertrainCanCharge(v.Powertrain) }
 func (v *Vehicle) CanRefuel() bool        { return PowertrainCanRefuel(v.Powertrain) }
+func (v *Vehicle) IsHybrid() bool         { return PowertrainIsHybrid(v.Powertrain) }
 func (v *Vehicle) CanLinkTeslaMate() bool { return PowertrainCanLinkTeslaMate(v.Powertrain) }
 
 // VehicleMember represents a user who has access to a vehicle with a specific role.
