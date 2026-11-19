@@ -78,8 +78,11 @@ type SaveChargeRequest struct {
 	Currency        string       `json:"currency"`
 	FxRate          *float64     `json:"fx_rate"`
 	Odometer        *float64     `json:"odometer"`
-	Notes           *string      `json:"notes"`
-	DocumentID      *string      `json:"document_id"`
+	// Battery percentages before and after the charge, optional.
+	StartBatteryLevel *int    `json:"start_battery_level"`
+	EndBatteryLevel   *int    `json:"end_battery_level"`
+	Notes             *string `json:"notes"`
+	DocumentID        *string `json:"document_id"`
 }
 
 func buildCharge(vehicleID, baseCurrency string, req *SaveChargeRequest) (*models.ChargeLog, error) {
@@ -110,19 +113,24 @@ func buildCharge(vehicleID, baseCurrency string, req *SaveChargeRequest) (*model
 	if odometer != nil && *odometer <= 0 {
 		odometer = nil
 	}
+	if err := validateBatteryLevels(req.StartBatteryLevel, req.EndBatteryLevel); err != nil {
+		return nil, err
+	}
 	return &models.ChargeLog{
-		VehicleID:  vehicleID,
-		Date:       date,
-		EndDate:    endDate,
-		Address:    req.Address,
-		PlaceID:    optionalText(req.PlaceID),
-		KwhAdded:   req.KwhAdded,
-		Cost:       req.Cost,
-		Currency:   curr,
-		FxRate:     fxRate,
-		Odometer:   odometer,
-		Notes:      req.Notes,
-		DocumentID: req.DocumentID,
+		VehicleID:         vehicleID,
+		Date:              date,
+		EndDate:           endDate,
+		Address:           req.Address,
+		PlaceID:           optionalText(req.PlaceID),
+		KwhAdded:          req.KwhAdded,
+		Cost:              req.Cost,
+		Currency:          curr,
+		FxRate:            fxRate,
+		Odometer:          odometer,
+		StartBatteryLevel: req.StartBatteryLevel,
+		EndBatteryLevel:   req.EndBatteryLevel,
+		Notes:             req.Notes,
+		DocumentID:        req.DocumentID,
 	}, nil
 }
 
@@ -257,4 +265,18 @@ func (h *ExpenseHandler) SetChargeCostReview(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "reviewed": req.Reviewed})
+}
+
+// validateBatteryLevels checks the optional battery percentages of a charge: each from 0 to 100, and a charge ends
+// higher than it started.
+func validateBatteryLevels(start, end *int) error {
+	for _, v := range []*int{start, end} {
+		if v != nil && (*v < 0 || *v > 100) {
+			return apierror.New("charge.battery_level_invalid", "A battery percentage must be between 0 and 100")
+		}
+	}
+	if start != nil && end != nil && *end <= *start {
+		return apierror.New("charge.battery_levels_order", "The battery must end the charge higher than it started")
+	}
+	return nil
 }
