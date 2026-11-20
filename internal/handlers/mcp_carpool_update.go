@@ -33,7 +33,7 @@ type mcpUpdateCarpoolInput struct {
 	Title            *string                    `json:"title,omitempty" jsonschema:"a new title for the carpool"`
 	Notes            *string                    `json:"notes,omitempty" jsonschema:"the note on the carpool; an empty string removes it"`
 	AddPassengers    []mcpCarpoolPassengerInput `json:"add_passengers,omitempty" jsonschema:"passengers to add; a name already in the carpool is refused, change that passenger with update_passengers"`
-	UpdatePassengers []mcpPassengerChange       `json:"update_passengers,omitempty" jsonschema:"passengers to change, found by name; only the fields given change"`
+	UpdatePassengers []mcpPassengerChange       `json:"update_passengers,omitempty" jsonschema:"passengers to change, found by name (or by \"Passenger N\", as get_carpool labels one without a name); only the fields given change"`
 	RemovePassengers []string                   `json:"remove_passengers,omitempty" jsonschema:"names of the passengers to take out of the carpool, with what they paid"`
 	AddDrives        []string                   `json:"add_drives,omitempty" jsonschema:"existing drives to link to the carpool as new legs, by the drive_id list_vehicle_trips gives; a drive already in a carpool is refused. A passenger who rode to the end of the trip rides to the end of the longer one"`
 	RemoveDrives     []string                   `json:"remove_drives,omitempty" jsonschema:"drives to unlink from the carpool, by drive_id: the drive stays, only its leg leaves the carpool. The carpool keeps at least one drive, and a passenger who rode only on that drive has to be taken out first"`
@@ -189,7 +189,7 @@ func changedPassengers(current []models.CarpoolPassenger, in mcpUpdateCarpoolInp
 	find := func(name string) (int, error) {
 		found := -1
 		for i, p := range out {
-			if strings.EqualFold(strings.TrimSpace(p.PassengerName), strings.TrimSpace(name)) {
+			if strings.EqualFold(passengerLabel(p.PassengerName, i), strings.TrimSpace(name)) {
 				if found >= 0 {
 					return -1, mcpUserError(fmt.Sprintf("several passengers are called %q: they cannot be told apart by name, change them in the application", name))
 				}
@@ -199,7 +199,7 @@ func changedPassengers(current []models.CarpoolPassenger, in mcpUpdateCarpoolInp
 		if found < 0 {
 			names := make([]string, len(out))
 			for i, p := range out {
-				names[i] = fmt.Sprintf("%q", p.PassengerName)
+				names[i] = fmt.Sprintf("%q", passengerLabel(p.PassengerName, i))
 			}
 			return -1, mcpUserError(fmt.Sprintf("no passenger is called %q: the carpool has %s", name, strings.Join(names, ", ")))
 		}

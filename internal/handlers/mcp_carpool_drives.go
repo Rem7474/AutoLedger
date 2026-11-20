@@ -124,7 +124,7 @@ func (h *IntegrationReadHandler) changeCarpoolDrives(ctx context.Context, vehicl
 			alight = len(payloads) // rode to the end of the trip: rides to the end of the new one
 		}
 		if alight <= board {
-			return nil, nil, mcpUserError(fmt.Sprintf("%s rode only on the drive taken out: take the passenger out of the carpool first (remove_passengers)", p.PassengerName))
+			return nil, nil, mcpUserError(fmt.Sprintf("%s rode only on the drive taken out: take the passenger out of the carpool first (remove_passengers)", passengerLabel(p.PassengerName, i)))
 		}
 		if board != p.BoardStopIndex || alight != p.AlightStopIndex {
 			p.Origin, p.Destination = nil, nil // the labels follow the stops again

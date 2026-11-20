@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -44,7 +45,7 @@ type IntegrationCarpoolSummary struct {
 
 // IntegrationCarpoolPassenger is one person who rode, named as the owner recorded them.
 type IntegrationCarpoolPassenger struct {
-	Name      string            `json:"name" jsonschema:"the passenger's name as the owner typed it, user text"`
+	Name      string            `json:"name" jsonschema:"the passenger's name as the owner typed it, user text; \"Passenger N\" (N from 1, in the order listed) for a passenger left without a name"`
 	Seats     int               `json:"seats" jsonschema:"seats the passenger took"`
 	BoardsAt  *string           `json:"boards_at" jsonschema:"the stop where the passenger got on; null when that stop has no label"`
 	AlightsAt *string           `json:"alights_at" jsonschema:"the stop where the passenger got off; null when that stop has no label"`
@@ -101,6 +102,15 @@ func stopAt(stops []*string, index int) *string {
 	return stops[index]
 }
 
+// passengerLabel is how a passenger is named to an assistant: the name the owner typed, or "Passenger N" (N counting
+// from 1 in the carpool's order) for one left blank, as the application labels it. update_carpool takes the label back.
+func passengerLabel(name string, index int) string {
+	if name = strings.TrimSpace(name); name != "" {
+		return name
+	}
+	return fmt.Sprintf("Passenger %d", index+1)
+}
+
 func noteOf(n *string) *string {
 	if n == nil {
 		return nil
@@ -126,9 +136,9 @@ func integrationCarpoolTrip(t models.CarpoolTripWithPassengers, currency string)
 			item.DriveIDs = append(item.DriveIDs, *l.DriveID)
 		}
 	}
-	for _, p := range t.Passengers {
+	for i, p := range t.Passengers {
 		item.Passengers = append(item.Passengers, IntegrationCarpoolPassenger{
-			Name: p.PassengerName, Seats: p.Seats, BoardsAt: stopAt(stops, p.BoardStopIndex), AlightsAt: stopAt(stops, p.AlightStopIndex),
+			Name: passengerLabel(p.PassengerName, i), Seats: p.Seats, BoardsAt: stopAt(stops, p.BoardStopIndex), AlightsAt: stopAt(stops, p.AlightStopIndex),
 			Paid: amountOf(p.AmountPaid, currency), CostShare: amountOf(p.CostShare, currency), Balance: amountOf(p.Balance, currency), Notes: noteOf(p.Notes),
 		})
 	}
