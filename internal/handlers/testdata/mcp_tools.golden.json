@@ -256,7 +256,7 @@
                     "type": "object"
                   },
                   "name": {
-                    "description": "the passenger's name as the owner typed it, user text",
+                    "description": "the passenger's name as the owner typed it, user text; \"Passenger N\" (N from 1, in the order listed) for a passenger left without a name",
                     "type": "string"
                   },
                   "notes": {
@@ -1130,7 +1130,7 @@
                       "type": "object"
                     },
                     "name": {
-                      "description": "the passenger's name as the owner typed it, user text",
+                      "description": "the passenger's name as the owner typed it, user text; \"Passenger N\" (N from 1, in the order listed) for a passenger left without a name",
                       "type": "string"
                     },
                     "notes": {
@@ -8559,7 +8559,7 @@
           ]
         },
         "update_passengers": {
-          "description": "passengers to change, found by name; only the fields given change",
+          "description": "passengers to change, found by name (or by \"Passenger N\", as get_carpool labels one without a name); only the fields given change",
           "items": {
             "additionalProperties": false,
             "properties": {
@@ -8799,7 +8799,7 @@
                     "type": "object"
                   },
                   "name": {
-                    "description": "the passenger's name as the owner typed it, user text",
+                    "description": "the passenger's name as the owner typed it, user text; \"Passenger N\" (N from 1, in the order listed) for a passenger left without a name",
                     "type": "string"
                   },
                   "notes": {
