@@ -23,7 +23,7 @@ import (
 
 // mcpInstructions is what a client shows its model about the server. It states the conventions every tool's output
 // follows, so a model does not have to infer them from field names.
-const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools read; create_carpool_from_drives, update_carpool and update_drive_expenses are the only ones that write, and only on a connection the owner allowed to. No carpool or drive is deleted; update_carpool can take a passenger out of a carpool, and update_drive_expenses replaces the tolls and parking amounts of trips (and removes them with 0).
+const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools read; create_carpool_from_drives, update_carpool and update_drive_expenses are the only ones that write, and only on a connection the owner allowed to. No carpool or drive is deleted; update_carpool can take a passenger out of a carpool and link or unlink its drives (the drives are kept), and update_drive_expenses replaces the tolls and parking amounts of trips (and removes them with 0).
 Amounts are decimal strings in the currency of their vehicle and are never converted between currencies: do not add amounts of different currencies together.
 Distances are in kilometres. A null value means the figure is unknown, not zero.
 Costs are the cash spent, the purchase of the vehicle excluded. Call get_vehicle_data_gaps before drawing conclusions from a vehicle's costs: it says what the records are missing.
