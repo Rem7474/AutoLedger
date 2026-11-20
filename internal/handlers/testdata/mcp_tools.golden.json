@@ -7706,13 +7706,25 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
-    "description": "The trips of a vehicle, most recent first: when, from and to (the addresses the owner recorded, null when unknown), distance, duration, energy, and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\") and a period. Only the first trips are listed: matching says how many fit.",
+    "description": "The trips of a vehicle, most recent first: when, from and to (the addresses the owner recorded, null when unknown), distance, duration, energy, and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\"), a period, has_tolls and carpool_only. At most 50 are listed per call: matching says how many fit and next_cursor, passed back as cursor with the same filters, gives the next page.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
+        "carpool_only": {
+          "description": "true to keep only the trips that are a leg of a carpool",
+          "type": "boolean"
+        },
+        "cursor": {
+          "description": "the next_cursor of the previous page, with the same filters",
+          "type": "string"
+        },
         "from": {
           "description": "first day to include, YYYY-MM-DD (UTC)",
           "type": "string"
+        },
+        "has_tolls": {
+          "description": "true to keep only the trips with a recorded toll",
+          "type": "boolean"
         },
         "limit": {
           "description": "how many trips to return, 20 by default and 50 at most",
@@ -7743,6 +7755,13 @@
         "matching": {
           "description": "how many trips fit the query, listed or not",
           "type": "integer"
+        },
+        "next_cursor": {
+          "description": "pass it as cursor, with the same filters, to get the next page; null on the last page",
+          "type": [
+            "null",
+            "string"
+          ]
         },
         "trips": {
           "description": "the trips that fit the query, most recent first",
@@ -7892,7 +7911,8 @@
         "vehicle_id",
         "trips",
         "matching",
-        "truncated"
+        "truncated",
+        "next_cursor"
       ],
       "type": "object"
     },

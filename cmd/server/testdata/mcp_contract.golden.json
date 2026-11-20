@@ -2744,12 +2744,14 @@
   },
   "list_vehicle_trips / empty": {
     "matching": "number",
+    "next_cursor": null,
     "trips": [],
     "truncated": "boolean",
     "vehicle_id": "string"
   },
   "list_vehicle_trips / ev": {
     "matching": "number",
+    "next_cursor": "string",
     "trips": [
       {
         "carpool_ids": [],
@@ -2774,12 +2776,14 @@
   },
   "list_vehicle_trips / ice": {
     "matching": "number",
+    "next_cursor": null,
     "trips": [],
     "truncated": "boolean",
     "vehicle_id": "string"
   },
   "list_vehicle_trips / layout": {
     "matching": "number",
+    "next_cursor": "string",
     "trips": [
       {
         "carpool_ids": [],

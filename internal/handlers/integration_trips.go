@@ -29,6 +29,11 @@ type IntegrationTripsQuery struct {
 	From   string
 	To     string
 	Limit  int
+	// HasTolls keeps the trips with a recorded toll; CarpoolOnly keeps the trips that are a leg of a carpool.
+	HasTolls    bool
+	CarpoolOnly bool
+	// Cursor is the next_cursor of a previous page.
+	Cursor string
 }
 
 // IntegrationTrip is one drive. It carries the addresses the account recorded, so an assistant can talk about "the
@@ -57,6 +62,8 @@ type IntegrationTrips struct {
 	// Matching counts the trips that fit the query; Truncated says more than the ones listed exist.
 	Matching  int  `json:"matching" jsonschema:"how many trips fit the query, listed or not"`
 	Truncated bool `json:"truncated" jsonschema:"true when more trips fit than the ones listed"`
+	// NextCursor is set while trips remain after this page.
+	NextCursor *string `json:"next_cursor" jsonschema:"pass it as cursor, with the same filters, to get the next page; null on the last page"`
 }
 
 // tripBound reads a From or To bound. A day as upper bound runs to the end of that day.
@@ -93,8 +100,16 @@ func (h *IntegrationReadHandler) Trips(ctx context.Context, userID, vehicleID st
 		limit = integrationTripsDefault
 	}
 	limit = min(limit, integrationTripsMax)
+	filter.HasToll = q.HasTolls
+	if q.CarpoolOnly {
+		filter.Carpool = database.CarpoolOnly
+	}
+	offset, err := decodeExpenseCursor(q.Cursor)
+	if err != nil {
+		return nil, err
+	}
 
-	drives, total, err := h.repo.ListDrives(ctx, vehicle.ID, filter, limit, 0)
+	drives, total, err := h.repo.ListDrives(ctx, vehicle.ID, filter, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +134,12 @@ func (h *IntegrationReadHandler) Trips(ctx context.Context, userID, vehicleID st
 		}
 		trips = append(trips, trip)
 	}
-	return &IntegrationTrips{VehicleID: vehicle.ID, Trips: trips, Matching: total, Truncated: total > len(trips)}, nil
+	out := &IntegrationTrips{VehicleID: vehicle.ID, Trips: trips, Matching: total, Truncated: total > offset+len(trips)}
+	if out.Truncated {
+		cursor := encodeExpenseCursor(offset + len(trips))
+		out.NextCursor = &cursor
+	}
+	return out, nil
 }
 
 func integrationTrip(d models.Drive, currency string, expenses map[string]money.Cents) IntegrationTrip {
@@ -157,7 +177,10 @@ func publicAddress(stored *string) *string {
 // GetTrips serves Trips.
 func (h *IntegrationReadHandler) GetTrips(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	q := IntegrationTripsQuery{Search: query.Get("search"), From: query.Get("from"), To: query.Get("to")}
+	q := IntegrationTripsQuery{
+		Search: query.Get("search"), From: query.Get("from"), To: query.Get("to"), Cursor: query.Get("cursor"),
+		HasTolls: query.Get("has_tolls") == "true", CarpoolOnly: query.Get("carpool_only") == "true",
+	}
 	if raw := query.Get("limit"); raw != "" {
 		limit, err := strconv.Atoi(raw)
 		if err != nil || limit < 1 {

@@ -122,6 +122,42 @@ func TestMCPTripsFilterByAddressPeriodAndLimit(t *testing.T) {
 	}
 }
 
+func TestMCPTripsPageThroughTheHistoryWithACursor(t *testing.T) {
+	f := newMCPFixture(t)
+	f.tripFixture(t)
+	session := f.connect(t, f.readTok)
+
+	first, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "limit": 3})
+	if len(first.Trips) != 3 || !first.Truncated || first.NextCursor == nil || first.Matching != 4 {
+		t.Fatalf("the first page points at the next: %+v", first)
+	}
+	second, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "limit": 3, "cursor": *first.NextCursor})
+	if len(second.Trips) != 1 || second.Truncated || second.NextCursor != nil || second.Matching != 4 {
+		t.Fatalf("the last page has no cursor: %+v", second)
+	}
+	if second.Trips[0].DriveID == first.Trips[0].DriveID || second.Trips[0].DriveID == first.Trips[2].DriveID {
+		t.Errorf("a page repeats nothing of the previous one: %+v %+v", first, second)
+	}
+	if _, res := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "cursor": "not-a-cursor"}); !res.IsError {
+		t.Error("a cursor that no call returned must be an error the assistant can read")
+	}
+}
+
+func TestMCPTripsKeepOnlyTheTollTrips(t *testing.T) {
+	f := newMCPFixture(t)
+	f.tripFixture(t)
+	session := f.connect(t, f.readTok)
+
+	tolled, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "has_tolls": true})
+	if tolled.Matching != 1 || len(tolled.Trips) != 1 || tolled.Trips[0].TravelExpenses == nil || tolled.Trips[0].TravelExpenses.Amount != "62.50" {
+		t.Errorf("only the drive with a toll: %+v", tolled)
+	}
+	untolled, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "has_tolls": false})
+	if untolled.Matching != 4 {
+		t.Errorf("without the filter every trip is listed: %+v", untolled)
+	}
+}
+
 func TestMCPTripsOfAnotherAccountAreNotFound(t *testing.T) {
 	f := newMCPFixture(t)
 	f.tripFixture(t)
