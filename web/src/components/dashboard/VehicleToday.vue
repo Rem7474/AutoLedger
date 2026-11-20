@@ -13,6 +13,9 @@ import DataQualityCard from '@/components/dashboard/DataQualityCard.vue'
 import { buildLeaseSummary, currentMonthStats } from '@/utils/dashboard'
 import { carpoolOwed } from '@/utils/upcoming'
 import { todayHero } from '@/utils/todayHero'
+import { yearOverview } from '@/utils/yearOverview'
+import { monthKey } from '@/utils/reportingTime'
+import YearOverview from '@/components/dashboard/YearOverview.vue'
 import { summarizeFittedTires } from '@/utils/tires'
 import { formatAmount } from '@/currency'
 import { formatPercent } from '@/utils/numbers'
@@ -32,6 +35,8 @@ const hero = computed(() => {
   const month = currentMonthStats(tco.value?.monthly_costs, new Date(), tco.value?.current_month)
   return todayHero(month?.raw, vehicleStore.currency, tco.value?.monthly_costs)
 })
+
+const year = computed(() => yearOverview(tco.value?.monthly_costs, hero.value?.month ?? monthKey(new Date()), vehicleStore.currency))
 
 // What the coming-up block lists besides the reminders: the carpools passengers have not settled and the end of a lease
 const carpoolSummary = ref<any | null>(null)
@@ -133,6 +138,7 @@ onMounted(() => {
 
     <div v-else class="space-y-4 sm:space-y-6">
       <TodayHero v-if="hero" :hero="hero" />
+      <YearOverview v-if="year" :overview="year" />
       <UpcomingList :reminders="reminders" :tires="tireSummary" :extras="upcomingExtras" :can-edit="vehicleStore.canEdit" />
       <DataQualityCard :tco="tco" :vehicle-id="vehicleId" />
 

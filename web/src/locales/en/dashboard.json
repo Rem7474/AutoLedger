@@ -402,7 +402,6 @@
     "planOne": "Plan one",
     "spentIn": "Spent in {month}",
     "themesLabel": "What the month's spending is made of",
-    "perKm": "Cost per {unit}",
     "wholeMonth": "The whole month, scheduled included",
     "undatedTitle": "{count} reminder without a due date | {count} reminders without a due date",
     "undatedHint": "Plan them",
@@ -410,7 +409,18 @@
     "carpoolHint": "Carpooling not settled yet",
     "leaseTitle": "End of the contract",
     "leaseEnds": "Ends {date} · less than a month left | Ends {date} · 1 month left | Ends {date} · {months} months left",
-    "perKmIn": "Cost per {unit} in {month}",
-    "perKmNone": "Cost per {unit}"
+    "previousWhole": "{month}, whole month",
+    "shareBelow": "{month} is at {percent}% of this total",
+    "shareAbove": "Already {percent}% above this total",
+    "shareReached": "The month in progress has reached this total"
+  },
+  "year": {
+    "title": "Last {months} months",
+    "total": "Total",
+    "average": "Average per month",
+    "perKm": "Cost per {unit}",
+    "summary": "Spending over the last {months} months: {total} in all, {average} a month on average",
+    "inProgress": "in progress",
+    "partialNote": "The last month, hatched, is not over: it is left out of the figures."
   }
 }

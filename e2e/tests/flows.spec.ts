@@ -277,7 +277,7 @@ test('the home is the present: the month so far, what is coming up, a line to th
   await useVehicle(page, ev.id, '/')
   const main = page.getByRole('main')
   await expect(main.getByTestId('today-hero')).toBeVisible()
-  await expect(main.getByTestId('today-per-km')).toBeVisible()
+  await expect(main.getByTestId('year-overview')).toBeVisible()
   await expect(main.getByRole('heading', { name: 'Coming up' })).toBeVisible()
   await expect(main.getByTestId('upcoming')).toBeVisible()
   await expect(main.getByRole('link', { name: /Vehicle sheet/ })).toHaveAttribute('href', '/vehicle')

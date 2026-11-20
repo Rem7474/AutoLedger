@@ -216,10 +216,10 @@ test('the Back gesture leaves the selection instead of the page', async ({ page 
   expect(new URL(page.url()).pathname).not.toBe('/drives')
 })
 
-test('on the home page the month figure leads to the journal, and the cost per distance explains itself', async ({ page }) => {
+test('on the home page the month figure leads to the journal, and the previous month explains itself', async ({ page }) => {
   await useVehicle(page, ev.id, '/')
   const hero = page.getByTestId('today-hero')
-  await expect(hero.getByTestId('today-per-km')).toContainText(/\/km/)
+  await expect(hero.getByTestId('today-previous')).toContainText(/%/)
   await hero.getByRole('link').first().click()
   await expect(page).toHaveURL(/\/costs(\?period=\w+)?$/)
 })
@@ -914,7 +914,7 @@ test('"Change set" is disabled with its reason when no tire is in storage, and o
 
 test('a definition opens on touch, and Back closes it', async ({ page }) => {
   await useVehicle(page, ev.id, '/')
-  const tip = page.getByTestId('today-per-km').getByRole('button', { name: /^Cash paid: / })
+  const tip = page.getByTestId('today-previous').getByRole('button', { name: /^Cash paid: / })
   await tip.scrollIntoViewIfNeeded()
   const box = (await tip.boundingBox())!
   // The button is the size of its glyph; the finger's 44 px hit area is around it
