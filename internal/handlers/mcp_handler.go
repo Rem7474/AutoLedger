@@ -210,11 +210,14 @@ type mcpVehicleInput struct {
 }
 
 type mcpTripsInput struct {
-	VehicleID string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same"`
-	Search    string `json:"search,omitempty" jsonschema:"text to find in the departure or arrival address, for instance a city or a street"`
-	From      string `json:"from,omitempty" jsonschema:"first day to include, YYYY-MM-DD (UTC)"`
-	To        string `json:"to,omitempty" jsonschema:"last day to include, YYYY-MM-DD (UTC)"`
-	Limit     int    `json:"limit,omitempty" jsonschema:"how many trips to return, 20 by default and 50 at most"`
+	VehicleID   string `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same"`
+	Search      string `json:"search,omitempty" jsonschema:"text to find in the departure or arrival address, for instance a city or a street"`
+	From        string `json:"from,omitempty" jsonschema:"first day to include, YYYY-MM-DD (UTC)"`
+	To          string `json:"to,omitempty" jsonschema:"last day to include, YYYY-MM-DD (UTC)"`
+	Limit       int    `json:"limit,omitempty" jsonschema:"how many trips to return, 20 by default and 50 at most"`
+	HasTolls    bool   `json:"has_tolls,omitempty" jsonschema:"true to keep only the trips with a recorded toll"`
+	CarpoolOnly bool   `json:"carpool_only,omitempty" jsonschema:"true to keep only the trips that are a leg of a carpool"`
+	Cursor      string `json:"cursor,omitempty" jsonschema:"the next_cursor of the previous page, with the same filters"`
 }
 
 type mcpVehiclesOutput struct {
@@ -278,14 +281,14 @@ func (h *MCPHandler) addTools() {
 		Name:  "list_vehicle_trips",
 		Title: "Vehicle trips",
 		Description: "The trips of a vehicle, most recent first: when, from and to (the addresses the owner recorded, null when unknown), distance, duration, energy, " +
-			"and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\") and a period. Only the first trips are listed: matching says how many fit.",
+			"and what tolls and parking cost. Filter with search (text in an address, to find a trip \"to Lyon\"), a period, has_tolls and carpool_only. At most 50 are listed per call: matching says how many fit and next_cursor, passed back as cursor with the same filters, gives the next page.",
 		Annotations: readOnly,
 	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpTripsInput) (*mcp.CallToolResult, IntegrationTrips, error) {
 		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
 		if err != nil {
 			return nil, IntegrationTrips{}, mcpFailure(ctx, "list_vehicle_trips", err, "Could not list the trips")
 		}
-		trips, err := h.read.Trips(ctx, mcpUserID(req), vehicleID, IntegrationTripsQuery{Search: in.Search, From: in.From, To: in.To, Limit: in.Limit})
+		trips, err := h.read.Trips(ctx, mcpUserID(req), vehicleID, IntegrationTripsQuery{Search: in.Search, From: in.From, To: in.To, Limit: in.Limit, HasTolls: in.HasTolls, CarpoolOnly: in.CarpoolOnly, Cursor: in.Cursor})
 		if err != nil {
 			return nil, IntegrationTrips{}, mcpFailure(ctx, "list_vehicle_trips", err, "Could not list the trips")
 		}
