@@ -774,7 +774,7 @@ test('the legs of a trip are compact cards that open the leg; a leg is taken out
   const legCount = async () => (((await (await request.get(`/api/vehicles/${ev.id}/trip-groups`, { headers })).json()) as { id: string; drive_ids: string[] }[]).find((g) => g.id === id)?.drive_ids ?? []).length
   try {
     await useVehicle(page, ev.id, '/drives?tab=TRIPS&period=all')
-    await page.locator('div.relative.flex', { has: page.getByRole('button', { name: `Open ${name}` }) }).getByRole('button', { name: 'Legs', exact: true }).click()
+    await page.locator('div.card.relative', { has: page.getByRole('button', { name: `Open ${name}` }) }).getByRole('button', { name: 'Legs', exact: true }).click()
     const legs = page.locator('[data-testid="trip-legs"] [data-testid="drive-leg"]')
     await expect(legs).toHaveCount(3)
     await expect(legs.first()).toHaveClass(/card/)
