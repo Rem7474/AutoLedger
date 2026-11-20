@@ -92,7 +92,7 @@
     "scopeBadge": {
       "ingest": "Send and read",
       "read": "Read only",
-      "write": "Read, record and edit carpools",
+      "write": "Read, record and edit carpools and trip expenses",
       "homeassistant": "Home Assistant"
     },
     "oauthBadge": "Connected app",
