@@ -86,9 +86,9 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   const { tools } = await client.listTools()
   expect(tools.length).toBeGreaterThan(0)
   // The tools that write are named here on purpose: a new one has to be added to this list in review.
-  const writing = ['create_carpool_from_drives', 'update_carpool']
+  const writing = ['create_carpool_from_drives', 'update_carpool', 'update_drive_expenses']
   // Creating adds records; changing a carpool replaces what it held
-  const overwrites = ['update_carpool']
+  const overwrites = ['update_carpool', 'update_drive_expenses']
   for (const tool of tools) {
     if (writing.includes(tool.name)) {
       expect(tool.annotations?.readOnlyHint, `${tool.name} writes`).not.toBe(true)
@@ -106,9 +106,13 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
 
   // A grant is read-only unless the user ticked the writing box: the writing tool refuses it
   for (const name of writing) {
-    const refused = await call(client, name, name === 'update_carpool'
-      ? { vehicle_id: vehicles[0].id, carpool_id: '00000000-0000-4000-8000-000000000001', expected_version: 1, title: 'x' }
-      : { vehicle_id: vehicles[0].id, drive_ids: ['00000000-0000-4000-8000-000000000001'] })
+    const drive = '00000000-0000-4000-8000-000000000001'
+    const args: Record<string, unknown> = {
+      update_carpool: { vehicle_id: vehicles[0].id, carpool_id: drive, expected_version: 1, title: 'x' },
+      update_drive_expenses: { vehicle_id: vehicles[0].id, items: [{ drive_id: drive, tolls: '1.00' }] },
+      create_carpool_from_drives: { vehicle_id: vehicles[0].id, drive_ids: [drive] },
+    }
+    const refused = await call(client, name, args[name])
     expect(refused.isError, `${name} on a read grant`).toBe(true)
     expect(refused.text).toContain('can only read')
   }
