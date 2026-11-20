@@ -207,3 +207,18 @@ func (r *Repository) ListOdometerAnchors(ctx context.Context, vehicleID string) 
 	}
 	return out, rows.Err()
 }
+
+// FindMaintenanceExpenseLike returns the id of an expense of the vehicle with the same category, day, amount and
+// description (compared without case), or "" when there is none: what a call repeated by mistake would record twice.
+func (r *Repository) FindMaintenanceExpenseLike(ctx context.Context, m *models.MaintenanceExpense) (string, error) {
+	var id string
+	err := r.pool.QueryRow(ctx, `
+		SELECT id FROM maintenance_expenses
+		WHERE vehicle_id = $1 AND category = $2 AND date::date = $3::date AND amount = $4 AND lower(description) = lower($5)
+		LIMIT 1;
+	`, m.VehicleID, m.Category, m.Date, m.Amount, m.Description).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", nil
+	}
+	return id, err
+}
