@@ -51,8 +51,10 @@ type IntegrationTrip struct {
 	// TravelExpenses is what tolls, parking and ferries cost for this drive, in the vehicle's currency; null when none
 	// is recorded. An expense shared by a trip group is split between its drives by distance.
 	TravelExpenses *IntegrationAmount `json:"travel_expenses" jsonschema:"cost of tolls, parking and ferries for this trip, null when none is recorded; a cost shared by a trip group is split between its drives by distance"`
-	Tags           []string           `json:"tags" jsonschema:"tags the owner put on the trip, user text"`
-	Driver         *string            `json:"driver" jsonschema:"name of the person who drove, as the owner recorded them, user text; null when no driver is assigned"`
+	// TollSource says whether the tolls of the trip were typed by the owner or estimated from its trace.
+	TollSource *string  `json:"toll_source" jsonschema:"where the trip's tolls come from: entered (the owner typed them), estimated (detected from the trace, not confirmed) or mixed; null when the trip has no toll"`
+	Tags       []string `json:"tags" jsonschema:"tags the owner put on the trip, user text"`
+	Driver     *string  `json:"driver" jsonschema:"name of the person who drove, as the owner recorded them, user text; null when no driver is assigned"`
 }
 
 // IntegrationTrips lists the trips of a vehicle, the most recent first.
@@ -126,9 +128,14 @@ func (h *IntegrationReadHandler) Trips(ctx context.Context, userID, vehicleID st
 	if err != nil {
 		return nil, err
 	}
+	sources, err := h.repo.GetTollSourcesForDrives(ctx, vehicle.ID, ids)
+	if err != nil {
+		return nil, err
+	}
 	trips := make([]IntegrationTrip, 0, len(drives))
 	for _, d := range drives {
 		trip := integrationTrip(d, vehicle.Currency, expenses)
+		trip.TollSource = tollSourceOf(sources[d.ID])
 		for _, c := range carpools[d.ID] {
 			trip.CarpoolIDs = append(trip.CarpoolIDs, c.ID)
 		}
@@ -195,4 +202,28 @@ func (h *IntegrationReadHandler) GetTrips(w http.ResponseWriter, r *http.Request
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// tollSourceOf names where a trip's tolls come from, given the sources of its toll expenses; nil when it has none.
+func tollSourceOf(sources []string) *string {
+	var entered, estimated bool
+	for _, s := range sources {
+		if s == models.ExpenseSourceAutoToll {
+			estimated = true
+		} else {
+			entered = true
+		}
+	}
+	var name string
+	switch {
+	case entered && estimated:
+		name = "mixed"
+	case estimated:
+		name = "estimated"
+	case entered:
+		name = "entered"
+	default:
+		return nil
+	}
+	return &name
 }
