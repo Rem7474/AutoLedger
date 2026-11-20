@@ -8259,6 +8259,13 @@
                   "string"
                 ]
               },
+              "toll_source": {
+                "description": "where the trip's tolls come from: entered (the owner typed them), estimated (detected from the trace, not confirmed) or mixed; null when the trip has no toll",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
               "travel_expenses": {
                 "additionalProperties": false,
                 "description": "cost of tolls, parking and ferries for this trip, null when none is recorded; a cost shared by a trip group is split between its drives by distance",
@@ -8293,6 +8300,7 @@
               "duration_min",
               "energy_kwh",
               "travel_expenses",
+              "toll_source",
               "tags",
               "driver"
             ],

@@ -133,6 +133,38 @@ func (r *Repository) GetTollExpensesForDrives(ctx context.Context, vehicleID str
 	return result, rows.Err()
 }
 
+// GetTollSourcesForDrives returns, for each of the drives that has a toll, where its tolls come from: the sources
+// (ExpenseSourceManual, ExpenseSourceAutoToll) of the toll expenses attached to the drive or to a trip group it is in.
+func (r *Repository) GetTollSourcesForDrives(ctx context.Context, vehicleID string, driveIDs []string) (map[string][]string, error) {
+	result := make(map[string][]string)
+	ids := uniqueStrings(driveIDs)
+	if len(ids) == 0 {
+		return result, nil
+	}
+	rows, err := r.pool.Query(ctx, `
+		SELECT drives.id::text, ARRAY_AGG(DISTINCT de.source ORDER BY de.source)
+		FROM drives
+		JOIN drive_expenses de ON de.type = 'TOLL' AND de.vehicle_id = drives.vehicle_id
+		  AND (de.drive_id = drives.id
+		       OR de.trip_group_id IN (SELECT tgd.trip_group_id FROM trip_group_drives tgd WHERE tgd.drive_id = drives.id))
+		WHERE drives.vehicle_id = $1 AND drives.id::text = ANY($2::text[])
+		GROUP BY drives.id
+	`, vehicleID, ids)
+	if err != nil {
+		return result, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		var sources []string
+		if err := rows.Scan(&id, &sources); err != nil {
+			return result, err
+		}
+		result[id] = sources
+	}
+	return result, rows.Err()
+}
+
 // DrivesNeedingTollQualification returns which of the drives are in the "to qualify" toll queue: the same rule as
 // the unqualified filter of the drives list (UnqualifiedDrivePredicate).
 func (r *Repository) DrivesNeedingTollQualification(ctx context.Context, vehicleID string, driveIDs []string) (map[string]bool, error) {

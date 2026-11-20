@@ -20,7 +20,7 @@ func TestCarpoolWhereNarrowsToAPeriodOrOneCarpoolAndNamesItsDrives(t *testing.T)
 		t.Fatalf("a carpool names the trips that are its legs: %+v", trip.DriveIDs)
 	}
 	for _, c := range []struct {
-		name, from, to, id string
+		name, from, to, id  string
 		trips, summaryTrips int
 	}{
 		{"whole history", "", "", "", 1, 1},

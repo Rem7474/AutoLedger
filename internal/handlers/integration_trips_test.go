@@ -98,6 +98,45 @@ func TestMCPTripsCarryAddressesAndTheirDriveIDButNoPosition(t *testing.T) {
 	if all.Trips[2].TravelExpenses != nil {
 		t.Errorf("no expense is null, not zero: %+v", all.Trips[2].TravelExpenses)
 	}
+	if lyon.TollSource == nil || *lyon.TollSource != "entered" || all.Trips[2].TollSource != nil {
+		t.Errorf("the source of a toll is named, a trip without one has none: %v %v", lyon.TollSource, all.Trips[2].TollSource)
+	}
+}
+
+func TestTollSourceOfNamesWhereTheTollsCameFrom(t *testing.T) {
+	for _, c := range []struct {
+		sources []string
+		want    string
+	}{
+		{nil, ""},
+		{[]string{models.ExpenseSourceManual}, "entered"},
+		{[]string{models.ExpenseSourceAutoToll}, "estimated"},
+		{[]string{models.ExpenseSourceAutoToll, models.ExpenseSourceManual}, "mixed"},
+	} {
+		got := tollSourceOf(c.sources)
+		if (c.want == "") != (got == nil) || (got != nil && *got != c.want) {
+			t.Errorf("%v: %v, want %q", c.sources, got, c.want)
+		}
+	}
+}
+
+func TestMCPAVehicleIDMayBeLeftEmptyOnlyWithASingleVehicle(t *testing.T) {
+	f := newMCPFixture(t)
+	f.tripFixture(t)
+	session := f.connect(t, f.readTok)
+	out, res := f.trips(t, session, map[string]any{"vehicle_id": ""})
+	if res.IsError || out.VehicleID != f.mine.ID {
+		t.Fatalf("a single vehicle is the default: %+v", res)
+	}
+
+	second := &models.Vehicle{Currency: "EUR", UserID: f.owner.ID, Name: "Second", TeslaMateAuthType: models.AuthModeNone}
+	if err := f.repo.CreateVehicle(context.Background(), second); err != nil {
+		t.Fatal(err)
+	}
+	_, res = f.trips(t, session, map[string]any{"vehicle_id": ""})
+	if !res.IsError || !strings.Contains(res.Content[0].(*mcp.TextContent).Text, "vehicle not found") {
+		t.Errorf("with two vehicles an empty id is refused and names them: %+v", res)
+	}
 }
 
 func TestMCPTripsFilterByAddressPeriodAndLimit(t *testing.T) {
