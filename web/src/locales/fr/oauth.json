@@ -2,7 +2,7 @@
   "authorize": {
     "title": "Autoriser une application",
     "intro": "{name} demande à lire vos données AutoLedger.",
-    "introWrite": "{name} demande à lire vos données AutoLedger et à enregistrer et modifier des covoiturages et les péages et parkings des trajets.",
+    "introWrite": "{name} demande à lire vos données AutoLedger et à enregistrer et modifier des covoiturages, les péages et parkings des trajets, et à enregistrer des dépenses.",
     "introRecord": "{name} demande à lire vos données AutoLedger et à enregistrer ce que Home Assistant envoie.",
     "vehiclesTitle": "Véhicules qu'elle pourra lire",
     "vehiclesAll": "Tous mes véhicules, y compris ceux que j'ajouterai plus tard",
@@ -35,7 +35,7 @@
     "invalid": "Cette demande d'autorisation n'est pas valide.",
     "failed": "La décision n'a pas pu être enregistrée. Réessayez.",
     "writeTitle": "Enregistrement",
-    "writeAllow": "Lui permettre aussi de regrouper des trajets que j'ai déjà en un covoiturage et de modifier des covoiturages (leurs passagers et ce qu'ils ont payé) et de fixer les péages et parkings de mes trajets.",
+    "writeAllow": "Lui permettre aussi de regrouper des trajets que j'ai déjà en un covoiturage et de modifier des covoiturages (leurs passagers, leurs trajets et ce qu'ils ont payé), de fixer les péages et parkings de mes trajets et d'enregistrer des dépenses que je décris.",
     "recordTitle": "Enregistrement",
     "recordAllow": "Lui permettre aussi d'enregistrer des sessions de charge, des relevés de compteur et des trajets."
   }
