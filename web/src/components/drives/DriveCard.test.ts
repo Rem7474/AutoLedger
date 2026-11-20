@@ -52,6 +52,19 @@ describe('DriveCard', () => {
     expect(html.match(/<button/g)).toHaveLength(2)
   })
 
+  it('garde les boutons de qualification péage dans la carte du trajet, pas dessous', async () => {
+    const html = (await render({ ...drive, is_manual: false, needs_toll_qualification: true, distance_km: 105, costs: { total_cost: 24, cost_per_km: 0.23 } })).trim()
+    expect(html).toContain('Sans péage')
+    let depth = 0
+    let closedAt = -1
+    for (const m of html.matchAll(/<div\b|<\/div>/g)) {
+      depth += m[0] === '</div>' ? -1 : 1
+      if (depth === 0) { closedAt = m.index! + m[0].length; break }
+    }
+    expect(closedAt).toBe(html.length)
+    expect(html.lastIndexOf('Sans péage')).toBeLessThan(closedAt)
+  })
+
   it('met la consommation dans la ligne discrète mais la retire du téléphone', async () => {
     const html = await render({ ...drive, consumption_kwh_100km: 16.4, duration_min: 30 })
     expect(html).toContain('kWh/100')
