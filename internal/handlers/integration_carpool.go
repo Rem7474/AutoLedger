@@ -67,6 +67,7 @@ type IntegrationCarpoolTrip struct {
 	Revenue    IntegrationAmount             `json:"revenue" jsonschema:"what the passengers paid"`
 	NetCost    IntegrationAmount             `json:"net_cost" jsonschema:"total cost minus revenue"`
 	DriverCost IntegrationAmount             `json:"driver_cost_share" jsonschema:"the part of the cost the driver keeps"`
+	DriveIDs   []string                      `json:"drive_ids" jsonschema:"the trips (drive_id of list_vehicle_trips) that are the legs of this carpool, in order; a leg without a recorded trip has none"`
 	Passengers []IntegrationCarpoolPassenger `json:"passengers" jsonschema:"who rode, named"`
 	Notes      *string                       `json:"notes" jsonschema:"free note on the trip, user text; null when none"`
 	Version    int64                         `json:"version" jsonschema:"counts the saves of the carpool: give it back as expected_version to update_carpool; 0 for a carpool that was only previewed"`
@@ -118,7 +119,12 @@ func integrationCarpoolTrip(t models.CarpoolTripWithPassengers, currency string)
 		ID: t.ID, Title: t.Title, Date: t.Date.UTC().Format(time.RFC3339), Distance: kilometres(t.DistanceKm), Stops: stops,
 		TotalCost: amountOf(t.TotalCost, currency), Energy: amountOf(t.EnergyCost, currency), Tolls: amountOf(t.TollsCost, currency),
 		Revenue: amountOf(t.TotalRevenue, currency), NetCost: amountOf(t.NetCost, currency), DriverCost: amountOf(t.DriverCostShare, currency),
-		Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes), Version: t.Version,
+		DriveIDs: []string{}, Passengers: []IntegrationCarpoolPassenger{}, Notes: noteOf(t.Notes), Version: t.Version,
+	}
+	for _, l := range t.Legs {
+		if l.DriveID != nil {
+			item.DriveIDs = append(item.DriveIDs, *l.DriveID)
+		}
 	}
 	for _, p := range t.Passengers {
 		item.Passengers = append(item.Passengers, IntegrationCarpoolPassenger{
@@ -158,6 +164,12 @@ func buildIntegrationCarpool(vehicleID, currency string, trips []models.CarpoolT
 
 // Carpool lists the most recent carpool trips of a vehicle with their stops and named passengers, and the totals.
 func (h *IntegrationReadHandler) Carpool(ctx context.Context, userID, vehicleID string, limit int) (*IntegrationCarpool, error) {
+	return h.CarpoolWhere(ctx, userID, vehicleID, limit, "", "", "")
+}
+
+// CarpoolWhere is Carpool narrowed to the trips dated within [from, to] (days, YYYY-MM-DD, both optional) or to one
+// trip by its id. The summary covers the same period; with an id it still covers the whole period, not that trip alone.
+func (h *IntegrationReadHandler) CarpoolWhere(ctx context.Context, userID, vehicleID string, limit int, from, to, carpoolID string) (*IntegrationCarpool, error) {
 	vehicle, err := h.vehicleOf(ctx, userID, vehicleID)
 	if err != nil {
 		return nil, err
@@ -167,7 +179,16 @@ func (h *IntegrationReadHandler) Carpool(ctx context.Context, userID, vehicleID 
 	}
 	limit = min(limit, integrationCarpoolMax)
 
-	trips, err := h.repo.ListCarpoolTrips(ctx, vehicle.ID)
+	start, err := parseExportDate(from, false, h.dateLocation())
+	if err != nil {
+		return nil, err
+	}
+	end, err := parseExportDate(to, true, h.dateLocation())
+	if err != nil {
+		return nil, err
+	}
+	filter := database.CarpoolFilter{From: start, To: end}
+	trips, _, err := h.repo.ListCarpoolTripsPage(ctx, vehicle.ID, filter, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -177,9 +198,18 @@ func (h *IntegrationReadHandler) Carpool(ctx context.Context, userID, vehicleID 
 			return nil, err
 		}
 	}
-	sum, err := h.repo.GetCarpoolSummary(ctx, vehicle.ID, database.CarpoolFilter{})
+	sum, err := h.repo.GetCarpoolSummary(ctx, vehicle.ID, filter)
 	if err != nil {
 		return nil, err
+	}
+	if carpoolID != "" {
+		kept := trips[:0]
+		for _, t := range trips {
+			if t.ID == carpoolID {
+				kept = append(kept, t)
+			}
+		}
+		trips = kept
 	}
 	out := buildIntegrationCarpool(vehicle.ID, vehicle.Currency, trips, *sum, limit)
 	return &out, nil

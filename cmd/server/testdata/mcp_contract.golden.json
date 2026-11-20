@@ -113,6 +113,7 @@
           "unit": "string",
           "value": "number"
         },
+        "drive_ids": [],
         "driver_cost_share": {
           "amount": "string",
           "currency": "string"
@@ -1700,6 +1701,104 @@
         "wear_pct": "number"
       }
     ],
+    "vehicle_id": "string"
+  },
+  "get_tolls_report / empty": {
+    "count": "number",
+    "currency": "string",
+    "from": null,
+    "other_currency_count": "number",
+    "to": null,
+    "tolls": [],
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_tolls_report / ev": {
+    "count": "number",
+    "currency": "string",
+    "from": null,
+    "other_currency_count": "number",
+    "to": null,
+    "tolls": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "carpool_ids": [],
+        "date": "string",
+        "drive_ids": [],
+        "id": "string",
+        "notes": "string",
+        "source": "string",
+        "trip_group_id": null
+      }
+    ],
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_tolls_report / ice": {
+    "count": "number",
+    "currency": "string",
+    "from": null,
+    "other_currency_count": "number",
+    "to": null,
+    "tolls": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "carpool_ids": [],
+        "date": "string",
+        "drive_ids": [],
+        "id": "string",
+        "notes": "string",
+        "source": "string",
+        "trip_group_id": null
+      }
+    ],
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
+    "vehicle_id": "string"
+  },
+  "get_tolls_report / layout": {
+    "count": "number",
+    "currency": "string",
+    "from": null,
+    "other_currency_count": "number",
+    "to": null,
+    "tolls": [
+      {
+        "amount": {
+          "amount": "string",
+          "currency": "string"
+        },
+        "carpool_ids": [],
+        "date": "string",
+        "drive_ids": [],
+        "id": "string",
+        "notes": "string",
+        "source": "string",
+        "trip_group_id": null
+      }
+    ],
+    "total": {
+      "amount": "string",
+      "currency": "string"
+    },
+    "truncated": "boolean",
     "vehicle_id": "string"
   },
   "get_vehicle_costs / empty": {
