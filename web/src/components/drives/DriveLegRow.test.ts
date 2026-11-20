@@ -28,7 +28,7 @@ describe('DriveLegRow', () => {
     const html = await render(leg)
     expect(html).toContain('data-testid="drive-leg"')
     expect(html).toContain('inset-0')
-    expect(html).toContain('card relative flex items-center px-3 gap-2.5 py-1.5')
+    expect(html).toContain('card relative px-3 py-1.5')
     expect(html).not.toContain('py-2.5')
     expect(html).not.toContain('aria-haspopup')
     expect(html).toContain('Zone industrielle des Grandes Terres Nord')
