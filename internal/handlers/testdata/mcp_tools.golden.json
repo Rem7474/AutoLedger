@@ -8549,6 +8549,113 @@
   },
   {
     "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Records what the odometer of a vehicle showed on a day, as the odometer form of the app does: it moves the vehicle's current odometer when the reading is the latest, and feeds the estimates of the energy and the distance between readings. A reading that contradicts the others (a lower mileage on a later day, or the other way round) is refused with the reading it contradicts. It never changes or deletes a reading. This writes to the owner's records: call it with dry_run true first, show the owner the reading, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "description": "the day of the reading, YYYY-MM-DD",
+          "type": "string"
+        },
+        "dry_run": {
+          "description": "true to check the reading against the others and see it, without recording anything",
+          "type": "boolean"
+        },
+        "idempotency_key": {
+          "description": "a value you make up, 100 characters at most, so that a retry records once: sending the call again with the same key and the same arguments returns the first answer and records nothing more, and a different call with the same key is refused. Without it, a retry may record twice. Not used by a dry run",
+          "type": "string"
+        },
+        "notes": {
+          "description": "a free note on the reading, 500 characters at most",
+          "type": "string"
+        },
+        "odometer_km": {
+          "description": "what the odometer showed, in kilometres, between 0 and 2000000",
+          "type": "number"
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "date",
+        "odometer_km"
+      ],
+      "type": "object"
+    },
+    "name": "record_odometer",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "reading": {
+          "additionalProperties": false,
+          "description": "the reading as it is, or would be, recorded",
+          "properties": {
+            "date": {
+              "description": "the day of the reading, YYYY-MM-DD",
+              "type": "string"
+            },
+            "id": {
+              "description": "the id of the reading; empty on a dry run",
+              "type": "string"
+            },
+            "notes": {
+              "description": "the note on the reading, user text; null when none",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "odometer": {
+              "additionalProperties": false,
+              "description": "what the odometer showed",
+              "properties": {
+                "unit": {
+                  "description": "always km",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "the distance",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "id",
+            "date",
+            "odometer",
+            "notes"
+          ],
+          "type": "object"
+        },
+        "recorded": {
+          "description": "true when the reading was recorded; false for a dry run, which records nothing",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "recorded",
+        "reading"
+      ],
+      "type": "object"
+    },
+    "title": "Record an odometer reading"
+  },
+  {
+    "annotations": {
       "destructiveHint": true,
       "idempotentHint": true,
       "openWorldHint": false,

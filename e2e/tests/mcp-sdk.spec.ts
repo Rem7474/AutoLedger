@@ -86,7 +86,7 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   const { tools } = await client.listTools()
   expect(tools.length).toBeGreaterThan(0)
   // The tools that write are named here on purpose: a new one has to be added to this list in review.
-  const writing = ['create_carpool_from_drives', 'create_expense', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
+  const writing = ['create_carpool_from_drives', 'create_expense', 'record_odometer', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
   // Creating adds records; changing a carpool replaces what it held
   const overwrites = ['set_toll_invoice', 'update_carpool', 'update_drive_expenses']
   for (const tool of tools) {
@@ -112,6 +112,7 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
       update_drive_expenses: { vehicle_id: vehicles[0].id, items: [{ drive_id: drive, tolls: '1.00' }] },
       create_carpool_from_drives: { vehicle_id: vehicles[0].id, drive_ids: [drive] },
       create_expense: { vehicle_id: vehicles[0].id, category: 'other', amount: '1.00', date: '2026-01-01', description: 'x' },
+      record_odometer: { vehicle_id: vehicles[0].id, date: '2026-01-01', odometer_km: 1000 },
       set_toll_invoice: { vehicle_id: vehicles[0].id, month: '2026-01', total: '10.00' },
     }
     const refused = await call(client, name, args[name])

@@ -92,7 +92,7 @@
     "scopeBadge": {
       "ingest": "Envoi et lecture",
       "read": "Lecture seule",
-      "write": "Lecture, saisie et modification de covoiturages, de frais de trajet et de dépenses",
+      "write": "Lecture, saisie et modification de covoiturages, de frais de trajet, de dépenses et de relevés de compteur",
       "homeassistant": "Home Assistant"
     },
     "oauthBadge": "Application connectée",
