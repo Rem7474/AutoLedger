@@ -6,6 +6,157 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
+    "description": "Records a charge the owner paid for and that no synchronised source holds (a public terminal, a charge at someone else's home), as the manual charge form of the app does: the energy added and what it cost, which is required (\"0\" for a free charge). It applies to vehicles that charge, never changes or deletes a charge, and does not touch the charges synchronised from TeslaMate or Home Assistant. This writes to the owner's records: call it with dry_run true first, show the owner the charge, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "cost": {
+          "description": "what the charge cost in all, a decimal string in the vehicle's currency such as \"7.80\"; \"0\" for a free charge",
+          "type": "string"
+        },
+        "date": {
+          "description": "the day of the charge, YYYY-MM-DD",
+          "type": "string"
+        },
+        "dry_run": {
+          "description": "true to check the charge and see it without recording anything",
+          "type": "boolean"
+        },
+        "end_battery_level": {
+          "description": "the battery percentage after the charge, 0 to 100, higher than the start",
+          "type": [
+            "null",
+            "integer"
+          ]
+        },
+        "idempotency_key": {
+          "description": "a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run",
+          "type": "string"
+        },
+        "kwh_added": {
+          "description": "the energy added to the battery, in kWh, more than zero",
+          "type": "number"
+        },
+        "notes": {
+          "description": "a free note on the charge, 500 characters at most",
+          "type": "string"
+        },
+        "odometer_km": {
+          "description": "what the odometer showed, in kilometres",
+          "type": [
+            "null",
+            "number"
+          ]
+        },
+        "start_battery_level": {
+          "description": "the battery percentage before the charge, 0 to 100",
+          "type": [
+            "null",
+            "integer"
+          ]
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "date",
+        "kwh_added",
+        "cost"
+      ],
+      "type": "object"
+    },
+    "name": "add_charge",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "cost": {
+          "additionalProperties": false,
+          "description": "total cost",
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        },
+        "date": {
+          "description": "YYYY-MM-DD",
+          "type": "string"
+        },
+        "id": {
+          "description": "id of the charge; empty on a dry run",
+          "type": "string"
+        },
+        "kwh_added": {
+          "description": "kWh added",
+          "type": "number"
+        },
+        "notes": {
+          "description": "user text; null when none",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "odometer": {
+          "additionalProperties": false,
+          "description": "null when not given",
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": [
+            "null",
+            "object"
+          ]
+        },
+        "recorded": {
+          "description": "false for a dry run",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "recorded",
+        "id",
+        "date",
+        "kwh_added",
+        "cost",
+        "odometer",
+        "notes"
+      ],
+      "type": "object"
+    },
+    "title": "Record a charging session"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
     "description": "Records a fill-up of a combustion or hybrid vehicle, as the fill-up form of the app does. Give the day and two of the amount, the litres and the price per litre: the third is worked out. The odometer is optional; when given it is checked against the other readings and a mileage that contradicts them is refused. It does not apply to electric vehicles (record a charge instead) and never changes or deletes a fill-up. This writes to the owner's records: call it with dry_run true first, show the owner the fill-up as worked out, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
     "inputSchema": {
       "additionalProperties": false,
