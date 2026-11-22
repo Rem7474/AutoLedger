@@ -126,3 +126,72 @@ func TestMCPCreateExpenseRefusesWhatItCannotRecord(t *testing.T) {
 		t.Errorf("a refused call recorded something: %d %v", len(list), err)
 	}
 }
+
+func TestMCPCreateExpenseWithAnIdempotencyKeyRecordsOnce(t *testing.T) {
+	f := newMCPFixture(t)
+	ctx := context.Background()
+	writeTok := f.newToken(t, f.owner.ID, auth.ScopeWrite)
+	call := func(args map[string]any) (*mcp.CallToolResult, IntegrationExpenseCreated) {
+		t.Helper()
+		res, err := f.connect(t, writeTok).CallTool(ctx, &mcp.CallToolParams{Name: "create_expense", Arguments: args})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var out IntegrationExpenseCreated
+		if !res.IsError {
+			raw, _ := json.Marshal(res.StructuredContent)
+			if err := json.Unmarshal(raw, &out); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return res, out
+	}
+	reason := func(res *mcp.CallToolResult) string { return res.Content[0].(*mcp.TextContent).Text }
+	count := func() int {
+		list, err := f.repo.ListMaintenanceExpenses(ctx, f.mine.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return len(list)
+	}
+	args := func(extra map[string]any) map[string]any {
+		a := map[string]any{"vehicle_id": f.mine.ID, "category": "insurance", "amount": "42.00", "date": "2026-09-02", "description": "Glass cover", "idempotency_key": "retry-1"}
+		for k, v := range extra {
+			a[k] = v
+		}
+		return a
+	}
+	start := count()
+
+	if res, out := call(args(map[string]any{"dry_run": true})); res.IsError || out.Recorded {
+		t.Fatalf("a dry run records nothing: %+v", res)
+	}
+	res, first := call(args(nil))
+	if res.IsError || !first.Recorded || first.ExpenseID == "" {
+		t.Fatalf("the first call records, whatever the dry run before it: %+v", res)
+	}
+
+	// The retry is answered with the first answer, where the same call without a key is refused as a duplicate
+	res, again := call(args(nil))
+	if res.IsError || again.ExpenseID != first.ExpenseID || !again.Recorded {
+		t.Fatalf("the retry returns the first answer: %+v %+v", res, again)
+	}
+	if count() != start+1 {
+		t.Fatalf("expenses after the retry: %d, want %d", count(), start+1)
+	}
+	if res, _ := call(args(map[string]any{"idempotency_key": ""})); !res.IsError || !strings.Contains(reason(res), "already recorded") {
+		t.Fatalf("without a key the same call is still refused as a duplicate: %+v", res)
+	}
+
+	// The same key with other arguments is not a retry
+	if res, _ := call(args(map[string]any{"amount": "43.00"})); !res.IsError || !strings.Contains(reason(res), "already used for another call") {
+		t.Fatalf("a key reused for another call is refused: %+v", res)
+	}
+	if count() != start+1 {
+		t.Fatalf("expenses after the refused call: %d", count())
+	}
+
+	if res, _ := call(args(map[string]any{"idempotency_key": strings.Repeat("k", 101)})); !res.IsError || !strings.Contains(reason(res), "101 characters") {
+		t.Fatalf("a key over 100 characters is refused: %+v", res)
+	}
+}
