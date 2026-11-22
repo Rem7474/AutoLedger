@@ -162,6 +162,14 @@ async function fetchDrive(driveId: string) {
   return res.drives?.[0] ?? null
 }
 
+// What the leg's cost detail calls after it changed something (a toll, the driver): the drive is read again and the
+// carpool's amounts, which follow the drive's costs on the server, are read again behind it, so that the carpool the
+// arrow leads back to is not out of date.
+async function refreshLegDrive(driveId: string) {
+  const [drive] = await Promise.all([fetchDrive(driveId), loadData(true)])
+  return drive
+}
+
 async function openLegDrive(driveId: string) {
   try {
     const drive = await fetchDrive(driveId)
@@ -509,7 +517,7 @@ onMounted(async () => {
       :trip-drive-ids="[]"
       :trip-legs="[]"
       :start-with-toll-entry="false"
-      :refresh-drive="fetchDrive"
+      :refresh-drive="refreshLegDrive"
       :back-label="$t('carpool.carpoolView.backToTheCarpool')"
       @back="backToCarpool"
       @toggle-tag="toggleLegDriveTag"
