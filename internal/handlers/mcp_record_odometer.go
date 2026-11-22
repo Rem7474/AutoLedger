@@ -14,7 +14,7 @@ type mcpRecordOdometerInput struct {
 	OdometerKm     float64 `json:"odometer_km" jsonschema:"what the odometer showed, in kilometres, between 0 and 2000000"`
 	Notes          string  `json:"notes,omitempty" jsonschema:"a free note on the reading, 500 characters at most"`
 	DryRun         bool    `json:"dry_run,omitempty" jsonschema:"true to check the reading against the others and see it, without recording anything"`
-	IdempotencyKey string  `json:"idempotency_key,omitempty" jsonschema:"a value you make up, 100 characters at most, so that a retry records once: sending the call again with the same key and the same arguments returns the first answer and records nothing more, and a different call with the same key is refused. Without it, a retry may record twice. Not used by a dry run"`
+	IdempotencyKey string  `json:"idempotency_key,omitempty" jsonschema:"a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run"`
 }
 
 // IntegrationOdometerReading is an odometer reading the owner recorded.
