@@ -135,11 +135,11 @@
               "description": "the part of the cost the driver keeps",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -154,11 +154,11 @@
               "description": "energy part of the cost",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -177,11 +177,11 @@
               "description": "total cost minus revenue",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -215,11 +215,11 @@
                     "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -241,11 +241,11 @@
                     "description": "fair share of the costs of the legs the passenger rode",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -271,11 +271,11 @@
                     "description": "what the passenger paid",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -312,11 +312,11 @@
               "description": "what the passengers paid",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -348,11 +348,11 @@
               "description": "tolls part of the cost",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -367,11 +367,11 @@
               "description": "what the trip cost to run",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -490,11 +490,11 @@
               "description": "what it cost, in the vehicle's currency",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -684,11 +684,11 @@
           "description": "the cost of the charge, in the currency of the plan",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -831,11 +831,11 @@
               "description": "the part of the costs the driver keeps, including the empty seats",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -850,11 +850,11 @@
               "description": "real cost minus revenue: what the trips cost the owner after being repaid",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -869,11 +869,11 @@
               "description": "net cost per km; null while there is no distance",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -895,11 +895,11 @@
               "description": "what the passengers should cover given the legs they rode",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -914,11 +914,11 @@
               "description": "what those trips cost to run (energy, tolls, tires, maintenance, insurance and others)",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -933,11 +933,11 @@
               "description": "what the passengers paid",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -1009,11 +1009,11 @@
                 "description": "the part of the cost the driver keeps",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1028,11 +1028,11 @@
                 "description": "energy part of the cost",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1051,11 +1051,11 @@
                 "description": "total cost minus revenue",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1089,11 +1089,11 @@
                       "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe",
                       "properties": {
                         "amount": {
-                          "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                          "description": "decimal string, e.g. 12.34, never rounded",
                           "type": "string"
                         },
                         "currency": {
-                          "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                          "description": "ISO 4217 code of the vehicle",
                           "type": "string"
                         }
                       },
@@ -1115,11 +1115,11 @@
                       "description": "fair share of the costs of the legs the passenger rode",
                       "properties": {
                         "amount": {
-                          "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                          "description": "decimal string, e.g. 12.34, never rounded",
                           "type": "string"
                         },
                         "currency": {
-                          "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                          "description": "ISO 4217 code of the vehicle",
                           "type": "string"
                         }
                       },
@@ -1145,11 +1145,11 @@
                       "description": "what the passenger paid",
                       "properties": {
                         "amount": {
-                          "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                          "description": "decimal string, e.g. 12.34, never rounded",
                           "type": "string"
                         },
                         "currency": {
-                          "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                          "description": "ISO 4217 code of the vehicle",
                           "type": "string"
                         }
                       },
@@ -1186,11 +1186,11 @@
                 "description": "what the passengers paid",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1222,11 +1222,11 @@
                 "description": "tolls part of the cost",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1241,11 +1241,11 @@
                 "description": "what the trip cost to run",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1348,11 +1348,11 @@
               "description": "what the same energy would have cost at the home price",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -1367,11 +1367,11 @@
               "description": "what charging away from home cost",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -1390,11 +1390,11 @@
               "description": "price per kWh at the home place; null when unknown",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -1412,11 +1412,11 @@
               "description": "away cost minus the cost at the home price: positive when charging at home would have been cheaper, negative when charging away was",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -1474,11 +1474,11 @@
                 "description": "what those sessions cost, free ones counted as zero; sessions without a cost are left out",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1508,11 +1508,11 @@
                 "description": "cost over the energy of the sessions whose cost is known; null while none is known",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -1667,11 +1667,11 @@
                   "description": "total over the distance of the period; null when it is unknown",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1689,11 +1689,11 @@
                   "description": "purchase price minus the resale value at the end of the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1708,11 +1708,11 @@
                   "description": "electricity or fuel over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1727,11 +1727,11 @@
                   "description": "insurance over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1746,11 +1746,11 @@
                   "description": "maintenance over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1765,11 +1765,11 @@
                   "description": "total over the number of months",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1784,11 +1784,11 @@
                   "description": "total over the number of years",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1803,11 +1803,11 @@
                   "description": "yearly taxes over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1822,11 +1822,11 @@
                   "description": "all of the above",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1859,11 +1859,11 @@
               "description": "what the tracked vehicle saves over the period compared with the combustion one, negative when it costs more; null while the tracked vehicle's depreciation is unknown (see depreciation_known), because its total would be incomplete",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -1894,11 +1894,11 @@
                     "description": "saving of the tracked vehicle with that assumption; negative when it costs more",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -1913,11 +1913,11 @@
                     "description": "difference with the saving of the scenario",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -1949,11 +1949,11 @@
                   "description": "total over the distance of the period; null when it is unknown",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1971,11 +1971,11 @@
                   "description": "purchase price minus the resale value at the end of the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -1990,11 +1990,11 @@
                   "description": "electricity or fuel over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -2009,11 +2009,11 @@
                   "description": "insurance over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -2028,11 +2028,11 @@
                   "description": "maintenance over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -2047,11 +2047,11 @@
                   "description": "total over the number of months",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -2066,11 +2066,11 @@
                   "description": "total over the number of years",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -2085,11 +2085,11 @@
                   "description": "yearly taxes over the period",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -2104,11 +2104,11 @@
                   "description": "all of the above",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -2280,11 +2280,11 @@
               "description": "price of one kWh from then on",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -2318,11 +2318,11 @@
               "description": "price of one kWh, in the currency of the plan, up to six decimals",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -2551,11 +2551,11 @@
           "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -2570,11 +2570,11 @@
           "description": "that cost divided by the distance; null while the distance is zero",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -2650,11 +2650,11 @@
                 "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -2669,11 +2669,11 @@
                 "description": "that cost divided by the distance; null while the distance is zero",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -2739,11 +2739,11 @@
                 "description": "tolls and parking attributed to those drives",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -2781,11 +2781,11 @@
           "description": "tolls and parking attributed to those drives",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -2948,11 +2948,11 @@
                     "description": "what charging from 0 to 100 percent costs with this kind of charging; null when the sessions do not allow the estimate",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -2970,11 +2970,11 @@
                     "description": "what these sessions cost; sessions without a price are not counted",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -2993,11 +2993,11 @@
                     "description": "average price paid per kWh over the priced sessions; null when none is priced",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -3048,11 +3048,11 @@
               "description": "energy cost per 100 km; null while the distance is too short to be meaningful",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3070,11 +3070,11 @@
               "description": "what charging from 0 to 100 percent costs on average; null when the sessions do not allow the estimate",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3099,11 +3099,11 @@
               "description": "average price paid per kWh over the priced charges",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3136,11 +3136,11 @@
                   "description": "cost of that extra energy per 100 km at the average price paid per kWh; null when unknown",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -3214,11 +3214,11 @@
               "description": "fuel cost per 100 km; null while the distance is unknown",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3244,11 +3244,11 @@
               "description": "average price paid per litre; null without a priced fill-up",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3318,11 +3318,11 @@
               "description": "the monthly target the owner set",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3337,11 +3337,11 @@
               "description": "target minus spent, negative once the target is exceeded",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3356,11 +3356,11 @@
               "description": "what the vehicles in the budget's currency cost so far this month",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -3404,11 +3404,11 @@
                 "description": "what they cost so far in the month in progress",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3513,11 +3513,11 @@
                 "description": "their energy cost",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3536,11 +3536,11 @@
                 "description": "everything else",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3555,11 +3555,11 @@
                 "description": "what the vehicles in the fleet currency cost",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3598,11 +3598,11 @@
                 "description": "full cost extrapolated to twelve months from the observed history; null under three months of history",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3632,11 +3632,11 @@
                 "description": "cost so far in the month in progress",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3670,11 +3670,11 @@
                 "description": "energy cost per 100 km; null when unknown, 0 is a known free energy",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3692,11 +3692,11 @@
                 "description": "running cost plus depreciation and amortized tires, per kilometre; null while the distance is unknown",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3770,11 +3770,11 @@
                 "description": "what it costs to run per kilometre (energy, upkeep, insurance, financing); null while the distance is unknown",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3926,11 +3926,11 @@
                 "description": "the scale applied to this tag's own cumulative distance of each year, so the slices restart on 1 January; null when no scale was applied",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -3974,11 +3974,11 @@
                 "description": "tolls and parking attributed to those drives",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -4081,11 +4081,11 @@
                 "description": "what the record contributes to the month",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -4146,11 +4146,11 @@
               "description": "energy cost added for distance driven that no record covers",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4207,11 +4207,11 @@
           "description": "the month's figure for this category, as get_monthly_costs gives it: the records plus the estimate",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -4282,11 +4282,11 @@
           "description": "total cost of the listed months divided by their distance; null while the distance is unknown",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -4332,11 +4332,11 @@
                 "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -4358,11 +4358,11 @@
                     "description": "electricity charged and fuel bought",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4377,11 +4377,11 @@
                     "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4396,11 +4396,11 @@
                     "description": "insurance premiums",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4415,11 +4415,11 @@
                     "description": "servicing and unplanned repairs, insurance deductibles included",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4434,11 +4434,11 @@
                     "description": "subscriptions, taxes, accessories and anything else",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4453,11 +4453,11 @@
                     "description": "tires, counted in full in the month they were bought",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4472,11 +4472,11 @@
                     "description": "tolls, parking and ferries",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4491,11 +4491,11 @@
                     "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -4550,11 +4550,11 @@
                 "description": "part of the total that falls due later in the month in progress (instalments dated after today); null when none or for a past month",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -4592,11 +4592,11 @@
               "description": "electricity charged and fuel bought",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4611,11 +4611,11 @@
               "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4630,11 +4630,11 @@
               "description": "insurance premiums",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4649,11 +4649,11 @@
               "description": "servicing and unplanned repairs, insurance deductibles included",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4668,11 +4668,11 @@
               "description": "subscriptions, taxes, accessories and anything else",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4687,11 +4687,11 @@
               "description": "tires, counted in full in the month they were bought",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4706,11 +4706,11 @@
               "description": "tolls, parking and ferries",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -4725,11 +4725,11 @@
               "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -5223,11 +5223,11 @@
                 "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5242,11 +5242,11 @@
                 "description": "that cost divided by the distance; null while the distance is zero",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5312,11 +5312,11 @@
                 "description": "tolls and parking attributed to those drives",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5401,11 +5401,11 @@
                 "description": "purchase price over the distance driven; null while no distance is driven",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5474,11 +5474,11 @@
                 "description": "what it cost",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5636,11 +5636,11 @@
                 "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5666,11 +5666,11 @@
                 "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5685,11 +5685,11 @@
                 "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5740,11 +5740,11 @@
                 "description": "what the toll cost, in its own currency, which is not always the vehicle's",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -5823,11 +5823,11 @@
           "description": "what they cost in all, the tolls in the vehicle's currency only",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -5968,11 +5968,11 @@
               "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -5994,11 +5994,11 @@
                   "description": "electricity charged and fuel bought",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6013,11 +6013,11 @@
                   "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6032,11 +6032,11 @@
                   "description": "insurance premiums",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6051,11 +6051,11 @@
                   "description": "servicing and unplanned repairs, insurance deductibles included",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6070,11 +6070,11 @@
                   "description": "subscriptions, taxes, accessories and anything else",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6089,11 +6089,11 @@
                   "description": "tires, counted in full in the month they were bought",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6108,11 +6108,11 @@
                   "description": "tolls, parking and ferries",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6127,11 +6127,11 @@
                   "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6211,11 +6211,11 @@
               "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -6237,11 +6237,11 @@
                   "description": "electricity charged and fuel bought",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6256,11 +6256,11 @@
                   "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6275,11 +6275,11 @@
                   "description": "insurance premiums",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6294,11 +6294,11 @@
                   "description": "servicing and unplanned repairs, insurance deductibles included",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6313,11 +6313,11 @@
                   "description": "subscriptions, taxes, accessories and anything else",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6332,11 +6332,11 @@
                   "description": "tires, counted in full in the month they were bought",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6351,11 +6351,11 @@
                   "description": "tolls, parking and ferries",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6370,11 +6370,11 @@
                   "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -6566,11 +6566,11 @@
                 "description": "rough cost left out of the totals, estimated from the vehicle's own prices; null when it cannot be estimated (the depreciation never is)",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -6705,11 +6705,11 @@
                 "description": "for an amount outlier, what the entry cost",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -6735,11 +6735,11 @@
                 "description": "for a price outlier, the highest price among the vehicle's other entries",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -6761,11 +6761,11 @@
                 "description": "for a price outlier, the lowest price among the vehicle's other entries",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -6783,11 +6783,11 @@
                 "description": "for a price outlier, the price per kWh or per litre of the entry",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -6805,11 +6805,11 @@
                 "description": "for an amount outlier, the median of the category, what an entry usually costs",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -6928,11 +6928,11 @@
           "description": "purchase price and fees net of incentives; 0 for a lease still running",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -6958,11 +6958,11 @@
               "description": "first rent or down payment of a lease; null when none",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7092,11 +7092,11 @@
                   "description": "cost of the kilometres above the pro-rata allowance so far",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -7111,11 +7111,11 @@
                   "description": "price charged per kilometre above the allowance; null when not entered",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -7133,11 +7133,11 @@
                   "description": "cost of the excess expected at the end of the contract if the pace stays the same",
                   "properties": {
                     "amount": {
-                      "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                      "description": "decimal string, e.g. 12.34, never rounded",
                       "type": "string"
                     },
                     "currency": {
-                      "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                      "description": "ISO 4217 code of the vehicle",
                       "type": "string"
                     }
                   },
@@ -7167,11 +7167,11 @@
               "description": "monthly instalment of a lease; null when not entered or not a lease",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7196,11 +7196,11 @@
               "description": "price to buy the vehicle at the end of a LOA; null when none",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7252,11 +7252,11 @@
               "description": "what passengers paid the driver for carpooling",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7271,11 +7271,11 @@
               "description": "value the vehicle lost: purchase price and fees, net of incentives, minus the resale value; 0 when it cannot be computed (see depreciation_known) and for a lease",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7294,11 +7294,11 @@
               "description": "depreciation per kilometre; null while the distance is unknown",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7335,11 +7335,11 @@
               "description": "economic cost of ownership: running costs with the tires amortized per km, plus the depreciation (or the financing as a whole for a lease); unlike the cash costs of get_vehicle_costs it accounts for the purchase",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7354,11 +7354,11 @@
               "description": "full cost minus the carpool revenue",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7373,11 +7373,11 @@
               "description": "net full cost per kilometre; null while the distance is unknown",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7395,11 +7395,11 @@
               "description": "full cost per kilometre; null while the distance is unknown",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7417,11 +7417,11 @@
               "description": "the tires' cost spread over the distance they were used",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7436,11 +7436,11 @@
               "description": "what the tires cost in cash, at purchase; the full cost counts tires_amortized instead",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7490,11 +7490,11 @@
               "description": "estimated value today, from the owner's purchase price and expected resale value, adjusted for age, distance and battery health",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7509,11 +7509,11 @@
               "description": "start value minus the current value",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7528,11 +7528,11 @@
               "description": "value expected at the end of the holding period (or of the lease contract)",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7555,11 +7555,11 @@
               "description": "for a LOA, the expected value at the end of the contract minus the purchase option price: positive when buying is worth it; null otherwise",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7577,11 +7577,11 @@
               "description": "value at the start of the ownership (or of the lease contract)",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -7712,11 +7712,11 @@
                 "description": "their sum",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -7765,11 +7765,11 @@
                 "description": "what it cost, in the vehicle's currency",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -7870,11 +7870,11 @@
           "description": "sum of all the matching entries, not only the page; the purchase of the vehicle is never included",
           "properties": {
             "amount": {
-              "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+              "description": "decimal string, e.g. 12.34, never rounded",
               "type": "string"
             },
             "currency": {
-              "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+              "description": "ISO 4217 code of the vehicle",
               "type": "string"
             }
           },
@@ -8143,11 +8143,11 @@
                 "description": "tolls, parking and ferries borne by the group: those of its drives and those attached to the group itself",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -8365,11 +8365,11 @@
                 "description": "cost of tolls, parking and ferries for this trip, null when none is recorded; a cost shared by a trip group is split between its drives by distance",
                 "properties": {
                   "amount": {
-                    "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                    "description": "decimal string, e.g. 12.34, never rounded",
                     "type": "string"
                   },
                   "currency": {
-                    "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                    "description": "ISO 4217 code of the vehicle",
                     "type": "string"
                   }
                 },
@@ -8601,11 +8601,11 @@
               "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -8631,11 +8631,11 @@
               "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -8650,11 +8650,11 @@
               "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -8688,11 +8688,11 @@
               "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -8718,11 +8718,11 @@
               "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -8737,11 +8737,11 @@
               "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -9016,11 +9016,11 @@
               "description": "the part of the cost the driver keeps",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -9035,11 +9035,11 @@
               "description": "energy part of the cost",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -9058,11 +9058,11 @@
               "description": "total cost minus revenue",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -9096,11 +9096,11 @@
                     "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -9122,11 +9122,11 @@
                     "description": "fair share of the costs of the legs the passenger rode",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -9152,11 +9152,11 @@
                     "description": "what the passenger paid",
                     "properties": {
                       "amount": {
-                        "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                        "description": "decimal string, e.g. 12.34, never rounded",
                         "type": "string"
                       },
                       "currency": {
-                        "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                        "description": "ISO 4217 code of the vehicle",
                         "type": "string"
                       }
                     },
@@ -9193,11 +9193,11 @@
               "description": "what the passengers paid",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -9229,11 +9229,11 @@
               "description": "tolls part of the cost",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -9248,11 +9248,11 @@
               "description": "what the trip cost to run",
               "properties": {
                 "amount": {
-                  "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                  "description": "decimal string, e.g. 12.34, never rounded",
                   "type": "string"
                 },
                 "currency": {
-                  "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                  "description": "ISO 4217 code of the vehicle",
                   "type": "string"
                 }
               },
@@ -9406,11 +9406,11 @@
                       "description": "the amount the trip holds after the change; 0 when removed",
                       "properties": {
                         "amount": {
-                          "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                          "description": "decimal string, e.g. 12.34, never rounded",
                           "type": "string"
                         },
                         "currency": {
-                          "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                          "description": "ISO 4217 code of the vehicle",
                           "type": "string"
                         }
                       },
@@ -9425,11 +9425,11 @@
                       "description": "the amount the trip held before; 0 when it held none",
                       "properties": {
                         "amount": {
-                          "description": "decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure",
+                          "description": "decimal string, e.g. 12.34, never rounded",
                           "type": "string"
                         },
                         "currency": {
-                          "description": "ISO 4217 currency code of the vehicle the amount belongs to",
+                          "description": "ISO 4217 code of the vehicle",
                           "type": "string"
                         }
                       },

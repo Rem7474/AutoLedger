@@ -49,8 +49,8 @@ func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.T
 
 // IntegrationAmount is a monetary amount with its currency. Amount is a decimal string so no client rounds it.
 type IntegrationAmount struct {
-	Amount   string `json:"amount" jsonschema:"decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure"`
-	Currency string `json:"currency" jsonschema:"ISO 4217 currency code of the vehicle the amount belongs to"`
+	Amount   string `json:"amount" jsonschema:"decimal string, e.g. 12.34, never rounded"`
+	Currency string `json:"currency" jsonschema:"ISO 4217 code of the vehicle"`
 }
 
 func amountOf(c money.Cents, currency string) IntegrationAmount {
