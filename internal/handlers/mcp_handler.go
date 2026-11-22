@@ -42,7 +42,9 @@ type MCPHandler struct {
 	server  *mcp.Server
 	// writeTools names the tools registered through addMCPWriteTool.
 	writeTools []string
-	handler    http.Handler
+	// idempotencyLocks serializes the calls of a writing tool that carry the same idempotency_key.
+	idempotencyLocks idempotencyLocks
+	handler          http.Handler
 }
 
 // NewMCPHandler builds the endpoint. baseURL is the instance's public URL: the resource is baseURL + "/mcp" and the
