@@ -42,6 +42,7 @@ type apiHandlers struct {
 	checkpoint      *handlers.CheckpointHandler
 	fuel            *handlers.FuelHandler
 	hybridShare     *handlers.HybridShareHandler
+	tollInvoice     *handlers.TollInvoiceHandler
 	reminder        *handlers.ReminderHandler
 	vehicleMember   *handlers.VehicleMemberHandler
 	csvImport       *handlers.ImportHandler
@@ -112,6 +113,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		checkpoint:      handlers.NewCheckpointHandler(repo),
 		fuel:            handlers.NewFuelHandler(repo),
 		hybridShare:     handlers.NewHybridShareHandler(repo),
+		tollInvoice:     handlers.NewTollInvoiceHandler(repo),
 		reminder:        handlers.NewReminderHandler(repo, svc.notification),
 		vehicleMember:   handlers.NewVehicleMemberHandler(repo),
 		csvImport:       handlers.NewImportHandler(repo, services.NewCSVImportService(repo, cfg.ReportingTimezone)),
@@ -135,6 +137,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 	}
 	h.ha.SetTimezone(cfg.ReportingTimezone)
 	h.fuel.SetTimezone(cfg.ReportingTimezone)
+	h.tollInvoice.SetTimezone(cfg.ReportingTimezone)
 	h.export.SetTimezone(cfg.ReportingTimezone)
 	h.mileage.SetTimezone(cfg.ReportingTimezone)
 	h.serviceBook.SetTimezone(cfg.ReportingTimezone)

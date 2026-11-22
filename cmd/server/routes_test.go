@@ -415,6 +415,7 @@ var updateRoutesVersioned = []string{
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}/logs/{logId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}/sessions/{sessionId}",
+	"PUT /api/vehicles/{vehicleId}/toll-invoices/{month}",
 	"PUT /api/vehicles/{vehicleId}/trip-groups/{groupId}",
 }
 
