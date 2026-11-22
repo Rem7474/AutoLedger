@@ -36,6 +36,15 @@ Le ticket est alors tarifé en entier et son prix est réparti entre les trajets
 
 Si un péage a été saisi à la main, ou pour un groupe de trajets, sur un autre trajet du même ticket, le péage automatique n'est pas enregistré : le parcours est déjà compté.
 
+## Facture mensuelle
+
+Les péages saisis ou estimés trajet par trajet sont une approximation de ce que la société d'autoroute facture (remises d'abonnement, trajets jamais saisis). Quand le relevé mensuel arrive, son total peut être enregistré pour ce mois, depuis la page Coûts (filtre Péages) ou avec l'outil `set_toll_invoice` de l'assistant.
+
+- Un mois qui a une facture compte le total de la facture comme ses péages dans les chiffres mensuels et globaux (coût au kilomètre, coûts mensuels, totaux, flotte). Les péages individuels de ce mois, saisis ou automatiques, ne s'y ajoutent plus. Le parking et les autres frais de déplacement ne sont pas des péages et ne changent pas.
+- Les trajets, covoiturages et groupes de trajets gardent les péages saisis sur eux, exactement comme avant : la facture ne les modifie jamais.
+- L'écart entre la facture et les péages saisis sur les trajets est affiché avec elle : positif quand la facture contient des péages qu'aucun trajet ne porte, négatif quand les trajets en comptent plus que ce qui a été facturé.
+- Un véhicule a une facture par mois, modifiable ou supprimable à tout moment ; la supprimer remet les péages individuels dans les chiffres. Une facture de 0 dit que le mois n'a pas eu de péage. Le total est dans la devise du véhicule.
+
 ## Historique
 
 Sur la page Coûts, le filtre Péages liste ce qui a été payé en péages, parkings et autres frais de déplacement sur la période choisie en haut, avec le total payé et le coût au kilomètre ; une ligne ouvre son enregistrement pour le modifier, et la balayer le supprime avec un retour en arrière possible. Le filtre Entretien fait de même pour l'entretien et les réparations, et le coût total ajoute les chiffres par mois. Une dépense récurrente compte une fois pour chaque mois d'échéance.
