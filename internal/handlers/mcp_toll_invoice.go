@@ -23,7 +23,7 @@ type IntegrationTollInvoice struct {
 	Total     IntegrationAmount `json:"total" jsonschema:"what the operator billed for the month: the month counts this as its tolls in every monthly and global figure"`
 	TripTolls IntegrationAmount `json:"trip_tolls" jsonschema:"what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them"`
 	Gap       IntegrationAmount `json:"gap" jsonschema:"total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower"`
-	Note      *string           `json:"note" jsonschema:"the owner's note on the invoice, null when there is none"`
+	Note      *string           `json:"note" jsonschema:"the owner's note on the invoice, user text; null when there is none"`
 }
 
 func tollInvoiceOf(t models.TollInvoice, currency string) IntegrationTollInvoice {

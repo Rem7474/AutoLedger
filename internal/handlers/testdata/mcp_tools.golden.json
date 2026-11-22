@@ -5655,7 +5655,7 @@
                 "type": "string"
               },
               "note": {
-                "description": "the owner's note on the invoice, null when there is none",
+                "description": "the owner's note on the invoice, user text; null when there is none",
                 "type": [
                   "null",
                   "string"
@@ -8620,7 +8620,7 @@
               "type": "string"
             },
             "note": {
-              "description": "the owner's note on the invoice, null when there is none",
+              "description": "the owner's note on the invoice, user text; null when there is none",
               "type": [
                 "null",
                 "string"
@@ -8707,7 +8707,7 @@
               "type": "string"
             },
             "note": {
-              "description": "the owner's note on the invoice, null when there is none",
+              "description": "the owner's note on the invoice, user text; null when there is none",
               "type": [
                 "null",
                 "string"

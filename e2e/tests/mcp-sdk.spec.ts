@@ -86,9 +86,9 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   const { tools } = await client.listTools()
   expect(tools.length).toBeGreaterThan(0)
   // The tools that write are named here on purpose: a new one has to be added to this list in review.
-  const writing = ['create_carpool_from_drives', 'create_expense', 'update_carpool', 'update_drive_expenses']
+  const writing = ['create_carpool_from_drives', 'create_expense', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
   // Creating adds records; changing a carpool replaces what it held
-  const overwrites = ['update_carpool', 'update_drive_expenses']
+  const overwrites = ['set_toll_invoice', 'update_carpool', 'update_drive_expenses']
   for (const tool of tools) {
     if (writing.includes(tool.name)) {
       expect(tool.annotations?.readOnlyHint, `${tool.name} writes`).not.toBe(true)
