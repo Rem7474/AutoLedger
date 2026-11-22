@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -11,20 +12,30 @@ import (
 	"github.com/teslacost/teslacost/internal/money"
 )
 
-// tollInvoiceSelect reads an invoice with the tolls entered individually in its period, converted to the vehicle's
-// currency the way cost_ledger does.
-const tollInvoiceSelect = `
+// tripTollsSQL adds up the tolls entered individually in a period, converted to the vehicle's currency the way
+// cost_ledger does. It takes the vehicle, the start and the end of the period.
+const tripTollsSQL = `
+	SELECT COALESCE(SUM(ROUND(CASE WHEN e.currency = v.currency THEN e.amount ELSE e.amount * e.fx_rate END, 2)), 0)
+	FROM drive_expenses e
+	JOIN vehicles v ON v.id = e.vehicle_id
+	WHERE e.vehicle_id = %s AND e.type = 'TOLL'
+	  AND e.date >= %s AND e.date < %s
+	  AND (e.currency = v.currency OR e.fx_rate IS NOT NULL)`
+
+// tollInvoiceSelect reads an invoice with the tolls entered individually in its period.
+var tollInvoiceSelect = `
 	SELECT i.id::text, i.vehicle_id::text, i.month, i.period_start, i.period_end, i.total, i.note, i.version, i.updated_at,
-	       COALESCE((
-	           SELECT SUM(ROUND(CASE WHEN e.currency = v.currency THEN e.amount ELSE e.amount * e.fx_rate END, 2))
-	           FROM drive_expenses e
-	           JOIN vehicles v ON v.id = e.vehicle_id
-	           WHERE e.vehicle_id = i.vehicle_id AND e.type = 'TOLL'
-	             AND e.date >= i.period_start AND e.date < i.period_end
-	             AND (e.currency = v.currency OR e.fx_rate IS NOT NULL)
-	       ), 0)
+	       (` + fmt.Sprintf(tripTollsSQL, "i.vehicle_id", "i.period_start", "i.period_end") + `)
 	FROM toll_invoices i
 `
+
+// TripTollsInPeriod adds up the tolls entered individually for a vehicle in [start, end): what an invoice of that
+// period would replace.
+func (r *Repository) TripTollsInPeriod(ctx context.Context, vehicleID string, start, end time.Time) (money.Cents, error) {
+	var total money.Cents
+	err := r.pool.QueryRow(ctx, fmt.Sprintf(tripTollsSQL, "$1", "$2", "$3"), vehicleID, start, end).Scan(&total)
+	return total, err
+}
 
 func scanTollInvoice(row pgx.Row) (*models.TollInvoice, error) {
 	var t models.TollInvoice
