@@ -1,6 +1,6 @@
 # Connecting an assistant (MCP)
 
-AutoLedger can serve a [Model Context Protocol](https://modelcontextprotocol.io) endpoint, so an assistant (Claude, Cursor, any MCP client) can answer questions about the costs of your vehicles. It reads by default; three tools also record and edit carpools and the tolls and parking of trips, and only on an access you allowed to write ([Writing](#writing)). Français : [mcp.fr.md](mcp.fr.md).
+AutoLedger can serve a [Model Context Protocol](https://modelcontextprotocol.io) endpoint, so an assistant (Claude, Cursor, any MCP client) can answer questions about the costs of your vehicles. It reads by default; five tools also record and edit carpools, the tolls and parking of trips, expenses and the monthly toll invoice, and only on an access you allowed to write ([Writing](#writing)). Français : [mcp.fr.md](mcp.fr.md).
 
 ## Enable it
 
