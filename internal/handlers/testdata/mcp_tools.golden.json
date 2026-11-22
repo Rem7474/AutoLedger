@@ -520,7 +520,7 @@
               ]
             },
             "kind": {
-              "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase or financing (a loan or lease instalment)",
+              "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase, financing (a loan or lease instalment) or toll_invoice (a monthly toll invoice, which stands for every toll of its month)",
               "type": "string"
             },
             "kwh": {
@@ -7795,7 +7795,7 @@
                 ]
               },
               "kind": {
-                "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase or financing (a loan or lease instalment)",
+                "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase, financing (a loan or lease instalment) or toll_invoice (a monthly toll invoice, which stands for every toll of its month)",
                 "type": "string"
               },
               "kwh": {

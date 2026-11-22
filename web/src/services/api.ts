@@ -402,6 +402,11 @@ export const api = {
     if (params.offset) q.set('offset', String(params.offset))
     return request<CostEntriesResponse>(`/vehicles/${vehicleId}/cost-entries?${q.toString()}`)
   },
+  getTollInvoices: (vehicleId: string, months = 12) => request<TollInvoiceList>(`/vehicles/${vehicleId}/toll-invoices?months=${months}`),
+  saveTollInvoice: (vehicleId: string, month: string, data: { total: number; note: string | null; expected_version?: number }) =>
+    request<TollInvoice>(`/vehicles/${vehicleId}/toll-invoices/${month}`, { method: 'PUT', body: JSON.stringify(data) }, t('shell.api.tollInvoice')),
+  deleteTollInvoice: (vehicleId: string, month: string, expectedVersion?: number) =>
+    request<void>(`/vehicles/${vehicleId}/toll-invoices/${month}${expectedVersion === undefined ? '' : `?expected_version=${expectedVersion}`}`, { method: 'DELETE' }),
   getChargingPlaces: (vehicleId: string) => request<any>(`/vehicles/${vehicleId}/charging-places`),
   createChargingPlace: (vehicleId: string, data: { name: string; category: string }) =>
     request<any>(`/vehicles/${vehicleId}/charging-places`, { method: 'POST', body: JSON.stringify(data) }),
@@ -938,6 +943,35 @@ export interface CostEntryLine {
   has_receipt: boolean | null
   source: string
   source_id: string
+}
+
+/** The toll total a motorway operator billed for a month; it replaces the individual tolls of that month in the totals. */
+export interface TollInvoice {
+  id: string
+  vehicle_id: string
+  /** YYYY-MM, in the reporting timezone. */
+  month: string
+  total: number
+  note: string | null
+  version: number
+  updated_at: string
+  /** What the tolls entered or estimated on the trips of the month add up to. */
+  trip_tolls: number
+  /** total - trip_tolls: positive when the invoice is higher than the trips' tolls. */
+  gap: number
+}
+
+export interface TollInvoiceMonth {
+  month: string
+  trip_tolls: number
+  invoice: TollInvoice | null
+}
+
+export interface TollInvoiceList {
+  currency: string
+  invoices: TollInvoice[]
+  /** The latest months, the current one first, with or without an invoice. */
+  months: TollInvoiceMonth[]
 }
 
 export interface CostEntriesResponse {

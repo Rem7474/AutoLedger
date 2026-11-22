@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"testing"
+	"time"
 )
 
 func TestTollInvoiceAPISavesListsAndDeletesAMonth(t *testing.T) {
@@ -25,6 +26,20 @@ func TestTollInvoiceAPISavesListsAndDeletesAMonth(t *testing.T) {
 	if invoices, _ := list["invoices"].([]any); len(invoices) != 1 || list["currency"] != "EUR" {
 		t.Fatalf("list: %+v", list)
 	}
+
+	months, _ := list["months"].([]any)
+	if len(months) != 12 {
+		t.Fatalf("the window holds the latest 12 months by default: %d", len(months))
+	}
+	current := months[0].(map[string]any)
+	if current["month"] != time.Now().In(h.dateLocation()).Format("2006-01") || current["invoice"] != nil || current["trip_tolls"] != float64(0) {
+		t.Errorf("the current month comes first, without invoice: %+v", current)
+	}
+	if two := a.expect(http.StatusOK, "GET", "/toll-invoices?months=2", ""); len(two["months"].([]any)) != 2 {
+		t.Errorf("months narrows the window: %+v", two["months"])
+	}
+	a.expect(http.StatusBadRequest, "GET", "/toll-invoices?months=0", "")
+	a.expect(http.StatusBadRequest, "GET", "/toll-invoices?months=61", "")
 
 	a.expect(http.StatusConflict, "PUT", "/toll-invoices/2026-03", `{"total":"50","expected_version":7}`)
 	a.expect(http.StatusOK, "PUT", "/toll-invoices/2026-03", `{"total":"50","expected_version":1}`)

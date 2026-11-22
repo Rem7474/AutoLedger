@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { api, type CostEntryLine, type ExpenseDocumentHeader } from '@/services/api'
+import { api, type CostEntryLine, type ExpenseDocumentHeader, type TollInvoiceMonth } from '@/services/api'
 import { useVehicleStore } from '@/stores/vehicle'
 import { useConfirm } from '@/composables/useConfirm'
 import { deleteWithUndo } from '@/composables/useUndoableDelete'
@@ -12,7 +12,7 @@ import { t } from '@/i18n'
  * page of the journal holds only the figures), and delete it with a way back. `hide`/`restore` take the line off the
  * page and put it back; `reload` reads the journal again once the server has changed.
  */
-export function useCostEntryActions(hooks: { hide: (id: string) => void; restore: (id: string) => void; reload: () => unknown }) {
+export function useCostEntryActions(hooks: { hide: (id: string) => void; restore: (id: string) => void; reload: () => unknown; hideInvoiceMonth?: (month: string) => void; restoreInvoiceMonth?: (month: string) => void }) {
   const vehicleStore = useVehicleStore()
   const { showAlert } = useConfirm()
   const { removeRecords } = useRecordDeletion()
@@ -20,6 +20,9 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
   const showMaintenance = ref(false)
   const showCharge = ref(false)
   const showFuel = ref(false)
+  const showTollInvoice = ref(false)
+  // The month whose invoice form is open: its invoice if it has one, and what the trips recorded
+  const invoiceRow = ref<TollInvoiceMonth | null>(null)
   // The journal line the fill-up sheet was opened from: the sheet's own Delete takes that line off the page
   let fuelEntryId = ''
   // The same for the charge detail
@@ -61,11 +64,44 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     return log
   }
 
+  /** There is no read of one invoice: it is found among the vehicle's latest months, which carry its version. */
+  async function readInvoiceRow(vehicleId: string, id: string): Promise<TollInvoiceMonth> {
+    const res = await api.getTollInvoices(vehicleId, 60)
+    const row = res.months.find((m) => m.invoice?.id === id)
+    if (!row) throw new Error(t('costs.tollInvoice.loadError'))
+    return row
+  }
+
+  /** The Delete of the invoice form: the month reads as without invoice at once, with an Undo. */
+  function removeInvoice(row: TollInvoiceMonth) {
+    const vehicle = vehicleStore.activeVehicle
+    if (!vehicle || !row.invoice) return
+    const { month, version } = { month: row.month, version: row.invoice.version }
+    deleteWithUndo({
+      message: t('costs.tollInvoice.deleted'),
+      hide: () => hooks.hideInvoiceMonth?.(month),
+      restore: () => hooks.restoreInvoiceMonth?.(month),
+      commit: () => api.deleteTollInvoice(vehicle.id, month, version),
+      committed: () => void hooks.reload(),
+      onError: fail,
+    })
+  }
+
+  /** Opens the invoice form on a month of the card. */
+  function openInvoice(row: TollInvoiceMonth) {
+    invoiceRow.value = row
+    showTollInvoice.value = true
+  }
+
   async function open(entry: CostEntryLine) {
     const vehicle = vehicleStore.activeVehicle
     const target = entryTarget(entry)
     if (!vehicle || target.type !== 'edit') return
     try {
+      if (target.modal === 'tollInvoice') {
+        openInvoice(await readInvoiceRow(vehicle.id, target.id))
+        return
+      }
       if (target.modal === 'fuel') {
         const record = await readFuelLog(vehicle.id, target.id)
         editing.value = record
@@ -97,6 +133,23 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     if (target.modal === 'charge' || target.modal === 'fuel') {
       return removeFromJournal(target.modal === 'charge' ? 'charge' : 'fuel_log', target.id, id)
     }
+    if (target.modal === 'tollInvoice') {
+      let row: TollInvoiceMonth
+      try {
+        row = await readInvoiceRow(vehicle.id, target.id)
+      } catch (err) {
+        return fail(err)
+      }
+      const { month, invoice } = { month: row.month, invoice: row.invoice! }
+      return deleteWithUndo({
+        message: t('costs.tollInvoice.deleted'),
+        hide: () => hooks.hide(id),
+        restore: () => hooks.restore(id),
+        commit: () => api.deleteTollInvoice(vehicle.id, month, invoice.version),
+        committed: () => void hooks.reload(),
+        onError: fail,
+      })
+    }
     const erase = target.modal === 'toll' ? api.deleteDriveExpense : api.deleteMaintenance
     deleteWithUndo({
       message: t('expenses.expensesView.costDeleted'),
@@ -127,5 +180,5 @@ export function useCostEntryActions(hooks: { hide: (id: string) => void; restore
     documents.value.unshift(doc)
   }
 
-  return { showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, removeOpenedCharge, editing, documents, maintenanceExpenses, open, addMaintenance, remove, onDocumentAdded }
+  return { showTollInvoice, invoiceRow, openInvoice, removeInvoice, showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, removeOpenedCharge, editing, documents, maintenanceExpenses, open, addMaintenance, remove, onDocumentAdded }
 }

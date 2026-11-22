@@ -10,6 +10,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/teslacost/teslacost/internal/auth"
+	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
@@ -115,5 +116,14 @@ func TestMCPSetTollInvoiceNeedsTheWriteScopeAndRecordsThroughTheProtocol(t *test
 	var out IntegrationTollInvoiceSaved
 	if err := json.Unmarshal(raw, &out); err != nil || !out.Saved || out.Invoice.Total.Amount != "48.20" || out.Invoice.Version != 1 {
 		t.Fatalf("recorded: %+v %v", out, err)
+	}
+}
+
+func TestTollInvoiceLinesOfTheLedgerAreNamedAsInvoices(t *testing.T) {
+	out := buildIntegrationExpenses("v", "EUR", time.UTC, database.LedgerFilter{}, []database.LedgerEntry{
+		{SourceID: "i1", Date: time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC), Category: "TOLL", Source: "toll_invoices", Amount: 4820},
+	}, nil)
+	if len(out.Expenses) != 1 || out.Expenses[0].Kind != "toll_invoice" || out.Expenses[0].Category != "toll" {
+		t.Fatalf("%+v", out.Expenses)
 	}
 }
