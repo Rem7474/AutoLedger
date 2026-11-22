@@ -47,8 +47,11 @@ onBeforeUnmount(() => scroller?.removeEventListener('scroll', onScroll))
       </button>
     </div>
   </div>
-  <!-- Outside the bar: a transformed ancestor would become the containing block of the fixed sheet -->
-  <slot name="sheet" :open="sheet" :set-open="(v: boolean) => (sheet = v)">
-    <PeriodSheet v-if="period" v-model:open="sheet" :period="period" @pick="emit('pick', $event)" />
-  </slot>
+  <!-- On the body: a page puts the bar in a sticky, blurred wrapper, and an ancestor with a filter or a transform becomes the
+       containing block of a fixed descendant (the sheet would shrink into the wrapper) and its stacking context caps the layer -->
+  <Teleport to="body">
+    <slot name="sheet" :open="sheet" :set-open="(v: boolean) => (sheet = v)">
+      <PeriodSheet v-if="period" v-model:open="sheet" :period="period" @pick="emit('pick', $event)" />
+    </slot>
+  </Teleport>
 </template>
