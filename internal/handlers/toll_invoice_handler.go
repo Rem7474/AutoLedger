@@ -32,7 +32,7 @@ func tollInvoiceMonthBounds(month string, loc *time.Location) (start, end time.T
 	if perr != nil {
 		return start, end, apierror.New("toll_invoice.invalid_month", "Invalid month: expected YYYY-MM")
 	}
-	return first, first.AddDate(0, 1, 0), nil
+	return first, models.AddCalendarMonths(first, 1), nil
 }
 
 type tollInvoiceList struct {
