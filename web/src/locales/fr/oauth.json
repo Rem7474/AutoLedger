@@ -2,7 +2,7 @@
   "authorize": {
     "title": "Autoriser une application",
     "intro": "{name} demande à lire vos données AutoLedger.",
-    "introWrite": "{name} demande à lire vos données AutoLedger et à enregistrer et modifier des covoiturages, les péages et parkings des trajets, et à enregistrer des dépenses.",
+    "introWrite": "{name} demande à lire vos données AutoLedger et à enregistrer et modifier des covoiturages, les péages et parkings des trajets, et à enregistrer des dépenses et des relevés de compteur.",
     "introRecord": "{name} demande à lire vos données AutoLedger et à enregistrer ce que Home Assistant envoie.",
     "vehiclesTitle": "Véhicules qu'elle pourra lire",
     "vehiclesAll": "Tous mes véhicules, y compris ceux que j'ajouterai plus tard",

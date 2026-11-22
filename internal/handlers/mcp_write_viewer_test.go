@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// A vehicle shared read-only is refused by every writing tool that works on a vehicle's expenses: the role is checked
+// A vehicle shared read-only is refused by every writing tool that works on a vehicle's records: the role is checked
 // in the service of each tool, so each one needs its own case.
 func TestMCPExpenseWritesRefuseAReadOnlyMember(t *testing.T) {
 	a := newCarpoolAPI(t, "mcpwrite-viewer")
@@ -22,6 +22,10 @@ func TestMCPExpenseWritesRefuseAReadOnlyMember(t *testing.T) {
 	update := mcpUpdateDriveExpensesInput{Items: []mcpDriveExpenseItem{{DriveID: d.ID, Tolls: ptr("5.00")}}}
 	if _, err := h.UpdateDriveExpenses(ctx, a.viewerID, a.vid, update); err == nil || !strings.Contains(err.Error(), "read-only") {
 		t.Errorf("a read-only member cannot change the tolls of a trip: %v", err)
+	}
+
+	if _, err := h.RecordOdometer(ctx, a.viewerID, a.vid, mcpRecordOdometerInput{Date: "2026-09-06", OdometerKm: 20000}); err == nil || !strings.Contains(err.Error(), "read-only") {
+		t.Errorf("a read-only member cannot record an odometer reading: %v", err)
 	}
 
 	// The owner of the same vehicle is not refused, so the cases above fail on the role and on nothing else
