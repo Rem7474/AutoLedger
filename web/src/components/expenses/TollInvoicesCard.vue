@@ -49,7 +49,7 @@ const gapText = (row: TollInvoiceMonth) => {
         <li v-for="row in listed.rows" :key="row.month">
           <button
             type="button"
-            class="tap flex w-full items-start justify-between gap-3 py-2.5 text-left"
+            class="flex min-h-11 w-full items-start justify-between gap-3 py-2.5 text-left"
             :data-testid="`toll-invoice-${row.month}`"
             :disabled="!canEdit && !row.invoice"
             @click="emit('edit', row)"

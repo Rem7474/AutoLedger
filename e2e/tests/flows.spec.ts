@@ -1350,3 +1350,41 @@ test('a plug-in hybrid asks for the odometer on a quick charge and keeps the bat
     await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
   }
 })
+
+test('a monthly toll invoice is entered from the Costs page and replaces the tolls of its month', async ({ page, request }) => {
+  const headers = await authHeaders(request)
+  const created = await request.post('/api/vehicles', { headers, data: { name: 'Toll invoice reference', powertrain: 'ICE', currency: 'EUR' } })
+  expect(created.ok()).toBeTruthy()
+  const vehicle = await created.json()
+  try {
+    const now = new Date()
+    const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 12)).toISOString()
+    const month = date.slice(0, 7)
+    const toll = await request.post(`/api/vehicles/${vehicle.id}/expenses`, { headers, data: { type: 'TOLL', amount: 10, currency: 'EUR', date, notes: 'A1 reference toll' } })
+    expect(toll.ok()).toBeTruthy()
+
+    await useVehicle(page, vehicle.id, '/costs?theme=tolls')
+    const card = page.getByTestId('toll-invoices-card')
+    await expect(card).toBeVisible()
+    await card.getByTestId(`toll-invoice-${month}`).click()
+    // The form says what the trips recorded and what the typed total would leave unattached
+    await expect(page.getByTestId('toll-invoice-trips')).toContainText('10.00')
+    await page.locator('#toll-invoice-total').fill('15')
+    await expect(page.getByTestId('toll-invoice-gap')).toContainText('5.00')
+    await page.getByRole('button', { name: 'Save' }).click()
+
+    // The invoice line stands in for the month's toll in the journal and its total is the month's
+    await expect(page.getByRole('button', { name: 'Toll invoice', exact: true })).toBeVisible()
+    await expect(page.getByText('A1 reference toll')).toHaveCount(0)
+    const list = await request.get(`/api/vehicles/${vehicle.id}/toll-invoices`, { headers })
+    expect((await list.json()).invoices[0].total).toBe(15)
+
+    // Its line opens the same form, and Delete takes it back with the tolls of the trips
+    await page.getByRole('button', { name: 'Toll invoice', exact: true }).click()
+    await expect(page.locator('#toll-invoice-total')).toHaveValue('15')
+    await page.getByRole('button', { name: 'Delete' }).click()
+    await expect(page.getByText('A1 reference toll')).toBeVisible({ timeout: 15000 })
+  } finally {
+    await request.delete(`/api/vehicles/${vehicle.id}`, { headers })
+  }
+})
