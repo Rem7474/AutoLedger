@@ -40,7 +40,9 @@ type MCPHandler struct {
 	callLog MCPCallLog
 	issuer  string
 	server  *mcp.Server
-	handler http.Handler
+	// writeTools names the tools registered through addMCPWriteTool.
+	writeTools []string
+	handler    http.Handler
 }
 
 // NewMCPHandler builds the endpoint. baseURL is the instance's public URL: the resource is baseURL + "/mcp" and the

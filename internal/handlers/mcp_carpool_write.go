@@ -9,7 +9,6 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/teslacost/teslacost/internal/auth"
 	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
@@ -46,14 +45,8 @@ type IntegrationCarpoolCreated struct {
 	Carpool  IntegrationCarpoolTrip `json:"carpool" jsonschema:"the carpool, as get_carpool lists it; its id is empty on a dry run"`
 }
 
-// mcpCanWrite reports whether the grant the call was made with may record carpools.
-func mcpCanWrite(req *mcp.CallToolRequest) bool {
-	extra := req.GetExtra()
-	return extra != nil && extra.TokenInfo != nil && slices.Contains(extra.TokenInfo.Scopes, auth.ScopeWrite)
-}
-
 func (h *MCPHandler) addCarpoolWriteTools() {
-	mcp.AddTool(h.server, &mcp.Tool{
+	addMCPWriteTool(h, &mcp.Tool{
 		Name:  "create_carpool_from_drives",
 		Title: "Group drives into a carpool",
 		Description: "Records a carpool made of drives the owner already has: the drives become its legs (priced as the app prices them), and the passengers with what each paid are added to it. " +
@@ -61,20 +54,7 @@ func (h *MCPHandler) addCarpoolWriteTools() {
 			"This writes to the owner's records: call it with dry_run true first, show the owner the stops, costs and shares, and record only once they agree. " +
 			"Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(false), OpenWorldHint: ptr(false)},
-	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpCreateCarpoolInput) (*mcp.CallToolResult, IntegrationCarpoolCreated, error) {
-		if !mcpCanWrite(req) {
-			return nil, IntegrationCarpoolCreated{}, errors.New("this connection can only read: the owner has to allow writing when connecting the assistant to AutoLedger")
-		}
-		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
-		if err != nil {
-			return nil, IntegrationCarpoolCreated{}, mcpFailure(ctx, "create_carpool_from_drives", err, "Could not record the carpool")
-		}
-		out, err := h.read.CreateCarpoolFromDrives(ctx, mcpUserID(req), vehicleID, in)
-		if err != nil {
-			return nil, IntegrationCarpoolCreated{}, mcpFailure(ctx, "create_carpool_from_drives", err, "Could not record the carpool")
-		}
-		return nil, *out, nil
-	})
+	}, "Could not record the carpool", func(in mcpCreateCarpoolInput) string { return in.VehicleID }, h.read.CreateCarpoolFromDrives)
 }
 
 // CreateCarpoolFromDrives groups existing drives of a vehicle into a carpool, with its passengers. The legs are

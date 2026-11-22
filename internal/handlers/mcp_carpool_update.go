@@ -41,7 +41,7 @@ type mcpUpdateCarpoolInput struct {
 }
 
 func (h *MCPHandler) addCarpoolUpdateTools() {
-	mcp.AddTool(h.server, &mcp.Tool{
+	addMCPWriteTool(h, &mcp.Tool{
 		Name:  "update_carpool",
 		Title: "Change a carpool",
 		Description: "Changes a carpool the owner recorded: its title or note, its passengers (add one, change what one paid, their seats or stops, rename one, take one out) and its drives (link an existing drive as a new leg with add_drives, unlink one with remove_drives; the drive itself is never changed or deleted). " +
@@ -50,20 +50,7 @@ func (h *MCPHandler) addCarpoolUpdateTools() {
 			"This overwrites the owner's records: call it with dry_run true first, show the owner the carpool as it would be, and save only once they agree. " +
 			"Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(true), IdempotentHint: false, OpenWorldHint: ptr(false)},
-	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpUpdateCarpoolInput) (*mcp.CallToolResult, IntegrationCarpoolUpdated, error) {
-		if !mcpCanWrite(req) {
-			return nil, IntegrationCarpoolUpdated{}, errors.New("this connection can only read: the owner has to allow writing when connecting the assistant to AutoLedger")
-		}
-		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
-		if err != nil {
-			return nil, IntegrationCarpoolUpdated{}, mcpFailure(ctx, "update_carpool", err, "Could not change the carpool")
-		}
-		out, err := h.read.UpdateCarpool(ctx, mcpUserID(req), vehicleID, in)
-		if err != nil {
-			return nil, IntegrationCarpoolUpdated{}, mcpFailure(ctx, "update_carpool", err, "Could not change the carpool")
-		}
-		return nil, *out, nil
-	})
+	}, "Could not change the carpool", func(in mcpUpdateCarpoolInput) string { return in.VehicleID }, h.read.UpdateCarpool)
 }
 
 // IntegrationCarpoolUpdated is the answer of update_carpool.
