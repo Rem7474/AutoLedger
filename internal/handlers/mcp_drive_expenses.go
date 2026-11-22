@@ -52,7 +52,7 @@ type IntegrationDriveExpensesUpdated struct {
 }
 
 func (h *MCPHandler) addDriveExpenseTools() {
-	mcp.AddTool(h.server, &mcp.Tool{
+	addMCPWriteTool(h, &mcp.Tool{
 		Name:  "update_drive_expenses",
 		Title: "Change the tolls and parking of trips",
 		Description: "Sets what the tolls and the parking of one or several trips cost: pass the drive_id of each (from list_vehicle_trips) and the amount. The amount replaces what the trip holds, an estimate included, and is then recorded as entered by the owner; \"0\" removes it. " +
@@ -61,20 +61,7 @@ func (h *MCPHandler) addDriveExpenseTools() {
 			"This overwrites the owner's records: call it with dry_run true first, show the owner each trip with its old and new amount, and save only once they agree. " +
 			"The carpools that have these trips as legs are listed in the answer: those that follow their drives take the new cost when read. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(true), IdempotentHint: true, OpenWorldHint: ptr(false)},
-	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpUpdateDriveExpensesInput) (*mcp.CallToolResult, IntegrationDriveExpensesUpdated, error) {
-		if !mcpCanWrite(req) {
-			return nil, IntegrationDriveExpensesUpdated{}, errors.New("this connection can only read: the owner has to allow writing when connecting the assistant to AutoLedger")
-		}
-		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
-		if err != nil {
-			return nil, IntegrationDriveExpensesUpdated{}, mcpFailure(ctx, "update_drive_expenses", err, "Could not change the expenses")
-		}
-		out, err := h.read.UpdateDriveExpenses(ctx, mcpUserID(req), vehicleID, in)
-		if err != nil {
-			return nil, IntegrationDriveExpensesUpdated{}, mcpFailure(ctx, "update_drive_expenses", err, "Could not change the expenses")
-		}
-		return nil, *out, nil
-	})
+	}, "Could not change the expenses", func(in mcpUpdateDriveExpensesInput) string { return in.VehicleID }, h.read.UpdateDriveExpenses)
 }
 
 // driveExpenseKinds pairs the kinds a call names with the expense types they are stored as.
