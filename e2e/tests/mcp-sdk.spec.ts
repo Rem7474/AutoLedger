@@ -112,6 +112,7 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
       update_drive_expenses: { vehicle_id: vehicles[0].id, items: [{ drive_id: drive, tolls: '1.00' }] },
       create_carpool_from_drives: { vehicle_id: vehicles[0].id, drive_ids: [drive] },
       create_expense: { vehicle_id: vehicles[0].id, category: 'other', amount: '1.00', date: '2026-01-01', description: 'x' },
+      set_toll_invoice: { vehicle_id: vehicles[0].id, month: '2026-01', total: '10.00' },
     }
     const refused = await call(client, name, args[name])
     expect(refused.isError, `${name} on a read grant`).toBe(true)
