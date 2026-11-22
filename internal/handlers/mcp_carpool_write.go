@@ -37,7 +37,7 @@ type mcpCreateCarpoolInput struct {
 	Passengers     []mcpCarpoolPassengerInput `json:"passengers,omitempty" jsonschema:"who rode and what they paid; 7 at most"`
 	Notes          string                     `json:"notes,omitempty" jsonschema:"a free note on the carpool"`
 	DryRun         bool                       `json:"dry_run,omitempty" jsonschema:"true to see the carpool that would be recorded, with its stops, costs and shares, without recording anything"`
-	IdempotencyKey string                     `json:"idempotency_key,omitempty" jsonschema:"a value you make up, 100 characters at most, so that a retry records once: sending the call again with the same key and the same arguments returns the first answer and records nothing more, and a different call with the same key is refused. Without it, a retry may record twice. Not used by a dry run"`
+	IdempotencyKey string                     `json:"idempotency_key,omitempty" jsonschema:"a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run"`
 }
 
 // IntegrationCarpoolCreated is the answer of create_carpool_from_drives.

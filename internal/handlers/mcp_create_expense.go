@@ -26,7 +26,7 @@ type mcpCreateExpenseInput struct {
 	RepeatsEveryMonths *int    `json:"repeats_every_months,omitempty" jsonschema:"makes the expense recurring: every this many months, 1 to 120 (1 for a monthly fee, 12 for a yearly one). Left out for a single expense"`
 	RepeatsUntil       *string `json:"repeats_until,omitempty" jsonschema:"for a recurring expense, the last day it applies, YYYY-MM-DD; none by default, which means it goes on"`
 	DryRun             bool    `json:"dry_run,omitempty" jsonschema:"true to see the expense that would be recorded, without recording anything"`
-	IdempotencyKey     string  `json:"idempotency_key,omitempty" jsonschema:"a value you make up, 100 characters at most, so that a retry records once: sending the call again with the same key and the same arguments returns the first answer and records nothing more, and a different call with the same key is refused. Without it, a retry may record twice. Not used by a dry run"`
+	IdempotencyKey     string  `json:"idempotency_key,omitempty" jsonschema:"a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run"`
 }
 
 // IntegrationExpenseCreated is the answer of create_expense.

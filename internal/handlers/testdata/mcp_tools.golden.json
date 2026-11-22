@@ -6,6 +6,196 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
+    "description": "Records a fill-up of a combustion or hybrid vehicle, as the fill-up form of the app does. Give the day and two of the amount, the litres and the price per litre: the third is worked out. The odometer is optional; when given it is checked against the other readings and a mileage that contradicts them is refused. It does not apply to electric vehicles (record a charge instead) and never changes or deletes a fill-up. This writes to the owner's records: call it with dry_run true first, show the owner the fill-up as worked out, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "what it cost in all, a decimal string in the vehicle's currency such as \"62.40\"; may be left out when liters and price_per_liter are given",
+          "type": "string"
+        },
+        "date": {
+          "description": "YYYY-MM-DD",
+          "type": "string"
+        },
+        "dry_run": {
+          "description": "true to check the fill-up and see it, with the amount, litres and price worked out, without recording anything",
+          "type": "boolean"
+        },
+        "fuel_type": {
+          "description": "SP95_E10, SP98, DIESEL, E85 or GPL",
+          "type": "string"
+        },
+        "idempotency_key": {
+          "description": "a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run",
+          "type": "string"
+        },
+        "is_full_tank": {
+          "description": "false for a partial fill-up; true when left out. A consumption is measured between two full tanks",
+          "type": [
+            "null",
+            "boolean"
+          ]
+        },
+        "liters": {
+          "description": "the quantity of fuel, between 0.01 and 500 litres; may be left out when amount and price_per_liter are given",
+          "type": [
+            "null",
+            "number"
+          ]
+        },
+        "notes": {
+          "description": "a free note on the fill-up, 500 characters at most",
+          "type": "string"
+        },
+        "odometer_km": {
+          "description": "what the odometer showed, in kilometres; left out, the app estimates it from the readings",
+          "type": [
+            "null",
+            "number"
+          ]
+        },
+        "price_per_liter": {
+          "description": "the price of a litre, in the vehicle's currency; may be left out when amount and liters are given",
+          "type": [
+            "null",
+            "number"
+          ]
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "date"
+      ],
+      "type": "object"
+    },
+    "name": "add_fuel_fill",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "fill": {
+          "additionalProperties": false,
+          "description": "the fill-up as recorded, or as it would be",
+          "properties": {
+            "amount": {
+              "additionalProperties": false,
+              "description": "total cost",
+              "properties": {
+                "amount": {
+                  "description": "decimal string, e.g. 12.34, never rounded",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 code of the vehicle",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": "object"
+            },
+            "date": {
+              "description": "the day of the fill-up, YYYY-MM-DD",
+              "type": "string"
+            },
+            "fuel_type": {
+              "description": "null when not given",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "id": {
+              "description": "id; empty on a dry run",
+              "type": "string"
+            },
+            "is_full_tank": {
+              "description": "full tank or not",
+              "type": "boolean"
+            },
+            "liters": {
+              "description": "litres; null when unknown",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "notes": {
+              "description": "user text; null when none",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "odometer": {
+              "additionalProperties": false,
+              "description": "null when not given",
+              "properties": {
+                "unit": {
+                  "description": "always km",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "the distance",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "price_per_liter": {
+              "description": "price of a litre; null when unknown",
+              "type": [
+                "null",
+                "number"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "date",
+            "amount",
+            "liters",
+            "price_per_liter",
+            "odometer",
+            "fuel_type",
+            "is_full_tank",
+            "notes"
+          ],
+          "type": "object"
+        },
+        "recorded": {
+          "description": "false for a dry run",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "recorded",
+        "fill"
+      ],
+      "type": "object"
+    },
+    "title": "Record a fuel fill-up"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
     "description": "Records a carpool made of drives the owner already has: the drives become its legs (priced as the app prices them), and the passengers with what each paid are added to it. It creates no drive and deletes nothing; a carpool is changed afterwards with update_carpool. Find the drive_ids with list_vehicle_trips, which says when a drive is already in a carpool (such a drive is refused). This writes to the owner's records: call it with dry_run true first, show the owner the stops, costs and shares, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
     "inputSchema": {
       "additionalProperties": false,
@@ -25,7 +215,7 @@
           "type": "boolean"
         },
         "idempotency_key": {
-          "description": "a value you make up, 100 characters at most, so that a retry records once: sending the call again with the same key and the same arguments returns the first answer and records nothing more, and a different call with the same key is refused. Without it, a retry may record twice. Not used by a dry run",
+          "description": "a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run",
           "type": "string"
         },
         "notes": {
@@ -454,7 +644,7 @@
           "type": "boolean"
         },
         "idempotency_key": {
-          "description": "a value you make up, 100 characters at most, so that a retry records once: sending the call again with the same key and the same arguments returns the first answer and records nothing more, and a different call with the same key is refused. Without it, a retry may record twice. Not used by a dry run",
+          "description": "a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run",
           "type": "string"
         },
         "repeats_every_months": {
@@ -8567,7 +8757,7 @@
           "type": "boolean"
         },
         "idempotency_key": {
-          "description": "a value you make up, 100 characters at most, so that a retry records once: sending the call again with the same key and the same arguments returns the first answer and records nothing more, and a different call with the same key is refused. Without it, a retry may record twice. Not used by a dry run",
+          "description": "a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run",
           "type": "string"
         },
         "notes": {

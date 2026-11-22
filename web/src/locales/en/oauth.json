@@ -2,7 +2,7 @@
   "authorize": {
     "title": "Authorize an application",
     "intro": "{name} asks to read your AutoLedger data.",
-    "introWrite": "{name} asks to read your AutoLedger data and to record and edit carpools, the tolls and parking of trips, and to record expenses and odometer readings.",
+    "introWrite": "{name} asks to read your AutoLedger data and to record and edit carpools, the tolls and parking of trips, and to record expenses, odometer readings and fuel fill-ups.",
     "introRecord": "{name} asks to read your AutoLedger data and to record what Home Assistant sends.",
     "vehiclesTitle": "Vehicles it can read",
     "vehiclesAll": "All my vehicles, including the ones I add later",
