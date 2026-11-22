@@ -1,6 +1,6 @@
 # Connecter un assistant (MCP)
 
-AutoLedger peut servir un point d'accès [Model Context Protocol](https://modelcontextprotocol.io), pour qu'un assistant (Claude, Cursor, tout client MCP) réponde à des questions sur le coût de vos véhicules. Il lit par défaut ; trois outils enregistrent et modifient aussi des covoiturages et les péages et parkings des trajets, et seulement sur un accès que vous avez autorisé à écrire ([Écriture](#écriture)). English: [mcp.md](mcp.md).
+AutoLedger peut servir un point d'accès [Model Context Protocol](https://modelcontextprotocol.io), pour qu'un assistant (Claude, Cursor, tout client MCP) réponde à des questions sur le coût de vos véhicules. Il lit par défaut ; cinq outils enregistrent et modifient aussi des covoiturages, les péages et parkings des trajets, des dépenses et la facture mensuelle de péages, et seulement sur un accès que vous avez autorisé à écrire ([Écriture](#écriture)). English: [mcp.md](mcp.md).
 
 ## L'activer
 
