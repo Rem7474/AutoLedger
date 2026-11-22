@@ -2,10 +2,14 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/teslacost/teslacost/internal/auth"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
 )
@@ -80,5 +84,36 @@ func TestSetTollInvoiceRecordsReplacesAndReportsTheGap(t *testing.T) {
 	all, _ := h.TollsReport(ctx, a.userID, a.vid, "", "", 0)
 	if len(all.Invoices) != 1 {
 		t.Errorf("no period lists every invoice: %+v", all.Invoices)
+	}
+}
+
+func TestMCPSetTollInvoiceNeedsTheWriteScopeAndRecordsThroughTheProtocol(t *testing.T) {
+	f := newMCPFixture(t)
+	ctx := context.Background()
+	writeTok := f.newToken(t, f.owner.ID, auth.ScopeWrite)
+	call := func(token string, args map[string]any) *mcp.CallToolResult {
+		t.Helper()
+		res, err := f.connect(t, token).CallTool(ctx, &mcp.CallToolParams{Name: "set_toll_invoice", Arguments: args})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+	args := map[string]any{"vehicle_id": f.mine.ID, "month": "2026-03", "total": "48.20"}
+
+	if res := call(f.readTok, args); !res.IsError || !strings.Contains(res.Content[0].(*mcp.TextContent).Text, "can only read") {
+		t.Fatalf("a read connection must not record: %+v", res)
+	}
+	if list, _ := f.repo.ListTollInvoices(ctx, f.mine.ID); len(list) != 0 {
+		t.Fatalf("a refused call recorded: %+v", list)
+	}
+	res := call(writeTok, args)
+	if res.IsError {
+		t.Fatalf("%+v", res.Content)
+	}
+	raw, _ := json.Marshal(res.StructuredContent)
+	var out IntegrationTollInvoiceSaved
+	if err := json.Unmarshal(raw, &out); err != nil || !out.Saved || out.Invoice.Total.Amount != "48.20" || out.Invoice.Version != 1 {
+		t.Fatalf("recorded: %+v %v", out, err)
 	}
 }
