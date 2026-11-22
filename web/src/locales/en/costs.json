@@ -55,6 +55,40 @@
   "estimateNote": "Excludes estimated energy and upcoming instalments, which have no line.",
   "kinds": {
     "charge": "Charge",
-    "fuel_fill_up": "Fill-up"
+    "fuel_fill_up": "Fill-up",
+    "toll_invoice": "Toll invoice"
+  },
+  "tollInvoice": {
+    "title": "Toll invoices",
+    "hint": "The monthly invoice replaces the tolls entered or estimated on the trips of its month in the totals. Trips and carpools keep their own tolls.",
+    "tripTolls": "Trips: {amount}",
+    "noTolls": "No toll on trips",
+    "enter": "Enter the invoice",
+    "invoiced": "Invoiced",
+    "gap": {
+      "unattached": "{amount} of tolls on no trip",
+      "lower": "{amount} less than the trips",
+      "none": "Same as the trips"
+    },
+    "showMore": "Show {count} more months",
+    "showLess": "Show fewer months",
+    "loadError": "The invoices could not be loaded.",
+    "edit": "Toll invoice of {month}",
+    "add": "Enter the toll invoice of {month}",
+    "intro": "The total billed for the month. In the totals, it takes the place of the tolls entered or estimated on the trips of the month; the trips keep theirs.",
+    "total": "Total billed ({currency})",
+    "totalHelp": "0 when the month had no toll.",
+    "note": "Note",
+    "notePlaceholder": "Invoice number, operator…",
+    "onTrips": "Tolls on the trips of the month",
+    "preview": {
+      "unattached": "The invoice holds {amount} of tolls that no trip carries.",
+      "lower": "The trips record {amount} more than the invoice.",
+      "none": "The invoice matches the trips."
+    },
+    "delete": "Delete the invoice",
+    "deleteConfirm": "Delete the toll invoice of {month}? The month goes back to counting the tolls entered on its trips.",
+    "deleted": "Toll invoice deleted",
+    "saveError": "The invoice could not be saved"
   }
 }

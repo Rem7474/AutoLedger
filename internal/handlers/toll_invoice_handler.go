@@ -35,24 +35,66 @@ func tollInvoiceMonthBounds(month string, loc *time.Location) (start, end time.T
 	return first, models.AddCalendarMonths(first, 1), nil
 }
 
+// tollInvoiceMonth is one month of the recent window: what the individual tolls add up to, and its invoice if any.
+type tollInvoiceMonth struct {
+	Month     string              `json:"month"`
+	TripTolls money.Cents         `json:"trip_tolls"`
+	Invoice   *models.TollInvoice `json:"invoice"`
+}
+
 type tollInvoiceList struct {
 	Currency string               `json:"currency"`
 	Invoices []models.TollInvoice `json:"invoices"`
+	// Months are the latest months (the current one first), whether they have an invoice or not.
+	Months []tollInvoiceMonth `json:"months"`
 }
 
+const (
+	defaultTollInvoiceMonths = 12
+	maxTollInvoiceMonths     = 60
+)
+
 // List returns the invoices of the vehicle, the latest month first, each with the tolls entered individually in its
-// month and the gap between the two.
+// month and the gap between the two, and the latest months (`months`, 12 by default, 60 at most) with their tolls
+// so that a month without invoice shows what an invoice would replace.
 func (h *TollInvoiceHandler) List(w http.ResponseWriter, r *http.Request) {
 	v := requireVehicleAccess(w, r, h.repo, chi.URLParam(r, "vehicleId"), models.RoleViewer)
 	if v == nil {
 		return
+	}
+	window := defaultTollInvoiceMonths
+	if raw := r.URL.Query().Get("months"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 || n > maxTollInvoiceMonths {
+			writeAPIError(w, http.StatusBadRequest, apierror.Newf("toll_invoice.invalid_months", "months must be between 1 and %d", maxTollInvoiceMonths))
+			return
+		}
+		window = n
 	}
 	invoices, err := h.repo.ListTollInvoices(r.Context(), v.ID)
 	if err != nil {
 		writeRepoError(w, r, err, "Failed to list toll invoices")
 		return
 	}
-	writeJSON(w, http.StatusOK, tollInvoiceList{Currency: v.Currency, Invoices: invoices})
+	loc := h.dateLocation()
+	now := time.Now().In(loc)
+	current := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, loc)
+	oldest := models.AddCalendarMonths(current, -(window - 1))
+	tolls, err := h.repo.TripTollsByMonth(r.Context(), v.ID, loc.String(), oldest)
+	if err != nil {
+		writeRepoError(w, r, err, "Failed to read the tolls")
+		return
+	}
+	byMonth := make(map[string]*models.TollInvoice, len(invoices))
+	for i := range invoices {
+		byMonth[invoices[i].Month] = &invoices[i]
+	}
+	months := make([]tollInvoiceMonth, 0, window)
+	for i := 0; i < window; i++ {
+		key := models.AddCalendarMonths(current, -i).Format("2006-01")
+		months = append(months, tollInvoiceMonth{Month: key, TripTolls: tolls[key], Invoice: byMonth[key]})
+	}
+	writeJSON(w, http.StatusOK, tollInvoiceList{Currency: v.Currency, Invoices: invoices, Months: months})
 }
 
 // SaveTollInvoiceRequest is the invoice of a month. The total is in the vehicle's currency.

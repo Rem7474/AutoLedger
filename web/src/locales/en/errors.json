@@ -35,7 +35,8 @@
     "invalid_category": "Unknown category {p0}: use one of {p1}",
     "invalid_cursor": "The cursor is not one returned by a previous call",
     "invalid_amount": "The minimum amount must be a decimal number such as 12.50",
-    "invalid_sort": "Sort must be date or amount"
+    "invalid_sort": "Sort must be date or amount",
+    "invalid_version": "The expected version must be a whole number"
   },
   "member": {
     "invalid_role": "Invalid role: {p0}",
@@ -415,5 +416,11 @@
     "share_range": "The electric share must be between 0 and 100 %",
     "fuel_range": "Invalid fuel consumption",
     "battery_range": "Invalid battery capacity"
+  },
+  "toll_invoice": {
+    "invalid_month": "Invalid month: expected YYYY-MM",
+    "invalid_months": "The number of months must be between 1 and {p0}",
+    "future_month": "A month that has not started cannot have an invoice",
+    "invalid_total": "Invalid invoice total"
   }
 }

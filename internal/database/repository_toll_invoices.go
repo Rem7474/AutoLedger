@@ -144,3 +144,31 @@ func staleOrNotFoundInvoice(ctx context.Context, r *Repository, vehicleID, month
 	}
 	return ErrNotFound
 }
+
+// TripTollsByMonth adds up, per month of the given timezone, the tolls entered individually for a vehicle since
+// `since`, converted to the vehicle's currency the way cost_ledger does.
+func (r *Repository) TripTollsByMonth(ctx context.Context, vehicleID, timezone string, since time.Time) (map[string]money.Cents, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT TO_CHAR(e.date AT TIME ZONE $2, 'YYYY-MM'),
+		       SUM(ROUND(CASE WHEN e.currency = v.currency THEN e.amount ELSE e.amount * e.fx_rate END, 2))
+		FROM drive_expenses e
+		JOIN vehicles v ON v.id = e.vehicle_id
+		WHERE e.vehicle_id = $1 AND e.type = 'TOLL' AND e.date >= $3
+		  AND (e.currency = v.currency OR e.fx_rate IS NOT NULL)
+		GROUP BY 1;
+	`, vehicleID, timezone, since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]money.Cents{}
+	for rows.Next() {
+		var month string
+		var total money.Cents
+		if err := rows.Scan(&month, &total); err != nil {
+			return nil, err
+		}
+		out[month] = total
+	}
+	return out, rows.Err()
+}

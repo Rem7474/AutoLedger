@@ -61,7 +61,7 @@ export const entryKey = (e: CostEntryLine): string => `${e.source}:${e.source_id
 export function entryLabel(e: CostEntryLine): string {
   if (e.note) return e.note
   if (e.place) return e.place
-  return e.kind === 'charge' || e.kind === 'fuel_fill_up' ? t(`costs.kinds.${e.kind}`) : t(`costs.categories.${e.category}`)
+  return e.kind === 'charge' || e.kind === 'fuel_fill_up' || e.kind === 'toll_invoice' ? t(`costs.kinds.${e.kind}`) : t(`costs.categories.${e.category}`)
 }
 
 /** The second line of a row: the place of a charge that has a note, the energy bought. */
@@ -75,7 +75,7 @@ export function entryDetail(e: CostEntryLine, formatNumber: (n: number) => strin
 }
 
 /** What a tap on a line does: edit the record in its own form, go to the screen that holds it, or nothing (a line with no record of its own). */
-export type EntryTarget = { type: 'edit'; modal: 'charge' | 'toll' | 'maintenance' | 'fuel'; id: string } | { type: 'link'; to: string } | { type: 'none' }
+export type EntryTarget = { type: 'edit'; modal: 'charge' | 'toll' | 'maintenance' | 'fuel' | 'tollInvoice'; id: string } | { type: 'link'; to: string } | { type: 'none' }
 
 export function entryTarget(e: Pick<CostEntryLine, 'source' | 'source_id'>): EntryTarget {
   switch (e.source) {
@@ -87,6 +87,8 @@ export function entryTarget(e: Pick<CostEntryLine, 'source' | 'source_id'>): Ent
       return { type: 'edit', modal: 'maintenance', id: e.source_id }
     case 'fuel_logs':
       return { type: 'edit', modal: 'fuel', id: e.source_id }
+    case 'toll_invoices':
+      return { type: 'edit', modal: 'tollInvoice', id: e.source_id }
     case 'tires':
       return { type: 'link', to: '/tires' }
     default:

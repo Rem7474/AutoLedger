@@ -55,6 +55,40 @@
   "estimateNote": "Hors énergie estimée et échéances à venir, qui n'ont pas de ligne.",
   "kinds": {
     "charge": "Recharge",
-    "fuel_fill_up": "Plein"
+    "fuel_fill_up": "Plein",
+    "toll_invoice": "Facture de péages"
+  },
+  "tollInvoice": {
+    "title": "Factures de péages",
+    "hint": "La facture mensuelle remplace, dans les totaux, les péages saisis ou estimés sur les trajets de son mois. Les trajets et les covoiturages gardent leurs péages.",
+    "tripTolls": "Trajets : {amount}",
+    "noTolls": "Aucun péage sur les trajets",
+    "enter": "Saisir la facture",
+    "invoiced": "Facturé",
+    "gap": {
+      "unattached": "{amount} de péages sur aucun trajet",
+      "lower": "{amount} de moins que les trajets",
+      "none": "Identique aux trajets"
+    },
+    "showMore": "Afficher {count} mois de plus",
+    "showLess": "Afficher moins de mois",
+    "loadError": "Les factures n'ont pas pu être chargées.",
+    "edit": "Facture de péages de {month}",
+    "add": "Saisir la facture de péages de {month}",
+    "intro": "Le total facturé pour le mois. Dans les totaux, il prend la place des péages saisis ou estimés sur les trajets du mois ; les trajets gardent les leurs.",
+    "total": "Total facturé ({currency})",
+    "totalHelp": "0 si le mois n'a pas eu de péage.",
+    "note": "Note",
+    "notePlaceholder": "Numéro de facture, société…",
+    "onTrips": "Péages sur les trajets du mois",
+    "preview": {
+      "unattached": "La facture contient {amount} de péages qu'aucun trajet ne porte.",
+      "lower": "Les trajets comptent {amount} de plus que la facture.",
+      "none": "La facture correspond aux trajets."
+    },
+    "delete": "Supprimer la facture",
+    "deleteConfirm": "Supprimer la facture de péages de {month} ? Le mois recompte les péages saisis sur ses trajets.",
+    "deleted": "Facture de péages supprimée",
+    "saveError": "La facture n'a pas pu être enregistrée"
   }
 }
