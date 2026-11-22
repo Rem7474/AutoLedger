@@ -24,6 +24,7 @@ var versionedTables = map[string]bool{
 	"maintenance_reminders": true,
 	"tariff_plans":          true,
 	"comparison_scenarios":  true,
+	"toll_invoices":         true,
 }
 
 // staleOrNotFound tells why an UPDATE guarded by a version touched no row: the row is gone (ErrNotFound) or it was saved
