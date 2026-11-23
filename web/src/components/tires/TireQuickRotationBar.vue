@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ArrowUpDown, RefreshCw, Shuffle } from '@/icons'
+import { ArrowUpDown, Shuffle } from '@/icons'
 import { t } from '@/i18n'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
@@ -44,30 +44,24 @@ function handleQuickRotate(mode: RotationMode) {
 </script>
 
 <template>
-  <div class="p-3 card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-    <div class="flex items-center gap-2 text-slate-300 font-semibold">
-      <RefreshCw class="w-4 h-4 text-rose-400" />
-      <span>{{ $t('tires.tiresView.quickVehicleRotationsIn1') }}</span>
-    </div>
-    <div class="flex items-center gap-2 flex-wrap">
-      <button
-        @click="handleQuickRotate('FRONT_BACK')"
-        :disabled="rotating || !hasMountedTires"
-        :title="$t('tires.tiresView.rotateTooltip', { pairs: 'FL ⇄ RL, FR ⇄ RR' })"
-        class="tap btn btn-secondary"
-      >
-        <ArrowUpDown class="w-3.5 h-3.5 text-slate-400" />
-        {{ $t('tires.tiresView.frontRear') }}
-      </button>
-      <button
-        @click="handleQuickRotate('CROSS')"
-        :disabled="rotating || !hasMountedTires"
-        :title="$t('tires.tiresView.rotateTooltip', { pairs: 'FL ⇄ RR, FR ⇄ RL' })"
-        class="tap btn btn-secondary"
-      >
-        <Shuffle class="w-3.5 h-3.5 text-sky-400" />
-        {{ $t('tires.tiresView.crossRotation') }}
-      </button>
-    </div>
+  <div class="flex flex-wrap items-center gap-2" role="group" :aria-label="$t('tires.tiresView.quickVehicleRotationsIn1')">
+    <button
+      @click="handleQuickRotate('FRONT_BACK')"
+      :disabled="rotating || !hasMountedTires"
+      :title="$t('tires.tiresView.rotateTooltip', { pairs: 'FL ⇄ RL, FR ⇄ RR' })"
+      class="tap btn btn-secondary"
+    >
+      <ArrowUpDown class="w-3.5 h-3.5 text-slate-400" />
+      {{ $t('tires.tiresView.frontRear') }}
+    </button>
+    <button
+      @click="handleQuickRotate('CROSS')"
+      :disabled="rotating || !hasMountedTires"
+      :title="$t('tires.tiresView.rotateTooltip', { pairs: 'FL ⇄ RR, FR ⇄ RL' })"
+      class="tap btn btn-secondary"
+    >
+      <Shuffle class="w-3.5 h-3.5 text-slate-400" />
+      {{ $t('tires.tiresView.crossRotation') }}
+    </button>
   </div>
 </template>

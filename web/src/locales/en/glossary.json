@@ -63,5 +63,9 @@
     "label": "Cash paid",
     "definition": "Money actually paid: tires when bought, no depreciation."
   },
+  "treadNotMeasured": {
+    "label": "Theoretical wear",
+    "definition": "No tread depth measured yet: add a reading to replace the theoretical estimate."
+  },
   "about": "Definition of {term}"
 }

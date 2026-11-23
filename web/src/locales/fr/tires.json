@@ -12,7 +12,6 @@
     "scrapped": "Mis au rebut",
     "catalogueAndGarageStock": "Catalogue & stock au garage",
     "tiresFittedOnTheVehicle": "Pneus montés sur le véhicule",
-    "tireSInThisView": "{length} pneu(s) dans cette vue",
     "scrap": "Mettre au rebut",
     "scrapTheSelectedTires": "Mettre au rebut les pneus sélectionnés",
     "editInBulk": "Modifier par lot",
@@ -25,7 +24,6 @@
     "addTires": "Ajouter des pneus",
     "changeSet": "Changer de pack",
     "swapTheFittedSetWith": "Permuter le pack complet monté avec un pack de réserve (ex: Hiver / Été)",
-    "wearTrackingInMmEstimated": "Suivi de l'usure en mm, durée de vie estimée, permutations en 1 clic et historique complet des montages",
     "deselectAll": "Tout désélectionner",
     "selectAll": "Tout sélectionner",
     "rotateFrontBack": "Avant ⇄ arrière (FL ⇄ RL, FR ⇄ RR)",
@@ -364,7 +362,6 @@
   "measuredWear": {
     "label": "Usure mesurée",
     "value": "Sculpture {depth} mm · {pct} d'usure",
-    "none": "Aucune mesure : ajoutez une profondeur pour remplacer l'estimation théorique.",
     "lowConfidence": "Peu de millimètres usés pour l'instant : la prévision s'appuie sur l'usure moyenne. Ajoute un relevé pour l'affiner."
   },
   "wearComparison": {

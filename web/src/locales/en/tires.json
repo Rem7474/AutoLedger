@@ -12,7 +12,6 @@
     "scrapped": "Scrapped",
     "catalogueAndGarageStock": "Catalogue and garage stock",
     "tiresFittedOnTheVehicle": "Tires fitted on the vehicle",
-    "tireSInThisView": "{length} tire(s) in this view",
     "scrap": "Scrap",
     "scrapTheSelectedTires": "Scrap the selected tires",
     "editInBulk": "Edit in bulk",
@@ -25,7 +24,6 @@
     "addTires": "Add tires",
     "changeSet": "Change set",
     "swapTheFittedSetWith": "Swap the fitted set with a spare set (e.g. winter / summer)",
-    "wearTrackingInMmEstimated": "Wear tracking in mm, estimated lifespan, one-click rotations and the full fitting history",
     "deselectAll": "Deselect all",
     "selectAll": "Select all",
     "rotateFrontBack": "Front ⇄ Rear (FL ⇄ RL, FR ⇄ RR)",
@@ -364,7 +362,6 @@
   "measuredWear": {
     "label": "Measured wear",
     "value": "{depth} mm tread · {pct} worn",
-    "none": "No measurement: add a tread depth to replace the theoretical estimate.",
     "lowConfidence": "Few millimetres worn so far: the forecast leans on the average wear rate. Add a reading to refine it."
   },
   "wearComparison": {

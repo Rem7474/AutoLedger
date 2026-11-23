@@ -63,5 +63,9 @@
     "label": "Sommes payées",
     "definition": "Sommes réellement payées : pneus au moment de l'achat, sans décote."
   },
+  "treadNotMeasured": {
+    "label": "Usure théorique",
+    "definition": "Aucune profondeur de sculpture mesurée : ajoutez une mesure pour remplacer l'estimation théorique."
+  },
   "about": "Définition de {term}"
 }

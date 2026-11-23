@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import CardOpenButton from '@/components/CardOpenButton.vue'
-import KpiCard from '@/components/KpiCard.vue'
-import { formatNumber, formatPercent } from '@/utils/numbers'
-import { intlLocale } from '@/i18n'
+import GlossaryTip from '@/components/GlossaryTip.vue'
+import StatusLabel from '@/components/StatusLabel.vue'
+import { formatPercent } from '@/utils/numbers'
+import { t } from '@/i18n'
 import { Disc } from '@/icons'
-import { getConditionBadge } from '@/utils/tires'
 import TireWearBar from '@/components/tires/TireWearBar.vue'
 import TireForecastLine from '@/components/tires/TireForecastLine.vue'
 import TireMeasuredWear from '@/components/tires/TireMeasuredWear.vue'
@@ -15,8 +15,9 @@ import { computed } from 'vue'
 import { distanceUnit, formatDistance, formatDistanceValue, perDistance } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 
-// One wheel of the chassis view: the mounted tire with its wear, or a placeholder when the wheel is empty
-const props = defineProps<{ pos: string; label: string; stat: any | null; selected: boolean; selecting?: boolean; canMount?: boolean }>()
+// One wheel of an axle card: the mounted tire with its wear, or a placeholder when the wheel is empty. The tire is named only
+// when the wheels do not all carry the same one (`showModel`); a condition is written only when it is not good.
+const props = defineProps<{ pos: string; label: string; stat: any | null; showModel?: boolean; selected: boolean; selecting?: boolean; canMount?: boolean }>()
 const emit = defineEmits<{ open: [stat: any]; toggle: [tireId: string]; mount: [] }>()
 const vehicleStore = useVehicleStore()
 const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
@@ -25,13 +26,20 @@ const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
   toggle: () => emit('toggle', props.stat?.tire.id),
   open: () => emit('open', props.stat),
 })
+// The condition worth a word: a good tire is read from its gauge
+const condition = computed(() => {
+  const c = props.stat?.condition
+  if (c === 'WARNING') return { tone: 'attention' as const, label: t('tires.condition.warning') }
+  if (c === 'CRITICAL') return { tone: 'danger' as const, label: t('tires.condition.critical') }
+  return null
+})
 </script>
 
 <template>
   <div
     v-if="stat"
-    class="relative hover:border-rose-500/40 card sm:rounded-3xl p-3.5 sm:p-5 space-y-3 sm:space-y-4 shadow-sm transition-all group max-sm:select-none max-sm:[-webkit-touch-callout:none]"
-    :class="{ 'ring-2 ring-rose-500/50 border-rose-500/60': selected }"
+    class="relative space-y-3 rounded-2xl p-3 transition-colors hover:bg-slate-800/60 max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+    :class="{ 'ring-2 ring-rose-500/50': selected }"
   >
     <CardOpenButton
       :label="$t('tires.openTire', { name: `${stat.tire.brand} ${stat.tire.model}` })"
@@ -42,9 +50,9 @@ const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
       @pointercancel="press.onPointercancel"
       @contextmenu="press.onContextmenu"
     />
-    <div class="flex items-start justify-between">
-      <div>
-        <label :for="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id" :class="showBox ? 'relative z-10 cursor-pointer' : ''" class="flex items-center gap-2 text-xs font-bold text-danger-400 hover:text-danger-300" :title="selected ? $t('tires.tireWheelCard.removeFromSelection') : $t('tires.tireWheelCard.selectForBulk')">
+    <div class="flex items-start justify-between gap-2">
+      <div class="min-w-0">
+        <label :for="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id" :class="showBox ? 'relative z-10 cursor-pointer' : ''" class="flex items-center gap-2 text-sm font-bold text-white" :title="selected ? $t('tires.tireWheelCard.removeFromSelection') : $t('tires.tireWheelCard.selectForBulk')">
           <input
             v-if="showBox"
             :id="'chassis-select-' + pos.toLowerCase() + '-' + stat.tire.id"
@@ -53,31 +61,31 @@ const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
             @change="emit('toggle', stat.tire.id)"
             class="select-box"
           />
-          <span>{{ label }} ({{ pos }})</span>
+          <span>{{ label }}</span>
         </label>
-        <h3 class="text-sm sm:text-base font-bold text-white group-hover:text-rose-300 transition-colors mt-0.5">{{ stat.tire.brand }} {{ stat.tire.model }}</h3>
-        <div class="text-xs text-slate-400 font-mono">{{ stat.tire.dimension }}</div>
+        <template v-if="showModel">
+          <p class="mt-0.5 truncate text-xs text-slate-300" :title="`${stat.tire.brand} ${stat.tire.model}`">{{ stat.tire.brand }} {{ stat.tire.model }}</p>
+          <p class="text-xs text-slate-400 font-mono">{{ stat.tire.dimension }}</p>
+        </template>
       </div>
-      <span
-        class="px-2.5 py-1 rounded-full text-xs font-semibold border"
-        :class="getConditionBadge(stat.condition).class"
-      >
-        {{ getConditionBadge(stat.condition).label }}
-      </span>
+      <StatusLabel v-if="condition" :tone="condition.tone">{{ condition.label }}</StatusLabel>
     </div>
 
-    <!-- Metrics Row -->
-    <div class="grid grid-cols-2 gap-2">
-      <KpiCard compact :label="$t('tires.tireWheelCard.totalDriven')" :value="formatDistance(stat.total_distance_km)" />
-      <div :title="Number(stat.tire.purchase_price) > 0 ? undefined : $t('tires.costPerKmUnset')">
-        <KpiCard compact :label="$t('tires.tireWheelCard.costKm', { unit: distanceUnit() })" :value="formatCostPerDistance(stat.cost_per_km, vehicleStore.currency, 4)" />
+    <dl class="grid grid-cols-2 gap-3">
+      <div>
+        <dt class="text-xs text-slate-400">{{ $t('tires.tireWheelCard.totalDriven') }}</dt>
+        <dd class="text-base font-bold tabular-nums text-white">{{ formatDistance(stat.total_distance_km) }}</dd>
       </div>
-    </div>
+      <div :title="Number(stat.tire.purchase_price) > 0 ? undefined : $t('tires.costPerKmUnset')">
+        <dt class="text-xs text-slate-400">{{ $t('tires.tireWheelCard.costKm', { unit: distanceUnit() }) }}</dt>
+        <dd class="text-base font-bold tabular-nums text-white">{{ formatCostPerDistance(stat.cost_per_km, vehicleStore.currency, 4) }}</dd>
+      </div>
+    </dl>
 
     <!-- Lifespan progress bar -->
     <div class="space-y-1.5">
       <div class="flex items-center justify-between text-xs text-slate-400">
-        <span>{{ $t('tires.tireWheelCard.estimatedLifespanWearKm', { unit: distanceUnit(), estimated_lifespan_km: formatDistanceValue(stat.estimated_lifespan_km) }) }}</span>
+        <span>{{ $t('tires.tireWheelCard.estimatedLifespanWearKm', { unit: distanceUnit(), estimated_lifespan_km: formatDistanceValue(stat.estimated_lifespan_km) }) }}<GlossaryTip v-if="!(stat.logs_count > 0)" class="relative z-10" term="treadNotMeasured" /></span>
         <span class="font-bold text-slate-200">{{ formatPercent(Number(stat.life_progress_pct)) }}</span>
       </div>
       <TireWearBar :pct="stat.life_progress_pct" :condition="stat.condition" />
@@ -85,10 +93,10 @@ const { showBox, press, onPointerdown, onRowClick } = useSelectableRow({
     <TireMeasuredWear :stat="stat" />
     <TireForecastLine :forecast="stat.replacement_forecast" />
   </div>
-  <div v-else class="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-center text-slate-400 flex flex-col items-center justify-center space-y-2">
-    <Disc class="w-8 h-8 opacity-30" />
+  <div v-else class="flex min-h-32 flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-slate-800 p-4 text-center text-xs text-slate-400">
+    <Disc class="w-8 h-8 opacity-30" aria-hidden="true" />
     <span>{{ $t('tires.tireWheelCard.noTireFittedAtThe', { label, pos }) }}</span>
-    <button v-if="canMount" type="button" @click="emit('mount')" class="text-xs font-semibold text-rose-400 hover:text-rose-300 underline">
+    <button v-if="canMount" type="button" @click="emit('mount')" class="tap-text font-semibold text-slate-200 underline">
       {{ $t('tires.tireWheelCard.fitATire') }}
     </button>
   </div>
