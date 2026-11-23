@@ -303,6 +303,7 @@
     "depreciation": "Depreciation",
     "other": "Subscriptions, taxes and other",
     "tiresCash": "Tires (purchases)",
+    "viewMode": "Donut view",
     "modeFull": "Full cost",
     "modeCash": "Cash out",
     "cashTitle": "Breakdown of cash spent"

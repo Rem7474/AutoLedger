@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ModalShell from '@/components/ModalShell.vue'
+import SegmentedControl from '@/components/SegmentedControl.vue'
 import { t } from '@/i18n'
 import DistanceInput from '@/components/DistanceInput.vue'
 import { computed, nextTick, ref, watch } from 'vue'
@@ -238,19 +239,16 @@ const handleSaveReminder = () => runOnce(handleSaveReminderAction)
       <!-- Periodicities -->
       <div class="p-3.5 bg-slate-800/40 rounded-xl border border-slate-800 space-y-3">
         <span class="block text-xs font-semibold text-slate-200">{{ scheduleMode === 'date' ? $t('expenses.reminderModal.scheduleTitleDate') : $t('expenses.reminderModal.frequencyAtLeastOneOf') }}</span>
-        <div role="group" :aria-label="$t('expenses.reminderModal.scheduleMode')" class="flex gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1">
-          <button
-            v-for="mode in (['interval', 'date'] as const)"
-            :key="mode"
-            type="button"
-            :aria-pressed="scheduleMode === mode"
-            class="tap-text flex-1 whitespace-nowrap rounded-lg px-2 text-xs font-semibold transition-colors"
-            :class="scheduleMode === mode ? 'bg-rose-500/15 text-rose-200' : 'text-slate-400 hover:text-white'"
-            @click="setScheduleMode(mode)"
-          >
-            {{ mode === 'interval' ? $t('expenses.reminderModal.modeInterval') : $t('expenses.reminderModal.modeDate') }}
-          </button>
-        </div>
+        <SegmentedControl
+          fill
+          :model-value="scheduleMode"
+          :label="$t('expenses.reminderModal.scheduleMode')"
+          :options="[
+            { value: 'interval', label: $t('expenses.reminderModal.modeInterval') },
+            { value: 'date', label: $t('expenses.reminderModal.modeDate') },
+          ]"
+          @update:model-value="setScheduleMode"
+        />
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
           <div>
             <label for="reminder-form-interval-km" class="block text-xs font-semibold text-slate-300 mb-1">{{ $t('expenses.reminderModal.intervalInKm', { unit: distanceUnit() }) }}</label>
