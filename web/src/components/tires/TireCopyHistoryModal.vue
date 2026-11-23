@@ -78,12 +78,12 @@ async function handleCopyHistorySubmit() {
 
 <template>
   <ModalShell
+    pane
     v-if="copyHistorySourceTire"
     v-model:open="open"
     :title="$t('tires.tireCopyHistoryModal.copyTheFullHistory')"
     :icon="Copy"
     icon-class="text-sky-400"
-    nested
     body-class="space-y-4 text-xs"
     footer-class="items-center justify-end gap-2"
   >
