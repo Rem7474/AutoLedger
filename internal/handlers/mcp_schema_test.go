@@ -191,7 +191,7 @@ func TestMCPToolListMatchesTheGoldenFile(t *testing.T) {
 // mcpToolListBudgetBytes bounds the size of tools/list. A client with a context budget may drop the tools it cannot fit
 // (the ones late in the alphabet go first), so growth is a decision: raise the ceiling in the same change as the tool
 // or the field that needs it, and say why.
-const mcpToolListBudgetBytes = 200 * 1024
+const mcpToolListBudgetBytes = 180 * 1024
 
 func TestMCPToolListStaysWithinItsBudget(t *testing.T) {
 	raw, err := json.Marshal(listMCPTools(t))

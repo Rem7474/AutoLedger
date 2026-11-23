@@ -174,7 +174,7 @@ func TestMCPToolsAreReadOnlyExceptTheWritingOnesAndServeTheAccountsVehiclesWitho
 	for _, tool := range tools.Tools {
 		names = append(names, tool.Name)
 		// Whether the tool overwrites records: creating adds, changing a carpool replaces what it held
-		if overwrites, writes := map[string]bool{"create_carpool_from_drives": false, "update_carpool": true, "update_drive_expenses": true, "create_expense": false, "record_odometer": false, "add_fuel_fill": false, "add_charge": false, "delete_record": true, "set_toll_invoice": true}[tool.Name]; writes {
+		if overwrites, writes := map[string]bool{"create_carpool_from_drives": false, "update_carpool": true, "update_drive_expenses": true, "create_expense": false, "record_odometer": false, "add_fuel_fill": false, "add_charge": false, "delete_record": true, "update_expense": true, "set_toll_invoice": true}[tool.Name]; writes {
 			if tool.Annotations == nil || tool.Annotations.ReadOnlyHint || tool.Annotations.DestructiveHint == nil || *tool.Annotations.DestructiveHint != overwrites {
 				t.Errorf("%s: destructive hint must be %v: %+v", tool.Name, overwrites, tool.Annotations)
 			}
@@ -184,7 +184,7 @@ func TestMCPToolsAreReadOnlyExceptTheWritingOnesAndServeTheAccountsVehiclesWitho
 			t.Errorf("%s must be declared read-only", tool.Name)
 		}
 	}
-	if strings.Join(names, ",") != "add_charge,add_fuel_fill,create_carpool_from_drives,create_expense,delete_record,estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_current_tariff,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_tolls_report,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles,record_odometer,set_toll_invoice,update_carpool,update_drive_expenses" {
+	if strings.Join(names, ",") != "add_charge,add_fuel_fill,create_carpool_from_drives,create_expense,delete_record,estimate_charge_cost,get_carpool,get_charging_places,get_comparison,get_current_tariff,get_data_sources,get_drive_summary,get_energy_efficiency,get_fleet_summary,get_mileage_report,get_month_breakdown,get_monthly_costs,get_odometer,get_reminders,get_tag_breakdown,get_tire_status,get_tolls_report,get_vehicle_costs,get_vehicle_data_gaps,get_vehicle_ownership,list_expenses,list_tariff_plans,list_trip_groups,list_vehicle_trips,list_vehicles,record_odometer,set_toll_invoice,update_carpool,update_drive_expenses,update_expense" {
 		t.Errorf("tools: %v", names)
 	}
 
