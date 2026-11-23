@@ -86,9 +86,9 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   const { tools } = await client.listTools()
   expect(tools.length).toBeGreaterThan(0)
   // The tools that write are named here on purpose: a new one has to be added to this list in review.
-  const writing = ['add_charge', 'add_fuel_fill', 'create_carpool_from_drives', 'create_expense', 'record_odometer', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
+  const writing = ['add_charge', 'add_fuel_fill', 'create_carpool_from_drives', 'create_expense', 'delete_record', 'record_odometer', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
   // Creating adds records; changing a carpool replaces what it held
-  const overwrites = ['set_toll_invoice', 'update_carpool', 'update_drive_expenses']
+  const overwrites = ['delete_record', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
   for (const tool of tools) {
     if (writing.includes(tool.name)) {
       expect(tool.annotations?.readOnlyHint, `${tool.name} writes`).not.toBe(true)
@@ -114,6 +114,7 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
       create_expense: { vehicle_id: vehicles[0].id, category: 'other', amount: '1.00', date: '2026-01-01', description: 'x' },
       add_charge: { vehicle_id: vehicles[0].id, date: '2026-01-01', kwh_added: 10, cost: '3.00' },
       add_fuel_fill: { vehicle_id: vehicles[0].id, date: '2026-01-01', amount: '10.00' },
+      delete_record: { vehicle_id: vehicles[0].id, kind: 'expense', id: '00000000-0000-4000-8000-000000000001', dry_run: true },
       record_odometer: { vehicle_id: vehicles[0].id, date: '2026-01-01', odometer_km: 1000 },
       set_toll_invoice: { vehicle_id: vehicles[0].id, month: '2026-01', total: '10.00' },
     }

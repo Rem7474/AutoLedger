@@ -41,7 +41,7 @@ func (h *MCPHandler) addExpenseCreateTools() {
 		Name:  "create_expense",
 		Title: "Record an expense",
 		Description: "Records one running cost the owner paid and that no other record holds: a service or repair, an insurance, a subscription or a fee (a toll badge fee, say), a tax, an accessory. Give the category, the amount, the day and what it is for; give repeats_every_months to record a recurring fee once instead of every month. " +
-			"It does not record tolls or parking (update_drive_expenses sets them on a trip), charges, fill-ups, tires or loan instalments. It never changes or deletes an existing expense, and an expense identical to one already recorded (same category, day, amount and description) is refused rather than recorded twice. " +
+			"It does not record tolls or parking (update_drive_expenses sets them on a trip), charges, fill-ups, tires or loan instalments. It never changes an existing expense, and an expense identical to one already recorded (same category, day, amount and description) is refused rather than recorded twice. " +
 			"This writes to the owner's records: call it with dry_run true first, show the owner the entry, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. " +
 			"The description is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(false), IdempotentHint: false, OpenWorldHint: ptr(false)},

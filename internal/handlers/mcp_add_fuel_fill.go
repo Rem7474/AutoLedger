@@ -48,7 +48,7 @@ func (h *MCPHandler) addFuelWriteTools() {
 		Name:  "add_fuel_fill",
 		Title: "Record a fuel fill-up",
 		Description: "Records a fill-up of a combustion or hybrid vehicle, as the fill-up form of the app does. Give the day and two of the amount, the litres and the price per litre: the third is worked out. The odometer is optional; when given it is checked against the other readings and a mileage that contradicts them is refused. " +
-			"It does not apply to electric vehicles (record a charge instead) and never changes or deletes a fill-up. " +
+			"It does not apply to electric vehicles (record a charge instead) and never changes a fill-up. " +
 			"This writes to the owner's records: call it with dry_run true first, show the owner the fill-up as worked out, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. " +
 			"The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(false), IdempotentHint: false, OpenWorldHint: ptr(false)},
