@@ -21,6 +21,9 @@ const (
 
 // IntegrationTripGroup is a journey the owner grouped several drives into.
 type IntegrationTripGroup struct {
+	ID             string              `json:"id" jsonschema:"the id of the group, to change or delete it with manage_trip_group"`
+	Version        int64               `json:"version" jsonschema:"to give back as expected_version"`
+	DriveIDs       []string            `json:"drive_ids" jsonschema:"the drives of the group, as list_vehicle_trips gives their drive_id"`
 	Name           string              `json:"name" jsonschema:"the group's name, user text"`
 	Start          *string             `json:"start_time" jsonschema:"RFC 3339 instant the first drive began; null when the group has no drive"`
 	End            *string             `json:"end_time" jsonschema:"RFC 3339 instant the last drive ended; null when the group has no drive"`
@@ -47,7 +50,7 @@ func buildIntegrationTripGroups(vehicleID, currency string, groups []models.Trip
 			break
 		}
 		item := IntegrationTripGroup{
-			Name: g.Name, Drives: len(g.DriveIDs), Distance: kilometres(g.DistanceKm), TravelExpenses: amountOf(g.TollsTotal, currency),
+			ID: g.ID, Version: g.Version, DriveIDs: append([]string{}, g.DriveIDs...), Name: g.Name, Drives: len(g.DriveIDs), Distance: kilometres(g.DistanceKm), TravelExpenses: amountOf(g.TollsTotal, currency),
 			GroupExpenses: g.ExpenseCount, CarpoolTrips: g.CarpoolCount, Notes: noteOf(g.Notes),
 		}
 		if g.StartTime != nil {

@@ -142,3 +142,12 @@ func (r *Repository) DeleteFuelLog(ctx context.Context, vehicleID, fuelLogID str
 	}
 	return nil
 }
+
+// GetFuelLog reads one fill-up of the vehicle; ErrNotFound when it is not one of its.
+func (r *Repository) GetFuelLog(ctx context.Context, vehicleID, id string) (*models.FuelLog, error) {
+	f, err := scanFuelLog(r.pool.QueryRow(ctx, `SELECT `+fuelColumns+` FROM fuel_logs WHERE vehicle_id = $1 AND id::text = $2;`, vehicleID, id))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return f, err
+}

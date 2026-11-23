@@ -2821,6 +2821,18 @@
     },
     "vehicle_id": "string"
   },
+  "list_odometer_readings / empty": {
+    "readings": []
+  },
+  "list_odometer_readings / ev": {
+    "readings": []
+  },
+  "list_odometer_readings / ice": {
+    "readings": []
+  },
+  "list_odometer_readings / layout": {
+    "readings": []
+  },
   "list_tariff_plans": {
     "plans": []
   },

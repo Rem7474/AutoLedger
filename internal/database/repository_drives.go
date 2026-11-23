@@ -452,3 +452,13 @@ func (r *Repository) ListCoordinateAddressDrives(ctx context.Context, vehicleID 
 	}
 	return out, rows.Err()
 }
+
+// GetDriveDriverName reads the name of the person who drove a drive of the vehicle; nil when none is assigned.
+func (r *Repository) GetDriveDriverName(ctx context.Context, driveID, vehicleID string) (*string, error) {
+	var name *string
+	err := r.pool.QueryRow(ctx, `SELECT (SELECT name FROM vehicle_people WHERE id = drives.driver_id) FROM drives WHERE id::text = $1 AND vehicle_id = $2;`, driveID, vehicleID).Scan(&name)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return name, err
+}

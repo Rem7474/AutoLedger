@@ -15,6 +15,9 @@ const (
 	RecordExpense  = "expense"      // maintenance_expenses: a service, insurance, tax, accessory...
 	RecordFuelFill = "fuel_fill_up" // fuel_logs
 	RecordCharge   = "charge"       // charge_logs, the manual ones only: a synchronised charge would come back on the next sync
+	// RecordOdometerReading is a reading the owner typed (odometer_checkpoints, source MANUAL): the ones an integration
+	// reports are written again by it.
+	RecordOdometerReading = "odometer_reading"
 )
 
 // RecordSummary describes a record a caller may delete, with the version a delete has to quote.
@@ -30,9 +33,10 @@ type RecordSummary struct {
 // recordQueries holds, per kind, the select of a RecordSummary and the table to delete from. The identifiers are
 // constants of this file: nothing from a caller is put in the SQL text.
 var recordQueries = map[string]struct{ selectSQL, table string }{
-	RecordExpense:  {`SELECT version, date, amount, description FROM maintenance_expenses WHERE id::text = $1 AND vehicle_id = $2`, "maintenance_expenses"},
-	RecordFuelFill: {`SELECT version, date, amount, notes FROM fuel_logs WHERE id::text = $1 AND vehicle_id = $2`, "fuel_logs"},
-	RecordCharge:   {`SELECT version, date, cost, notes FROM charge_logs WHERE id::text = $1 AND vehicle_id = $2 AND is_manual = TRUE`, "charge_logs"},
+	RecordExpense:         {`SELECT version, date, amount, description FROM maintenance_expenses WHERE id::text = $1 AND vehicle_id = $2`, "maintenance_expenses"},
+	RecordFuelFill:        {`SELECT version, date, amount, notes FROM fuel_logs WHERE id::text = $1 AND vehicle_id = $2`, "fuel_logs"},
+	RecordCharge:          {`SELECT version, date, cost, notes FROM charge_logs WHERE id::text = $1 AND vehicle_id = $2 AND is_manual = TRUE`, "charge_logs"},
+	RecordOdometerReading: {`SELECT version, date, NULL::bigint, notes FROM odometer_checkpoints WHERE id::text = $1 AND vehicle_id = $2 AND source = 'MANUAL'`, "odometer_checkpoints"},
 }
 
 // FindRecord reads the summary of a record of the vehicle; ErrNotFound when there is none (or, for a charge, when it is
@@ -61,8 +65,11 @@ func (r *Repository) DeleteRecordAtVersion(ctx context.Context, kind, vehicleID,
 		return ErrNotFound
 	}
 	extra := ""
-	if kind == RecordCharge {
+	switch kind {
+	case RecordCharge:
 		extra = " AND is_manual = TRUE"
+	case RecordOdometerReading:
+		extra = " AND source = 'MANUAL'"
 	}
 	tag, err := r.pool.Exec(ctx, `DELETE FROM `+q.table+` WHERE id::text = $1 AND vehicle_id = $2 AND version = $3`+extra, id, vehicleID, expected)
 	if err != nil {

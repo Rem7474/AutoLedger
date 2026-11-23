@@ -86,9 +86,9 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
   const { tools } = await client.listTools()
   expect(tools.length).toBeGreaterThan(0)
   // The tools that write are named here on purpose: a new one has to be added to this list in review.
-  const writing = ['add_charge', 'add_fuel_fill', 'create_carpool_from_drives', 'create_expense', 'delete_record', 'record_odometer', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses', 'update_expense']
+  const writing = ['add_charge', 'add_fuel_fill', 'create_carpool_from_drives', 'create_expense', 'delete_record', 'record_odometer', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses', 'update_expense', 'update_fuel_fill', 'update_charge', 'update_odometer_reading', 'carpool_costs', 'update_trips', 'manage_trip_group', 'estimate_trip_tolls']
   // Creating adds records; changing a carpool replaces what it held
-  const overwrites = ['delete_record', 'update_expense', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
+  const overwrites = ['delete_record', 'update_fuel_fill', 'update_charge', 'update_odometer_reading', 'carpool_costs', 'manage_trip_group', 'estimate_trip_tolls', 'update_expense', 'set_toll_invoice', 'update_carpool', 'update_drive_expenses']
   for (const tool of tools) {
     if (writing.includes(tool.name)) {
       expect(tool.annotations?.readOnlyHint, `${tool.name} writes`).not.toBe(true)
@@ -118,6 +118,13 @@ test('an assistant built on the official SDK authorizes, lists and calls every t
       delete_record: { vehicle_id: vehicles[0].id, kind: 'expense', id: '00000000-0000-4000-8000-000000000001', dry_run: true },
       record_odometer: { vehicle_id: vehicles[0].id, date: '2026-01-01', odometer_km: 1000 },
       set_toll_invoice: { vehicle_id: vehicles[0].id, month: '2026-01', total: '10.00' },
+      update_fuel_fill: { vehicle_id: vehicles[0].id, fill_id: drive, amount: '1.00', dry_run: true },
+      update_charge: { vehicle_id: vehicles[0].id, charge_id: drive, cost: '1.00', dry_run: true },
+      update_odometer_reading: { vehicle_id: vehicles[0].id, reading_id: drive, odometer_km: 1000, dry_run: true },
+      carpool_costs: { vehicle_id: vehicles[0].id, carpool_id: drive, action: 'freeze' },
+      update_trips: { vehicle_id: vehicles[0].id, drive_ids: [drive], add_tags: ['x'], dry_run: true },
+      manage_trip_group: { vehicle_id: vehicles[0].id, action: 'delete', group_id: drive, dry_run: true },
+      estimate_trip_tolls: { vehicle_id: vehicles[0].id, drive_ids: [drive] },
     }
     const refused = await call(client, name, args[name])
     expect(refused.isError, `${name} on a read grant`).toBe(true)
