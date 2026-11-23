@@ -436,6 +436,26 @@
     },
     "name": "create_carpool_from_drives",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "carpool": {
@@ -476,65 +496,20 @@
               ]
             },
             "driver_cost_share": {
-              "additionalProperties": false,
-              "description": "the part of the cost the driver keeps",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "the part of the cost the driver keeps"
             },
             "energy_cost": {
-              "additionalProperties": false,
-              "description": "energy part of the cost",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "energy part of the cost"
             },
             "id": {
               "description": "the id of the carpool trip; empty for a carpool that was only previewed",
               "type": "string"
             },
             "net_cost": {
-              "additionalProperties": false,
-              "description": "total cost minus revenue",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "total cost minus revenue"
             },
             "notes": {
               "description": "free note on the trip, user text; null when none",
@@ -556,23 +531,8 @@
                     ]
                   },
                   "balance": {
-                    "additionalProperties": false,
-                    "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape1",
+                    "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe"
                   },
                   "boards_at": {
                     "description": "the stop where the passenger got on; null when that stop has no label",
@@ -582,23 +542,8 @@
                     ]
                   },
                   "cost_share": {
-                    "additionalProperties": false,
-                    "description": "fair share of the costs of the legs the passenger rode",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape1",
+                    "description": "fair share of the costs of the legs the passenger rode"
                   },
                   "name": {
                     "description": "the passenger's name as the owner typed it, user text; \"Passenger N\" (N from 1, in the order listed) for a passenger left without a name",
@@ -612,23 +557,8 @@
                     ]
                   },
                   "paid": {
-                    "additionalProperties": false,
-                    "description": "what the passenger paid",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape1",
+                    "description": "what the passenger paid"
                   },
                   "seats": {
                     "description": "seats the passenger took",
@@ -653,23 +583,8 @@
               ]
             },
             "revenue": {
-              "additionalProperties": false,
-              "description": "what the passengers paid",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the passengers paid"
             },
             "stops": {
               "description": "the stops of the trip in order, from departure to arrival; a stop without a label is null",
@@ -689,42 +604,12 @@
               "type": "string"
             },
             "tolls_cost": {
-              "additionalProperties": false,
-              "description": "tolls part of the cost",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "tolls part of the cost"
             },
             "total_cost": {
-              "additionalProperties": false,
-              "description": "what the trip cost to run",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the trip cost to run"
             },
             "version": {
               "description": "counts the saves of the carpool: give it back as expected_version to update_carpool; 0 for a carpool that was only previewed",
@@ -770,7 +655,7 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
-    "description": "Records one running cost the owner paid and that no other record holds: a service or repair, an insurance, a subscription or a fee (a toll badge fee, say), a tax, an accessory. Give the category, the amount, the day and what it is for; give repeats_every_months to record a recurring fee once instead of every month. It does not record tolls or parking (update_drive_expenses sets them on a trip), charges, fill-ups, tires or loan instalments. It never changes an existing expense, and an expense identical to one already recorded (same category, day, amount and description) is refused rather than recorded twice. This writes to the owner's records: call it with dry_run true first, show the owner the entry, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The description is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "description": "Records one running cost the owner paid and that no other record holds: a service or repair, an insurance, a subscription or a fee (a toll badge fee, say), a tax, an accessory. Give the category, the amount, the day and what it is for; give repeats_every_months to record a recurring fee once instead of every month. It does not record tolls or parking (update_drive_expenses sets them on a trip), charges, fill-ups, tires or loan instalments. It never changes an existing expense (update_expense does), and an expense identical to one already recorded (same category, day, amount and description) is refused rather than recorded twice. This writes to the owner's records: call it with dry_run true first, show the owner the entry, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The description is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1263,6 +1148,44 @@
     },
     "name": "get_carpool",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "currency": {
@@ -1281,61 +1204,16 @@
               ]
             },
             "distance": {
-              "additionalProperties": false,
-              "description": "distance of the carpool trips",
-              "properties": {
-                "unit": {
-                  "description": "always km",
-                  "type": "string"
-                },
-                "value": {
-                  "description": "the distance",
-                  "type": "number"
-                }
-              },
-              "required": [
-                "value",
-                "unit"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "distance of the carpool trips"
             },
             "driver_fair_share": {
-              "additionalProperties": false,
-              "description": "the part of the costs the driver keeps, including the empty seats",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape2",
+              "description": "the part of the costs the driver keeps, including the empty seats"
             },
             "net_cost": {
-              "additionalProperties": false,
-              "description": "real cost minus revenue: what the trips cost the owner after being repaid",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape2",
+              "description": "real cost minus revenue: what the trips cost the owner after being repaid"
             },
             "net_cost_per_km": {
               "additionalProperties": false,
@@ -1364,61 +1242,16 @@
               "type": "integer"
             },
             "passengers_fair_share": {
-              "additionalProperties": false,
-              "description": "what the passengers should cover given the legs they rode",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape2",
+              "description": "what the passengers should cover given the legs they rode"
             },
             "real_cost": {
-              "additionalProperties": false,
-              "description": "what those trips cost to run (energy, tolls, tires, maintenance, insurance and others)",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape2",
+              "description": "what those trips cost to run (energy, tolls, tires, maintenance, insurance and others)"
             },
             "revenue": {
-              "additionalProperties": false,
-              "description": "what the passengers paid",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape2",
+              "description": "what the passengers paid"
             },
             "trips": {
               "description": "number of carpool trips",
@@ -1449,23 +1282,8 @@
                 "type": "string"
               },
               "distance": {
-                "additionalProperties": false,
-                "description": "distance of the trip",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "distance of the trip"
               },
               "drive_ids": {
                 "description": "the trips (drive_id of list_vehicle_trips) that are the legs of this carpool, in order; a leg without a recorded trip has none",
@@ -1478,65 +1296,20 @@
                 ]
               },
               "driver_cost_share": {
-                "additionalProperties": false,
-                "description": "the part of the cost the driver keeps",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "the part of the cost the driver keeps"
               },
               "energy_cost": {
-                "additionalProperties": false,
-                "description": "energy part of the cost",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "energy part of the cost"
               },
               "id": {
                 "description": "the id of the carpool trip; empty for a carpool that was only previewed",
                 "type": "string"
               },
               "net_cost": {
-                "additionalProperties": false,
-                "description": "total cost minus revenue",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "total cost minus revenue"
               },
               "notes": {
                 "description": "free note on the trip, user text; null when none",
@@ -1558,23 +1331,8 @@
                       ]
                     },
                     "balance": {
-                      "additionalProperties": false,
-                      "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe",
-                      "properties": {
-                        "amount": {
-                          "description": "decimal string, e.g. 12.34, never rounded",
-                          "type": "string"
-                        },
-                        "currency": {
-                          "description": "ISO 4217 code of the vehicle",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "amount",
-                        "currency"
-                      ],
-                      "type": "object"
+                      "$ref": "#/$defs/shape2",
+                      "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe"
                     },
                     "boards_at": {
                       "description": "the stop where the passenger got on; null when that stop has no label",
@@ -1584,23 +1342,8 @@
                       ]
                     },
                     "cost_share": {
-                      "additionalProperties": false,
-                      "description": "fair share of the costs of the legs the passenger rode",
-                      "properties": {
-                        "amount": {
-                          "description": "decimal string, e.g. 12.34, never rounded",
-                          "type": "string"
-                        },
-                        "currency": {
-                          "description": "ISO 4217 code of the vehicle",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "amount",
-                        "currency"
-                      ],
-                      "type": "object"
+                      "$ref": "#/$defs/shape2",
+                      "description": "fair share of the costs of the legs the passenger rode"
                     },
                     "name": {
                       "description": "the passenger's name as the owner typed it, user text; \"Passenger N\" (N from 1, in the order listed) for a passenger left without a name",
@@ -1614,23 +1357,8 @@
                       ]
                     },
                     "paid": {
-                      "additionalProperties": false,
-                      "description": "what the passenger paid",
-                      "properties": {
-                        "amount": {
-                          "description": "decimal string, e.g. 12.34, never rounded",
-                          "type": "string"
-                        },
-                        "currency": {
-                          "description": "ISO 4217 code of the vehicle",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "amount",
-                        "currency"
-                      ],
-                      "type": "object"
+                      "$ref": "#/$defs/shape2",
+                      "description": "what the passenger paid"
                     },
                     "seats": {
                       "description": "seats the passenger took",
@@ -1655,23 +1383,8 @@
                 ]
               },
               "revenue": {
-                "additionalProperties": false,
-                "description": "what the passengers paid",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "what the passengers paid"
               },
               "stops": {
                 "description": "the stops of the trip in order, from departure to arrival; a stop without a label is null",
@@ -1691,42 +1404,12 @@
                 "type": "string"
               },
               "tolls_cost": {
-                "additionalProperties": false,
-                "description": "tolls part of the cost",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "tolls part of the cost"
               },
               "total_cost": {
-                "additionalProperties": false,
-                "description": "what the trip cost to run",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "what the trip cost to run"
               },
               "version": {
                 "description": "counts the saves of the carpool: give it back as expected_version to update_carpool; 0 for a carpool that was only previewed",
@@ -1806,6 +1489,26 @@
     },
     "name": "get_charging_places",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "currency": {
@@ -1817,42 +1520,12 @@
           "description": "what charging away from home cost compared with the home price; null when nothing can be compared",
           "properties": {
             "at_home_price": {
-              "additionalProperties": false,
-              "description": "what the same energy would have cost at the home price",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the same energy would have cost at the home price"
             },
             "away_cost": {
-              "additionalProperties": false,
-              "description": "what charging away from home cost",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what charging away from home cost"
             },
             "away_sessions": {
               "description": "sessions away from home",
@@ -1881,23 +1554,8 @@
               ]
             },
             "savings": {
-              "additionalProperties": false,
-              "description": "away cost minus the cost at the home price: positive when charging at home would have been cheaper, negative when charging away was",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "away cost minus the cost at the home price: positive when charging at home would have been cheaper, negative when charging away was"
             }
           },
           "required": [
@@ -1943,23 +1601,8 @@
                 "type": "string"
               },
               "cost": {
-                "additionalProperties": false,
-                "description": "what those sessions cost, free ones counted as zero; sessions without a cost are left out",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what those sessions cost, free ones counted as zero; sessions without a cost are left out"
               },
               "energy_kwh": {
                 "description": "energy those sessions added, in kWh",
@@ -2097,6 +1740,97 @@
     },
     "name": "get_comparison",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "cost_per_km": {
+              "additionalProperties": false,
+              "description": "total over the distance of the period; null when it is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string, e.g. 12.34, never rounded",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 code of the vehicle",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "depreciation": {
+              "$ref": "#/$defs/shape2",
+              "description": "purchase price minus the resale value at the end of the period"
+            },
+            "energy": {
+              "$ref": "#/$defs/shape2",
+              "description": "electricity or fuel over the period"
+            },
+            "insurance": {
+              "$ref": "#/$defs/shape2",
+              "description": "insurance over the period"
+            },
+            "maintenance": {
+              "$ref": "#/$defs/shape2",
+              "description": "maintenance over the period"
+            },
+            "per_month": {
+              "$ref": "#/$defs/shape2",
+              "description": "total over the number of months"
+            },
+            "per_year": {
+              "$ref": "#/$defs/shape2",
+              "description": "total over the number of years"
+            },
+            "tax": {
+              "$ref": "#/$defs/shape2",
+              "description": "yearly taxes over the period"
+            },
+            "total": {
+              "$ref": "#/$defs/shape2",
+              "description": "all of the above"
+            }
+          },
+          "required": [
+            "energy",
+            "maintenance",
+            "insurance",
+            "tax",
+            "depreciation",
+            "total",
+            "per_year",
+            "per_month",
+            "cost_per_km"
+          ],
+          "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "result": {
@@ -2132,196 +1866,8 @@
               ]
             },
             "combustion": {
-              "additionalProperties": false,
-              "description": "the combustion vehicle it is compared with",
-              "properties": {
-                "cost_per_km": {
-                  "additionalProperties": false,
-                  "description": "total over the distance of the period; null when it is unknown",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": [
-                    "null",
-                    "object"
-                  ]
-                },
-                "depreciation": {
-                  "additionalProperties": false,
-                  "description": "purchase price minus the resale value at the end of the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "energy": {
-                  "additionalProperties": false,
-                  "description": "electricity or fuel over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "insurance": {
-                  "additionalProperties": false,
-                  "description": "insurance over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "maintenance": {
-                  "additionalProperties": false,
-                  "description": "maintenance over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "per_month": {
-                  "additionalProperties": false,
-                  "description": "total over the number of months",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "per_year": {
-                  "additionalProperties": false,
-                  "description": "total over the number of years",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "tax": {
-                  "additionalProperties": false,
-                  "description": "yearly taxes over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "total": {
-                  "additionalProperties": false,
-                  "description": "all of the above",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "energy",
-                "maintenance",
-                "insurance",
-                "tax",
-                "depreciation",
-                "total",
-                "per_year",
-                "per_month",
-                "cost_per_km"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "the combustion vehicle it is compared with"
             },
             "depreciation_known": {
               "description": "false when the tracked vehicle has no depreciation entered, so its total misses it",
@@ -2363,42 +1909,12 @@
                     "type": "string"
                   },
                   "savings": {
-                    "additionalProperties": false,
-                    "description": "saving of the tracked vehicle with that assumption; negative when it costs more",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape2",
+                    "description": "saving of the tracked vehicle with that assumption; negative when it costs more"
                   },
                   "shift": {
-                    "additionalProperties": false,
-                    "description": "difference with the saving of the scenario",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape2",
+                    "description": "difference with the saving of the scenario"
                   }
                 },
                 "required": [
@@ -2414,196 +1930,8 @@
               ]
             },
             "tracked": {
-              "additionalProperties": false,
-              "description": "the electric or plug-in vehicle the owner tracks",
-              "properties": {
-                "cost_per_km": {
-                  "additionalProperties": false,
-                  "description": "total over the distance of the period; null when it is unknown",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": [
-                    "null",
-                    "object"
-                  ]
-                },
-                "depreciation": {
-                  "additionalProperties": false,
-                  "description": "purchase price minus the resale value at the end of the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "energy": {
-                  "additionalProperties": false,
-                  "description": "electricity or fuel over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "insurance": {
-                  "additionalProperties": false,
-                  "description": "insurance over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "maintenance": {
-                  "additionalProperties": false,
-                  "description": "maintenance over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "per_month": {
-                  "additionalProperties": false,
-                  "description": "total over the number of months",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "per_year": {
-                  "additionalProperties": false,
-                  "description": "total over the number of years",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "tax": {
-                  "additionalProperties": false,
-                  "description": "yearly taxes over the period",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "total": {
-                  "additionalProperties": false,
-                  "description": "all of the above",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "energy",
-                "maintenance",
-                "insurance",
-                "tax",
-                "depreciation",
-                "total",
-                "per_year",
-                "per_month",
-                "cost_per_km"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "the electric or plug-in vehicle the owner tracks"
             }
           },
           "required": [
@@ -2734,6 +2062,26 @@
     },
     "name": "get_current_tariff",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "next_change": {
@@ -2749,23 +2097,8 @@
               "type": "string"
             },
             "price_per_kwh": {
-              "additionalProperties": false,
-              "description": "price of one kWh from then on",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "price of one kWh from then on"
             }
           },
           "required": [
@@ -2787,23 +2120,8 @@
               "type": "string"
             },
             "price_per_kwh": {
-              "additionalProperties": false,
-              "description": "price of one kWh, in the currency of the plan, up to six decimals",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "price of one kWh, in the currency of the plan, up to six decimals"
             }
           },
           "required": [
@@ -3017,11 +2335,9 @@
     },
     "name": "get_drive_summary",
     "outputSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "cost": {
+      "$defs": {
+        "shape1": {
           "additionalProperties": false,
-          "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid",
           "properties": {
             "amount": {
               "description": "decimal string, e.g. 12.34, never rounded",
@@ -3037,6 +2353,31 @@
             "currency"
           ],
           "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "cost": {
+          "$ref": "#/$defs/shape1",
+          "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid"
         },
         "cost_per_km": {
           "additionalProperties": false,
@@ -3065,23 +2406,8 @@
           "type": "string"
         },
         "distance": {
-          "additionalProperties": false,
-          "description": "distance of the drives that have one",
-          "properties": {
-            "unit": {
-              "description": "always km",
-              "type": "string"
-            },
-            "value": {
-              "description": "the distance",
-              "type": "number"
-            }
-          },
-          "required": [
-            "value",
-            "unit"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape2",
+          "description": "distance of the drives that have one"
         },
         "drives": {
           "description": "number of drives that began in the period",
@@ -3119,23 +2445,8 @@
             "additionalProperties": false,
             "properties": {
               "cost": {
-                "additionalProperties": false,
-                "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid"
               },
               "cost_per_km": {
                 "additionalProperties": false,
@@ -3160,23 +2471,8 @@
                 ]
               },
               "distance": {
-                "additionalProperties": false,
-                "description": "distance of the drives with this tag",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "distance of the drives with this tag"
               },
               "distance_share_pct": {
                 "description": "share of the vehicle's tracked distance, in percent",
@@ -3208,23 +2504,8 @@
                 ]
               },
               "tolls": {
-                "additionalProperties": false,
-                "description": "tolls and parking attributed to those drives",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "tolls and parking attributed to those drives"
               }
             },
             "required": [
@@ -3250,23 +2531,8 @@
           "type": "string"
         },
         "tolls": {
-          "additionalProperties": false,
-          "description": "tolls and parking attributed to those drives",
-          "properties": {
-            "amount": {
-              "description": "decimal string, e.g. 12.34, never rounded",
-              "type": "string"
-            },
-            "currency": {
-              "description": "ISO 4217 code of the vehicle",
-              "type": "string"
-            }
-          },
-          "required": [
-            "amount",
-            "currency"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "tolls and parking attributed to those drives"
         },
         "trip_groups": {
           "description": "trip groups with at least one drive in the period",
@@ -3780,6 +3046,44 @@
     },
     "name": "get_fleet_summary",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "budget": {
@@ -3787,61 +3091,16 @@
           "description": "the monthly target; null when none is set or no vehicle uses its currency",
           "properties": {
             "monthly": {
-              "additionalProperties": false,
-              "description": "the monthly target the owner set",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "the monthly target the owner set"
             },
             "remaining": {
-              "additionalProperties": false,
-              "description": "target minus spent, negative once the target is exceeded",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "target minus spent, negative once the target is exceeded"
             },
             "spent_this_month": {
-              "additionalProperties": false,
-              "description": "what the vehicles in the budget's currency cost so far this month",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the vehicles in the budget's currency cost so far this month"
             },
             "used_pct": {
               "description": "spent as a percentage of the target",
@@ -3873,23 +3132,8 @@
                 "type": "string"
               },
               "current_month_cost": {
-                "additionalProperties": false,
-                "description": "what they cost so far in the month in progress",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what they cost so far in the month in progress"
               },
               "vehicles": {
                 "description": "number of vehicles in that currency",
@@ -3914,23 +3158,8 @@
             "additionalProperties": false,
             "properties": {
               "distance": {
-                "additionalProperties": false,
-                "description": "distance this person drove",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "distance this person drove"
               },
               "name": {
                 "description": "name of the driver as entered in the account, user text",
@@ -3963,84 +3192,24 @@
             "additionalProperties": false,
             "properties": {
               "distance": {
-                "additionalProperties": false,
-                "description": "distance driven by all the vehicles, whatever their currency",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "distance driven by all the vehicles, whatever their currency"
               },
               "energy": {
-                "additionalProperties": false,
-                "description": "their energy cost",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "their energy cost"
               },
               "month": {
                 "description": "calendar month, YYYY-MM",
                 "type": "string"
               },
               "other": {
-                "additionalProperties": false,
-                "description": "everything else",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "everything else"
               },
               "total": {
-                "additionalProperties": false,
-                "description": "what the vehicles in the fleet currency cost",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what the vehicles in the fleet currency cost"
               }
             },
             "required": [
@@ -4101,42 +3270,12 @@
                 "type": "string"
               },
               "current_month_cost": {
-                "additionalProperties": false,
-                "description": "cost so far in the month in progress",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "cost so far in the month in progress"
               },
               "current_month_distance": {
-                "additionalProperties": false,
-                "description": "distance driven so far in the month in progress",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "distance driven so far in the month in progress"
               },
               "energy_cost_per_100km": {
                 "additionalProperties": false,
@@ -4216,23 +3355,8 @@
                 "type": "string"
               },
               "odometer": {
-                "additionalProperties": false,
-                "description": "current odometer reading",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "current odometer reading"
               },
               "powertrain": {
                 "description": "EV, ICE, PHEV or REEV",
@@ -4534,6 +3658,26 @@
     },
     "name": "get_month_breakdown",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "category": {
@@ -4550,23 +3694,8 @@
             "additionalProperties": false,
             "properties": {
               "amount": {
-                "additionalProperties": false,
-                "description": "what the record contributes to the month",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what the record contributes to the month"
               },
               "date": {
                 "description": "RFC 3339 instant of the record",
@@ -4615,23 +3744,8 @@
           "description": "part of the total that is estimated rather than recorded; null when none",
           "properties": {
             "amount": {
-              "additionalProperties": false,
-              "description": "energy cost added for distance driven that no record covers",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "energy cost added for distance driven that no record covers"
             },
             "distance": {
               "additionalProperties": false,
@@ -4676,23 +3790,8 @@
           "type": "string"
         },
         "total": {
-          "additionalProperties": false,
-          "description": "the month's figure for this category, as get_monthly_costs gives it: the records plus the estimate",
-          "properties": {
-            "amount": {
-              "description": "decimal string, e.g. 12.34, never rounded",
-              "type": "string"
-            },
-            "currency": {
-              "description": "ISO 4217 code of the vehicle",
-              "type": "string"
-            }
-          },
-          "required": [
-            "amount",
-            "currency"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "the month's figure for this category, as get_monthly_costs gives it: the records plus the estimate"
         },
         "truncated": {
           "description": "true when more records exist than the ones listed",
@@ -4748,6 +3847,92 @@
     },
     "name": "get_monthly_costs",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "energy": {
+              "$ref": "#/$defs/shape3",
+              "description": "electricity charged and fuel bought"
+            },
+            "financing": {
+              "$ref": "#/$defs/shape3",
+              "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest"
+            },
+            "insurance": {
+              "$ref": "#/$defs/shape3",
+              "description": "insurance premiums"
+            },
+            "maintenance": {
+              "$ref": "#/$defs/shape3",
+              "description": "servicing and unplanned repairs, insurance deductibles included"
+            },
+            "other": {
+              "$ref": "#/$defs/shape3",
+              "description": "subscriptions, taxes, accessories and anything else"
+            },
+            "tires": {
+              "$ref": "#/$defs/shape3",
+              "description": "tires, counted in full in the month they were bought"
+            },
+            "tolls": {
+              "$ref": "#/$defs/shape3",
+              "description": "tolls, parking and ferries"
+            },
+            "total": {
+              "$ref": "#/$defs/shape3",
+              "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded"
+            }
+          },
+          "required": [
+            "energy",
+            "tolls",
+            "maintenance",
+            "insurance",
+            "financing",
+            "tires",
+            "other",
+            "total"
+          ],
+          "type": "object"
+        },
+        "shape3": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "cost_per_km": {
@@ -4777,23 +3962,8 @@
           "type": "string"
         },
         "distance": {
-          "additionalProperties": false,
-          "description": "distance of the listed months added up",
-          "properties": {
-            "unit": {
-              "description": "always km",
-              "type": "string"
-            },
-            "value": {
-              "description": "the distance",
-              "type": "number"
-            }
-          },
-          "required": [
-            "value",
-            "unit"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "distance of the listed months added up"
         },
         "months": {
           "description": "consecutive calendar months, oldest first; a month with no record is present with zero amounts",
@@ -4823,192 +3993,12 @@
                 ]
               },
               "costs": {
-                "additionalProperties": false,
-                "description": "what was spent in the month, by category; the month in progress counts the instalments that fall due later in it",
-                "properties": {
-                  "energy": {
-                    "additionalProperties": false,
-                    "description": "electricity charged and fuel bought",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  },
-                  "financing": {
-                    "additionalProperties": false,
-                    "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  },
-                  "insurance": {
-                    "additionalProperties": false,
-                    "description": "insurance premiums",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  },
-                  "maintenance": {
-                    "additionalProperties": false,
-                    "description": "servicing and unplanned repairs, insurance deductibles included",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  },
-                  "other": {
-                    "additionalProperties": false,
-                    "description": "subscriptions, taxes, accessories and anything else",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  },
-                  "tires": {
-                    "additionalProperties": false,
-                    "description": "tires, counted in full in the month they were bought",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  },
-                  "tolls": {
-                    "additionalProperties": false,
-                    "description": "tolls, parking and ferries",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  },
-                  "total": {
-                    "additionalProperties": false,
-                    "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
-                  }
-                },
-                "required": [
-                  "energy",
-                  "tolls",
-                  "maintenance",
-                  "insurance",
-                  "financing",
-                  "tires",
-                  "other",
-                  "total"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape2",
+                "description": "what was spent in the month, by category; the month in progress counts the instalments that fall due later in it"
               },
               "distance": {
-                "additionalProperties": false,
-                "description": "distance driven in the month, tracked plus estimated for the untracked part",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "distance driven in the month, tracked plus estimated for the untracked part"
               },
               "in_progress": {
                 "description": "true for the month in progress, whose figures are not final",
@@ -5057,173 +4047,8 @@
           ]
         },
         "total": {
-          "additionalProperties": false,
-          "description": "the listed months added up, by category",
-          "properties": {
-            "energy": {
-              "additionalProperties": false,
-              "description": "electricity charged and fuel bought",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            },
-            "financing": {
-              "additionalProperties": false,
-              "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            },
-            "insurance": {
-              "additionalProperties": false,
-              "description": "insurance premiums",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            },
-            "maintenance": {
-              "additionalProperties": false,
-              "description": "servicing and unplanned repairs, insurance deductibles included",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            },
-            "other": {
-              "additionalProperties": false,
-              "description": "subscriptions, taxes, accessories and anything else",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            },
-            "tires": {
-              "additionalProperties": false,
-              "description": "tires, counted in full in the month they were bought",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            },
-            "tolls": {
-              "additionalProperties": false,
-              "description": "tolls, parking and ferries",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            },
-            "total": {
-              "additionalProperties": false,
-              "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
-            }
-          },
-          "required": [
-            "energy",
-            "tolls",
-            "maintenance",
-            "insurance",
-            "financing",
-            "tires",
-            "other",
-            "total"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape2",
+          "description": "the listed months added up, by category"
         },
         "vehicle_id": {
           "description": "the vehicle these figures belong to",
@@ -5268,11 +4093,9 @@
     },
     "name": "get_odometer",
     "outputSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "current": {
+      "$defs": {
+        "shape1": {
           "additionalProperties": false,
-          "description": "the odometer as last recorded",
           "properties": {
             "unit": {
               "description": "always km",
@@ -5288,6 +4111,13 @@
             "unit"
           ],
           "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "current": {
+          "$ref": "#/$defs/shape1",
+          "description": "the odometer as last recorded"
         },
         "estimate": {
           "additionalProperties": false,
@@ -5298,23 +4128,8 @@
               "type": "string"
             },
             "odometer": {
-              "additionalProperties": false,
-              "description": "the odometer reading on that day",
-              "properties": {
-                "unit": {
-                  "description": "always km",
-                  "type": "string"
-                },
-                "value": {
-                  "description": "the distance",
-                  "type": "number"
-                }
-              },
-              "required": [
-                "value",
-                "unit"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "the odometer reading on that day"
             },
             "source": {
               "description": "exact (a reading of that day), interpolated (spread in time between the readings on either side) or bounded (the day is before the first or after the last reading, so the nearest reading is kept)",
@@ -5680,6 +4495,26 @@
     },
     "name": "get_tag_breakdown",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "currency": {
@@ -5692,23 +4527,8 @@
             "additionalProperties": false,
             "properties": {
               "cost": {
-                "additionalProperties": false,
-                "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "allocated running cost of those drives (energy, wear, insurance share and tolls at the vehicle's unit rates); an allocation, not the cash paid"
               },
               "cost_per_km": {
                 "additionalProperties": false,
@@ -5781,23 +4601,8 @@
                 ]
               },
               "tolls": {
-                "additionalProperties": false,
-                "description": "tolls and parking attributed to those drives",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "tolls and parking attributed to those drives"
               }
             },
             "required": [
@@ -6082,6 +4887,26 @@
     },
     "name": "get_tolls_report",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "count": {
@@ -6105,23 +4930,8 @@
             "additionalProperties": false,
             "properties": {
               "gap": {
-                "additionalProperties": false,
-                "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower"
               },
               "month": {
                 "description": "the month the invoice covers, YYYY-MM, in the account timezone",
@@ -6135,42 +4945,12 @@
                 ]
               },
               "total": {
-                "additionalProperties": false,
-                "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure"
               },
               "trip_tolls": {
-                "additionalProperties": false,
-                "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them"
               },
               "version": {
                 "description": "give it back as expected_version to change this invoice with set_toll_invoice",
@@ -6209,23 +4989,8 @@
             "additionalProperties": false,
             "properties": {
               "amount": {
-                "additionalProperties": false,
-                "description": "what the toll cost, in its own currency, which is not always the vehicle's",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what the toll cost, in its own currency, which is not always the vehicle's"
               },
               "carpool_ids": {
                 "description": "the carpools that have one of those trips as a leg, as get_carpool lists them; empty when none",
@@ -6292,23 +5057,8 @@
           ]
         },
         "total": {
-          "additionalProperties": false,
-          "description": "what they cost in all, the tolls in the vehicle's currency only",
-          "properties": {
-            "amount": {
-              "description": "decimal string, e.g. 12.34, never rounded",
-              "type": "string"
-            },
-            "currency": {
-              "description": "ISO 4217 code of the vehicle",
-              "type": "string"
-            }
-          },
-          "required": [
-            "amount",
-            "currency"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "what they cost in all, the tolls in the vehicle's currency only"
         },
         "truncated": {
           "description": "true when the period holds more tolls than the ones listed",
@@ -6357,6 +5107,154 @@
     },
     "name": "get_vehicle_costs",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "cost_per_km": {
+              "additionalProperties": false,
+              "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string, e.g. 12.34, never rounded",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 code of the vehicle",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "costs": {
+              "$ref": "#/$defs/shape2",
+              "description": "what was spent over the period, by category"
+            },
+            "distance": {
+              "$ref": "#/$defs/shape4",
+              "description": "distance driven over the period, tracked plus estimated for the untracked part"
+            },
+            "from": {
+              "description": "first month covered, YYYY-MM; null for the whole ownership",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "months_covered": {
+              "description": "number of calendar months the figures span, the month in progress included; below 12 for last_12_months when the history is shorter, which makes the total smaller than a full year",
+              "type": "integer"
+            },
+            "to": {
+              "description": "last month covered, YYYY-MM; null for the whole ownership",
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "from",
+            "to",
+            "months_covered",
+            "costs",
+            "distance",
+            "cost_per_km"
+          ],
+          "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "energy": {
+              "$ref": "#/$defs/shape3",
+              "description": "electricity charged and fuel bought"
+            },
+            "financing": {
+              "$ref": "#/$defs/shape3",
+              "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest"
+            },
+            "insurance": {
+              "$ref": "#/$defs/shape3",
+              "description": "insurance premiums"
+            },
+            "maintenance": {
+              "$ref": "#/$defs/shape3",
+              "description": "servicing and unplanned repairs, insurance deductibles included"
+            },
+            "other": {
+              "$ref": "#/$defs/shape3",
+              "description": "subscriptions, taxes, accessories and anything else"
+            },
+            "tires": {
+              "$ref": "#/$defs/shape3",
+              "description": "tires, counted in full in the month they were bought"
+            },
+            "tolls": {
+              "$ref": "#/$defs/shape3",
+              "description": "tolls, parking and ferries"
+            },
+            "total": {
+              "$ref": "#/$defs/shape3",
+              "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded"
+            }
+          },
+          "required": [
+            "energy",
+            "tolls",
+            "maintenance",
+            "insurance",
+            "financing",
+            "tires",
+            "other",
+            "total"
+          ],
+          "type": "object"
+        },
+        "shape3": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        },
+        "shape4": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "completeness": {
@@ -6433,490 +5331,12 @@
           "type": "string"
         },
         "last_12_months": {
-          "additionalProperties": false,
-          "description": "the last twelve calendar months, the month in progress included with the instalments that fall due later in it; fewer months for a vehicle with a shorter history",
-          "properties": {
-            "cost_per_km": {
-              "additionalProperties": false,
-              "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": [
-                "null",
-                "object"
-              ]
-            },
-            "costs": {
-              "additionalProperties": false,
-              "description": "what was spent over the period, by category",
-              "properties": {
-                "energy": {
-                  "additionalProperties": false,
-                  "description": "electricity charged and fuel bought",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "financing": {
-                  "additionalProperties": false,
-                  "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "insurance": {
-                  "additionalProperties": false,
-                  "description": "insurance premiums",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "maintenance": {
-                  "additionalProperties": false,
-                  "description": "servicing and unplanned repairs, insurance deductibles included",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "other": {
-                  "additionalProperties": false,
-                  "description": "subscriptions, taxes, accessories and anything else",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "tires": {
-                  "additionalProperties": false,
-                  "description": "tires, counted in full in the month they were bought",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "tolls": {
-                  "additionalProperties": false,
-                  "description": "tolls, parking and ferries",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "total": {
-                  "additionalProperties": false,
-                  "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "energy",
-                "tolls",
-                "maintenance",
-                "insurance",
-                "financing",
-                "tires",
-                "other",
-                "total"
-              ],
-              "type": "object"
-            },
-            "distance": {
-              "additionalProperties": false,
-              "description": "distance driven over the period, tracked plus estimated for the untracked part",
-              "properties": {
-                "unit": {
-                  "description": "always km",
-                  "type": "string"
-                },
-                "value": {
-                  "description": "the distance",
-                  "type": "number"
-                }
-              },
-              "required": [
-                "value",
-                "unit"
-              ],
-              "type": "object"
-            },
-            "from": {
-              "description": "first month covered, YYYY-MM; null for the whole ownership",
-              "type": [
-                "null",
-                "string"
-              ]
-            },
-            "months_covered": {
-              "description": "number of calendar months the figures span, the month in progress included; below 12 for last_12_months when the history is shorter, which makes the total smaller than a full year",
-              "type": "integer"
-            },
-            "to": {
-              "description": "last month covered, YYYY-MM; null for the whole ownership",
-              "type": [
-                "null",
-                "string"
-              ]
-            }
-          },
-          "required": [
-            "from",
-            "to",
-            "months_covered",
-            "costs",
-            "distance",
-            "cost_per_km"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "the last twelve calendar months, the month in progress included with the instalments that fall due later in it; fewer months for a vehicle with a shorter history"
         },
         "since_purchase": {
-          "additionalProperties": false,
-          "description": "the whole ownership, from the first record",
-          "properties": {
-            "cost_per_km": {
-              "additionalProperties": false,
-              "description": "total cost divided by the distance, per kilometre; null while the distance is unknown",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": [
-                "null",
-                "object"
-              ]
-            },
-            "costs": {
-              "additionalProperties": false,
-              "description": "what was spent over the period, by category",
-              "properties": {
-                "energy": {
-                  "additionalProperties": false,
-                  "description": "electricity charged and fuel bought",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "financing": {
-                  "additionalProperties": false,
-                  "description": "cash paid for the loan or lease: rents, down payment, fees and loan interest",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "insurance": {
-                  "additionalProperties": false,
-                  "description": "insurance premiums",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "maintenance": {
-                  "additionalProperties": false,
-                  "description": "servicing and unplanned repairs, insurance deductibles included",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "other": {
-                  "additionalProperties": false,
-                  "description": "subscriptions, taxes, accessories and anything else",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "tires": {
-                  "additionalProperties": false,
-                  "description": "tires, counted in full in the month they were bought",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "tolls": {
-                  "additionalProperties": false,
-                  "description": "tolls, parking and ferries",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                },
-                "total": {
-                  "additionalProperties": false,
-                  "description": "sum of the seven categories above: the cash spent, the purchase of the vehicle excluded",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
-                }
-              },
-              "required": [
-                "energy",
-                "tolls",
-                "maintenance",
-                "insurance",
-                "financing",
-                "tires",
-                "other",
-                "total"
-              ],
-              "type": "object"
-            },
-            "distance": {
-              "additionalProperties": false,
-              "description": "distance driven over the period, tracked plus estimated for the untracked part",
-              "properties": {
-                "unit": {
-                  "description": "always km",
-                  "type": "string"
-                },
-                "value": {
-                  "description": "the distance",
-                  "type": "number"
-                }
-              },
-              "required": [
-                "value",
-                "unit"
-              ],
-              "type": "object"
-            },
-            "from": {
-              "description": "first month covered, YYYY-MM; null for the whole ownership",
-              "type": [
-                "null",
-                "string"
-              ]
-            },
-            "months_covered": {
-              "description": "number of calendar months the figures span, the month in progress included; below 12 for last_12_months when the history is shorter, which makes the total smaller than a full year",
-              "type": "integer"
-            },
-            "to": {
-              "description": "last month covered, YYYY-MM; null for the whole ownership",
-              "type": [
-                "null",
-                "string"
-              ]
-            }
-          },
-          "required": [
-            "from",
-            "to",
-            "months_covered",
-            "costs",
-            "distance",
-            "cost_per_km"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "the whole ownership, from the first record"
         },
         "vehicle_id": {
           "description": "the vehicle these figures belong to",
@@ -6956,6 +5376,26 @@
     },
     "name": "get_vehicle_data_gaps",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "acquisition_missing": {
@@ -6990,23 +5430,8 @@
                 "type": "string"
               },
               "distance": {
-                "additionalProperties": false,
-                "description": "distance involved",
-                "properties": {
-                  "unit": {
-                    "description": "always km",
-                    "type": "string"
-                  },
-                  "value": {
-                    "description": "the distance",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "distance involved"
               },
               "kind": {
                 "description": "ODOMETER_GAP (odometer moved with no drive recorded), ODOMETER_REGRESSION (odometer went down) or DISTANCE_MISMATCH (drive distance differs from the odometer)",
@@ -7102,23 +5527,8 @@
           "type": "integer"
         },
         "odometer_gap_distance": {
-          "additionalProperties": false,
-          "description": "total distance of those stretches",
-          "properties": {
-            "unit": {
-              "description": "always km",
-              "type": "string"
-            },
-            "value": {
-              "description": "the distance",
-              "type": "number"
-            }
-          },
-          "required": [
-            "value",
-            "unit"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "total distance of those stretches"
         },
         "odometer_gaps": {
           "description": "number of stretches of odometer that no recorded drive covers",
@@ -7326,23 +5736,8 @@
           "type": "integer"
         },
         "untracked_distance": {
-          "additionalProperties": false,
-          "description": "distance driven that no drive record covers, estimated from the odometer",
-          "properties": {
-            "unit": {
-              "description": "always km",
-              "type": "string"
-            },
-            "value": {
-              "description": "the distance",
-              "type": "number"
-            }
-          },
-          "required": [
-            "value",
-            "unit"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "distance driven that no drive record covers, estimated from the odometer"
         },
         "vehicle_id": {
           "description": "the vehicle these figures belong to",
@@ -7394,11 +5789,9 @@
     },
     "name": "get_vehicle_ownership",
     "outputSchema": {
-      "additionalProperties": false,
-      "properties": {
-        "acquisition_cost": {
+      "$defs": {
+        "shape1": {
           "additionalProperties": false,
-          "description": "purchase price and fees net of incentives; 0 for a lease still running",
           "properties": {
             "amount": {
               "description": "decimal string, e.g. 12.34, never rounded",
@@ -7414,6 +5807,31 @@
             "currency"
           ],
           "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "description": "always km",
+              "type": "string"
+            },
+            "value": {
+              "description": "the distance",
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "acquisition_cost": {
+          "$ref": "#/$defs/shape1",
+          "description": "purchase price and fees net of incentives; 0 for a lease still running"
         },
         "acquisition_type": {
           "description": "CASH (bought outright), LOAN, LOA (lease with a purchase option) or LLD (long-term rental); null when the acquisition is not entered",
@@ -7501,23 +5919,8 @@
                   ]
                 },
                 "allowance_to_date": {
-                  "additionalProperties": false,
-                  "description": "the part of the allowance that has elapsed, pro rata of the time",
-                  "properties": {
-                    "unit": {
-                      "description": "always km",
-                      "type": "string"
-                    },
-                    "value": {
-                      "description": "the distance",
-                      "type": "number"
-                    }
-                  },
-                  "required": [
-                    "value",
-                    "unit"
-                  ],
-                  "type": "object"
+                  "$ref": "#/$defs/shape2",
+                  "description": "the part of the allowance that has elapsed, pro rata of the time"
                 },
                 "allowance_total": {
                   "additionalProperties": false,
@@ -7542,42 +5945,12 @@
                   ]
                 },
                 "driven": {
-                  "additionalProperties": false,
-                  "description": "distance driven since the start of the contract",
-                  "properties": {
-                    "unit": {
-                      "description": "always km",
-                      "type": "string"
-                    },
-                    "value": {
-                      "description": "the distance",
-                      "type": "number"
-                    }
-                  },
-                  "required": [
-                    "value",
-                    "unit"
-                  ],
-                  "type": "object"
+                  "$ref": "#/$defs/shape2",
+                  "description": "distance driven since the start of the contract"
                 },
                 "excess_accrued": {
-                  "additionalProperties": false,
-                  "description": "cost of the kilometres above the pro-rata allowance so far",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
+                  "$ref": "#/$defs/shape1",
+                  "description": "cost of the kilometres above the pro-rata allowance so far"
                 },
                 "excess_price_per_km": {
                   "additionalProperties": false,
@@ -7602,23 +5975,8 @@
                   ]
                 },
                 "excess_projected": {
-                  "additionalProperties": false,
-                  "description": "cost of the excess expected at the end of the contract if the pace stays the same",
-                  "properties": {
-                    "amount": {
-                      "description": "decimal string, e.g. 12.34, never rounded",
-                      "type": "string"
-                    },
-                    "currency": {
-                      "description": "ISO 4217 code of the vehicle",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "amount",
-                    "currency"
-                  ],
-                  "type": "object"
+                  "$ref": "#/$defs/shape1",
+                  "description": "cost of the excess expected at the end of the contract if the pace stays the same"
                 }
               },
               "required": [
@@ -7721,42 +6079,12 @@
           "description": "what owning the vehicle costs, purchase included",
           "properties": {
             "carpool_revenue": {
-              "additionalProperties": false,
-              "description": "what passengers paid the driver for carpooling",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what passengers paid the driver for carpooling"
             },
             "depreciation": {
-              "additionalProperties": false,
-              "description": "value the vehicle lost: purchase price and fees, net of incentives, minus the resale value; 0 when it cannot be computed (see depreciation_known) and for a lease",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "value the vehicle lost: purchase price and fees, net of incentives, minus the resale value; 0 when it cannot be computed (see depreciation_known) and for a lease"
             },
             "depreciation_known": {
               "description": "false when a bought vehicle lacks its purchase price, resale value or holding period: the depreciation is then 0 and the full cost is understated, so do not compare it with a complete one",
@@ -7785,61 +6113,16 @@
               ]
             },
             "distance": {
-              "additionalProperties": false,
-              "description": "distance the per-km figures divide by: the largest of the tracked drives, their odometer span and the distance since acquisition",
-              "properties": {
-                "unit": {
-                  "description": "always km",
-                  "type": "string"
-                },
-                "value": {
-                  "description": "the distance",
-                  "type": "number"
-                }
-              },
-              "required": [
-                "value",
-                "unit"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape2",
+              "description": "distance the per-km figures divide by: the largest of the tracked drives, their odometer span and the distance since acquisition"
             },
             "full_cost": {
-              "additionalProperties": false,
-              "description": "economic cost of ownership: running costs with the tires amortized per km, plus the depreciation (or the financing as a whole for a lease); unlike the cash costs of get_vehicle_costs it accounts for the purchase",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "economic cost of ownership: running costs with the tires amortized per km, plus the depreciation (or the financing as a whole for a lease); unlike the cash costs of get_vehicle_costs it accounts for the purchase"
             },
             "full_cost_net": {
-              "additionalProperties": false,
-              "description": "full cost minus the carpool revenue",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "full cost minus the carpool revenue"
             },
             "full_cost_net_per_km": {
               "additionalProperties": false,
@@ -7886,42 +6169,12 @@
               ]
             },
             "tires_amortized": {
-              "additionalProperties": false,
-              "description": "the tires' cost spread over the distance they were used",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "the tires' cost spread over the distance they were used"
             },
             "tires_paid": {
-              "additionalProperties": false,
-              "description": "what the tires cost in cash, at purchase; the full cost counts tires_amortized instead",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the tires cost in cash, at purchase; the full cost counts tires_amortized instead"
             }
           },
           "required": [
@@ -7959,61 +6212,16 @@
               ]
             },
             "current_value": {
-              "additionalProperties": false,
-              "description": "estimated value today, from the owner's purchase price and expected resale value, adjusted for age, distance and battery health",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "estimated value today, from the owner's purchase price and expected resale value, adjusted for age, distance and battery health"
             },
             "depreciation_to_date": {
-              "additionalProperties": false,
-              "description": "start value minus the current value",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "start value minus the current value"
             },
             "expected_value": {
-              "additionalProperties": false,
-              "description": "value expected at the end of the holding period (or of the lease contract)",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "value expected at the end of the holding period (or of the lease contract)"
             },
             "holding_months": {
               "description": "planned holding period in months",
@@ -8046,23 +6254,8 @@
               ]
             },
             "start_value": {
-              "additionalProperties": false,
-              "description": "value at the start of the ownership (or of the lease contract)",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "value at the start of the ownership (or of the lease contract)"
             },
             "under_lease": {
               "description": "true while a LOA is running: the values are then those of the vehicle itself, not what the owner paid",
@@ -8173,6 +6366,26 @@
     },
     "name": "list_expenses",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "by_category": {
@@ -8181,23 +6394,8 @@
             "additionalProperties": false,
             "properties": {
               "amount": {
-                "additionalProperties": false,
-                "description": "their sum",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "their sum"
               },
               "category": {
                 "description": "the category",
@@ -8234,23 +6432,8 @@
             "additionalProperties": false,
             "properties": {
               "amount": {
-                "additionalProperties": false,
-                "description": "what it cost, in the vehicle's currency",
-                "properties": {
-                  "amount": {
-                    "description": "decimal string, e.g. 12.34, never rounded",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "description": "ISO 4217 code of the vehicle",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "amount",
-                  "currency"
-                ],
-                "type": "object"
+                "$ref": "#/$defs/shape1",
+                "description": "what it cost, in the vehicle's currency"
               },
               "category": {
                 "description": "energy, toll, parking, travel_other, maintenance, repair, insurance, subscription, tax, financing, tires, accessory or other",
@@ -8344,23 +6527,8 @@
           ]
         },
         "total": {
-          "additionalProperties": false,
-          "description": "sum of all the matching entries, not only the page; the purchase of the vehicle is never included",
-          "properties": {
-            "amount": {
-              "description": "decimal string, e.g. 12.34, never rounded",
-              "type": "string"
-            },
-            "currency": {
-              "description": "ISO 4217 code of the vehicle",
-              "type": "string"
-            }
-          },
-          "required": [
-            "amount",
-            "currency"
-          ],
-          "type": "object"
+          "$ref": "#/$defs/shape1",
+          "description": "sum of all the matching entries, not only the page; the purchase of the vehicle is never included"
         },
         "vehicle_id": {
           "description": "the vehicle these entries belong to",
@@ -9175,6 +7343,26 @@
     },
     "name": "set_toll_invoice",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "invoice": {
@@ -9182,23 +7370,8 @@
           "description": "the invoice as it is, or would be on a dry run",
           "properties": {
             "gap": {
-              "additionalProperties": false,
-              "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower"
             },
             "month": {
               "description": "the month the invoice covers, YYYY-MM, in the account timezone",
@@ -9212,42 +7385,12 @@
               ]
             },
             "total": {
-              "additionalProperties": false,
-              "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure"
             },
             "trip_tolls": {
-              "additionalProperties": false,
-              "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them"
             },
             "version": {
               "description": "give it back as expected_version to change this invoice with set_toll_invoice",
@@ -9269,23 +7412,8 @@
           "description": "the invoice the month had before, null when this is the first one",
           "properties": {
             "gap": {
-              "additionalProperties": false,
-              "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "total minus trip_tolls: positive when the invoice is higher than the tolls recorded on trips (tolls not attached to a trip), negative when it is lower"
             },
             "month": {
               "description": "the month the invoice covers, YYYY-MM, in the account timezone",
@@ -9299,42 +7427,12 @@
               ]
             },
             "total": {
-              "additionalProperties": false,
-              "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the operator billed for the month: the month counts this as its tolls in every monthly and global figure"
             },
             "trip_tolls": {
-              "additionalProperties": false,
-              "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the tolls entered or estimated on the trips of the month add up to; the trips, the carpools and the trip groups keep them"
             },
             "version": {
               "description": "give it back as expected_version to change this invoice with set_toll_invoice",
@@ -9557,6 +7655,26 @@
     },
     "name": "update_carpool",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "carpool": {
@@ -9597,65 +7715,20 @@
               ]
             },
             "driver_cost_share": {
-              "additionalProperties": false,
-              "description": "the part of the cost the driver keeps",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "the part of the cost the driver keeps"
             },
             "energy_cost": {
-              "additionalProperties": false,
-              "description": "energy part of the cost",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "energy part of the cost"
             },
             "id": {
               "description": "the id of the carpool trip; empty for a carpool that was only previewed",
               "type": "string"
             },
             "net_cost": {
-              "additionalProperties": false,
-              "description": "total cost minus revenue",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "total cost minus revenue"
             },
             "notes": {
               "description": "free note on the trip, user text; null when none",
@@ -9677,23 +7750,8 @@
                     ]
                   },
                   "balance": {
-                    "additionalProperties": false,
-                    "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape1",
+                    "description": "paid minus cost share: positive when the passenger paid more than their share, negative when they still owe"
                   },
                   "boards_at": {
                     "description": "the stop where the passenger got on; null when that stop has no label",
@@ -9703,23 +7761,8 @@
                     ]
                   },
                   "cost_share": {
-                    "additionalProperties": false,
-                    "description": "fair share of the costs of the legs the passenger rode",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape1",
+                    "description": "fair share of the costs of the legs the passenger rode"
                   },
                   "name": {
                     "description": "the passenger's name as the owner typed it, user text; \"Passenger N\" (N from 1, in the order listed) for a passenger left without a name",
@@ -9733,23 +7776,8 @@
                     ]
                   },
                   "paid": {
-                    "additionalProperties": false,
-                    "description": "what the passenger paid",
-                    "properties": {
-                      "amount": {
-                        "description": "decimal string, e.g. 12.34, never rounded",
-                        "type": "string"
-                      },
-                      "currency": {
-                        "description": "ISO 4217 code of the vehicle",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "amount",
-                      "currency"
-                    ],
-                    "type": "object"
+                    "$ref": "#/$defs/shape1",
+                    "description": "what the passenger paid"
                   },
                   "seats": {
                     "description": "seats the passenger took",
@@ -9774,23 +7802,8 @@
               ]
             },
             "revenue": {
-              "additionalProperties": false,
-              "description": "what the passengers paid",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the passengers paid"
             },
             "stops": {
               "description": "the stops of the trip in order, from departure to arrival; a stop without a label is null",
@@ -9810,42 +7823,12 @@
               "type": "string"
             },
             "tolls_cost": {
-              "additionalProperties": false,
-              "description": "tolls part of the cost",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "tolls part of the cost"
             },
             "total_cost": {
-              "additionalProperties": false,
-              "description": "what the trip cost to run",
-              "properties": {
-                "amount": {
-                  "description": "decimal string, e.g. 12.34, never rounded",
-                  "type": "string"
-                },
-                "currency": {
-                  "description": "ISO 4217 code of the vehicle",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "amount",
-                "currency"
-              ],
-              "type": "object"
+              "$ref": "#/$defs/shape1",
+              "description": "what the trip cost to run"
             },
             "version": {
               "description": "counts the saves of the carpool: give it back as expected_version to update_carpool; 0 for a carpool that was only previewed",
@@ -9960,6 +7943,26 @@
     },
     "name": "update_drive_expenses",
     "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "carpool_ids": {
@@ -9987,42 +7990,12 @@
                       "type": "string"
                     },
                     "after": {
-                      "additionalProperties": false,
-                      "description": "the amount the trip holds after the change; 0 when removed",
-                      "properties": {
-                        "amount": {
-                          "description": "decimal string, e.g. 12.34, never rounded",
-                          "type": "string"
-                        },
-                        "currency": {
-                          "description": "ISO 4217 code of the vehicle",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "amount",
-                        "currency"
-                      ],
-                      "type": "object"
+                      "$ref": "#/$defs/shape1",
+                      "description": "the amount the trip holds after the change; 0 when removed"
                     },
                     "before": {
-                      "additionalProperties": false,
-                      "description": "the amount the trip held before; 0 when it held none",
-                      "properties": {
-                        "amount": {
-                          "description": "decimal string, e.g. 12.34, never rounded",
-                          "type": "string"
-                        },
-                        "currency": {
-                          "description": "ISO 4217 code of the vehicle",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "amount",
-                        "currency"
-                      ],
-                      "type": "object"
+                      "$ref": "#/$defs/shape1",
+                      "description": "the amount the trip held before; 0 when it held none"
                     },
                     "kind": {
                       "description": "tolls or parking",
@@ -10071,5 +8044,221 @@
       "type": "object"
     },
     "title": "Change the tolls and parking of trips"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Changes an expense the owner recorded (a service or repair, an insurance, a subscription, a tax, an accessory, found with list_expenses): give only what changes among the category, amount, day, description and repetition; the rest, including an attached receipt and the smoothing of a service over time, stays as it is. Call it with dry_run true first: it shows the expense, its version and the change. Show it to the owner, and save only once they agree, with that version as expected_version; the call is refused when the expense was changed since. The description is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "what it cost in all, a decimal string in the vehicle's currency, more than zero",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "category": {
+          "description": "maintenance, repair, insurance, subscription, tax, accessory or other",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "date": {
+          "description": "the day of the expense, YYYY-MM-DD; for a recurring one, the first due date",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "description": {
+          "description": "what it is for, 200 characters at most",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "dry_run": {
+          "description": "true to see the expense, its version and the change, without saving anything",
+          "type": "boolean"
+        },
+        "expected_version": {
+          "description": "the version the dry run showed; required to save, and the call is refused when the expense was saved since",
+          "type": [
+            "null",
+            "integer"
+          ]
+        },
+        "expense_id": {
+          "description": "the id of the expense, as list_expenses (kind expense) or create_expense gives it",
+          "type": "string"
+        },
+        "repeats_every_months": {
+          "description": "every this many months, 1 to 120; 0 makes the expense a single one",
+          "type": [
+            "null",
+            "integer"
+          ]
+        },
+        "repeats_until": {
+          "description": "the last day a recurring expense applies, YYYY-MM-DD; an empty string removes the end",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "expense_id"
+      ],
+      "type": "object"
+    },
+    "name": "update_expense",
+    "outputSchema": {
+      "$defs": {
+        "shape1": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "$ref": "#/$defs/shape2",
+              "description": "what it cost, in the vehicle's currency"
+            },
+            "category": {
+              "description": "energy, toll, parking, travel_other, maintenance, repair, insurance, subscription, tax, financing, tires, accessory or other",
+              "type": "string"
+            },
+            "date": {
+              "description": "day of the entry, YYYY-MM-DD, in the account's reporting timezone",
+              "type": "string"
+            },
+            "has_receipt": {
+              "description": "true when a receipt or invoice is attached to the entry, false when none is; null for the entries that cannot carry one (fuel fill-ups, tires, financing). The document itself is never returned",
+              "type": [
+                "null",
+                "boolean"
+              ]
+            },
+            "id": {
+              "description": "id of the record, to give delete_record with kind; for a travel_expense, the trip id",
+              "type": "string"
+            },
+            "kind": {
+              "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase, financing (a loan or lease instalment) or toll_invoice (a monthly toll invoice, which stands for every toll of its month)",
+              "type": "string"
+            },
+            "kwh": {
+              "description": "energy added by a charge, in kWh; null for the others",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "litres": {
+              "description": "fuel bought by a fill-up, in litres; null when not recorded or for the others",
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "note": {
+              "description": "free note or description typed by the owner, user text; null when none",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "place": {
+              "description": "for a charge, the named charging place when its address is linked to one, otherwise the address reported, user text; null for the others",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "place_category": {
+              "description": "for a charge at a named place: home, work, public or other; null otherwise",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "recurring": {
+              "description": "true for an occurrence of a recurring expense (a yearly insurance, a subscription)",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "date",
+            "category",
+            "kind",
+            "amount",
+            "note",
+            "place",
+            "place_category",
+            "kwh",
+            "litres",
+            "recurring",
+            "has_receipt"
+          ],
+          "type": "object"
+        },
+        "shape2": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "description": "decimal string, e.g. 12.34, never rounded",
+              "type": "string"
+            },
+            "currency": {
+              "description": "ISO 4217 code of the vehicle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "after": {
+          "$ref": "#/$defs/shape1",
+          "description": "the expense as it is, or would be, saved"
+        },
+        "before": {
+          "$ref": "#/$defs/shape1",
+          "description": "the expense as it was"
+        },
+        "updated": {
+          "description": "false for a dry run",
+          "type": "boolean"
+        },
+        "version": {
+          "description": "the version now; the one to give back as expected_version on a dry run",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "updated",
+        "version",
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
+    "title": "Change an expense"
   }
 ]

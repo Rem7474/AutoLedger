@@ -40,6 +40,11 @@ func TestMCPExpenseWritesRefuseAReadOnlyMember(t *testing.T) {
 		t.Errorf("a read-only member cannot delete an entry: %v", err)
 	}
 
+	amount := "5.00"
+	if _, err := h.UpdateExpense(ctx, a.viewerID, a.vid, mcpUpdateExpenseInput{ExpenseID: "x", Amount: &amount, DryRun: true}); err == nil || !strings.Contains(err.Error(), "read-only") {
+		t.Errorf("a read-only member cannot change an expense: %v", err)
+	}
+
 	// The owner of the same vehicle is not refused, so the cases above fail on the role and on nothing else
 	if _, err := h.CreateExpense(ctx, a.userID, a.vid, mcpCreateExpenseInput{Category: "subscription", Amount: "6.00", Date: "2026-09-01", Description: "Badge fee", DryRun: true}); err != nil {
 		t.Errorf("the owner can: %v", err)
