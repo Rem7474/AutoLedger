@@ -45,9 +45,6 @@ const DIALOGS: Record<string, string> = {
   'components/drives/AddToTripModal.vue': 'picker of a trip for the selected drives',
   'components/tariffs/TariffPlanModal.vue': 'opened from the tariff editor, itself a dialog',
   'views/VehicleView.vue': 'tariff editor',
-  'components/tires/TireBatchDisposeModal.vue': 'opened from another dialog (nested)',
-  'components/tires/TireCopyHistoryModal.vue': 'opened from the tire history',
-  'components/tires/TireDuplicateSessionModal.vue': 'opened from the tire history',
   'components/tires/TireSessionDetailModal.vue': 'a fitting, opened from the tire history',
 }
 

@@ -69,11 +69,11 @@ async function handleBatchDisposeSubmit() {
 
 <template>
   <ModalShell
+    pane
     v-model:open="open"
     :title="$t('tires.tireBatchDisposeModal.scrapTireS', { length: selectedTireIds.length })"
     :icon="Archive"
     icon-class="text-warning-500"
-    nested
     body-class="space-y-4 text-xs"
     footer-class="items-center justify-end gap-2"
   >

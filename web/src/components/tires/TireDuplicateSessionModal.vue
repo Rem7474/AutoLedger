@@ -71,13 +71,13 @@ async function handleDuplicateSessionSubmit() {
 
 <template>
   <ModalShell
+    pane
     v-if="sessionToDuplicate"
     v-model:open="open"
     :title="$t('tires.tireDuplicateSessionModal.duplicateTheSessionToOther')"
     :icon="Copy"
     icon-class="text-sky-400"
     size="sm"
-    nested
     body-class="space-y-4 text-xs"
     footer-class="items-center justify-end gap-2"
   >
