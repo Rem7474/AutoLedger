@@ -20,7 +20,7 @@ import TireSetSummary from '@/components/tires/TireSetSummary.vue'
 import TireOdometerTimeline from '@/components/tires/TireOdometerTimeline.vue'
 import TireSetOverview from '@/components/tires/TireSetOverview.vue'
 import { useIsMobile } from '@/composables/useIsMobile'
-import TireWheelCard from '@/components/tires/TireWheelCard.vue'
+import TireAxleCard from '@/components/tires/TireAxleCard.vue'
 import TireStorageCard from '@/components/tires/TireStorageCard.vue'
 import TireDisposedCard from '@/components/tires/TireDisposedCard.vue'
 import TireAddModal from '@/components/tires/TireAddModal.vue'
@@ -36,7 +36,7 @@ import TireBatchDisposeModal from '@/components/tires/TireBatchDisposeModal.vue'
 import TireCopyHistoryModal from '@/components/tires/TireCopyHistoryModal.vue'
 import SheetRow from '@/components/SheetRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import { getLastDismountInfo } from '@/utils/tires'
+import { describeFittedSet, getLastDismountInfo } from '@/utils/tires'
 
 // The page owns the tire list, the selection and which modal is open; each modal owns its form and
 // its API call and reports back with "saved".
@@ -71,6 +71,12 @@ const wheels = [
   { pos: 'RL', labelKey: 'tires.wheels.RL' },
   { pos: 'RR', labelKey: 'tires.wheels.RR' },
 ]
+// The same four wheels, grouped by axle for the wide layout (the phone overview lists them as tiles)
+const axles = [
+  { titleKey: 'tires.timeline.front', wheels: wheels.slice(0, 2) },
+  { titleKey: 'tires.timeline.rear', wheels: wheels.slice(2) },
+]
+const fittedSet = computed(() => describeFittedSet(mountedTires.value))
 
 // Modals
 const showAddTireModal = ref(false)
@@ -254,7 +260,6 @@ function onDeleteEditedLog() {
   <div class="space-y-6">
     <!-- Header & Actions -->
     <PageHeader :title="$t('shell.nav.tires')" :icon="PageIcon">
-      {{ $t('tires.tiresView.wearTrackingInMmEstimated') }}
       <template #actions>
       <!-- Action Buttons -->
       <div v-if="vehicleStore.canEdit" class="flex items-center gap-2 flex-wrap">
@@ -263,7 +268,7 @@ function onDeleteEditedLog() {
           :disabled="storageTires.length === 0"
           :aria-describedby="storageTires.length === 0 ? 'change-set-reason' : undefined"
           class="btn btn-lg btn-secondary"
-          :title="$t('tires.tiresView.swapTheFittedSetWith')"
+          :title="storageTires.length === 0 ? $t('tires.tiresView.changeSetNoStorage') : $t('tires.tiresView.swapTheFittedSetWith')"
         >
           <Snowflake class="w-4 h-4 text-slate-300" />
           <span>{{ $t('tires.tiresView.changeSet') }}</span>
@@ -280,7 +285,7 @@ function onDeleteEditedLog() {
     
       </template>
     </PageHeader>
-    <p v-if="vehicleStore.canEdit && ready && storageTires.length === 0" id="change-set-reason" class="-mt-3 text-xs text-slate-400">{{ $t('tires.tiresView.changeSetNoStorage') }}</p>
+    <p v-if="vehicleStore.canEdit && ready && storageTires.length === 0" id="change-set-reason" class="sr-only">{{ $t('tires.tiresView.changeSetNoStorage') }}</p>
 
     <!-- Viewer mode banner -->
     <div
@@ -303,14 +308,13 @@ function onDeleteEditedLog() {
     />
 
     <!-- Header row: Select all toggle & Total info -->
-    <div v-if="vehicleStore.canEdit && activeTab === 'disposed' && currentTabTireIds.length > 0" class="flex items-center justify-between text-xs text-slate-400 px-2">
+    <div v-if="vehicleStore.canEdit && activeTab === 'disposed' && currentTabTireIds.length > 0" class="flex items-center text-xs text-slate-400 px-2">
       <SelectAllToggle
         :checked="isCurrentTabAllSelected"
         :indeterminate="isCurrentTabPartlySelected"
         :label="isCurrentTabAllSelected ? $t('tires.tiresView.deselectAll') : $t('tires.tiresView.selectAll')"
         @toggle="toggleSelectAllCurrentTab"
       />
-      <span>{{ $t('tires.tiresView.tireSInThisView', { length: currentTabTireIds.length }) }}</span>
     </div>
 
     <LoadError v-if="loadFailed" :message="loadError" @retry="loadTires" />
@@ -339,17 +343,17 @@ function onDeleteEditedLog() {
           @select-tire="close(); openTimelineTire($event)"
         />
       </SheetRow>
-      <TireQuickRotationBar v-if="vehicleStore.canEdit" :has-mounted-tires="hasMountedTires" :tires="tires" @layout="tires = $event" @rotated="loadTires" />
-
       <!-- On a phone the wheels are tiles: a long press starts the selection there -->
-      <div v-if="vehicleStore.canEdit && currentTabTireIds.length > 0" class="flex items-center justify-between text-xs text-slate-400 px-2 max-sm:hidden">
+      <div v-if="vehicleStore.canEdit" class="flex flex-wrap items-center justify-between gap-3">
         <SelectAllToggle
+          v-if="currentTabTireIds.length > 0"
+          class="max-sm:hidden"
           :checked="isCurrentTabAllSelected"
           :indeterminate="isCurrentTabPartlySelected"
           :label="isCurrentTabAllSelected ? $t('tires.tiresView.deselectAll') : $t('tires.tiresView.selectAll')"
           @toggle="toggleSelectAllCurrentTab"
         />
-        <span>{{ $t('tires.tiresView.tireSInThisView', { length: currentTabTireIds.length }) }}</span>
+        <TireQuickRotationBar :has-mounted-tires="hasMountedTires" :tires="tires" @layout="tires = $event" @rotated="loadTires" />
       </div>
 
       <EmptyState v-if="tires.length === 0" :icon="Disc" :title="$t('tires.tiresView.noTireYet')">
@@ -361,16 +365,16 @@ function onDeleteEditedLog() {
         </template>
       </EmptyState>
 
-      <!-- Cartes des 4 roues -->
-      <div v-else-if="!isMobile" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TireWheelCard
-          v-for="w in wheels"
-          :key="w.pos"
-          :pos="w.pos"
-          :label="$t(w.labelKey)"
-          :stat="mountedTires[w.pos]"
-          :selected="!!mountedTires[w.pos] && selectedTireIds.includes(mountedTires[w.pos].tire.id)"
-          :selecting="selectedTireIds.length > 0"
+      <!-- One card per axle, two wheels each -->
+      <div v-else-if="!isMobile" class="space-y-4">
+        <TireAxleCard
+          v-for="axle in axles"
+          :key="axle.titleKey"
+          :title="$t(axle.titleKey)"
+          :wheels="axle.wheels.map((w) => ({ pos: w.pos, label: $t(w.labelKey) }))"
+          :mounted="mountedTires"
+          :selected-ids="selectedTireIds"
+          :show-model="!fittedSet.uniform"
           :can-mount="vehicleStore.canEdit"
           @open="openHistoryModal"
           @toggle="toggleTireSelection"

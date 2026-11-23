@@ -20,5 +20,4 @@ defineProps<{ stat: any }>()
       {{ $t('tires.measuredWear.lowConfidence') }}
     </p>
   </div>
-  <p v-else class="text-xs text-slate-400">{{ $t('tires.measuredWear.none') }}</p>
 </template>

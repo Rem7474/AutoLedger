@@ -63,6 +63,10 @@
     "label": "Sommes payées",
     "definition": "Sommes réellement payées : pneus au moment de l'achat, sans décote."
   },
+  "treadNotMeasured": {
+    "label": "Usure théorique",
+    "definition": "Aucune profondeur de sculpture mesurée : ajoutez une mesure pour remplacer l'estimation théorique."
+  },
   "proPerso": {
     "label": "Pro / perso",
     "definition": "Affiche le classement Pro / Perso des trajets (filtres, pastilles, sélection groupée) et la répartition du tableau de bord. Réglage propre à ce navigateur ; les classements déjà faits sont conservés."

@@ -59,7 +59,7 @@ const due = computed(() => {
     </p>
     <TireWearBar remaining :pct="stat.life_progress_pct" :condition="stat.condition" />
     <p class="text-xs tabular-nums text-slate-400">{{ figures.worn }}</p>
-    <p class="truncate text-xs text-slate-400">{{ due ? $t('tires.overview.due', { date: due }) : getConditionBadge(stat.condition).label }}</p>
+    <p v-if="due || stat.condition !== 'GOOD'" class="truncate text-xs text-slate-400">{{ due ? $t('tires.overview.due', { date: due }) : getConditionBadge(stat.condition).label }}</p>
   </div>
   <div v-else class="flex min-h-32 flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-3 text-center text-xs text-slate-400">
     <Disc class="h-6 w-6 opacity-30" aria-hidden="true" />

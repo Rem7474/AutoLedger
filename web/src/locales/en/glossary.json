@@ -63,6 +63,10 @@
     "label": "Cash paid",
     "definition": "Money actually paid: tires when bought, no depreciation."
   },
+  "treadNotMeasured": {
+    "label": "Theoretical wear",
+    "definition": "No tread depth measured yet: add a reading to replace the theoretical estimate."
+  },
   "proPerso": {
     "label": "Work / personal",
     "definition": "Shows the work / personal classification of drives (filters, badges, bulk selection) and the dashboard breakdown. Setting of this browser only; classifications already made are kept."
