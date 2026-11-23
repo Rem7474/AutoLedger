@@ -342,6 +342,13 @@ test('saving a charge deep in the list keeps the page where it was', async ({ pa
   await useVehicle(page, ev.id, '/costs?theme=energy')
   const cards = page.getByTestId('cost-entry').getByRole('button')
   await expect(cards.first()).toBeVisible()
+  // The list reads its pages as it is scrolled: go to the end until no further page comes
+  let count = -1
+  while (count !== (await cards.count())) {
+    count = await cards.count()
+    await cards.last().scrollIntoViewIfNeeded()
+    await page.waitForTimeout(700)
+  }
   const last = cards.last()
   await last.scrollIntoViewIfNeeded()
   const scroller = page.locator('.app-scroll')
