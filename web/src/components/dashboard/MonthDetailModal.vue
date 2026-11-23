@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import KpiCard from '@/components/KpiCard.vue'
+import SegmentedControl from '@/components/SegmentedControl.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
 import CostItemRow from '@/components/costs/CostItemRow.vue'
 import { formatPercent } from '@/utils/numbers'
@@ -237,30 +238,16 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           <Info class="w-3.5 h-3.5 text-sky-400 shrink-0" />
           <span>{{ $t('dashboard.monthDetailModal.breakdownCalculationMode') }}</span>
         </span>
-        <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/70">
-          <button
-            type="button"
-            @click="monthDetailViewMode = 'economic'"
-            :aria-pressed="monthDetailViewMode === 'economic'"
-            :class="[
-              'flex-1 sm:flex-none px-2.5 py-1 text-xs font-semibold rounded-md transition-colors',
-              monthDetailViewMode === 'economic' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'
-            ]"
-          >
-            {{ $t('dashboard.monthDetailModal.costPriceKm', { unit: distanceUnit(), cur: currencySymbol(currency) }) }}
-          </button>
-          <button
-            type="button"
-            @click="monthDetailViewMode = 'cash'"
-            :aria-pressed="monthDetailViewMode === 'cash'"
-            :class="[
-              'flex-1 sm:flex-none px-2.5 py-1 text-xs font-semibold rounded-md transition-colors',
-              monthDetailViewMode === 'cash' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'
-            ]"
-          >
-            {{ $t('dashboard.monthDetailModal.cashExpenses', { cur: currencySymbol(currency) }) }}
-          </button>
-        </div>
+        <SegmentedControl
+          v-model="monthDetailViewMode"
+          class="max-sm:w-full"
+          fill
+          :label="$t('dashboard.monthDetailModal.breakdownCalculationMode')"
+          :options="[
+            { value: 'economic', label: $t('dashboard.monthDetailModal.costPriceKm', { unit: distanceUnit(), cur: currencySymbol(currency) }) },
+            { value: 'cash', label: $t('dashboard.monthDetailModal.cashExpenses', { cur: currencySymbol(currency) }) },
+          ]"
+        />
       </div>
 
       <!-- Content: Donut Chart (Left) + Itemized Breakdown List (Right) -->

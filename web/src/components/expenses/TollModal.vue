@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ModalShell from '@/components/ModalShell.vue'
+import SegmentedControl from '@/components/SegmentedControl.vue'
 import NumberInput from '@/components/NumberInput.vue'
 import { t } from '@/i18n'
 import { formatDistance } from '@/units'
@@ -224,35 +225,17 @@ const handleCreateToll = () => runOnce(handleCreateTollAction)
           {{ $t('expenses.tollModal.attachToATeslamateDrive') }}
         </span>
 
-        <div class="grid grid-cols-3 gap-1.5 pt-1">
-          <button
-            type="button"
-            @click="associationMode = 'NONE'"
-            :aria-pressed="associationMode === 'NONE'"
-            class="chip"
-            :class="{ 'chip-selected': associationMode === 'NONE' }"
-          >
-            {{ $t('expenses.tollModal.noDrive') }}
-          </button>
-          <button
-            type="button"
-            @click="associationMode = 'SINGLE'"
-            :aria-pressed="associationMode === 'SINGLE'"
-            class="chip"
-            :class="{ 'chip-selected': associationMode === 'SINGLE' }"
-          >
-            {{ $t('expenses.tollModal.singleDrive') }}
-          </button>
-          <button
-            type="button"
-            @click="associationMode = 'MULTI'"
-            :aria-pressed="associationMode === 'MULTI'"
-            class="chip"
-            :class="{ 'chip-selected': associationMode === 'MULTI' }"
-          >
-            {{ $t('expenses.tollModal.multiLeg') }}
-          </button>
-        </div>
+        <SegmentedControl
+          v-model="associationMode"
+          fill
+          class="mt-1"
+          :label="$t('expenses.tollModal.attachToATeslamateDrive')"
+          :options="[
+            { value: 'NONE', label: $t('expenses.tollModal.noDrive') },
+            { value: 'SINGLE', label: $t('expenses.tollModal.singleDrive') },
+            { value: 'MULTI', label: $t('expenses.tollModal.multiLeg') },
+          ]"
+        />
 
         <!-- Single drive selection -->
         <div v-if="associationMode === 'SINGLE'" class="pt-2 space-y-1.5">

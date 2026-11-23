@@ -504,6 +504,7 @@
     "monthlyPrice": "Prix moyen par mois ({cur}/kWh)",
     "noPrice": "Aucun coût enregistré",
     "breakdown": "Par lieu",
+    "breakdownBy": "Répartition par",
     "byEnergy": "Énergie",
     "byCost": "Coût",
     "chartLabel": "Répartition des recharges par lieu",
