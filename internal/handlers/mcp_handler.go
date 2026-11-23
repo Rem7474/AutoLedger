@@ -23,7 +23,7 @@ import (
 
 // mcpInstructions is what a client shows its model about the server. It states the conventions every tool's output
 // follows, so a model does not have to infer them from field names.
-const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools read; create_carpool_from_drives, update_carpool, update_drive_expenses, create_expense, set_toll_invoice, record_odometer, add_fuel_fill, add_charge, update_expense and delete_record are the only ones that write, and only on a connection the owner allowed to. delete_record is the only one that deletes, and only an expense, a fuel fill-up or a manual charge, after the owner agreed; no carpool or drive is deleted; update_carpool can take a passenger out of a carpool and link or unlink its drives (the drives are kept), and update_drive_expenses replaces the tolls and parking amounts of trips (and removes them with 0), and create_expense records one expense, never changing an existing one.
+const mcpInstructions = `AutoLedger tracks what vehicles cost. These tools read, except create_carpool_from_drives, update_carpool, carpool_costs, update_drive_expenses, create_expense, update_expense, set_toll_invoice, record_odometer, update_odometer_reading, add_fuel_fill, update_fuel_fill, add_charge, update_charge, update_trips, manage_trip_group, estimate_trip_tolls and delete_record, which write, and only on a connection the owner allowed to. Preview with dry_run and show the owner before saving; a change to an existing record needs the version the preview gave. delete_record is the only tool that deletes a record (an expense, a fuel fill-up, a manual charge, an odometer reading the owner typed, a toll invoice or a carpool), and manage_trip_group deletes a trip group: only after the owner agreed. A trip (drive) is never deleted; update_carpool can take a passenger out of a carpool and link or unlink its drives, and update_drive_expenses replaces the tolls and parking amounts of trips (0 removes them).
 Amounts are decimal strings in the currency of their vehicle and are never converted between currencies: do not add amounts of different currencies together.
 Distances are in kilometres. A null value means the figure is unknown, not zero.
 Costs are the cash spent, the purchase of the vehicle excluded. Call get_vehicle_data_gaps before drawing conclusions from a vehicle's costs: it says what the records are missing.
@@ -245,6 +245,7 @@ func (h *MCPHandler) addTools() {
 	h.addTripGroupTools(readOnly)
 	h.addTireTools(readOnly)
 	h.addOdometerTools(readOnly)
+	h.addOdometerReadingTools(readOnly)
 	h.addSourceTools(readOnly)
 	h.addComparisonTools(readOnly)
 	h.addTariffTools(readOnly)
@@ -257,6 +258,13 @@ func (h *MCPHandler) addTools() {
 	h.addChargeWriteTools()
 	h.addDeleteWriteTools()
 	h.addExpenseUpdateTools()
+	h.addFuelUpdateTools()
+	h.addChargeUpdateTools()
+	h.addOdometerUpdateTools()
+	h.addCarpoolCostTools()
+	h.addTripUpdateTools()
+	h.addTripGroupWriteTools()
+	h.addTollEstimateTools()
 	h.addTollInvoiceTools()
 
 	mcp.AddTool(h.server, &mcp.Tool{
