@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import GlossaryTip from '@/components/GlossaryTip.vue'
+import SegmentedControl from '@/components/SegmentedControl.vue'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import { formatAmount } from '@/currency'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -29,19 +30,12 @@ const rows = computed(() =>
         {{ $t(mode === 'full' ? 'dashboard.costBreakdownDonut.fullCostBreakdown' : 'dashboard.donut.cashTitle') }}
         <GlossaryTip :term="mode === 'full' ? 'donutFull' : 'donutCash'" />
       </h3>
-      <div class="inline-flex shrink-0 whitespace-nowrap rounded-lg bg-slate-800 p-0.5 text-xs" role="group">
-        <button
-          v-for="m in modes"
-          :key="m"
-          type="button"
-          :aria-pressed="mode === m"
-          class="px-2.5 py-1 rounded-md font-medium transition-colors"
-          :class="mode === m ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'"
-          @click="mode = m"
-        >
-          {{ $t(m === 'full' ? 'dashboard.donut.modeFull' : 'dashboard.donut.modeCash') }}
-        </button>
-      </div>
+      <SegmentedControl
+        v-model="mode"
+        class="shrink-0 whitespace-nowrap"
+        :label="$t('dashboard.donut.viewMode')"
+        :options="modes.map((m) => ({ value: m, label: $t(m === 'full' ? 'dashboard.donut.modeFull' : 'dashboard.donut.modeCash') }))"
+      />
     </div>
     <p v-if="mode === 'full' && tco && tco.depreciation_known === false" class="text-xs font-medium text-warning-400 -mt-2 mb-3">{{ $t('dashboard.costBreakdownDonut.depreciationMissing') }}</p>
     <div v-if="tco" class="mx-auto h-36 w-36 sm:h-44 sm:w-44">

@@ -982,13 +982,13 @@ test('in the month detail the two modes share the track, and the fixed/variable 
   await page.getByRole('main').getByRole('button', { name: /Last month's detail/ }).first().tap()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
-  const modes = dialog.locator('button[aria-pressed]')
+  const modes = dialog.getByRole('radio')
   await expect(modes).toHaveCount(2)
   const [a, b] = [(await modes.nth(0).boundingBox())!, (await modes.nth(1).boundingBox())!]
   expect(Math.abs(a.width - b.width)).toBeLessThan(2)
   // Together they fill the track (border, padding and gap apart)
   const track = (await modes.nth(0).locator('xpath=..').boundingBox())!
-  expect(a.width + b.width).toBeGreaterThan(track.width - 14)
+  expect(a.width + b.width).toBeGreaterThanOrEqual(track.width - 14)
   await expect(dialog.getByText('•', { exact: true })).toBeHidden()
 })
 
@@ -1130,7 +1130,7 @@ test('the costs page starts with the journal and keeps the charts behind an Anal
   await expect(page).toHaveURL(/tab=ANALYSIS/)
   await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toBeVisible()
   // The chart opens on what was paid
-  await expect(page.getByRole('button', { name: 'Cash paid' }).first()).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('radio', { name: 'Cash paid' }).first()).toBeChecked()
 
   // A theme without an analysis is the journal alone
   await page.getByTestId('costs-filter-tolls').click()

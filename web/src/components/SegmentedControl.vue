@@ -13,6 +13,7 @@ export interface SegmentOption<V> {
 const props = defineProps<{
   options: SegmentOption<T>[]
   label: string
+  fill?: boolean
 }>()
 const model = defineModel<T>({ required: true })
 const buttons = ref<HTMLButtonElement[]>([])
@@ -39,7 +40,7 @@ const tabbable = (i: number) => {
 </script>
 
 <template>
-  <div role="radiogroup" :aria-label="label" class="inline-flex gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1">
+  <div role="radiogroup" :aria-label="label" :class="[fill ? 'flex' : 'inline-flex', 'gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1']">
     <button
       v-for="(o, i) in options"
       :key="String(o.value)"
@@ -48,7 +49,7 @@ const tabbable = (i: number) => {
       role="radio"
       :aria-checked="o.value === model"
       :tabindex="tabbable(i) ? 0 : -1"
-      :class="['chip min-h-11 min-w-11 sm:min-h-9', o.value === model && 'chip-selected']"
+      :class="['chip min-h-11 min-w-11 sm:min-h-9', fill && 'flex-1 justify-center', o.value === model && 'chip-selected']"
       @click="select(i)"
       @keydown="onKey($event, i)"
     >

@@ -4,6 +4,7 @@ import { Chart, registerables } from 'chart.js'
 import { MapPin, PiggyBank, ChevronDown } from '@/icons'
 import CostDonut from '@/components/costs/CostDonut.vue'
 import KpiCard from '@/components/KpiCard.vue'
+import SegmentedControl from '@/components/SegmentedControl.vue'
 import { api } from '@/services/api'
 import { currencySymbol, formatAmount } from '@/currency'
 import { intlLocale, t } from '@/i18n'
@@ -166,18 +167,16 @@ onBeforeUnmount(() => {
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <PeriodField v-if="withPeriod" class="max-sm:basis-full" />
-        <div class="flex items-center gap-1 bg-slate-800/60 p-0.5 rounded-lg max-sm:basis-full sm:ml-auto" role="group">
-          <button
-            v-for="m in (['energy', 'cost'] as const)"
-            :key="m"
-            type="button"
-            :aria-pressed="mode === m"
-            :class="['tap-text flex-1 justify-center px-2.5 text-xs font-semibold rounded-md transition-colors sm:flex-none', mode === m ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white']"
-            @click="mode = m"
-          >
-            {{ $t(m === 'energy' ? 'expenses.chargingInsights.byEnergy' : 'expenses.chargingInsights.byCost') }}
-          </button>
-        </div>
+        <SegmentedControl
+          v-model="mode"
+          class="max-sm:basis-full sm:ml-auto"
+          fill
+          :label="$t('expenses.chargingInsights.breakdownBy')"
+          :options="[
+            { value: 'energy', label: $t('expenses.chargingInsights.byEnergy') },
+            { value: 'cost', label: $t('expenses.chargingInsights.byCost') },
+          ]"
+        />
       </div>
     </header>
 

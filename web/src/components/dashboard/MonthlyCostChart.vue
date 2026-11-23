@@ -10,6 +10,7 @@ import { currencySymbol, formatAmount, formatAxisAmount } from '@/currency'
 import { distanceUnit, perDistance } from '@/units'
 import { useVehicleStore } from '@/stores/vehicle'
 import ChartTable from '@/components/charts/ChartTable.vue'
+import SegmentedControl from '@/components/SegmentedControl.vue'
 
 Chart.register(...registerables)
 
@@ -186,18 +187,15 @@ onUnmounted(() => {
       <h3 class="text-sm font-bold text-white flex items-center gap-2">
         <span>{{ $t('dashboard.monthlyCostChart.monthlyExpenseTrend', { cur: currencySymbol(currency) }) }}</span>
       </h3>
-      <div class="flex items-center gap-1 bg-slate-800/60 rounded-lg p-0.5 self-start" role="group" :aria-label="$t('dashboard.monthlyCostChart.view')">
-        <button
-          v-for="opt in (['cash', 'economic'] as const)"
-          :key="opt"
-          type="button"
-          :aria-pressed="mode === opt"
-          :class="['tap-text justify-center px-2.5 text-xs font-semibold rounded-md transition-colors pointer-coarse:min-w-11', mode === opt ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white']"
-          @click="mode = opt"
-        >
-          {{ opt === 'economic' ? $t('dashboard.monthlyCostChart.economic') : $t('dashboard.monthlyCostChart.cash') }}
-        </button>
-      </div>
+      <SegmentedControl
+        v-model="mode"
+        class="self-start"
+        :label="$t('dashboard.monthlyCostChart.view')"
+        :options="[
+          { value: 'cash', label: $t('dashboard.monthlyCostChart.cash') },
+          { value: 'economic', label: $t('dashboard.monthlyCostChart.economic') },
+        ]"
+      />
     </div>
     <p class="-mt-2 mb-3 text-xs text-slate-400">{{ mode === 'economic' ? $t('dashboard.monthlyCostChart.economicHint') : $t('dashboard.monthlyCostChart.cashHint') }}</p>
     <div class="relative min-h-52 flex-1 sm:min-h-72">

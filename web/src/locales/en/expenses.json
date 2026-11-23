@@ -504,6 +504,7 @@
     "monthlyPrice": "Average price per month ({cur}/kWh)",
     "noPrice": "No cost recorded",
     "breakdown": "By place",
+    "breakdownBy": "Breakdown by",
     "byEnergy": "Energy",
     "byCost": "Cost",
     "chartLabel": "Charging split by place",
