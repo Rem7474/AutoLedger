@@ -25,6 +25,7 @@ import DriveBulkActions from '@/components/drives/DriveBulkActions.vue'
 import DriveTotalsLine from '@/components/drives/DriveTotalsLine.vue'
 import DriveCard from '@/components/drives/DriveCard.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
+import MonthSection from '@/components/MonthSection.vue'
 import AddressBackfillNotice from '@/components/drives/AddressBackfillNotice.vue'
 import CarpoolView from '@/views/CarpoolView.vue'
 import TripGroupsPanel from '@/components/drives/TripGroupsPanel.vue'
@@ -646,11 +647,8 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
         <span>{{ $t('drives.drivesView.shownOf', { count: drives.length, total }) }}</span>
       </div>
 
-      <section v-for="month in driveMonths" :key="month.month" class="space-y-2">
-        <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-2">
-          <h2 class="text-sm font-bold capitalize text-white">{{ month.label }}</h2>
-          <DriveTotalsLine :totals="month.totals" show-net />
-        </div>
+      <MonthSection v-for="month in driveMonths" :key="month.month" :label="month.label">
+        <template #summary><DriveTotalsLine :totals="month.totals" show-net /></template>
         <div v-for="group in month.days" :key="group.day" class="space-y-2">
           <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 pt-1">
             <h3 class="text-xs font-semibold text-slate-400">{{ group.label }}</h3>
@@ -668,7 +666,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
             />
           </SwipeToDelete>
         </div>
-      </section>
+      </MonthSection>
 
       <InfiniteSentinel
         v-if="hasMore"

@@ -10,17 +10,14 @@
     "showFewerDevices": "Afficher moins d’appareils",
     "connectedDevices": "Appareils connectés",
     "confirmTheNewPassword": "Confirmer le nouveau mot de passe",
-    "8CharactersMinimum72Bytes": "8 caractères au minimum, 72 octets au maximum.",
     "newPassword": "Nouveau mot de passe",
     "currentPassword": "Mot de passe actuel",
     "password": "Mot de passe",
     "signIn": "Connexion",
     "emailAddress": "Adresse e-mail",
     "identity": "Identité",
-    "signInPasswordAndConnected": "Connexion, mot de passe et appareils connectés.",
     "preferences": "Préférences",
-    "proPersoTitle": "Distinguer trajets Pro et Perso",
-    "proPersoHelp": "Affiche le classement Pro / Perso des trajets (filtres, pastilles, sélection groupée) et la répartition du tableau de bord. Réglage propre à ce navigateur ; les classements déjà faits sont conservés."
+    "proPersoTitle": "Distinguer trajets Pro et Perso"
   },
   "unknownDevice": "Appareil inconnu",
   "browserOnSystem": "{browser} sur {system}",
@@ -57,10 +54,8 @@
   "volumeUnit_gal_uk": "Gallons UK",
   "tokens": {
     "title": "Jetons d'API & automatisations",
-    "subtitle": "Pour envoyer des données depuis Home Assistant, une borne ou un script. Un jeton n'ouvre que les routes d'intégration, jamais le reste du compte.",
     "create": "Générer un jeton",
     "haIntegrationTitle": "Intégration Home Assistant (HACS)",
-    "haIntegrationSubtitle": "Installez l'intégration AutoLedger depuis HACS pour envoyer vos sessions de recharge automatiquement. Utilisez un jeton généré ci-dessous.",
     "haIntegrationLink": "Ouvrir l'intégration",
     "loading": "Chargement des jetons d'API...",
     "noTokens": "Aucun jeton d'API généré pour le moment.",
@@ -112,9 +107,9 @@
     }
   },
   "sso": {
+    "title": "Authentification unique ({provider})",
     "link": "Lier {provider}",
-    "linkHint": "Connectez-vous avec {provider} en plus de votre mot de passe. Vos données restent sur ce compte.",
-    "linked": "Lié à {provider} : vous pouvez vous connecter avec lui en plus de votre mot de passe.",
+    "linked": "Lié à {provider}",
     "linkedNotice": "Votre authentification unique est liée à ce compte.",
     "alreadyLinked": "Ce compte est déjà lié à une identité d'authentification unique.",
     "identityInUse": "Cette identité d'authentification unique appartient déjà à un autre compte.",

@@ -176,9 +176,7 @@ useRefreshHandler(() => load(true))
 
 <template>
   <div class="mx-auto max-w-3xl space-y-6">
-    <PageHeader :title="$t('shell.nav.account')" :icon="PageIcon">
-      {{ $t('account.accountView.signInPasswordAndConnected') }}
-    </PageHeader>
+    <PageHeader :title="$t('shell.nav.account')" :icon="PageIcon" />
 
     <section class="card p-5" aria-labelledby="account-identity">
       <h2 id="account-identity" class="mb-3 flex items-center gap-2 text-sm font-bold text-white">
@@ -186,10 +184,6 @@ useRefreshHandler(() => load(true))
         {{ $t('account.accountView.identity') }}
       </h2>
       <dl class="divide-y divide-slate-800">
-        <div class="settings-row">
-          <dt class="settings-row-label">{{ $t('account.language') }}</dt>
-          <dd><LanguageSwitcher /></dd>
-        </div>
         <div class="settings-row">
           <dt class="settings-row-label">{{ $t('account.accountView.emailAddress') }}</dt>
           <dd class="min-w-0 break-all text-right text-slate-300">{{ authStore.user?.email }}</dd>
@@ -207,10 +201,11 @@ useRefreshHandler(() => load(true))
       >
         {{ $t(ssoNotice.key) }}
       </p>
-      <div v-if="oidcEnabled && hasPassword" class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-3">
-        <p class="max-w-md text-xs text-slate-400">
-          {{ oidcLinked ? $t('account.sso.linked', { provider: oidcProviderName }) : $t('account.sso.linkHint', { provider: oidcProviderName }) }}
-        </p>
+      <div v-if="oidcEnabled && hasPassword" class="settings-row border-t border-slate-800 pt-3">
+        <span class="settings-row-label">
+          {{ oidcLinked ? $t('account.sso.linked', { provider: oidcProviderName }) : $t('account.sso.title', { provider: oidcProviderName }) }}
+          <GlossaryTip term="ssoLink" />
+        </span>
         <a v-if="!oidcLinked" href="/api/auth/oidc/link" class="btn btn-secondary">{{ $t('account.sso.link', { provider: oidcProviderName }) }}</a>
       </div>
     </section>
@@ -222,10 +217,10 @@ useRefreshHandler(() => load(true))
         <GlossaryTip term="currencyPerVehicle" />
       </h2>
       <div class="divide-y divide-slate-800">
-        <label class="settings-row cursor-pointer !items-start">
+        <label class="settings-row cursor-pointer">
           <span class="settings-row-label">
-            <span class="block">{{ $t('account.accountView.proPersoTitle') }}</span>
-            <span class="block text-xs font-normal text-slate-400">{{ $t('account.accountView.proPersoHelp') }}</span>
+            {{ $t('account.accountView.proPersoTitle') }}
+            <GlossaryTip term="proPerso" />
           </span>
           <input
             type="checkbox"
@@ -235,6 +230,10 @@ useRefreshHandler(() => load(true))
             @change="prefs.setProPersoEnabled(($event.target as HTMLInputElement).checked)"
           />
         </label>
+        <div class="settings-row">
+          <span class="settings-row-label">{{ $t('account.language') }}</span>
+          <LanguageSwitcher />
+        </div>
         <div class="settings-row">
           <span class="settings-row-label">{{ $t('account.distanceUnit') }}</span>
           <DistanceUnitSwitcher />
@@ -258,9 +257,8 @@ useRefreshHandler(() => load(true))
           <input id="pw-current" v-model="current" type="password" autocomplete="current-password" class="field" />
         </div>
         <div>
-          <label for="pw-new" class="field-label">{{ $t('account.accountView.newPassword') }}</label>
-          <input id="pw-new" v-model="next" type="password" autocomplete="new-password" class="field" aria-describedby="pw-hint" />
-          <p id="pw-hint" class="mt-1 text-xs text-slate-400">{{ $t('account.accountView.8CharactersMinimum72Bytes') }}</p>
+          <label for="pw-new" class="field-label">{{ $t('account.accountView.newPassword') }}<GlossaryTip term="passwordRules" /></label>
+          <input id="pw-new" v-model="next" type="password" autocomplete="new-password" class="field" />
         </div>
         <div>
           <label for="pw-confirm" class="field-label">{{ $t('account.accountView.confirmTheNewPassword') }}</label>
@@ -314,9 +312,8 @@ useRefreshHandler(() => load(true))
                 <span v-if="s.current" class="rounded-full bg-success-500/15 px-2 py-0.5 text-xs font-bold text-success-300">{{ $t('account.accountView.thisDevice') }}</span>
               </p>
               <p class="text-xs text-slate-400">
-                {{ $t('account.accountView.active', { value: describeRelativeTime(s.last_used_at) }) }}<template v-if="s.ip"> · {{ s.ip }}</template>
+                {{ $t('account.accountView.active', { value: describeRelativeTime(s.last_used_at) }) }} · {{ $t('account.accountView.signedIn', { value: describeRelativeTime(s.started_at) }) }}<template v-if="s.ip"> · {{ s.ip }}</template>
               </p>
-              <p class="text-xs text-slate-400">{{ $t('account.accountView.signedIn', { value: describeRelativeTime(s.started_at) }) }}</p>
             </div>
           </div>
           <button

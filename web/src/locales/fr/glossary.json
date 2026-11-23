@@ -67,5 +67,25 @@
     "label": "Usure théorique",
     "definition": "Aucune profondeur de sculpture mesurée : ajoutez une mesure pour remplacer l'estimation théorique."
   },
+  "proPerso": {
+    "label": "Pro / perso",
+    "definition": "Affiche le classement Pro / Perso des trajets (filtres, pastilles, sélection groupée) et la répartition du tableau de bord. Réglage propre à ce navigateur ; les classements déjà faits sont conservés."
+  },
+  "passwordRules": {
+    "label": "Règles du mot de passe",
+    "definition": "8 caractères au minimum, 72 octets au maximum."
+  },
+  "ssoLink": {
+    "label": "Authentification unique",
+    "definition": "Connectez-vous avec votre fournisseur d'identité en plus de votre mot de passe. Vos données restent sur ce compte."
+  },
+  "apiTokens": {
+    "label": "Jetons API",
+    "definition": "Pour envoyer des données depuis Home Assistant, une borne ou un script. Un jeton n'ouvre que les points d'accès d'intégration, jamais le reste du compte."
+  },
+  "homeAssistantIntegration": {
+    "label": "Intégration Home Assistant",
+    "definition": "Installez l'intégration AutoLedger depuis HACS pour envoyer vos sessions de charge automatiquement. Utilisez un jeton généré ci-dessous."
+  },
   "about": "Définition de {term}"
 }

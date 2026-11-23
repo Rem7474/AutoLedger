@@ -8,6 +8,7 @@ import { useConfirm } from '@/composables/useConfirm'
 import { t } from '@/i18n'
 import { useVehicleStore } from '@/stores/vehicle'
 import { coveredVehicles } from '@/utils/oauthVehicles'
+import GlossaryTip from '@/components/GlossaryTip.vue'
 import LoadError from '@/components/LoadError.vue'
 import TokenCallLog from '@/components/account/TokenCallLog.vue'
 
@@ -119,10 +120,8 @@ onMounted(() => {
         <h2 id="account-api-tokens" class="flex items-center gap-2 text-sm font-bold text-white">
           <Key class="h-4 w-4 text-slate-400" aria-hidden="true" />
           {{ t('account.tokens.title') }}
+          <GlossaryTip term="apiTokens" />
         </h2>
-        <p class="text-xs text-slate-400 mt-0.5">
-          {{ t('account.tokens.subtitle') }}
-        </p>
       </div>
       <button
         type="button"
@@ -134,24 +133,19 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Home Assistant integration Info Banner -->
-    <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div class="flex items-start gap-2.5">
-        <Sparkles class="h-4 w-4 text-slate-300 shrink-0 mt-0.5" />
-        <div>
-          <h3 class="text-xs font-semibold text-slate-200">{{ t('account.tokens.haIntegrationTitle') }}</h3>
-          <p class="text-xs text-slate-400 mt-0.5">
-            {{ t('account.tokens.haIntegrationSubtitle') }}
-          </p>
-        </div>
-      </div>
+    <!-- Home Assistant integration: one line, its explanation is in the tip -->
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <span class="flex items-center gap-2 text-xs font-semibold text-slate-200">
+        <Sparkles class="h-4 w-4 text-slate-300 shrink-0" aria-hidden="true" />
+        <span>{{ t('account.tokens.haIntegrationTitle') }}<GlossaryTip term="homeAssistantIntegration" /></span>
+      </span>
       <a
         href="https://github.com/Rem7474/autoledger-homeassistant"
         target="_blank"
         rel="noopener noreferrer"
-        class="tap-text justify-center gap-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-colors shrink-0"
+        class="tap-text gap-1.5 text-xs font-medium text-slate-200 underline underline-offset-2"
       >
-        <ExternalLink class="h-3 w-3" />
+        <ExternalLink class="h-3 w-3" aria-hidden="true" />
         {{ t('account.tokens.haIntegrationLink') }}
       </a>
     </div>

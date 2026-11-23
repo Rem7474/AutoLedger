@@ -335,8 +335,8 @@ test('the vehicle selector opens the household view and a vehicle leaves it', as
 
 test('the odometer page lists the mileage typed on fill-ups, read-only', async ({ page }) => {
   await useVehicle(page, ice.id, '/odometer')
-  await expect(page.getByText('Fill-up', { exact: true }).first()).toBeVisible()
-  const row = page.locator('div.rounded-2xl', { has: page.getByText('Fill-up', { exact: true }) }).first()
+  await expect(page.getByText('Fill-up').first()).toBeVisible()
+  const row = page.locator('div.rounded-2xl', { has: page.getByRole('link', { name: 'See the fill-ups' }) }).first()
   await expect(row.getByRole('button')).toHaveCount(0)
   await expect(row.getByRole('link', { name: 'See the fill-ups' })).toHaveAttribute('href', /\/consumption\?tab=FUEL/)
 })
@@ -344,7 +344,7 @@ test('the odometer page lists the mileage typed on fill-ups, read-only', async (
 test('an electric vehicle lists no fill-up on the odometer page', async ({ page }) => {
   await useVehicle(page, ev.id, '/odometer')
   await expect(page.getByText('History of recorded readings')).toBeVisible()
-  await expect(page.getByText('Fill-up', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'See the fill-ups' })).toHaveCount(0)
 })
 
 test('the trips address opens the trips of a combustion vehicle as it does for an electric one', async ({ page, request }) => {
@@ -398,7 +398,7 @@ test('the readings of the odometer list line up whether or not they can be selec
   try {
     await useVehicle(page, ice.id, '/odometer')
     const manual = page.locator('div.rounded-2xl', { hasText: notes }).last()
-    const fillUp = page.locator('div.rounded-2xl', { has: page.getByText('Fill-up', { exact: true }) }).last()
+    const fillUp = page.locator('div.rounded-2xl', { has: page.getByRole('link', { name: 'See the fill-ups' }) }).first()
     await fillUp.scrollIntoViewIfNeeded()
     const fillUpText = (await fillUp.locator('.tabular-nums').first().boundingBox())!
     await manual.scrollIntoViewIfNeeded()

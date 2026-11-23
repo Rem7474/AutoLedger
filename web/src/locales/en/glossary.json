@@ -67,5 +67,25 @@
     "label": "Theoretical wear",
     "definition": "No tread depth measured yet: add a reading to replace the theoretical estimate."
   },
+  "proPerso": {
+    "label": "Work / personal",
+    "definition": "Shows the work / personal classification of drives (filters, badges, bulk selection) and the dashboard breakdown. Setting of this browser only; classifications already made are kept."
+  },
+  "passwordRules": {
+    "label": "Password rules",
+    "definition": "8 characters minimum, 72 bytes maximum."
+  },
+  "ssoLink": {
+    "label": "Single sign-on",
+    "definition": "Sign in with your identity provider as well as with your password. Your data stays on this account."
+  },
+  "apiTokens": {
+    "label": "API tokens",
+    "definition": "To send data from Home Assistant, a charger or a script. A token only opens the integration endpoints, never the rest of the account."
+  },
+  "homeAssistantIntegration": {
+    "label": "Home Assistant integration",
+    "definition": "Install the AutoLedger integration from HACS to send your charging sessions automatically. Use a token generated below."
+  },
   "about": "Definition of {term}"
 }
