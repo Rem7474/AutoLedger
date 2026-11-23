@@ -415,6 +415,7 @@ var updateRoutesVersioned = []string{
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}/logs/{logId}",
 	"PUT /api/vehicles/{vehicleId}/tires/{tireId}/sessions/{sessionId}",
+	"PUT /api/vehicles/{vehicleId}/toll-invoices/{month}",
 	"PUT /api/vehicles/{vehicleId}/trip-groups/{groupId}",
 }
 
@@ -436,6 +437,7 @@ var updateRoutesExempt = map[string]string{
 	"PUT /api/fleet/budget":                                          "personal setting, a single editor",
 	"PUT /api/vehicles/{vehicleId}/charging-places/aliases":          "replaces a whole mapping, not an item",
 	"PUT /api/vehicles/{vehicleId}/webhook":                          "single setting per vehicle, not an item",
+	"PUT /api/vehicles/{vehicleId}/hybrid-share":                     "the owner's decision on one setting per vehicle (share, fuel consumption, capacity), replaced as sent, not an item",
 	"PATCH /api/vehicles/{vehicleId}/tires/batch":                    "applies the same few fields to several tires; advances their version so an open editor is refused",
 	"PUT /api/vehicles/{id}/members/{memberId}":                      "sets the role of a member, one field",
 	"PUT /api/vehicles/{id}/people/{personId}":                       "renames a person, one field",

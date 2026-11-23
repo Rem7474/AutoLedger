@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { intlLocale } from '@/i18n'
 import { computed } from 'vue'
-import { canCharge, canRefuel } from '@/utils/vehicles'
 import { useVehicleStore } from '@/stores/vehicle'
 import { formatAmount, formatAmountOrUnknown } from '@/currency'
 import GlossaryTip from '@/components/GlossaryTip.vue'
@@ -51,7 +50,7 @@ const rolling = computed(() => rollingWindowStats(props.tco?.monthly_costs))
     <dt class="text-success-400">{{ $t('dashboard.tcoMetricsGrid.netOfCarpoolingLabel') }}</dt>
     <dd class="font-semibold text-success-400">{{ money(tco.full_cost_net) }}</dd>
   </div>
-  <template v-if="canRefuel(tco?.powertrain)">
+  <template v-if="vehicleStore.capabilities.refuels">
     <div v-if="tco?.total_liters" class="flex justify-between gap-3">
       <dt class="text-slate-400">{{ volumeUnitLabel() }}</dt>
       <dd class="font-semibold text-white">{{ Math.round(litresToDisplayVolume(tco.total_liters)).toLocaleString(intlLocale()) }}</dd>
@@ -65,11 +64,11 @@ const rolling = computed(() => rollingWindowStats(props.tco?.monthly_costs))
       <dd class="font-semibold text-white">{{ money(perVolume(tco.avg_cost_per_liter), 3) }}/{{ volumeUnitLabel() }}</dd>
     </div>
   </template>
-  <div v-if="canCharge(tco?.powertrain) && tco?.total_kwh_added" class="flex justify-between gap-3">
+  <div v-if="vehicleStore.capabilities.charges && tco?.total_kwh_added" class="flex justify-between gap-3">
     <dt class="text-slate-400">{{ $t('dashboard.tcoMetricsGrid.kwhLabel') }}</dt>
     <dd class="font-semibold text-white">{{ Math.round(tco.total_kwh_added).toLocaleString(intlLocale()) }} kWh</dd>
   </div>
-  <div v-if="canCharge(tco?.powertrain) && canRefuel(tco?.powertrain)" class="flex justify-between gap-3 sm:col-span-2">
+  <div v-if="vehicleStore.capabilities.charges && vehicleStore.capabilities.refuels" class="flex justify-between gap-3 sm:col-span-2">
     <dt class="text-slate-400">{{ $t('dashboard.tcoMetricsGrid.hybridSplitLabel') }}</dt>
     <dd class="font-semibold text-white">{{ $t('dashboard.tcoMetricsGrid.hybridSplit', { electricity: money((tco?.energy_cost || 0) - (tco?.fuel_energy_cost || 0), 0), fuel: money(tco?.fuel_energy_cost || 0, 0) }) }}</dd>
   </div>

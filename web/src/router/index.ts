@@ -6,6 +6,8 @@ import { backEntryHeld, releaseBackEntry } from '@/composables/useEscapeToClose'
 import { replaceOverHeldEntry } from '@/utils/backEntryNavigation'
 import { installScrollMemory } from '@/utils/scrollMemory'
 import { energyRedirect, listRedirect } from '@/utils/listRedirects'
+import { useVehicleStore } from '@/stores/vehicle'
+import { capabilityRedirect } from '@/utils/capabilityRoutes'
 
 // Every view is its own chunk, loaded on first navigation: the sign-in page does not download the whole app.
 // A page that needs a signed-in session; `needsVehicle` marks the pages about a vehicle: without one the shell shows a
@@ -168,6 +170,17 @@ router.beforeEach(async (to, _from, next) => {
   } else {
     next()
   }
+})
+
+// A page that needs a capability the active vehicle lacks (the trips of a combustion vehicle no source feeds) sends to the
+// home of the vehicle, so an old address or a vehicle switch never leaves an empty page.
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore()
+  if (!authStore.isAuthenticated || !to.meta.needsVehicle) return
+  const vehicleStore = useVehicleStore()
+  await vehicleStore.ensureVehicles()
+  const target = capabilityRedirect(to.name, vehicleStore.capabilities)
+  if (target) return { path: target, replace: true }
 })
 
 // A layer (modal, sheet) holds a history entry for the system Back. A navigation to another page replaces that entry

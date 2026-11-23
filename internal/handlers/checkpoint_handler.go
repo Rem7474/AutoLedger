@@ -28,27 +28,33 @@ type SaveCheckpointRequest struct {
 	Notes           *string `json:"notes"`
 }
 
+// validateCheckpoint checks the day, the odometer and the note of a reading, as the routes and the MCP tool both take them.
+func validateCheckpoint(date string, odometer float64, note *string) (time.Time, *string, error) {
+	d, err := parseDate(date)
+	if err != nil {
+		return time.Time{}, nil, apierror.New("request.invalid_date", "Invalid date")
+	}
+	if odometer < 0 || odometer > 2_000_000 {
+		return time.Time{}, nil, apierror.Newf("odometer.range_checkpoint", "Invalid odometer (must be between 0 and %.0f km)", apierror.Km(2_000_000))
+	}
+	var notes *string
+	if note != nil && strings.TrimSpace(*note) != "" {
+		n := strings.TrimSpace(*note)
+		notes = &n
+	}
+	return d, notes, nil
+}
+
 // decodeCheckpointRequest reads and validates the shared payload used by Create and Update.
 func decodeCheckpointRequest(r *http.Request) (time.Time, float64, *string, *int64, error) {
 	var req SaveCheckpointRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return time.Time{}, 0, nil, nil, apierror.New("request.invalid_body", "Invalid request body")
 	}
-
-	d, err := parseDate(req.Date)
+	d, notes, err := validateCheckpoint(req.Date, req.Odometer, req.Notes)
 	if err != nil {
-		return time.Time{}, 0, nil, nil, apierror.New("request.invalid_date", "Invalid date")
+		return time.Time{}, 0, nil, nil, err
 	}
-	if req.Odometer < 0 || req.Odometer > 2_000_000 {
-		return time.Time{}, 0, nil, nil, apierror.Newf("odometer.range_checkpoint", "Invalid odometer (must be between 0 and %.0f km)", apierror.Km(2_000_000))
-	}
-
-	var notes *string
-	if req.Notes != nil && strings.TrimSpace(*req.Notes) != "" {
-		n := strings.TrimSpace(*req.Notes)
-		notes = &n
-	}
-
 	return d, req.Odometer, notes, req.ExpectedVersion, nil
 }
 

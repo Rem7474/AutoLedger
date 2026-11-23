@@ -11,12 +11,11 @@ import { useIsMobile } from '@/composables/useIsMobile'
 import { useLongPress } from '@/composables/useLongPress'
 import DriveCarpoolChip from '@/components/drives/DriveCarpoolChip.vue'
 import QualifyActions from '@/components/drives/QualifyActions.vue'
-import { hasTeslaMate } from '@/utils/vehicles'
 import { driveGlyph } from '@/utils/driveGlyph'
 import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
 import { formatDayTime, formatTimeOfDay } from '@/utils/dates'
 import { formatAmount } from '@/currency'
-import { distanceUnit, formatDistance, formatPerDistanceValue } from '@/units'
+import { distanceUnit, formatDistance, formatPerDistanceValue, formatVolume } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 
 // One drive of the list: the glyph of the drive, where it went and when, what it cost. A click anywhere on the row opens
@@ -45,7 +44,7 @@ function onRowClick() {
   else emit('open', props.d)
 }
 // A vehicle fed by TeslaMate mixes synced and manual drives: the badge tells them apart. Without TeslaMate every drive is manual.
-const showManualBadge = computed(() => hasTeslaMate(vehicleStore.activeVehicle))
+const showManualBadge = computed(() => vehicleStore.capabilities.sync)
 const carpoolSummary = computed(() => summarizeDriveCarpools(props.d.carpools))
 // The glyph says what is particular to the drive (carpooled, work, personal); an ordinary drive keeps the plain trip glyph.
 const leadingIcon = computed(() => driveGlyph(props.d, !!carpoolSummary.value, prefs.proPersoEnabled))
@@ -58,6 +57,9 @@ function openCarpool() {
 }
 // The quiet line under the route, as plain text parts: time, distance, duration, consumption and the tags that apply.
 // Each part stays whole (a break falls between two parts, never inside one) and the consumption leaves a phone.
+// The drive waits for its toll: two taps, enter it or confirm there is none
+const qualifying = computed(() => vehicleStore.canEdit && needsTollQualification(props.d))
+
 const subtitleParts = computed(() => {
   const d = props.d
   const parts: { text: string; wide?: boolean }[] = [{ text: formatTimeOfDay(d.start_time) }, { text: formatDistance(d.distance_km, 1) }]
@@ -71,6 +73,8 @@ const subtitleParts = computed(() => {
       }),
     })
   }
+  // The fuel of a drive of a vehicle that burns fuel, derived from its fill-ups (absent while they give no consumption)
+  if (d.costs?.fuel_liters) parts.push({ wide: true, text: formatVolume(Number(d.costs.fuel_liters)) })
   if (prefs.proPersoEnabled && d.tags?.includes('Pro')) parts.push({ text: t('drives.driveCard.work') })
   if (prefs.proPersoEnabled && d.tags?.includes('Perso')) parts.push({ text: t('drives.driveCard.personal') })
   if (d.is_manual && showManualBadge.value) parts.push({ text: t('drives.drivesView.manual') })
@@ -120,25 +124,37 @@ const subtitleParts = computed(() => {
         <span v-if="carpoolSummary && isMobile" class="mt-1 block"><DriveCarpoolChip :summary="carpoolSummary" @click="openCarpool" /></span>
       </template>
       <!-- A wide screen has room for the chip between the route and the cost; a phone gives it its own line under the quiet line -->
-      <template v-if="carpoolSummary && !isMobile" #meta>
-        <DriveCarpoolChip :summary="carpoolSummary" @click="openCarpool" />
+      <template v-if="!isMobile && (carpoolSummary || qualifying)" #meta>
+        <div class="flex items-center gap-2">
+          <DriveCarpoolChip v-if="carpoolSummary" :summary="carpoolSummary" @click="openCarpool" />
+          <QualifyActions
+            v-if="qualifying"
+            class="relative z-10"
+            :primary-label="$t('drives.driveCard.toll')"
+            :primary-title="$t('drives.driveCard.enterTheTollOfThis')"
+            :secondary-label="$t('drives.driveCard.noToll')"
+            :secondary-title="$t('drives.driveCard.confirmThatThisDriveHas')"
+            @primary="emit('toll-entry', d)"
+            @secondary="emit('no-toll', d)"
+          />
+        </div>
+      </template>
+      <!-- The toll to qualify: beside the figure on a wide screen, a line of its own inside the card on a phone -->
+      <template v-if="isMobile && qualifying" #footer>
+        <QualifyActions
+          stretch
+          :primary-label="$t('drives.driveCard.toll')"
+          :primary-title="$t('drives.driveCard.enterTheTollOfThis')"
+          :secondary-label="$t('drives.driveCard.noToll')"
+          :secondary-title="$t('drives.driveCard.confirmThatThisDriveHas')"
+          @primary="emit('toll-entry', d)"
+          @secondary="emit('no-toll', d)"
+        />
       </template>
       <template #value>
         <span :title="$t('drives.driveCard.actualCostPriceCalculatedFor')">{{ d.costs?.has_estimates ? '~' : '' }}{{ formatAmount(d.costs?.total_cost || 0, vehicleStore.currency) }}</span>
       </template>
       <template #subvalue>{{ formatCostPerDistance(d.costs?.cost_per_km, vehicleStore.currency, 3, true) }}</template>
     </ListItem>
-
-    <!-- Toll qualification: 2 taps, only while the drive waits for it -->
-    <QualifyActions
-      v-if="vehicleStore.canEdit && needsTollQualification(d)"
-      class="relative z-10 mt-2 ml-3 w-fit"
-      :primary-label="$t('drives.driveCard.toll')"
-      :primary-title="$t('drives.driveCard.enterTheTollOfThis')"
-      :secondary-label="$t('drives.driveCard.noToll')"
-      :secondary-title="$t('drives.driveCard.confirmThatThisDriveHas')"
-      @primary="emit('toll-entry', d)"
-      @secondary="emit('no-toll', d)"
-    />
   </div>
 </template>

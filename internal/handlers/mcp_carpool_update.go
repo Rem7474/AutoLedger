@@ -33,35 +33,24 @@ type mcpUpdateCarpoolInput struct {
 	Title            *string                    `json:"title,omitempty" jsonschema:"a new title for the carpool"`
 	Notes            *string                    `json:"notes,omitempty" jsonschema:"the note on the carpool; an empty string removes it"`
 	AddPassengers    []mcpCarpoolPassengerInput `json:"add_passengers,omitempty" jsonschema:"passengers to add; a name already in the carpool is refused, change that passenger with update_passengers"`
-	UpdatePassengers []mcpPassengerChange       `json:"update_passengers,omitempty" jsonschema:"passengers to change, found by name; only the fields given change"`
+	UpdatePassengers []mcpPassengerChange       `json:"update_passengers,omitempty" jsonschema:"passengers to change, found by name (or by \"Passenger N\", as get_carpool labels one without a name); only the fields given change"`
 	RemovePassengers []string                   `json:"remove_passengers,omitempty" jsonschema:"names of the passengers to take out of the carpool, with what they paid"`
+	AddDrives        []string                   `json:"add_drives,omitempty" jsonschema:"existing drives to link to the carpool as new legs, by the drive_id list_vehicle_trips gives; a drive already in a carpool is refused. A passenger who rode to the end of the trip rides to the end of the longer one"`
+	RemoveDrives     []string                   `json:"remove_drives,omitempty" jsonschema:"drives to unlink from the carpool, by drive_id: the drive stays, only its leg leaves the carpool. The carpool keeps at least one drive, and a passenger who rode only on that drive has to be taken out first"`
 	DryRun           bool                       `json:"dry_run,omitempty" jsonschema:"true to see the carpool as it would be, with its shares, without changing anything"`
 }
 
 func (h *MCPHandler) addCarpoolUpdateTools() {
-	mcp.AddTool(h.server, &mcp.Tool{
+	addMCPWriteTool(h, &mcp.Tool{
 		Name:  "update_carpool",
 		Title: "Change a carpool",
-		Description: "Changes a carpool the owner recorded: its title or note, and its passengers (add one, change what one paid, their seats or stops, rename one, take one out). " +
-			"The drives of the carpool and its costs are not changed here, and no carpool can be deleted; a passenger can be taken out of one. Get the carpool_id and its version from get_carpool, and give the version back as expected_version: the call is refused when the carpool was changed meanwhile. " +
+		Description: "Changes a carpool the owner recorded: its title or note, its passengers (add one, change what one paid, their seats or stops, rename one, take one out) and its drives (link an existing drive as a new leg with add_drives, unlink one with remove_drives; the drive itself is never changed or deleted). " +
+			"No carpool can be deleted; a passenger or a drive can be taken out of one. Get the carpool_id and its version from get_carpool, and give the version back as expected_version: the call is refused when the carpool was changed meanwhile. " +
 			"What a passenger paid replaces the amount recorded: read it first, and say the old and the new amount to the owner. " +
 			"This overwrites the owner's records: call it with dry_run true first, show the owner the carpool as it would be, and save only once they agree. " +
 			"Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(true), IdempotentHint: false, OpenWorldHint: ptr(false)},
-	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpUpdateCarpoolInput) (*mcp.CallToolResult, IntegrationCarpoolUpdated, error) {
-		if !mcpCanWrite(req) {
-			return nil, IntegrationCarpoolUpdated{}, errors.New("this connection can only read: the owner has to allow writing when connecting the assistant to AutoLedger")
-		}
-		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
-		if err != nil {
-			return nil, IntegrationCarpoolUpdated{}, mcpFailure(ctx, "update_carpool", err, "Could not change the carpool")
-		}
-		out, err := h.read.UpdateCarpool(ctx, mcpUserID(req), vehicleID, in)
-		if err != nil {
-			return nil, IntegrationCarpoolUpdated{}, mcpFailure(ctx, "update_carpool", err, "Could not change the carpool")
-		}
-		return nil, *out, nil
-	})
+	}, "Could not change the carpool", func(in mcpUpdateCarpoolInput) string { return in.VehicleID }, h.read.UpdateCarpool)
 }
 
 // IntegrationCarpoolUpdated is the answer of update_carpool.
@@ -88,8 +77,8 @@ func (h *IntegrationReadHandler) UpdateCarpool(ctx context.Context, userID, vehi
 	if !vehicleIDPattern.MatchString(carpoolID) {
 		return nil, mcpUserError("carpool_id is not a carpool id: use the id of get_carpool")
 	}
-	if in.Title == nil && in.Notes == nil && len(in.AddPassengers)+len(in.UpdatePassengers)+len(in.RemovePassengers) == 0 {
-		return nil, mcpUserError("nothing to change: give a title, notes, or passengers to add, update or remove")
+	if in.Title == nil && in.Notes == nil && len(in.AddPassengers)+len(in.UpdatePassengers)+len(in.RemovePassengers)+len(in.AddDrives)+len(in.RemoveDrives) == 0 {
+		return nil, mcpUserError("nothing to change: give a title, notes, passengers to add, update or remove, or drives to add or remove")
 	}
 
 	if in.ExpectedVersion < 1 {
@@ -114,7 +103,18 @@ func (h *IntegrationReadHandler) UpdateCarpool(ctx context.Context, userID, vehi
 		return nil, errCarpoolChanged
 	}
 
-	passengers, err := changedPassengers(existing.Passengers, in)
+	driveChange, err := carpoolDriveChanges(in.AddDrives, in.RemoveDrives)
+	if err != nil {
+		return nil, err
+	}
+	currentPassengers := existing.Passengers
+	var linkedLegs []LegPayload
+	if driveChange.any() {
+		if linkedLegs, currentPassengers, err = h.changeCarpoolDrives(ctx, vehicle, &existing, driveChange); err != nil {
+			return nil, err
+		}
+	}
+	passengers, err := changedPassengers(currentPassengers, in)
 	if err != nil {
 		return nil, err
 	}
@@ -131,14 +131,18 @@ func (h *IntegrationReadHandler) UpdateCarpool(ctx context.Context, userID, vehi
 			req.Notes = &note
 		}
 	}
-	for _, l := range existing.Legs {
-		req.Legs = append(req.Legs, LegPayload{
-			DriveID: l.DriveID, StartLabel: l.StartLabel, EndLabel: l.EndLabel, DistanceKm: l.DistanceKm,
-			ElectricityCost: l.ElectricityCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
-			MaintenanceCost: l.MaintenanceCost, InsuranceCost: l.InsuranceCost, OtherCost: l.OtherCost, Overrides: l.Overrides,
-		})
+	if driveChange.any() {
+		req.Legs, req.DriveID = linkedLegs, nil // a carpool of one drive gets its drive back from buildCarpool
+	} else {
+		for _, l := range existing.Legs {
+			req.Legs = append(req.Legs, LegPayload{
+				DriveID: l.DriveID, StartLabel: l.StartLabel, EndLabel: l.EndLabel, DistanceKm: l.DistanceKm,
+				EnergyCost: &l.EnergyCost, FuelCost: &l.FuelCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
+				MaintenanceCost: l.MaintenanceCost, InsuranceCost: l.InsuranceCost, OtherCost: l.OtherCost, Overrides: l.Overrides,
+			})
+		}
 	}
-	trip, legs, built, err := buildCarpool(vehicle.ID, &req)
+	trip, legs, built, err := buildCarpool(vehicle.ID, models.PowertrainIsFuelOnly(vehicle.Powertrain), &req)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +176,7 @@ func changedPassengers(current []models.CarpoolPassenger, in mcpUpdateCarpoolInp
 	find := func(name string) (int, error) {
 		found := -1
 		for i, p := range out {
-			if strings.EqualFold(strings.TrimSpace(p.PassengerName), strings.TrimSpace(name)) {
+			if strings.EqualFold(passengerLabel(p.PassengerName, i), strings.TrimSpace(name)) {
 				if found >= 0 {
 					return -1, mcpUserError(fmt.Sprintf("several passengers are called %q: they cannot be told apart by name, change them in the application", name))
 				}
@@ -182,7 +186,7 @@ func changedPassengers(current []models.CarpoolPassenger, in mcpUpdateCarpoolInp
 		if found < 0 {
 			names := make([]string, len(out))
 			for i, p := range out {
-				names[i] = fmt.Sprintf("%q", p.PassengerName)
+				names[i] = fmt.Sprintf("%q", passengerLabel(p.PassengerName, i))
 			}
 			return -1, mcpUserError(fmt.Sprintf("no passenger is called %q: the carpool has %s", name, strings.Join(names, ", ")))
 		}

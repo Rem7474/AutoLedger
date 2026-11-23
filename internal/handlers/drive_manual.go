@@ -61,6 +61,9 @@ func (h *DriveHandler) Create(w http.ResponseWriter, r *http.Request) {
 		DistanceKm:      req.DistanceKm,
 		EnergyKwh:       req.EnergyConsumedKwh,
 		VehicleKwh100km: vehicle.EstimatedKwh100km,
+		FuelOnly:        models.PowertrainIsFuelOnly(vehicle.Powertrain),
+		Hybrid:          vehicle.IsHybrid(),
+		HybridShare:     vehicle.HybridElectricShare,
 	})
 	req.StartOdometer, req.EndOdometer = ingest.CompleteOdometers(req.StartOdometer, req.EndOdometer, req.DistanceKm)
 
@@ -70,21 +73,24 @@ func (h *DriveHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d := &models.Drive{
-		VehicleID:           vehicleID,
-		StartTime:           req.StartTime,
-		EndTime:             timings.End,
-		StartOdometer:       req.StartOdometer,
-		EndOdometer:         req.EndOdometer,
-		DistanceKm:          &req.DistanceKm,
-		DurationMin:         timings.DurationMin,
-		StartAddress:        req.StartAddress,
-		EndAddress:          req.EndAddress,
-		EnergyConsumedKwh:   &timings.EnergyKwh,
-		ConsumptionKwh100km: &timings.Kwh100km,
-		Tags:                tags,
-		DriverID:            req.DriverID,
-		IsManual:            true,
-		EnergyEstimated:     timings.EnergyEstimated,
+		VehicleID:       vehicleID,
+		StartTime:       req.StartTime,
+		EndTime:         timings.End,
+		StartOdometer:   req.StartOdometer,
+		EndOdometer:     req.EndOdometer,
+		DistanceKm:      &req.DistanceKm,
+		DurationMin:     timings.DurationMin,
+		StartAddress:    req.StartAddress,
+		EndAddress:      req.EndAddress,
+		Tags:            tags,
+		DriverID:        req.DriverID,
+		IsManual:        true,
+		EnergyEstimated: timings.EnergyEstimated,
+		ElectricShare:   timings.ElectricShare,
+	}
+
+	if timings.EnergyKnown {
+		d.EnergyConsumedKwh, d.ConsumptionKwh100km = &timings.EnergyKwh, &timings.Kwh100km
 	}
 
 	if err := h.repo.CreateManualDrive(r.Context(), d); err != nil {
@@ -147,7 +153,16 @@ func (h *DriveHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	existing.DurationMin = ingest.DurationMinutes(existing.StartTime, existing.EndTime)
 
-	if req.EnergyConsumedKwh != nil && *req.EnergyConsumedKwh > 0 {
+	if vehicle.IsHybrid() && existing.ElectricShare == nil && vehicle.HybridElectricShare != nil {
+		// A hybrid drive saved before a share was accepted takes the accepted share at its next save, and keeps it
+		existing.ElectricShare = vehicle.HybridElectricShare
+		existing.EnergyEstimated = existing.EnergyEstimated || existing.EnergyConsumedKwh == nil
+	}
+
+	if models.PowertrainIsFuelOnly(vehicle.Powertrain) {
+		// A fuel-only vehicle's drive carries no kWh
+		existing.EnergyConsumedKwh, existing.ConsumptionKwh100km, existing.EnergyEstimated = nil, nil, false
+	} else if req.EnergyConsumedKwh != nil && *req.EnergyConsumedKwh > 0 {
 		energy := *req.EnergyConsumedKwh
 		cons100 := ingest.Consumption100km(energy, existing.Distance())
 		existing.EnergyConsumedKwh = &energy
@@ -156,6 +171,10 @@ func (h *DriveHandler) Update(w http.ResponseWriter, r *http.Request) {
 	} else if existing.EnergyEstimated {
 		// Keep an estimated energy in line with the (possibly edited) distance and the vehicle's current estimate
 		energy, cons100 := ingest.EstimateDriveEnergy(vehicle.EstimatedKwh100km, existing.Distance())
+		if existing.ElectricShare != nil {
+			// Only the electric part of a hybrid's distance draws on the battery
+			energy, cons100 = energy**existing.ElectricShare, cons100**existing.ElectricShare
+		}
 		existing.EnergyConsumedKwh = &energy
 		existing.ConsumptionKwh100km = &cons100
 	} else if existing.EnergyConsumedKwh != nil && *existing.EnergyConsumedKwh > 0 {

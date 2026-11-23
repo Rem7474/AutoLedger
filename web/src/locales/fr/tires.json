@@ -235,7 +235,7 @@
     "index": "(Indice : x{index})",
     "pasteCopied": "Coller la session copiée ({date})",
     "sessionOver": "Session terminée",
-    "currentlyFitted": "🟢 Montage en cours",
+    "currentlyFitted": "Montage en cours",
     "removedAt": "{date} à {odometer} {unit}",
     "currentlyOnVehicle": "Actuellement sur le véhicule",
     "dateAtKm": "{date} à {km} {unit}"

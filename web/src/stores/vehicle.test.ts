@@ -81,6 +81,18 @@ describe('vehicle selection', () => {
     expect(store.tollDetectionActive).toBe(true)
   })
 
+  it('exposes the capabilities of the active vehicle and takes the right to edit from them', async () => {
+    const store = await freshStore()
+    const sent = { charges: false, refuels: true, drives: true, sync: false, odometer_auto: true, battery_health: false, tolls_auto: false, write: false }
+    api.getVehicles.mockResolvedValue([{ id: 'v1', powertrain: 'ICE', role: 'OWNER', capabilities: sent }, { id: 'v2', powertrain: 'EV', role: 'VIEWER' }])
+    await store.fetchVehicles()
+    expect(store.capabilities).toEqual(sent)
+    expect(store.canEdit).toBe(false)
+    store.setActiveVehicle('v2')
+    expect(store.capabilities.charges).toBe(true)
+    expect(store.canEdit).toBe(false)
+  })
+
   it('keeps a stored vehicle that still exists and replaces one that vanished', async () => {
     storage.set('teslacost_active_vehicle', 'v2')
     let store = await freshStore()

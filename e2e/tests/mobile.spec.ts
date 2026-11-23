@@ -56,7 +56,7 @@ test('a carpool is built in three steps on a phone: legs, passengers, then the r
   await dialog.locator('#leg-start-0').fill('Lyon')
   await dialog.locator('#leg-end-0').fill('Annecy')
   await dialog.locator('#leg-distance-0').fill('100')
-  await dialog.locator('#leg-electricity_cost-0').fill('20')
+  await dialog.locator('#leg-energy_cost-0').fill('20')
   await dialog.locator('#leg-tolls_cost-0').fill('10')
   await dialog.getByRole('button', { name: 'Continue' }).click()
 
@@ -216,10 +216,10 @@ test('the Back gesture leaves the selection instead of the page', async ({ page 
   expect(new URL(page.url()).pathname).not.toBe('/drives')
 })
 
-test('on the home page the month figure leads to the journal, and the cost per distance explains itself', async ({ page }) => {
+test('on the home page the month figure leads to the journal, and the previous month explains itself', async ({ page }) => {
   await useVehicle(page, ev.id, '/')
   const hero = page.getByTestId('today-hero')
-  await expect(hero.getByTestId('today-per-km')).toContainText(/\/km/)
+  await expect(hero.getByTestId('today-previous')).toContainText(/%/)
   await hero.getByRole('link').first().click()
   await expect(page).toHaveURL(/\/costs(\?period=\w+)?$/)
 })
@@ -546,7 +546,7 @@ test('a carpool dragged to the left is deleted with an Undo', async ({ page, req
       title,
       date: new Date().toISOString(),
       costs_frozen: true,
-      legs: [{ start_address: 'A', end_address: 'B', distance_km: 10, electricity_cost: 2, tolls_cost: 0, overrides: {} }],
+      legs: [{ start_address: 'A', end_address: 'B', distance_km: 10, energy_cost: 2, tolls_cost: 0, overrides: {} }],
       passengers: [{ name: 'Probe', seats: 1, amount_paid: 1 }],
     },
   })
@@ -596,7 +596,7 @@ test('the account sheet opens from the top bar, with sign out last and set apart
   await expect(sheet.getByText(/\bdev$/)).toHaveCount(0)
 })
 
-test('the bottom bar has four tabs and the quick add button, and the second tab follows the vehicle', async ({ page, request }) => {
+test('the bottom bar has four tabs and the quick add button, the second one the trips of every vehicle', async ({ page, request }) => {
   await useVehicle(page, ev.id, '/')
   const bar = page.getByRole('navigation', { name: 'Main navigation' }).last()
   await expect(bar.getByRole('link')).toHaveText(['Home', 'Drives', 'Expenses', 'Vehicle'])
@@ -604,7 +604,7 @@ test('the bottom bar has four tabs and the quick add button, and the second tab 
   await expect(bar.getByRole('button', { name: 'Quick add' })).toBeVisible()
   const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')!
   await useVehicle(page, ice.id, '/')
-  await expect(bar.getByRole('link')).toHaveText(['Home', 'Consumption', 'Expenses', 'Vehicle'])
+  await expect(bar.getByRole('link')).toHaveText(['Home', 'Drives', 'Expenses', 'Vehicle'])
 })
 
 test('controls of the interface are not selectable text, values are', async ({ page }) => {
@@ -914,7 +914,7 @@ test('"Change set" is disabled with its reason when no tire is in storage, and o
 
 test('a definition opens on touch, and Back closes it', async ({ page }) => {
   await useVehicle(page, ev.id, '/')
-  const tip = page.getByTestId('today-per-km').getByRole('button', { name: /^Cash paid: / })
+  const tip = page.getByTestId('today-previous').getByRole('button', { name: /^Cash paid: / })
   await tip.scrollIntoViewIfNeeded()
   const box = (await tip.boundingBox())!
   // The button is the size of its glyph; the finger's 44 px hit area is around it

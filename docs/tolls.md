@@ -36,6 +36,15 @@ The ticket is then priced as a whole and its price is shared between the drives 
 
 If a toll was entered by hand, or for a trip group, on another drive of the same ticket, the automatic toll is not recorded: the journey is already accounted for.
 
+## Monthly invoice
+
+The tolls entered or estimated trip by trip are an approximation of what the operator bills (subscription discounts, journeys never entered). Once the monthly statement arrives, its total can be recorded for that month, from the Costs page (Tolls filter) or with the `set_toll_invoice` tool of the assistant.
+
+- A month with an invoice counts the invoice total as its tolls in the monthly and global figures (cost per kilometre, monthly costs, totals, fleet). The individual tolls of that month, entered or automatic, no longer add to it. Parking and other travel expenses are not tolls and are unaffected.
+- Trips, carpools and trip groups keep the tolls entered on them exactly as before: the invoice never edits them.
+- The gap between the invoice and the tolls recorded on trips is shown with it: positive when the invoice holds tolls that no trip carries, negative when the trips record more than was billed.
+- A vehicle has one invoice per month, which can be changed or deleted at any time; deleting it brings the individual tolls back into the figures. An invoice of 0 says the month had no toll. The total is in the vehicle's currency.
+
 ## History
 
 On the Costs page, the Tolls filter lists what was paid for tolls, parking and other travel expenses over the period chosen at the top, with the total paid and the cost per kilometre; a line opens its record for editing, and swiping it deletes it with a way back. The Maintenance filter does the same for servicing and repairs, and the whole cost adds the figures by month. A recurring expense counts once for each month it was due.

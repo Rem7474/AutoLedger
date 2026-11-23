@@ -1,19 +1,30 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useVehicleStore } from '@/stores/vehicle'
-import { formatAmount, formatAmountOrUnknown } from '@/currency'
-import { distanceUnit, perDistance } from '@/units'
+import { formatAmount } from '@/currency'
 import { formatMonthName } from '@/utils/dashboard'
+import { t, intlLocale } from '@/i18n'
 import type { TodayHero } from '@/utils/todayHero'
 import GlossaryTip from '@/components/GlossaryTip.vue'
 
-// The month so far: what was paid, what is already planned, the themes it is made of and the cost per distance on the
-// same basis. One figure, one bar, one line; the detail is the journal of costs.
+// The month so far: what was paid, what is already planned, the themes it is made of and the last full month, in the same
+// unit, to read it against. One figure, one bar, one line; the detail is the journal of costs.
 const props = defineProps<{ hero: TodayHero }>()
 const vehicleStore = useVehicleStore()
 const money = (v: number, digits = 2) => formatAmount(v || 0, vehicleStore.currency, digits)
 const headline = computed(() => money(props.hero.spent, Math.abs(props.hero.spent) >= 1000 ? 0 : 2))
-const perUnit = computed(() => formatAmountOrUnknown(props.hero.perKm == null ? null : perDistance(props.hero.perKm.value), vehicleStore.currency, 3))
+// The month in progress is not finished: it is told as a share of the last full month, which is true on any day of the
+// month, and not as a gap that would read "-80 %" on the 5th
+const monthOnly = (month: string) => capitalize(new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1).toLocaleDateString(intlLocale(), { month: 'long' }))
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+const comparison = computed(() => {
+  const previous = props.hero.previous
+  if (!previous) return ''
+  const above = Math.round((previous.share - 1) * 100)
+  if (previous.share >= 1 && above > 0) return t('dashboard.today.shareAbove', { percent: above })
+  if (Math.round(previous.share * 100) >= 100) return t('dashboard.today.shareReached')
+  return t('dashboard.today.shareBelow', { percent: Math.round(previous.share * 100), month: monthOnly(props.hero.month) })
+})
 </script>
 
 <template>
@@ -42,14 +53,15 @@ const perUnit = computed(() => formatAmountOrUnknown(props.hero.perKm == null ? 
       </ul>
     </template>
 
-    <p class="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-3 text-sm text-slate-300" data-testid="today-per-km">
-      <span class="flex items-center">
-        {{ hero.perKm ? $t('dashboard.today.perKmIn', { unit: distanceUnit(), month: formatMonthName(hero.perKm.month) }) : $t('dashboard.today.perKmNone', { unit: distanceUnit() }) }}
-        <GlossaryTip term="cashPaid" />
-      </span>
-      <span class="font-semibold tabular-nums text-white">
-        {{ perUnit }}<span v-if="hero.perKm != null" class="text-xs font-normal text-slate-400">/{{ distanceUnit() }}</span>
-      </span>
-    </p>
+    <div v-if="hero.previous" class="mt-4 border-t border-slate-800 pt-3 text-sm text-slate-300" data-testid="today-previous">
+      <p class="flex items-center justify-between gap-3">
+        <span class="flex items-center">
+          {{ $t('dashboard.today.previousWhole', { month: formatMonthName(hero.previous.month) }) }}
+          <GlossaryTip term="cashPaid" />
+        </span>
+        <span class="font-semibold tabular-nums text-white">{{ money(hero.previous.total, hero.previous.total >= 1000 ? 0 : 2) }}</span>
+      </p>
+      <p class="mt-1 text-xs text-slate-400" data-testid="today-share">{{ comparison }}</p>
+    </div>
   </section>
 </template>

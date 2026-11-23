@@ -3,10 +3,13 @@ import ModalShell from '@/components/ModalShell.vue'
 import { ref, watch } from 'vue'
 import { computed } from 'vue'
 import { currentLocale, intlLocale, t } from '@/i18n'
-import { CSV_COLUMNS, csvTemplate, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
+import { energyKind } from '@/utils/capabilities'
+import { csvColumns, csvTemplate, csvTemplateFilename, csvTemplateTypes, type CsvTemplateType } from '@/utils/dataSources'
 import { downloadCsv } from '@/utils/csv'
 import { api } from '@/services/api'
 import { useConfirm } from '@/composables/useConfirm'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 import { profileColumns, profileMapping, type CSVDateOrder, type CSVDecimalSeparator, type CSVExecuteResult, type CSVImportBatch, type CSVImportOptions, type CSVImportProfile, type CSVImportType, type CSVPreviewResult } from '@/services/csvImport'
 import { apiErrorMessage } from '@/services/apiError'
 import { distanceUnit } from '@/units'
@@ -38,10 +41,11 @@ const profileName = ref('')
 const loading = ref(false)
 const error = ref('')
 
-const templateTypes = computed(() => csvTemplateTypes(vehicleStore.activeVehicle?.powertrain))
+const templateTypes = computed(() => csvTemplateTypes(vehicleStore.capabilities))
+const energy = computed(() => energyKind(vehicleStore.capabilities))
 
 function downloadTemplate(type: CsvTemplateType) {
-  const { headers, rows } = csvTemplate(type, currentLocale())
+  const { headers, rows } = csvTemplate(type, currentLocale(), energy.value)
   downloadCsv(csvTemplateFilename(type), headers, rows)
 }
 
@@ -155,13 +159,19 @@ async function saveProfile() {
   }
 }
 
-async function deleteProfile(id: string) {
-  try {
-    await api.deleteImportProfile(id)
-    await loadProfiles()
-  } catch (err: any) {
-    error.value = err.message || t('import.profileDeleteFailed')
-  }
+// The profile goes at once and comes back with Undo, the server is asked when that time is over
+function deleteProfile(profile: CSVImportProfile) {
+  deleteRowsWithUndo({
+    list: profiles,
+    items: [profile],
+    key: (p) => p.id,
+    message: t('import.profileDeleted'),
+    remove: (p) => api.deleteImportProfile(p.id),
+    committed: () => void loadProfiles(),
+    onError: (err: any) => {
+      error.value = err.message || t('import.profileDeleteFailed')
+    },
+  })
 }
 
 function resetFormat() {
@@ -289,8 +299,8 @@ async function handleExecute() {
             <button type="button" @click="downloadTemplate(type)" class="shrink-0 text-rose-400 hover:text-rose-300 font-semibold">{{ $t('import.downloadTemplate') }}</button>
           </div>
           <p class="break-words text-slate-400">
-            <code class="text-success-300">{{ CSV_COLUMNS[type].required.join(', ') }}</code>
-            <span v-if="CSV_COLUMNS[type].optional.length"> + <code>{{ CSV_COLUMNS[type].optional.join(', ') }}</code></span>
+            <code class="text-success-300">{{ csvColumns(type, energy).required.join(', ') }}</code>
+            <span v-if="csvColumns(type, energy).optional.length"> + <code>{{ csvColumns(type, energy).optional.join(', ') }}</code></span>
           </p>
         </div>
       </details>
@@ -446,7 +456,7 @@ async function handleExecute() {
             <ul v-if="profilesForType.length" class="mt-2 space-y-1">
               <li v-for="p in profilesForType" :key="p.id" class="flex items-center justify-between gap-2 text-slate-400">
                 <span class="truncate">{{ p.name }}</span>
-                <button type="button" @click="deleteProfile(p.id)" class="shrink-0 text-danger-400 hover:text-danger-300">{{ $t('common.delete') }}</button>
+                <RowDeleteButton :label="$t('import.profileDelete', { name: p.name })" @delete="deleteProfile(p)" />
               </li>
             </ul>
           </div>

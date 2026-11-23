@@ -143,7 +143,8 @@
     "webhookTest": "Test de notification envoyé",
     "fillUp": "Plein de {amount}",
     "charge": "Recharge de {kwh} kWh",
-    "documentLoadFailed": "Impossible de charger le document"
+    "documentLoadFailed": "Impossible de charger le document",
+    "tollInvoice": "Facture de péages"
   },
   "a11y": {
     "skipToContent": "Aller au contenu"

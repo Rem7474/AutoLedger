@@ -4,7 +4,7 @@ import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import TripGroupsPanel from './TripGroupsPanel.vue'
 
-const vehicleStore = reactive<{ canEdit: boolean; currency: string }>({ canEdit: true, currency: 'EUR' })
+const vehicleStore = reactive<{ canEdit: boolean; currency: string; capabilities: { sync: boolean } }>({ canEdit: true, currency: 'EUR', capabilities: { sync: false } })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
 vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => ({ proPersoEnabled: false }) }))
 
@@ -50,7 +50,7 @@ describe('TripGroupsPanel', () => {
     expect(html).not.toContain('Retirer ce trajet du voyage')
     // a leg is the card of the drives list one step smaller (compact padding), under the rule of its trip
     const list = html.slice(html.indexOf('data-testid="trip-legs"'))
-    expect(list).toContain('class="card relative flex items-center px-3 gap-2.5 py-1.5"')
+    expect(list).toContain('class="card relative px-3 py-1.5"')
     expect(list).not.toContain('divide-y')
   })
 

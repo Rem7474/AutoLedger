@@ -98,6 +98,45 @@ func TestMCPTripsCarryAddressesAndTheirDriveIDButNoPosition(t *testing.T) {
 	if all.Trips[2].TravelExpenses != nil {
 		t.Errorf("no expense is null, not zero: %+v", all.Trips[2].TravelExpenses)
 	}
+	if lyon.TollSource == nil || *lyon.TollSource != "entered" || all.Trips[2].TollSource != nil {
+		t.Errorf("the source of a toll is named, a trip without one has none: %v %v", lyon.TollSource, all.Trips[2].TollSource)
+	}
+}
+
+func TestTollSourceOfNamesWhereTheTollsCameFrom(t *testing.T) {
+	for _, c := range []struct {
+		sources []string
+		want    string
+	}{
+		{nil, ""},
+		{[]string{models.ExpenseSourceManual}, "entered"},
+		{[]string{models.ExpenseSourceAutoToll}, "estimated"},
+		{[]string{models.ExpenseSourceAutoToll, models.ExpenseSourceManual}, "mixed"},
+	} {
+		got := tollSourceOf(c.sources)
+		if (c.want == "") != (got == nil) || (got != nil && *got != c.want) {
+			t.Errorf("%v: %v, want %q", c.sources, got, c.want)
+		}
+	}
+}
+
+func TestMCPAVehicleIDMayBeLeftEmptyOnlyWithASingleVehicle(t *testing.T) {
+	f := newMCPFixture(t)
+	f.tripFixture(t)
+	session := f.connect(t, f.readTok)
+	out, res := f.trips(t, session, map[string]any{"vehicle_id": ""})
+	if res.IsError || out.VehicleID != f.mine.ID {
+		t.Fatalf("a single vehicle is the default: %+v", res)
+	}
+
+	second := &models.Vehicle{Currency: "EUR", UserID: f.owner.ID, Name: "Second", TeslaMateAuthType: models.AuthModeNone}
+	if err := f.repo.CreateVehicle(context.Background(), second); err != nil {
+		t.Fatal(err)
+	}
+	_, res = f.trips(t, session, map[string]any{"vehicle_id": ""})
+	if !res.IsError || !strings.Contains(res.Content[0].(*mcp.TextContent).Text, "vehicle not found") {
+		t.Errorf("with two vehicles an empty id is refused and names them: %+v", res)
+	}
 }
 
 func TestMCPTripsFilterByAddressPeriodAndLimit(t *testing.T) {
@@ -119,6 +158,42 @@ func TestMCPTripsFilterByAddressPeriodAndLimit(t *testing.T) {
 	}
 	if _, res := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "from": "not a date"}); !res.IsError {
 		t.Error("a bad date must be an error the assistant can read")
+	}
+}
+
+func TestMCPTripsPageThroughTheHistoryWithACursor(t *testing.T) {
+	f := newMCPFixture(t)
+	f.tripFixture(t)
+	session := f.connect(t, f.readTok)
+
+	first, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "limit": 3})
+	if len(first.Trips) != 3 || !first.Truncated || first.NextCursor == nil || first.Matching != 4 {
+		t.Fatalf("the first page points at the next: %+v", first)
+	}
+	second, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "limit": 3, "cursor": *first.NextCursor})
+	if len(second.Trips) != 1 || second.Truncated || second.NextCursor != nil || second.Matching != 4 {
+		t.Fatalf("the last page has no cursor: %+v", second)
+	}
+	if second.Trips[0].DriveID == first.Trips[0].DriveID || second.Trips[0].DriveID == first.Trips[2].DriveID {
+		t.Errorf("a page repeats nothing of the previous one: %+v %+v", first, second)
+	}
+	if _, res := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "cursor": "not-a-cursor"}); !res.IsError {
+		t.Error("a cursor that no call returned must be an error the assistant can read")
+	}
+}
+
+func TestMCPTripsKeepOnlyTheTollTrips(t *testing.T) {
+	f := newMCPFixture(t)
+	f.tripFixture(t)
+	session := f.connect(t, f.readTok)
+
+	tolled, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "has_tolls": true})
+	if tolled.Matching != 1 || len(tolled.Trips) != 1 || tolled.Trips[0].TravelExpenses == nil || tolled.Trips[0].TravelExpenses.Amount != "62.50" {
+		t.Errorf("only the drive with a toll: %+v", tolled)
+	}
+	untolled, _ := f.trips(t, session, map[string]any{"vehicle_id": f.mine.ID, "has_tolls": false})
+	if untolled.Matching != 4 {
+		t.Errorf("without the filter every trip is listed: %+v", untolled)
 	}
 }
 

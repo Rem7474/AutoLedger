@@ -3,8 +3,9 @@ import NumberInput from '@/components/NumberInput.vue'
 import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { api, type MileageRate } from '@/services/api'
+import { deleteRowsWithUndo } from '@/composables/useUndoableDelete'
+import RowDeleteButton from '@/components/RowDeleteButton.vue'
 import { reportingYear } from '@/utils/reportingTime'
-import { Trash2 } from '@/icons'
 
 const emit = defineEmits<{ (e: 'change', labels: string[]): void }>()
 
@@ -44,9 +45,19 @@ async function add() {
   }
 }
 
-async function remove(id: string) {
-  await api.deleteMileageRate(id)
-  await load()
+// The rate goes at once and comes back with Undo, the server is asked when that time is over
+function remove(item: MileageRate) {
+  deleteRowsWithUndo({
+    list: rates,
+    items: [item],
+    key: (r) => r.id,
+    message: t('import.rateDeleted'),
+    remove: (r) => api.deleteMileageRate(r.id),
+    committed: () => void load(),
+    onError: (e) => {
+      error.value = e instanceof Error ? e.message : ''
+    },
+  })
 }
 
 function describe(r: MileageRate) {
@@ -67,9 +78,7 @@ onMounted(load)
     <ul v-if="rates.length" class="space-y-1 text-xs text-slate-300">
       <li v-for="r in rates" :key="r.id" class="flex items-center justify-between gap-2">
         <span>{{ r.label }} · {{ r.year }} · {{ describe(r) }}</span>
-        <button type="button" class="text-slate-400 hover:text-danger-400" :aria-label="$t('import.rateDelete')" @click="remove(r.id)">
-          <Trash2 class="w-4 h-4" />
-        </button>
+        <RowDeleteButton :label="$t('import.rateDelete')" @delete="remove(r)" />
       </li>
     </ul>
     <div class="grid grid-cols-2 gap-2">

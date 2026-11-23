@@ -82,7 +82,14 @@
     "originTeslaMateCost": "Synchronised from {link}: the date, energy, place and odometer are read-only. The cost is set in TeslaMate and read again by the next synchronisation; the notes are yours.",
     "originManual": "Entered manually.",
     "originCsv": "Imported from a CSV file.",
-    "originAutomatic": "Imported automatically."
+    "originAutomatic": "Imported automatically.",
+    "odometer": "Odometer",
+    "odometerHybridHint": "A hybrid needs the odometer to split its kilometres between electricity and fuel.",
+    "startBattery": "Battery at start (%, optional)",
+    "endBattery": "Battery at end (%, optional)",
+    "batteryHint": "Read on the dashboard. With both, the battery capacity is deduced and the electricity used is more exact.",
+    "batteryRange": "A battery percentage is between 0 and 100.",
+    "batteryOrder": "The battery must end the charge higher than it started."
   },
   "chargesPanel": {
     "chargeSShownOutOf": "{length} charge(s) shown out of {chargesTotal}",
@@ -313,7 +320,8 @@
       "none": "No template yet",
       "pick": "Choose a template",
       "apply": "Apply",
-      "delete": "Delete",
+      "delete": "Delete the template",
+      "deleted": "Template deleted",
       "saveName": "Template name",
       "save": "Save current reminders as a template",
       "applied": "{created} reminder(s) added, {skipped} already present.",

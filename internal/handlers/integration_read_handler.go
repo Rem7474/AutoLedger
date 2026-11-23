@@ -32,15 +32,16 @@ type IntegrationReadHandler struct {
 	calendarDates
 	repo       *database.Repository
 	tcoService *services.TCOService
-	fleet      *services.FleetService       // optional: without it the fleet view is unavailable
-	energy     *services.EnergyStatsService // optional: without it the energy view has no electric side
-	residual   *services.ResidualService    // optional: without it the ownership view has no resale estimate
-	tireWear   *services.TireWearService    // optional: without it the tires view is unavailable
-	comparison *services.ComparisonService  // optional: without it the comparison view is unavailable
-	carpool    *services.CarpoolService     // optional: without it the carpool view shows the amounts as stored
-	mileage    *services.MileageService     // optional: without it the mileage view is unavailable
-	tariffs    *services.TariffService      // optional: without it the charge estimate is unavailable
-	version    string                       // version of the server, reported by whoami
+	fleet      *services.FleetService         // optional: without it the fleet view is unavailable
+	energy     *services.EnergyStatsService   // optional: without it the energy view has no electric side
+	residual   *services.ResidualService      // optional: without it the ownership view has no resale estimate
+	tireWear   *services.TireWearService      // optional: without it the tires view is unavailable
+	comparison *services.ComparisonService    // optional: without it the comparison view is unavailable
+	carpool    *services.CarpoolService       // optional: without it the carpool view shows the amounts as stored
+	mileage    *services.MileageService       // optional: without it the mileage view is unavailable
+	tariffs    *services.TariffService        // optional: without it the charge estimate is unavailable
+	tolls      *services.TollDetectionService // optional: without it the trips tolls cannot be estimated
+	version    string                         // version of the server, reported by whoami
 }
 
 func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.TCOService) *IntegrationReadHandler {
@@ -49,8 +50,8 @@ func NewIntegrationReadHandler(repo *database.Repository, tcoService *services.T
 
 // IntegrationAmount is a monetary amount with its currency. Amount is a decimal string so no client rounds it.
 type IntegrationAmount struct {
-	Amount   string `json:"amount" jsonschema:"decimal string such as 12.34, never rounded or converted, so do not turn it into a rounded figure"`
-	Currency string `json:"currency" jsonschema:"ISO 4217 currency code of the vehicle the amount belongs to"`
+	Amount   string `json:"amount" jsonschema:"decimal string, e.g. 12.34, never rounded"`
+	Currency string `json:"currency" jsonschema:"ISO 4217 code of the vehicle"`
 }
 
 func amountOf(c money.Cents, currency string) IntegrationAmount {
@@ -486,4 +487,10 @@ func integrationScoreDimensions(dims []services.CompletenessDimension) []Integra
 		out = append(out, IntegrationScoreDimension{Key: d.Key, Label: d.Label, ScorePct: d.ScorePct, Weight: d.Weight, Applicable: d.Applicable})
 	}
 	return out
+}
+
+// WithTollDetection lets the handler estimate the tolls of trips from their GPS trace.
+func (h *IntegrationReadHandler) WithTollDetection(s *services.TollDetectionService) *IntegrationReadHandler {
+	h.tolls = s
+	return h
 }

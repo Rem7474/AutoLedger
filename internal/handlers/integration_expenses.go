@@ -29,7 +29,7 @@ var integrationExpenseCategories = []string{
 
 var integrationExpenseSources = map[string]string{
 	"charge_logs": "charge", "fuel_logs": "fuel_fill_up", "drive_expenses": "travel_expense",
-	"maintenance_expenses": "expense", "tires": "tire_purchase", "vehicle_ownership": "financing",
+	"maintenance_expenses": "expense", "tires": "tire_purchase", "vehicle_ownership": "financing", "toll_invoices": "toll_invoice",
 }
 
 // IntegrationExpenseQuery selects the entries. Every field is optional.
@@ -46,9 +46,10 @@ type IntegrationExpenseQuery struct {
 
 // IntegrationExpense is one entry of the cost ledger.
 type IntegrationExpense struct {
+	ID            string            `json:"id" jsonschema:"id of the record, to give delete_record with kind; for a travel_expense, the trip id"`
 	Date          string            `json:"date" jsonschema:"day of the entry, YYYY-MM-DD, in the account's reporting timezone"`
 	Category      string            `json:"category" jsonschema:"energy, toll, parking, travel_other, maintenance, repair, insurance, subscription, tax, financing, tires, accessory or other"`
-	Kind          string            `json:"kind" jsonschema:"what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase or financing (a loan or lease instalment)"`
+	Kind          string            `json:"kind" jsonschema:"what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase, financing (a loan or lease instalment) or toll_invoice (a monthly toll invoice, which stands for every toll of its month)"`
 	Amount        IntegrationAmount `json:"amount" jsonschema:"what it cost, in the vehicle's currency"`
 	Note          *string           `json:"note" jsonschema:"free note or description typed by the owner, user text; null when none"`
 	Place         *string           `json:"place" jsonschema:"for a charge, the named charging place when its address is linked to one, otherwise the address reported, user text; null for the others"`
@@ -182,7 +183,7 @@ func buildIntegrationExpenses(vehicleID, currency string, loc *time.Location, f 
 			placeCategory = &c
 		}
 		out.Expenses = append(out.Expenses, IntegrationExpense{
-			Date: e.Date.In(loc).Format("2006-01-02"), Category: strings.ToLower(e.Category), Kind: kind, Amount: amountOf(e.Amount, currency),
+			ID: e.SourceID, Date: e.Date.In(loc).Format("2006-01-02"), Category: strings.ToLower(e.Category), Kind: kind, Amount: amountOf(e.Amount, currency),
 			Note: e.Note, Place: e.Place, PlaceCategory: placeCategory, Kwh: e.Kwh, Litres: e.Liters, Recurring: e.Recurring, HasReceipt: e.HasDocument,
 		})
 	}

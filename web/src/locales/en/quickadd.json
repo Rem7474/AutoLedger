@@ -21,7 +21,9 @@
     "message": "Charge of {kwh} kWh",
     "saveFailed": "Could not save the charge.",
     "pricePerKwh": "Price per kWh ({cur})",
-    "calculatedWithTariff": "Calculated with the “{plan}” tariff from the charging hours"
+    "calculatedWithTariff": "Calculated with the “{plan}” tariff from the charging hours",
+    "startBattery": "Battery at start (%)",
+    "endBattery": "Battery at end (%)"
   },
   "quickExpenseForm": {
     "moreDetails": "More details",
@@ -70,7 +72,10 @@
     "kwh": "Enter the energy added (kWh).",
     "cost": "Enter the cost (0 if the charge was free).",
     "fuelAmount": "Enter the amount of the fill-up.",
-    "amount": "Enter the amount."
+    "amount": "Enter the amount.",
+    "hybridOdometer": "Enter the odometer: a hybrid needs it to tell its electric kilometres from its fuel ones.",
+    "batteryRange": "A battery percentage is between 0 and 100.",
+    "batteryOrder": "The battery must end the charge higher than it started."
   },
   "quickFormShell": {
     "saving": "Saving…"

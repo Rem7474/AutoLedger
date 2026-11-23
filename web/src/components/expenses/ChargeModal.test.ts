@@ -3,11 +3,16 @@ import { createSSRApp, defineComponent, h, reactive } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import ChargeModal from './ChargeModal.vue'
+import { capabilitiesOf } from '@/utils/capabilities'
 
-const vehicleStore = reactive<{ canEdit: boolean; currency: string; activeVehicle: any }>({
+const evVehicle = { id: 'v1', powertrain: 'EV', currency: 'EUR', teslamate_url: 'http://tm.local', teslamate_grafana_url: 'http://g.local' }
+const vehicleStore = reactive<{ canEdit: boolean; currency: string; activeVehicle: any; readonly capabilities: ReturnType<typeof capabilitiesOf> }>({
   canEdit: true,
   currency: 'EUR',
-  activeVehicle: { id: 'v1', powertrain: 'EV', currency: 'EUR', teslamate_url: 'http://tm.local', teslamate_grafana_url: 'http://g.local' },
+  activeVehicle: evVehicle,
+  get capabilities() {
+    return capabilitiesOf(this.activeVehicle)
+  },
 })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
 vi.mock('@/services/api', () => ({ api: { getChargingPlaces: vi.fn(async () => ({ places: [] })) } }))
@@ -26,6 +31,7 @@ const render = (editing: any) =>
 
 afterEach(() => {
   vehicleStore.canEdit = true
+  vehicleStore.activeVehicle = evVehicle
 })
 
 describe('ChargeModal origin', () => {
@@ -61,5 +67,27 @@ describe('ChargeModal delete', () => {
     expect(await render(null)).not.toContain('Supprimer')
     vehicleStore.canEdit = false
     expect(await render({ ...base, origin: 'MANUAL' })).not.toContain('Supprimer')
+  })
+})
+
+describe('ChargeModal on a plug-in hybrid', () => {
+  const phev = { id: 'v2', powertrain: 'PHEV', currency: 'EUR' }
+  it('asks for the odometer and offers the battery percentages', async () => {
+    vehicleStore.activeVehicle = phev
+    const html = await render(null)
+    expect(html).toContain('data-testid="charge-battery-levels"')
+    expect(html).toContain('data-testid="charge-hybrid-odometer-hint"')
+    expect(html).toMatch(/id="charge-form-odometer"[^>]*required/)
+    expect(html).not.toContain('Odomètre (optionnel)')
+  })
+  it('keeps the odometer optional and has no battery fields on an electric vehicle', async () => {
+    const html = await render(null)
+    expect(html).not.toContain('data-testid="charge-battery-levels"')
+    expect(html).not.toMatch(/id="charge-form-odometer"[^>]*required/)
+  })
+  it('does not require the odometer of a synchronised charge, which it cannot edit', async () => {
+    vehicleStore.activeVehicle = phev
+    const html = await render({ ...base, origin: 'TESLAMATE', teslamate_charge_id: 158, cost_source: 'MANUAL' })
+    expect(html).not.toMatch(/id="charge-form-odometer"[^>]*required/)
   })
 })

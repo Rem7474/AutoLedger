@@ -8,6 +8,8 @@ import PeriodBar from '@/components/period/PeriodBar.vue'
 import CostEntryRow from '@/components/costs/CostEntryRow.vue'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import TollModal from '@/components/expenses/TollModal.vue'
+import TollInvoiceModal from '@/components/expenses/TollInvoiceModal.vue'
+import TollInvoicesCard from '@/components/expenses/TollInvoicesCard.vue'
 import MaintenanceModal from '@/components/expenses/MaintenanceModal.vue'
 import ChargeModal from '@/components/expenses/ChargeModal.vue'
 import FuelFillUpModal from '@/components/manual/FuelFillUpModal.vue'
@@ -90,6 +92,9 @@ useRefreshHandler(() => load(true))
 
 // A line opens its record, and a swipe deletes it with a way back: the line leaves the page at once and returns if the
 // deletion is taken back or refused
+// An invoice's delete waits for its Undo: the card shows the month without it meanwhile
+const invoiceSync = ref(0)
+const hiddenInvoiceMonths = ref<string[]>([])
 const removed = new Map<string, { row: (typeof items.value)[number]; index: number }>()
 const actions = useCostEntryActions({
   hide: (id) => {
@@ -106,9 +111,20 @@ const actions = useCostEntryActions({
     next.splice(Math.min(gone.index, next.length), 0, gone.row)
     items.value = next
   },
-  reload: () => load(true),
+  reload: () => {
+    invoiceSync.value++
+    hiddenInvoiceMonths.value = []
+    return load(true)
+  },
+  hideInvoiceMonth: (m) => (hiddenInvoiceMonths.value = [...hiddenInvoiceMonths.value, m]),
+  restoreInvoiceMonth: (m) => (hiddenInvoiceMonths.value = hiddenInvoiceMonths.value.filter((x) => x !== m)),
 })
-const { showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, removeOpenedCharge, editing, documents, maintenanceExpenses, onDocumentAdded } = actions
+const { showTollInvoice, invoiceRow, openInvoice, removeInvoice, showToll, showMaintenance, showCharge, showFuel, removeOpenedFuel, removeOpenedCharge, editing, documents, maintenanceExpenses, onDocumentAdded } = actions
+// An invoice saved changes the journal (its line) and the card (its gap)
+function onInvoiceSaved() {
+  invoiceSync.value++
+  void load(true)
+}
 // The quick entry sheet sends a maintenance entry here: the form opens on arrival and the parameter is dropped
 watch(
   () => [route.query.add, vehicleStore.canEdit] as const,
@@ -181,7 +197,7 @@ const showBreakdown = computed(() => filter.value === 'all' && received.value > 
 // Journal first, the charts behind a second tab kept in the address (`?tab=ANALYSIS`) so that a reload and Back find it.
 // Only the whole cost and the energy theme have an analysis: under another theme the page is the journal alone.
 const requestedTab = ref<CostsTab>(parseCostsTab(route.query.tab))
-const hasAnalysis = computed(() => filter.value === 'all' || (filter.value === 'energy' && vehicleStore.canCharge))
+const hasAnalysis = computed(() => filter.value === 'all' || (filter.value === 'energy' && vehicleStore.capabilities.charges))
 const tab = computed<CostsTab>(() => (hasAnalysis.value ? requestedTab.value : 'JOURNAL'))
 const tabs = computed<TabItem[]>(() => [
   { key: 'JOURNAL', label: t('costs.tabs.journal'), icon: List },
@@ -275,6 +291,15 @@ const chipClass = (key: CostFilterKey) => {
     </template>
 
     <template v-else>
+      <TollInvoicesCard
+        v-if="filter === 'tolls'"
+        :vehicle-id="vehicleStore.activeVehicle.id"
+        :currency="currency"
+        :can-edit="vehicleStore.canEdit"
+        :sync-key="invoiceSync"
+        :hidden-months="hiddenInvoiceMonths"
+        @edit="openInvoice"
+      />
       <ListSkeleton v-if="loading" :rows="6" />
       <LoadError v-else-if="error !== null" :message="error" @retry="load()" />
       <EmptyState v-else-if="!items.length" :icon="Wallet" :title="$t('costs.empty.title')">{{ $t('costs.empty.body') }}</EmptyState>
@@ -297,6 +322,7 @@ const chipClass = (key: CostFilterKey) => {
       </div>
     </template>
 
+    <TollInvoiceModal v-model:open="showTollInvoice" :vehicle-id="vehicleStore.activeVehicle.id" :row="invoiceRow" :currency="currency" :can-edit="vehicleStore.canEdit" @saved="onInvoiceSaved" @delete="removeInvoice" />
     <TollModal v-model:open="showToll" :vehicle-id="vehicleStore.activeVehicle.id" :editing="editing" :documents="documents" @saved="load(true)" @document-added="onDocumentAdded" @view-document="viewOrDownloadDocument" />
     <MaintenanceModal
       v-model:open="showMaintenance"

@@ -4,7 +4,7 @@ import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import DriveLegRow from './DriveLegRow.vue'
 
-const vehicleStore = reactive<{ canEdit: boolean; currency: string; activeVehicle: any }>({ canEdit: true, currency: 'EUR', activeVehicle: { powertrain: 'EV', teslamate_api_url: 'http://tm' } })
+const vehicleStore = reactive<{ canEdit: boolean; currency: string; capabilities: { sync: boolean } }>({ canEdit: true, currency: 'EUR', capabilities: { sync: true } })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
 const prefs = reactive({ proPersoEnabled: false })
 vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => prefs }))
@@ -20,7 +20,7 @@ const leg = {
 const render = (l: any) => renderToString(createSSRApp({ render: () => h(DriveLegRow as any, { leg: l }) }).use(i18n))
 
 afterEach(() => {
-  vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: 'http://tm' }
+  vehicleStore.capabilities = { sync: true }
 })
 
 describe('DriveLegRow', () => {
@@ -28,7 +28,7 @@ describe('DriveLegRow', () => {
     const html = await render(leg)
     expect(html).toContain('data-testid="drive-leg"')
     expect(html).toContain('inset-0')
-    expect(html).toContain('card relative flex items-center px-3 gap-2.5 py-1.5')
+    expect(html).toContain('card relative px-3 py-1.5')
     expect(html).not.toContain('py-2.5')
     expect(html).not.toContain('aria-haspopup')
     expect(html).toContain('Zone industrielle des Grandes Terres Nord')
@@ -50,7 +50,7 @@ describe('DriveLegRow', () => {
     expect(html).toContain('data-tone="info"')
     expect(html).toContain('Covoituré')
     expect(html).toContain('Manuel')
-    vehicleStore.activeVehicle = { powertrain: 'ICE' }
+    vehicleStore.capabilities = { sync: false }
     expect(await render({ ...leg, is_manual: true })).not.toContain('Manuel')
   })
 

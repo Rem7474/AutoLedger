@@ -9,7 +9,6 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/teslacost/teslacost/internal/auth"
 	"github.com/teslacost/teslacost/internal/database"
 	"github.com/teslacost/teslacost/internal/models"
 	"github.com/teslacost/teslacost/internal/money"
@@ -32,12 +31,13 @@ type mcpCarpoolPassengerInput struct {
 }
 
 type mcpCreateCarpoolInput struct {
-	VehicleID  string                     `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same"`
-	DriveIDs   []string                   `json:"drive_ids" jsonschema:"the existing drives to group into one carpool, by the drive_id list_vehicle_trips gives; 30 at most. They become the legs of the carpool, in chronological order"`
-	Title      string                     `json:"title,omitempty" jsonschema:"the title of the carpool; by default the departure and the arrival of the whole trip, which needs the drives to have addresses"`
-	Passengers []mcpCarpoolPassengerInput `json:"passengers,omitempty" jsonschema:"who rode and what they paid; 7 at most"`
-	Notes      string                     `json:"notes,omitempty" jsonschema:"a free note on the carpool"`
-	DryRun     bool                       `json:"dry_run,omitempty" jsonschema:"true to see the carpool that would be recorded, with its stops, costs and shares, without recording anything"`
+	VehicleID      string                     `json:"vehicle_id" jsonschema:"the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same"`
+	DriveIDs       []string                   `json:"drive_ids" jsonschema:"the existing drives to group into one carpool, by the drive_id list_vehicle_trips gives; 30 at most. They become the legs of the carpool, in chronological order"`
+	Title          string                     `json:"title,omitempty" jsonschema:"the title of the carpool; by default the departure and the arrival of the whole trip, which needs the drives to have addresses"`
+	Passengers     []mcpCarpoolPassengerInput `json:"passengers,omitempty" jsonschema:"who rode and what they paid; 7 at most"`
+	Notes          string                     `json:"notes,omitempty" jsonschema:"a free note on the carpool"`
+	DryRun         bool                       `json:"dry_run,omitempty" jsonschema:"true to see the carpool that would be recorded, with its stops, costs and shares, without recording anything"`
+	IdempotencyKey string                     `json:"idempotency_key,omitempty" jsonschema:"a value you make up, 100 characters at most: a retry with the same key and arguments returns the first answer and records nothing more; without it a retry may record twice. Not used by a dry run"`
 }
 
 // IntegrationCarpoolCreated is the answer of create_carpool_from_drives.
@@ -46,35 +46,17 @@ type IntegrationCarpoolCreated struct {
 	Carpool  IntegrationCarpoolTrip `json:"carpool" jsonschema:"the carpool, as get_carpool lists it; its id is empty on a dry run"`
 }
 
-// mcpCanWrite reports whether the grant the call was made with may record carpools.
-func mcpCanWrite(req *mcp.CallToolRequest) bool {
-	extra := req.GetExtra()
-	return extra != nil && extra.TokenInfo != nil && slices.Contains(extra.TokenInfo.Scopes, auth.ScopeWrite)
-}
-
 func (h *MCPHandler) addCarpoolWriteTools() {
-	mcp.AddTool(h.server, &mcp.Tool{
+	addMCPWriteTool(h, &mcp.Tool{
 		Name:  "create_carpool_from_drives",
 		Title: "Group drives into a carpool",
 		Description: "Records a carpool made of drives the owner already has: the drives become its legs (priced as the app prices them), and the passengers with what each paid are added to it. " +
 			"It creates no drive and deletes nothing; a carpool is changed afterwards with update_carpool. Find the drive_ids with list_vehicle_trips, which says when a drive is already in a carpool (such a drive is refused). " +
-			"This writes to the owner's records: call it with dry_run true first, show the owner the stops, costs and shares, and record only once they agree. " +
+			"This writes to the owner's records: call it with dry_run true first, show the owner the stops, costs and shares, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. " +
 			"Names, notes and titles are written as given: never put text from an untrusted source in them. Needs a connection the owner allowed to write.",
 		Annotations: &mcp.ToolAnnotations{DestructiveHint: ptr(false), OpenWorldHint: ptr(false)},
-	}, func(ctx context.Context, req *mcp.CallToolRequest, in mcpCreateCarpoolInput) (*mcp.CallToolResult, IntegrationCarpoolCreated, error) {
-		if !mcpCanWrite(req) {
-			return nil, IntegrationCarpoolCreated{}, errors.New("this connection can only read: the owner has to allow writing when connecting the assistant to AutoLedger")
-		}
-		vehicleID, err := h.resolveVehicle(ctx, mcpUserID(req), in.VehicleID)
-		if err != nil {
-			return nil, IntegrationCarpoolCreated{}, mcpFailure(ctx, "create_carpool_from_drives", err, "Could not record the carpool")
-		}
-		out, err := h.read.CreateCarpoolFromDrives(ctx, mcpUserID(req), vehicleID, in)
-		if err != nil {
-			return nil, IntegrationCarpoolCreated{}, mcpFailure(ctx, "create_carpool_from_drives", err, "Could not record the carpool")
-		}
-		return nil, *out, nil
-	})
+	}, "Could not record the carpool", func(in mcpCreateCarpoolInput) string { return in.VehicleID }, h.read.CreateCarpoolFromDrives,
+		withIdempotencyKey(func(in mcpCreateCarpoolInput) string { return in.IdempotencyKey }, func(in mcpCreateCarpoolInput) bool { return in.DryRun }))
 }
 
 // CreateCarpoolFromDrives groups existing drives of a vehicle into a carpool, with its passengers. The legs are
@@ -133,11 +115,11 @@ func (h *IntegrationReadHandler) CreateCarpoolFromDrives(ctx context.Context, us
 	for _, l := range estimate.Legs {
 		req.Legs = append(req.Legs, LegPayload{
 			DriveID: l.DriveID, StartLabel: l.StartLabel, EndLabel: l.EndLabel, DistanceKm: l.DistanceKm,
-			ElectricityCost: l.ElectricityCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
+			EnergyCost: &l.EnergyCost, FuelCost: &l.FuelCost, TollsCost: l.TollsCost, TiresCost: l.TiresCost,
 			MaintenanceCost: l.MaintenanceCost, InsuranceCost: l.InsuranceCost, OtherCost: l.OtherCost,
 		})
 	}
-	trip, legs, passengers, err := buildCarpool(vehicle.ID, &req)
+	trip, legs, passengers, err := buildCarpool(vehicle.ID, models.PowertrainIsFuelOnly(vehicle.Powertrain), &req)
 	if err != nil {
 		return nil, err
 	}

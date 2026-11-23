@@ -12,6 +12,15 @@ func (h *apiHandlers) registerDriveRoutes(r chi.Router) {
 	r.Put("/{vehicleId}/fuel-logs/{fuelLogId}", h.fuel.Update)
 	r.Delete("/{vehicleId}/fuel-logs/{fuelLogId}", h.fuel.Delete)
 
+	// Electric share of a plug-in hybrid, suggested from the history (read-only)
+	r.Get("/{vehicleId}/hybrid-share", h.hybridShare.Get)
+	r.Put("/{vehicleId}/hybrid-share", h.hybridShare.Save)
+
+	// Monthly toll invoices: the invoiced total replaces the individual tolls of its month in the totals
+	r.Get("/{vehicleId}/toll-invoices", h.tollInvoice.List)
+	r.Put("/{vehicleId}/toll-invoices/{month}", h.tollInvoice.Save)
+	r.Delete("/{vehicleId}/toll-invoices/{month}", h.tollInvoice.Delete)
+
 	// Drives
 	r.Get("/{vehicleId}/drives", h.drive.List)
 	r.Get("/{vehicleId}/drives/address-backfill", h.drive.AddressBackfillStatus)

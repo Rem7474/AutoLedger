@@ -10,7 +10,7 @@ import { useExpensesTabs, type ExpensesTab } from '@/composables/useExpensesTabs
 import { useExpenseDeletions } from '@/composables/useExpenseDeletions'
 import { useDocumentPreview } from '@/composables/useDocumentPreview'
 import { useReminders } from '@/composables/useReminders'
-import { api, type ExpenseDocumentHeader } from '@/services/api'
+import { api, type ExpenseDocumentHeader, type MaintenanceReminder } from '@/services/api'
 import DocumentPreviewModal from '@/components/expenses/DocumentPreviewModal.vue'
 import RemindersPanel from '@/components/expenses/RemindersPanel.vue'
 import ChargesPanel from '@/components/expenses/ChargesPanel.vue'
@@ -119,6 +119,12 @@ async function onChargesAssigned() {
   await refreshData()
 }
 
+// The reminder edited in its panel is deleted from there: the panel closes and Undo is in the snackbar
+function onDeleteEditedReminder(r: MaintenanceReminder) {
+  showReminderModal.value = false
+  handleDeleteReminder(r)
+}
+
 // The fill-ups panel loads its own data when mounted: remounting it shows what an import added
 const fuelReloadKey = ref(0)
 function onImported() {
@@ -135,7 +141,7 @@ async function loadData(keepList = false) {
   try {
     if (activeTab.value === 'REMINDERS') {
       await loadReminders()
-    } else if (activeTab.value === 'CHARGES' && vehicleStore.canCharge) {
+    } else if (activeTab.value === 'CHARGES' && vehicleStore.capabilities.charges) {
       const pages = keepList ? chargesPage.value : 1
       const loaded: any[] = []
       let res: any
@@ -278,12 +284,11 @@ function openUploadDocumentModal() {
       @add="openAddReminderModal"
       @edit="openEditReminderModal"
       @complete="openCompleteReminder"
-      @delete="handleDeleteReminder"
       @reload="loadReminders"
     />
 
     <div
-      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge && pendingChargesCount > 0"
+      v-if="activeTab === 'CHARGES' && vehicleStore.capabilities.charges && pendingChargesCount > 0"
       class="p-4 bg-warning-500/10 border border-warning-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
     >
       <div class="flex items-center gap-2.5 text-warning-300">
@@ -316,14 +321,14 @@ function openUploadDocumentModal() {
     />
 
     <FuelLogsPanel
-      v-if="activeTab === 'FUEL' && vehicleStore.canRefuel && vehicleStore.activeVehicle"
+      v-if="activeTab === 'FUEL' && vehicleStore.capabilities.refuels && vehicleStore.activeVehicle"
       :key="fuelReloadKey"
       :vehicle-id="vehicleStore.activeVehicle.id"
       :can-edit="vehicleStore.canEdit"
     />
 
     <router-link
-      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge"
+      v-if="activeTab === 'CHARGES' && vehicleStore.capabilities.charges"
       to="/costs?theme=energy"
       class="card flex items-center justify-between gap-3 px-4 py-3"
       data-testid="charges-list-link"
@@ -336,7 +341,7 @@ function openUploadDocumentModal() {
     </router-link>
 
     <ChargesPanel
-      v-if="activeTab === 'CHARGES' && vehicleStore.canCharge"
+      v-if="activeTab === 'CHARGES' && vehicleStore.capabilities.charges"
       to-complete-only
       :charges="charges"
       :charges-total="chargesTotal"
@@ -388,6 +393,7 @@ function openUploadDocumentModal() {
       :preset="reminderPreset"
       :current-odometer="currentOdometer"
       @saved="loadReminders"
+      @delete="onDeleteEditedReminder"
     />
 
     <CompleteReminderModal

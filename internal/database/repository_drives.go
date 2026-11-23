@@ -216,7 +216,7 @@ func (r *Repository) ListDrives(ctx context.Context, vehicleID string, filter Dr
 		SELECT id, vehicle_id, teslamate_drive_id, start_time, end_time,
 		       start_odometer, end_odometer, distance_km, duration_min,
 		       speed_avg, speed_max, power_max, power_min, start_address, end_address, energy_consumed_kwh,
-		       consumption_kwh_100km, tags, is_manual, energy_estimated, toll_reviewed_at, created_at, updated_at,
+		       consumption_kwh_100km, tags, is_manual, energy_estimated, electric_share, toll_reviewed_at, created_at, updated_at,
 		       driver_id, (SELECT name FROM vehicle_people WHERE id = drives.driver_id) AS driver_name, version
 		FROM drives
 		WHERE ` + whereClause + fmt.Sprintf(" ORDER BY start_time DESC LIMIT $%d OFFSET $%d;", argIdx, argIdx+1)
@@ -237,7 +237,7 @@ func (r *Repository) ListDrives(ctx context.Context, vehicleID string, filter Dr
 			&d.StartOdometer, &d.EndOdometer, &d.DistanceKm, &d.DurationMin,
 			&d.SpeedAvg, &d.SpeedMax, &d.PowerMax, &d.PowerMin,
 			&d.StartAddress, &d.EndAddress, &d.EnergyConsumedKwh,
-			&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt,
+			&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.ElectricShare, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt,
 			&d.DriverID, &driverName, &d.Version,
 		); err != nil {
 			return nil, 0, err
@@ -306,15 +306,15 @@ func (r *Repository) CreateManualDrive(ctx context.Context, d *models.Drive) err
 			vehicle_id, start_time, end_time,
 			start_odometer, end_odometer, distance_km, duration_min,
 			start_address, end_address, energy_consumed_kwh,
-			consumption_kwh_100km, tags, is_manual, driver_id, energy_estimated, origin, external_id, source_batch_id
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE, COALESCE($13, (SELECT default_driver_id FROM vehicles WHERE id = $1)), $14, COALESCE(NULLIF($15, ''), 'MANUAL'), $16, $17)
+			consumption_kwh_100km, tags, is_manual, driver_id, energy_estimated, origin, external_id, source_batch_id, electric_share
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE, COALESCE($13, (SELECT default_driver_id FROM vehicles WHERE id = $1)), $14, COALESCE(NULLIF($15, ''), 'MANUAL'), $16, $17, $18)
 		RETURNING id, created_at, updated_at, version;
 	`
 	return r.pool.QueryRow(ctx, query,
 		d.VehicleID, d.StartTime, d.EndTime,
 		d.StartOdometer, d.EndOdometer, d.DistanceKm, d.DurationMin,
 		d.StartAddress, d.EndAddress, d.EnergyConsumedKwh,
-		d.ConsumptionKwh100km, d.Tags, d.DriverID, d.EnergyEstimated, d.Origin, d.ExternalID, d.SourceBatchID,
+		d.ConsumptionKwh100km, d.Tags, d.DriverID, d.EnergyEstimated, d.Origin, d.ExternalID, d.SourceBatchID, d.ElectricShare,
 	).Scan(&d.ID, &d.CreatedAt, &d.UpdatedAt, &d.Version)
 }
 
@@ -348,8 +348,8 @@ func (r *Repository) UpdateManualDrive(ctx context.Context, d *models.Drive) err
 		    distance_km = $5, duration_min = $6,
 		    start_address = $7, end_address = $8,
 		    energy_consumed_kwh = $9, consumption_kwh_100km = $10,
-		    tags = $11, driver_id = $12, energy_estimated = $13, updated_at = NOW(), version = version + 1
-		WHERE id = $14 AND vehicle_id = $15 AND is_manual = TRUE AND ($16::bigint IS NULL OR version = $16::bigint)
+		    tags = $11, driver_id = $12, energy_estimated = $13, electric_share = $14, updated_at = NOW(), version = version + 1
+		WHERE id = $15 AND vehicle_id = $16 AND is_manual = TRUE AND ($17::bigint IS NULL OR version = $17::bigint)
 		RETURNING version;
 	`
 	err := r.pool.QueryRow(ctx, query,
@@ -358,7 +358,7 @@ func (r *Repository) UpdateManualDrive(ctx context.Context, d *models.Drive) err
 		d.DistanceKm, d.DurationMin,
 		d.StartAddress, d.EndAddress,
 		d.EnergyConsumedKwh, d.ConsumptionKwh100km,
-		d.Tags, d.DriverID, d.EnergyEstimated, d.ID, d.VehicleID, d.ExpectedVersion,
+		d.Tags, d.DriverID, d.EnergyEstimated, d.ElectricShare, d.ID, d.VehicleID, d.ExpectedVersion,
 	).Scan(&d.Version)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return staleOrNotFound(ctx, r.pool, "drives", d.ID, d.VehicleID, d.ExpectedVersion)
@@ -451,4 +451,14 @@ func (r *Repository) ListCoordinateAddressDrives(ctx context.Context, vehicleID 
 		out = append(out, d)
 	}
 	return out, rows.Err()
+}
+
+// GetDriveDriverName reads the name of the person who drove a drive of the vehicle; nil when none is assigned.
+func (r *Repository) GetDriveDriverName(ctx context.Context, driveID, vehicleID string) (*string, error) {
+	var name *string
+	err := r.pool.QueryRow(ctx, `SELECT (SELECT name FROM vehicle_people WHERE id = drives.driver_id) FROM drives WHERE id::text = $1 AND vehicle_id = $2;`, driveID, vehicleID).Scan(&name)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return name, err
 }

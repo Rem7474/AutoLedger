@@ -66,7 +66,10 @@
     "noFillUpHint": "Saisissez la date, le kilométrage et le montant de chaque plein : le coût au {unit} est calculé à partir de ces relevés.",
     "periodFigures": "Période : {period}",
     "noFillUpInPeriod": "Aucun plein sur cette période",
-    "noFillUpInPeriodHint": "Aucun plein n'est daté de {period}. Choisissez une autre période dans la barre."
+    "noFillUpInPeriodHint": "Aucun plein n'est daté de {period}. Choisissez une autre période dans la barre.",
+    "mileageKm": "Kilométrage ({unit})",
+    "hybridMileageHint": "Un hybride a besoin du kilométrage pour répartir ses kilomètres entre électricité et carburant. Cochez « Plein complet » quand vous remplissez à ras bord : c'est ce qui rend une période mesurable.",
+    "odometerRequired": "Indiquez le kilométrage."
   },
   "odometerReadingsPanel": {
     "noManualReadingYet": "Aucun relevé pour l'instant",

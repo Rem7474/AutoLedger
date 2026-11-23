@@ -19,8 +19,8 @@ export interface PhoneTab {
 }
 
 /**
- * The four tabs of the phone's bottom bar. The second one is the trips of a vehicle that has some (electric, hybrid; the
- * carpools are a segment of that page) and the consumption of one that has none (combustion); the other pages of the app are reached from these four, from the vehicle
+ * The four tabs of the phone's bottom bar. The second one is the trips of a vehicle with the `drives` capability (every
+ * vehicle: the carpools are a segment of that page) and the consumption of one without it; the other pages of the app are reached from these four, from the vehicle
  * sheet or from the account menu.
  */
 export function phoneTabs(hasDrives: boolean): PhoneTab[] {

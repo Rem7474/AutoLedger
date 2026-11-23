@@ -35,7 +35,8 @@
     "invalid_category": "Catégorie inconnue {p0} : utilisez l'une de {p1}",
     "invalid_cursor": "Le curseur n'a pas été renvoyé par un appel précédent",
     "invalid_amount": "Le montant minimum doit être un nombre décimal tel que 12.50",
-    "invalid_sort": "Le tri doit être date ou amount"
+    "invalid_sort": "Le tri doit être date ou amount",
+    "invalid_version": "La version attendue doit être un nombre entier"
   },
   "member": {
     "invalid_role": "Rôle invalide : {p0}",
@@ -259,7 +260,9 @@
     "invalid_period": "La session se termine avant d'avoir commencé",
     "invalid_energy": "L'énergie de la session doit être supérieure à 0 et au plus {p0} kWh",
     "electric_only": "Les sessions de recharge ne concernent que les véhicules électriques",
-    "place_invalid": "Le lieu de recharge n'existe pas"
+    "place_invalid": "Le lieu de recharge n'existe pas",
+    "battery_level_invalid": "Un pourcentage de batterie doit être compris entre 0 et 100",
+    "battery_levels_order": "La batterie doit finir la recharge plus haut qu'elle ne l'a commencée"
   },
   "tariff": {
     "band_invalid": "Tranche invalide",
@@ -406,5 +409,18 @@
   },
   "currency": {
     "required": "Choisissez une devise"
+  },
+  "hybrid_share": {
+    "not_hybrid": "La part électrique ne concerne que les véhicules qui se rechargent et font le plein",
+    "no_suggestion": "L'historique ne suffit pas pour suggérer une part électrique",
+    "share_range": "La part électrique doit être comprise entre 0 et 100 %",
+    "fuel_range": "Consommation de carburant invalide",
+    "battery_range": "Capacité de batterie invalide"
+  },
+  "toll_invoice": {
+    "invalid_month": "Mois invalide : AAAA-MM attendu",
+    "invalid_months": "Le nombre de mois doit être compris entre 1 et {p0}",
+    "future_month": "Un mois qui n'a pas commencé ne peut pas avoir de facture",
+    "invalid_total": "Total de facture invalide"
   }
 }

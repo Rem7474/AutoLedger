@@ -187,3 +187,22 @@ func TestMCPToolListMatchesTheGoldenFile(t *testing.T) {
 		t.Errorf("the advertised tools changed; review the diff and regenerate with -update-mcp-golden\n--- want\n%s\n--- got\n%s", want, got)
 	}
 }
+
+// mcpToolListBudgetBytes bounds the size of tools/list. A client with a context budget may drop the tools it cannot fit
+// (the ones late in the alphabet go first), so growth is a decision: raise the ceiling in the same change as the tool
+// or the field that needs it, and say why.
+//
+// 208 KB: the ledger edits (fuel fills, charges, odometer readings, trips, trip groups, carpool costs, toll estimation) add
+// eight tools whose inputs and outputs are typed like the earlier ones; each output schema is the record it returns.
+const mcpToolListBudgetBytes = 208 * 1024
+
+func TestMCPToolListStaysWithinItsBudget(t *testing.T) {
+	raw, err := json.Marshal(listMCPTools(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(raw) > mcpToolListBudgetBytes {
+		t.Errorf("tools/list is %d KB, the budget is %d KB: shorten the descriptions of the output schemas before raising it", len(raw)/1024, mcpToolListBudgetBytes/1024)
+	}
+	t.Logf("tools/list: %d KB for %d tools", len(raw)/1024, len(listMCPTools(t)))
+}

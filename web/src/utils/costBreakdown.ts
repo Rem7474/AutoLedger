@@ -41,7 +41,7 @@ export function buildCostBreakdown(raw: [CostCategory, number][], distanceKm: nu
 export function buildDriveBreakdown(costs: any, distanceKm: number) {
   return buildCostBreakdown(
     [
-      ['energy', Number(costs?.electricity_cost) || 0],
+      ['energy', Number(costs?.energy_cost) || 0],
       ['tires', Number(costs?.tires_cost) || 0],
       ['maintenance', Number(costs?.maintenance_cost) || 0],
       ['insurance', Number(costs?.insurance_cost) || 0],
@@ -55,7 +55,7 @@ export function buildDriveBreakdown(costs: any, distanceKm: number) {
 export function buildCarpoolBreakdown(trip: any) {
   return buildCostBreakdown(
     [
-      ['energy', Number(trip?.electricity_cost) || 0],
+      ['energy', Number(trip?.energy_cost) || 0],
       ['tires', Number(trip?.tires_cost) || 0],
       ['maintenance', Number(trip?.maintenance_cost) || 0],
       ['insurance', Number(trip?.insurance_cost) || 0],

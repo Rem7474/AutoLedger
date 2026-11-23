@@ -10,7 +10,7 @@ type VehicleCapabilities struct {
 	Charges bool `json:"charges"`
 	// Refuels: the vehicle has a tank (fill-ups).
 	Refuels bool `json:"refuels"`
-	// Drives: trips apply, because the vehicle can record them by hand or a source wrote some.
+	// Drives: trips apply to every vehicle (recorded by hand or written by a source).
 	Drives bool `json:"drives"`
 	// Sync: a connected source (TeslaMate) synchronizes the vehicle's data.
 	Sync bool `json:"sync"`
@@ -26,8 +26,6 @@ type VehicleCapabilities struct {
 
 // CapabilityFacts are the stored facts a capability depends on, beyond the vehicle row.
 type CapabilityFacts struct {
-	// HasDrives: at least one drive is stored, whatever its origin.
-	HasDrives bool
 	// HasSourceOdometer: at least one odometer reading was reported by a source (Home Assistant).
 	HasSourceOdometer bool
 }
@@ -38,15 +36,14 @@ type CapabilityFacts struct {
 func ComputeCapabilities(v *Vehicle, f CapabilityFacts) VehicleCapabilities {
 	charges := v.CanCharge()
 	sync := v.CanLinkTeslaMate() && v.TeslaMateAPIURL != nil && strings.TrimSpace(*v.TeslaMateAPIURL) != ""
-	drives := charges || f.HasDrives
 	return VehicleCapabilities{
 		Charges:       charges,
 		Refuels:       v.CanRefuel(),
-		Drives:        drives,
+		Drives:        true,
 		Sync:          sync,
 		OdometerAuto:  sync || f.HasSourceOdometer,
 		BatteryHealth: charges,
-		TollsAuto:     drives && v.TollDetectionActive,
+		TollsAuto:     v.TollDetectionActive,
 		Write:         v.Role.CanEdit(),
 	}
 }

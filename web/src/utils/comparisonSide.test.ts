@@ -3,13 +3,17 @@ import { scenarioSide, sideKey, trackedSide } from './comparisonSide'
 
 describe('trackedSide', () => {
   it('compares plug-in and range-extender hybrids as hybrids', () => {
-    expect(trackedSide('PHEV')).toBe('hybrid')
-    expect(trackedSide('REEV')).toBe('hybrid')
+    expect(trackedSide({ powertrain: 'PHEV' })).toBe('hybrid')
+    expect(trackedSide({ powertrain: 'REEV' })).toBe('hybrid')
   })
   it('keeps the electric wording for other vehicles and for projections', () => {
-    expect(trackedSide('EV')).toBe('electric')
-    expect(trackedSide('ICE')).toBe('electric')
+    expect(trackedSide({ powertrain: 'EV' })).toBe('electric')
+    expect(trackedSide({ powertrain: 'ICE' })).toBe('electric')
     expect(trackedSide(undefined)).toBe('electric')
+  })
+  it('follows the capabilities the server sent', () => {
+    expect(trackedSide({ capabilities: { charges: true, refuels: true } })).toBe('hybrid')
+    expect(trackedSide({ capabilities: { charges: true, refuels: false } })).toBe('electric')
   })
 })
 

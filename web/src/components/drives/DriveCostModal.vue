@@ -17,7 +17,7 @@ import CostDonut from '@/components/costs/CostDonut.vue'
 import ModalShell from '@/components/ModalShell.vue'
 import DetailDeleteButton from '@/components/DetailDeleteButton.vue'
 import CostTotalBar from '@/components/CostTotalBar.vue'
-import { distanceUnit, formatDistance, kmToDisplayDistance, speedUnit } from '@/units'
+import { distanceUnit, formatDistance, formatVolume, kmToDisplayDistance, speedUnit } from '@/units'
 import { formatCostPerDistance } from '@/utils/costPerDistance'
 import DriveCostLegs from '@/components/drives/DriveCostLegs.vue'
 import DriveCostCarpools from '@/components/drives/DriveCostCarpools.vue'
@@ -194,6 +194,7 @@ async function handleDriverChange(event: Event) {
           <span v-if="selectedCostDrive.duration_min" class="text-slate-400">{{ $t('drives.driveCostModal.min', { duration_min: selectedCostDrive.duration_min }) }}</span>
           <span v-if="selectedCostDrive.drives_count" class="text-sky-400 font-semibold">{{ $t('drives.driveCostModal.legs', { drives_count: selectedCostDrive.drives_count }) }}</span>
           <span v-if="selectedCostDrive.speed_avg" class="text-slate-400">{{ $t('drives.driveCostModal.kmHAvg', { speed: speedUnit(), speed_avg: Math.round(kmToDisplayDistance(selectedCostDrive.speed_avg)) }) }}</span>
+          <span v-if="selectedCostDrive.costs?.fuel_liters" class="text-theme-energy">{{ $t('drives.driveCostModal.fuelLitres', { volume: formatVolume(Number(selectedCostDrive.costs.fuel_liters)) }) }}</span>
           <span v-if="selectedCostDrive.costs?.electricity_kwh" class="text-theme-energy">{{ $t('drives.driveCostModal.kwh', { electricity_kwh: formatQuantity(Number(selectedCostDrive.costs.electricity_kwh)) }) }}</span>
           <a
             v-if="teslamateDriveUrl(selectedCostDrive)"

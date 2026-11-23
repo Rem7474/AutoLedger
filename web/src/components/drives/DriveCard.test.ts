@@ -4,10 +4,10 @@ import { renderToString } from '@vue/server-renderer'
 import { i18n } from '@/i18n'
 import DriveCard from './DriveCard.vue'
 
-const vehicleStore = reactive<{ canEdit: boolean; currency: string; activeVehicle: any }>({
+const vehicleStore = reactive<{ canEdit: boolean; currency: string; capabilities: { sync: boolean } }>({
   canEdit: true,
   currency: 'EUR',
-  activeVehicle: { powertrain: 'EV', teslamate_api_url: null },
+  capabilities: { sync: false },
 })
 vi.mock('@/stores/vehicle', () => ({ useVehicleStore: () => vehicleStore }))
 vi.mock('@/stores/preferences', () => ({ usePreferencesStore: () => ({ proPersoEnabled: false }) }))
@@ -18,7 +18,7 @@ const render = (d: any = drive) => renderToString(createSSRApp({ render: () => h
 
 afterEach(() => {
   vehicleStore.canEdit = true
-  vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: null }
+  vehicleStore.capabilities = { sync: false }
 })
 
 describe('DriveCard', () => {
@@ -27,7 +27,7 @@ describe('DriveCard', () => {
   })
 
   it('mentionne « manuel » sur un véhicule alimenté par TeslaMate, où cela distingue les trajets', async () => {
-    vehicleStore.activeVehicle = { powertrain: 'EV', teslamate_api_url: 'http://teslamate.local' }
+    vehicleStore.capabilities = { sync: true }
     expect(await render()).toContain('Manuel')
     expect(await render({ ...drive, is_manual: false })).not.toContain('Manuel')
   })
@@ -52,6 +52,19 @@ describe('DriveCard', () => {
     expect(html.match(/<button/g)).toHaveLength(2)
   })
 
+  it('garde les boutons de qualification péage dans la carte du trajet, pas dessous', async () => {
+    const html = (await render({ ...drive, is_manual: false, needs_toll_qualification: true, distance_km: 105, costs: { total_cost: 24, cost_per_km: 0.23 } })).trim()
+    expect(html).toContain('Sans péage')
+    let depth = 0
+    let closedAt = -1
+    for (const m of html.matchAll(/<div\b|<\/div>/g)) {
+      depth += m[0] === '</div>' ? -1 : 1
+      if (depth === 0) { closedAt = m.index! + m[0].length; break }
+    }
+    expect(closedAt).toBe(html.length)
+    expect(html.lastIndexOf('Sans péage')).toBeLessThan(closedAt)
+  })
+
   it('met la consommation dans la ligne discrète mais la retire du téléphone', async () => {
     const html = await render({ ...drive, consumption_kwh_100km: 16.4, duration_min: 30 })
     expect(html).toContain('kWh/100')
@@ -64,5 +77,17 @@ describe('DriveCard', () => {
     expect(html).toContain('inset-0')
     const cost = html.slice(html.indexOf('€5.26') - 300, html.indexOf('€5.26'))
     expect(cost).not.toContain('z-10')
+  })
+
+  it('montre le carburant d\'un trajet de véhicule thermique en litres, jamais en kWh', async () => {
+    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: 1.6 } })
+    expect(html).toMatch(/1,6\s(<!--.*?-->)?\s?L/)
+    expect(html).not.toContain('kWh')
+  })
+
+  it('ne montre aucun carburant tant que les pleins ne donnent pas de consommation', async () => {
+    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: null } })
+    expect(html).not.toMatch(/\sL\b/)
+    expect(html).not.toContain('kWh')
   })
 })

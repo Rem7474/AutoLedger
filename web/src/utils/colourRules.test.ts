@@ -38,7 +38,7 @@ const RAW_STATE_ALLOWLIST = new Set([
   'components/quickadd/QuickOdometerField.vue', 'components/quickadd/QuickPendingCosts.vue', 'components/quickadd/QuickPhotoField.vue',
   'components/tires/TireCopyHistoryModal.vue', 'components/tires/TireDuplicateSessionModal.vue', 'components/tires/TireHistoryModal.vue',
   'components/tires/TireQuickRotationBar.vue', 'components/tires/TireSessionModal.vue', 'components/tires/TireWheelTile.vue',
-  'components/vehicles/OwnershipWizardModal.vue', 'components/vehicles/VehicleCard.vue', 'components/vehicles/VehicleDataSourcesModal.vue',
+  'components/vehicles/OwnershipWizardModal.vue', 'components/vehicles/VehicleCard.vue',
   'components/vehicles/VehicleMembersModal.vue', 'views/ComparisonView.vue', 'views/ManualTrackingView.vue', 'views/TiresView.vue',
 ])
 const FOUNDATIONS = ['components/StatusLabel.vue', 'components/CountBadge.vue', 'components/SegmentedControl.vue']

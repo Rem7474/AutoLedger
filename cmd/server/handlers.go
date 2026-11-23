@@ -41,6 +41,8 @@ type apiHandlers struct {
 	carpool         *handlers.CarpoolHandler
 	checkpoint      *handlers.CheckpointHandler
 	fuel            *handlers.FuelHandler
+	hybridShare     *handlers.HybridShareHandler
+	tollInvoice     *handlers.TollInvoiceHandler
 	reminder        *handlers.ReminderHandler
 	vehicleMember   *handlers.VehicleMemberHandler
 	csvImport       *handlers.ImportHandler
@@ -110,6 +112,8 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		carpool:         handlers.NewCarpoolHandler(repo, svc.carpool),
 		checkpoint:      handlers.NewCheckpointHandler(repo),
 		fuel:            handlers.NewFuelHandler(repo),
+		hybridShare:     handlers.NewHybridShareHandler(repo),
+		tollInvoice:     handlers.NewTollInvoiceHandler(repo),
 		reminder:        handlers.NewReminderHandler(repo, svc.notification),
 		vehicleMember:   handlers.NewVehicleMemberHandler(repo),
 		csvImport:       handlers.NewImportHandler(repo, services.NewCSVImportService(repo, cfg.ReportingTimezone)),
@@ -123,7 +127,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 		pendingCharges:  handlers.NewPendingChargesHandler(repo, tariffService),
 		fleet:           handlers.NewFleetHandler(services.NewFleetService(repo, svc.tco)),
 		ha:              handlers.NewHomeAssistantHandler(repo, tariffService),
-		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco).WithEnergy(svc.energyStats).WithFleet(services.NewFleetService(repo, svc.tco)).WithResidual(services.NewResidualService(repo, svc.energyStats)).WithTires(svc.tireWear).WithComparison(svc.comparison).WithCarpool(svc.carpool).WithMileage(mileageService, cfg.ReportingTimezone).WithTariffs(tariffService).WithVersion(AppVersion),
+		integrationRead: handlers.NewIntegrationReadHandler(repo, svc.tco).WithEnergy(svc.energyStats).WithFleet(services.NewFleetService(repo, svc.tco)).WithResidual(services.NewResidualService(repo, svc.energyStats)).WithTires(svc.tireWear).WithComparison(svc.comparison).WithCarpool(svc.carpool).WithMileage(mileageService, cfg.ReportingTimezone).WithTariffs(tariffService).WithTollDetection(tollDetectionService).WithVersion(AppVersion),
 	}
 	if cfg.OAuthServed() {
 		h.oauth = handlers.NewOAuthHandler(repo, cfg.AppBaseURL)
@@ -133,6 +137,7 @@ func newAPIHandlers(cfg *config.Config, repo *database.Repository, encryptor *cr
 	}
 	h.ha.SetTimezone(cfg.ReportingTimezone)
 	h.fuel.SetTimezone(cfg.ReportingTimezone)
+	h.tollInvoice.SetTimezone(cfg.ReportingTimezone)
 	h.export.SetTimezone(cfg.ReportingTimezone)
 	h.mileage.SetTimezone(cfg.ReportingTimezone)
 	h.serviceBook.SetTimezone(cfg.ReportingTimezone)

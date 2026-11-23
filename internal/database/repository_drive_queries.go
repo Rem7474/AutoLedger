@@ -20,7 +20,7 @@ func (r *Repository) GetDriveByID(ctx context.Context, driveID, vehicleID string
 		SELECT id, vehicle_id, teslamate_drive_id, start_time, end_time,
 		       start_odometer, end_odometer, distance_km, duration_min,
 		       speed_avg, speed_max, power_max, power_min, start_address, end_address, energy_consumed_kwh,
-		       consumption_kwh_100km, tags, is_manual, energy_estimated, toll_reviewed_at, created_at, updated_at, version
+		       consumption_kwh_100km, tags, is_manual, energy_estimated, electric_share, toll_reviewed_at, created_at, updated_at, version
 		FROM drives
 		WHERE id::text = $1 AND vehicle_id = $2 AND deleted_upstream_at IS NULL;
 	`
@@ -30,7 +30,7 @@ func (r *Repository) GetDriveByID(ctx context.Context, driveID, vehicleID string
 		&d.StartOdometer, &d.EndOdometer, &d.DistanceKm, &d.DurationMin,
 		&d.SpeedAvg, &d.SpeedMax, &d.PowerMax, &d.PowerMin,
 		&d.StartAddress, &d.EndAddress, &d.EnergyConsumedKwh,
-		&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt, &d.Version,
+		&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.ElectricShare, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt, &d.Version,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -46,7 +46,7 @@ func (r *Repository) GetTripGroupDrives(ctx context.Context, vehicleID, tripGrou
 		SELECT d.id, d.vehicle_id, d.teslamate_drive_id, d.start_time, d.end_time,
 		       d.start_odometer, d.end_odometer, d.distance_km, d.duration_min,
 		       d.speed_avg, d.speed_max, d.power_max, d.power_min, d.start_address, d.end_address, d.energy_consumed_kwh,
-		       d.consumption_kwh_100km, d.tags, d.is_manual, d.energy_estimated, d.toll_reviewed_at, d.created_at, d.updated_at
+		       d.consumption_kwh_100km, d.tags, d.is_manual, d.energy_estimated, d.electric_share, d.toll_reviewed_at, d.created_at, d.updated_at
 		FROM drives d
 		JOIN trip_group_drives tgd ON d.id = tgd.drive_id
 		JOIN trip_groups tg ON tg.id = tgd.trip_group_id
@@ -67,7 +67,7 @@ func (r *Repository) GetTripGroupDrives(ctx context.Context, vehicleID, tripGrou
 			&d.StartOdometer, &d.EndOdometer, &d.DistanceKm, &d.DurationMin,
 			&d.SpeedAvg, &d.SpeedMax, &d.PowerMax, &d.PowerMin,
 			&d.StartAddress, &d.EndAddress, &d.EnergyConsumedKwh,
-			&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt,
+			&d.ConsumptionKwh100km, &d.Tags, &d.IsManual, &d.EnergyEstimated, &d.ElectricShare, &d.TollReviewedAt, &d.CreatedAt, &d.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -129,6 +129,38 @@ func (r *Repository) GetTollExpensesForDrives(ctx context.Context, vehicleID str
 			return result, err
 		}
 		result[dID] = amt
+	}
+	return result, rows.Err()
+}
+
+// GetTollSourcesForDrives returns, for each of the drives that has a toll, where its tolls come from: the sources
+// (ExpenseSourceManual, ExpenseSourceAutoToll) of the toll expenses attached to the drive or to a trip group it is in.
+func (r *Repository) GetTollSourcesForDrives(ctx context.Context, vehicleID string, driveIDs []string) (map[string][]string, error) {
+	result := make(map[string][]string)
+	ids := uniqueStrings(driveIDs)
+	if len(ids) == 0 {
+		return result, nil
+	}
+	rows, err := r.pool.Query(ctx, `
+		SELECT drives.id::text, ARRAY_AGG(DISTINCT de.source ORDER BY de.source)
+		FROM drives
+		JOIN drive_expenses de ON de.type = 'TOLL' AND de.vehicle_id = drives.vehicle_id
+		  AND (de.drive_id = drives.id
+		       OR de.trip_group_id IN (SELECT tgd.trip_group_id FROM trip_group_drives tgd WHERE tgd.drive_id = drives.id))
+		WHERE drives.vehicle_id = $1 AND drives.id::text = ANY($2::text[])
+		GROUP BY drives.id
+	`, vehicleID, ids)
+	if err != nil {
+		return result, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		var sources []string
+		if err := rows.Scan(&id, &sources); err != nil {
+			return result, err
+		}
+		result[id] = sources
 	}
 	return result, rows.Err()
 }
@@ -261,8 +293,8 @@ func buildDrivingTelemetryQuery(vehicleID string, ranges []OdometerRange) (strin
 		SELECT
 			COALESCE(AVG(NULLIF(power_max, 0)), 0),
 			COALESCE(AVG(NULLIF(power_min, 0)), 0),
-			COALESCE(AVG(NULLIF(consumption_kwh_100km, 0)), 0),
-			COUNT(*)
+			COALESCE(AVG(NULLIF(consumption_kwh_100km, 0)) FILTER (WHERE NOT is_manual), 0),
+			COUNT(*) FILTER (WHERE COALESCE(power_max, 0) <> 0 OR COALESCE(power_min, 0) <> 0)
 		FROM drives
 		WHERE vehicle_id = $1 AND deleted_upstream_at IS NULL
 		  AND (%s)
@@ -274,6 +306,8 @@ func buildDrivingTelemetryQuery(vehicleID string, ranges []OdometerRange) (strin
 // GetDrivingTelemetryStats returns driving dynamics averaged over the provided odometer ranges.
 // Each range corresponds to a tire mount session: only drives whose end_odometer falls within
 // [range.Min, range.Max) (or >= range.Min when Max is nil) are included.
+// Only drives that carry power telemetry count, and an estimated consumption (a manual drive's) is not averaged: a
+// vehicle fed by hand, a combustion one included, has no driving style to derive.
 // Returns zeros and count=0 when ranges is empty or no matching drives exist.
 func (r *Repository) GetDrivingTelemetryStats(ctx context.Context, vehicleID string, ranges []OdometerRange) (avgPowerMax, avgPowerMin, avgConsumption float64, count int, err error) {
 	if len(ranges) == 0 {

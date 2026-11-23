@@ -91,6 +91,25 @@ func TestCreateCarpoolFromDrivesGroupsTheDrivesAndNamesWhoPaid(t *testing.T) {
 	}
 }
 
+func TestTripsCarpoolOnlyKeepsTheLegsOfACarpool(t *testing.T) {
+	a := newCarpoolAPI(t, "mcpwrite-carpoolonly")
+	ctx := context.Background()
+	shared := manualDrive(t, a, time.Date(2026, 9, 5, 8, 0, 0, 0, time.UTC), "Lyon, France", "Valence, France", 100)
+	manualDrive(t, a, time.Date(2026, 9, 6, 8, 0, 0, 0, time.UTC), "Valence, France", "Lyon, France", 100)
+	h := writeHandler(a)
+	if _, err := h.CreateCarpoolFromDrives(ctx, a.userID, a.vid, mcpCreateCarpoolInput{DriveIDs: []string{shared.ID}, Passengers: []mcpCarpoolPassengerInput{{Name: "Alice", AmountPaid: "5"}}}); err != nil {
+		t.Fatal(err)
+	}
+	all, err := h.Trips(ctx, a.userID, a.vid, IntegrationTripsQuery{})
+	if err != nil || all.Matching != 2 {
+		t.Fatalf("both drives without the filter: %+v %v", all, err)
+	}
+	only, err := h.Trips(ctx, a.userID, a.vid, IntegrationTripsQuery{CarpoolOnly: true})
+	if err != nil || only.Matching != 1 || len(only.Trips) != 1 || only.Trips[0].DriveID != shared.ID {
+		t.Errorf("only the drive that is a leg of a carpool: %+v %v", only, err)
+	}
+}
+
 func TestCreateCarpoolFromDrivesRefusesWhatItCannotRecord(t *testing.T) {
 	a := newCarpoolAPI(t, "mcpwrite-refuse")
 	ctx := context.Background()

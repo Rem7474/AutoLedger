@@ -8,6 +8,7 @@ import { t, intlLocale } from '@/i18n'
 import { distanceUnit } from '@/units'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { CAPABILITY_FALLBACK } from '@/utils/capabilityRoutes'
 import { drivesTabQuery, parseDrivesTab, type DrivesTab } from '@/utils/drivesTab'
 import { useVehicleStore } from '@/stores/vehicle'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -90,6 +91,11 @@ loading.value = true
 const showManualDriveModal = ref(false)
 const driveToEdit = ref<any | null>(null)
 const showCSVImportModal = ref(false)
+
+// A filter, a period or a search narrows the list: an empty result then is not an empty vehicle
+const hasActiveFilters = computed(
+  () => !!(searchQuery.value || periodMode.value !== 'ALL' || selectedTag.value || unqualifiedOnly.value || hasTollOnly.value || carpoolFilter.value),
+)
 
 function openManualDriveModal(drive?: any) {
   driveToEdit.value = drive || null
@@ -342,6 +348,14 @@ watch(
   () => clearSelection()
 )
 
+// Switching to a vehicle without trips leaves the page, like opening its address does
+watch(
+  () => vehicleStore.capabilities.drives,
+  (drives) => {
+    if (!drives) void router.replace(CAPABILITY_FALLBACK)
+  }
+)
+
 // The qualification queue and the toll source only exist with the toll detection: leave them when it goes away
 watch(
   () => vehicleStore.tollDetectionActive,
@@ -391,7 +405,7 @@ const viewTabs = computed<TabItem[]>(() => [
   { key: 'DRIVES', label: t('drives.drivesView.drives'), icon: List },
   { key: 'TRIPS', label: t('drives.drivesView.trips'), icon: Layers },
   // Carpooling applies to any vehicle that has drives
-  ...(vehicleStore.canCharge ? [{ key: 'CARPOOLS', label: t('drives.drivesView.carpools'), icon: Users }] : []),
+  ...(vehicleStore.capabilities.drives ? [{ key: 'CARPOOLS', label: t('drives.drivesView.carpools'), icon: Users }] : []),
 ])
 
 function switchView(mode: DrivesTab) {
@@ -491,7 +505,7 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 <template>
   <div class="space-y-6 max-md:pb-16">
     <!-- Drives informational banner when no telemetry is linked -->
-    <div v-if="vehicleStore.activeVehicle && !vehicleStore.hasTeslaMate && total === 0 && !loading && loadError === null" class="rounded-2xl border border-info-500/30 bg-info-500/10 p-4 text-sm text-info-200">
+    <div v-if="vehicleStore.activeVehicle && !vehicleStore.capabilities.sync && total === 0 && !loading && loadError === null" class="rounded-2xl border border-info-500/30 bg-info-500/10 p-4 text-sm text-info-200">
       <span>{{ $t('drives.drivesView.noTelemetryBanner') }}</span>
     </div>
 
@@ -598,8 +612,13 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
     <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadDrives()" />
 
     <!-- EMPTY STATE -->
-    <EmptyState v-else-if="!drives.length" :icon="PageIcon" :title="$t('drives.drivesView.noDriveFoundForThis')">
+    <EmptyState v-else-if="!drives.length" :icon="PageIcon" :title="hasActiveFilters ? $t('drives.drivesView.noDriveFoundForThis') : $t('drives.drivesView.noDriveYet')">
+      <template v-if="!hasActiveFilters">{{ $t('drives.drivesView.noDriveYetHint') }}</template>
       <template #actions>
+      <button v-if="!hasActiveFilters && vehicleStore.canEdit" type="button" class="btn btn-secondary" data-testid="empty-add-trip" @click="openManualDriveModal()">
+        <Plus class="w-3.5 h-3.5" />
+        {{ $t('drives.drivesView.addATrip') }}
+      </button>
       <EmptySourceHints v-if="!(searchQuery || periodMode !== 'ALL' || selectedTag || unqualifiedOnly || hasTollOnly || carpoolFilter)" @import-csv="openCSVImportModal" />
       <button
         v-if="searchQuery || periodMode !== 'ALL' || selectedTag || unqualifiedOnly || hasTollOnly"

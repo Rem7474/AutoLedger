@@ -273,3 +273,45 @@ func TestMCPUpdateCarpoolNeedsAConnectionAllowedToWrite(t *testing.T) {
 		t.Error("a vehicle of another account must be refused")
 	}
 }
+
+func TestPassengerLabelNamesAPassengerLeftBlankByItsPosition(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		index int
+		want  string
+	}{{"Alice", 0, "Alice"}, {"  Bob ", 1, "Bob"}, {"", 1, "Passenger 2"}, {"   ", 0, "Passenger 1"}} {
+		if got := passengerLabel(c.name, c.index); got != c.want {
+			t.Errorf("%q at %d: %q, want %q", c.name, c.index, got, c.want)
+		}
+	}
+}
+
+func TestUpdateCarpoolTakesTheLabelOfAPassengerLeftBlank(t *testing.T) {
+	a := newCarpoolAPI(t, "mcpblank")
+	ctx := context.Background()
+	h := writeHandler(a)
+	before := recordedCarpool(t, a, h) // Alice, then Bob
+	if _, err := a.repo.Pool().Exec(ctx, `UPDATE carpool_passengers SET passenger_name = '' WHERE carpool_trip_id = $1 AND passenger_name = 'Bob'`, before.ID); err != nil {
+		t.Fatal(err)
+	}
+	read, err := h.CarpoolWhere(ctx, a.userID, a.vid, 0, "", "", before.ID)
+	if err != nil || len(read.Trips) != 1 {
+		t.Fatalf("read: %+v %v", read, err)
+	}
+	names := []string{read.Trips[0].Passengers[0].Name, read.Trips[0].Passengers[1].Name}
+	if names[0] != "Alice" || names[1] != "Passenger 2" {
+		t.Fatalf("a blank name is labelled by its position: %v", names)
+	}
+
+	out, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{
+		CarpoolID: before.ID, ExpectedVersion: read.Trips[0].Version, UpdatePassengers: []mcpPassengerChange{{Name: "passenger 2", AmountPaid: ptr("5")}},
+	})
+	if err != nil || out.Carpool.Passengers[1].Paid.Amount != "5.00" {
+		t.Fatalf("the label finds the passenger: %+v %v", out, err)
+	}
+	if _, err := h.UpdateCarpool(ctx, a.userID, a.vid, mcpUpdateCarpoolInput{
+		CarpoolID: before.ID, ExpectedVersion: out.Carpool.Version, RemovePassengers: []string{"Passenger 3"},
+	}); err == nil || !strings.Contains(err.Error(), `"Alice", "Passenger 2"`) {
+		t.Errorf("an unknown passenger lists the labels: %v", err)
+	}
+}
