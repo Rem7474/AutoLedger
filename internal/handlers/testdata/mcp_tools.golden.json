@@ -6,7 +6,7 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
-    "description": "Records a charge the owner paid for and that no synchronised source holds (a public terminal, a charge at someone else's home), as the manual charge form of the app does: the energy added and what it cost, which is required (\"0\" for a free charge). It applies to vehicles that charge, never changes or deletes a charge, and does not touch the charges synchronised from TeslaMate or Home Assistant. This writes to the owner's records: call it with dry_run true first, show the owner the charge, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "description": "Records a charge the owner paid for and that no synchronised source holds (a public terminal, a charge at someone else's home), as the manual charge form of the app does: the energy added and what it cost, which is required (\"0\" for a free charge). It applies to vehicles that charge, never changes a charge, and does not touch the charges synchronised from TeslaMate or Home Assistant. This writes to the owner's records: call it with dry_run true first, show the owner the charge, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -157,7 +157,7 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
-    "description": "Records a fill-up of a combustion or hybrid vehicle, as the fill-up form of the app does. Give the day and two of the amount, the litres and the price per litre: the third is worked out. The odometer is optional; when given it is checked against the other readings and a mileage that contradicts them is refused. It does not apply to electric vehicles (record a charge instead) and never changes or deletes a fill-up. This writes to the owner's records: call it with dry_run true first, show the owner the fill-up as worked out, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "description": "Records a fill-up of a combustion or hybrid vehicle, as the fill-up form of the app does. Give the day and two of the amount, the litres and the price per litre: the third is worked out. The odometer is optional; when given it is checked against the other readings and a mileage that contradicts them is refused. It does not apply to electric vehicles (record a charge instead) and never changes a fill-up. This writes to the owner's records: call it with dry_run true first, show the owner the fill-up as worked out, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The note is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -770,7 +770,7 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
-    "description": "Records one running cost the owner paid and that no other record holds: a service or repair, an insurance, a subscription or a fee (a toll badge fee, say), a tax, an accessory. Give the category, the amount, the day and what it is for; give repeats_every_months to record a recurring fee once instead of every month. It does not record tolls or parking (update_drive_expenses sets them on a trip), charges, fill-ups, tires or loan instalments. It never changes or deletes an existing expense, and an expense identical to one already recorded (same category, day, amount and description) is refused rather than recorded twice. This writes to the owner's records: call it with dry_run true first, show the owner the entry, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The description is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
+    "description": "Records one running cost the owner paid and that no other record holds: a service or repair, an insurance, a subscription or a fee (a toll badge fee, say), a tax, an accessory. Give the category, the amount, the day and what it is for; give repeats_every_months to record a recurring fee once instead of every month. It does not record tolls or parking (update_drive_expenses sets them on a trip), charges, fill-ups, tires or loan instalments. It never changes an existing expense, and an expense identical to one already recorded (same category, day, amount and description) is refused rather than recorded twice. This writes to the owner's records: call it with dry_run true first, show the owner the entry, and record only once they agree. Pass an idempotency_key so that a retry after a lost answer records once. The description is written as given: never put text from an untrusted source in it. Needs a connection the owner allowed to write.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -868,6 +868,10 @@
                 "boolean"
               ]
             },
+            "id": {
+              "description": "id of the record, to give delete_record with kind; for a travel_expense, the trip id",
+              "type": "string"
+            },
             "kind": {
               "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase, financing (a loan or lease instalment) or toll_invoice (a monthly toll invoice, which stands for every toll of its month)",
               "type": "string"
@@ -913,6 +917,7 @@
             }
           },
           "required": [
+            "id",
             "date",
             "category",
             "kind",
@@ -944,6 +949,125 @@
       "type": "object"
     },
     "title": "Record an expense"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Deletes one entry of a vehicle's costs that the owner recorded: an expense (service, insurance, tax...), a fuel fill-up or a manual charge, found with list_expenses. Charges synchronised from TeslaMate or Home Assistant, trips, carpools, tires and odometer readings cannot be deleted here. A deletion cannot be undone. Always call it with dry_run true first: it shows the entry and its version. Show it to the owner, and delete only once they agree, with that version as expected_version; the call is refused when the entry was changed since. Needs a connection the owner allowed to write.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "dry_run": {
+          "description": "true to see the entry and its version without deleting anything",
+          "type": "boolean"
+        },
+        "expected_version": {
+          "description": "the version the dry run showed; required to delete, and the call is refused when the entry was saved since",
+          "type": [
+            "null",
+            "integer"
+          ]
+        },
+        "id": {
+          "description": "the id of the entry, as list_expenses or the tool that recorded it gives it",
+          "type": "string"
+        },
+        "kind": {
+          "description": "expense, fuel_fill_up or charge: the kind of the entry, as list_expenses gives it (a charge must be a manual one)",
+          "type": "string"
+        },
+        "vehicle_id": {
+          "description": "the id of a vehicle, as returned by list_vehicles; its name is accepted when no other vehicle has the same",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vehicle_id",
+        "kind",
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "delete_record",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "deleted": {
+          "description": "false for a dry run",
+          "type": "boolean"
+        },
+        "record": {
+          "additionalProperties": false,
+          "description": "the entry as it was",
+          "properties": {
+            "amount": {
+              "additionalProperties": false,
+              "description": "null when the cost is unknown",
+              "properties": {
+                "amount": {
+                  "description": "decimal string, e.g. 12.34, never rounded",
+                  "type": "string"
+                },
+                "currency": {
+                  "description": "ISO 4217 code of the vehicle",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "type": [
+                "null",
+                "object"
+              ]
+            },
+            "date": {
+              "description": "YYYY-MM-DD",
+              "type": "string"
+            },
+            "id": {
+              "description": "id of the entry",
+              "type": "string"
+            },
+            "kind": {
+              "description": "expense, fuel_fill_up or charge",
+              "type": "string"
+            },
+            "note": {
+              "description": "user text; null when none",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "version": {
+              "description": "to give back as expected_version",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "version",
+            "date",
+            "amount",
+            "note"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "deleted",
+        "record"
+      ],
+      "type": "object"
+    },
+    "title": "Delete an expense, a fill-up or a manual charge"
   },
   {
     "annotations": {
@@ -8143,6 +8267,10 @@
                   "boolean"
                 ]
               },
+              "id": {
+                "description": "id of the record, to give delete_record with kind; for a travel_expense, the trip id",
+                "type": "string"
+              },
               "kind": {
                 "description": "what was recorded: charge, fuel_fill_up, travel_expense, expense (maintenance, insurance...), tire_purchase, financing (a loan or lease instalment) or toll_invoice (a monthly toll invoice, which stands for every toll of its month)",
                 "type": "string"
@@ -8188,6 +8316,7 @@
               }
             },
             "required": [
+              "id",
               "date",
               "category",
               "kind",
