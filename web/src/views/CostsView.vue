@@ -24,6 +24,7 @@ import ChargingPlacesModal from '@/components/expenses/ChargingPlacesModal.vue'
 import DocumentPreviewModal from '@/components/expenses/DocumentPreviewModal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
+import MonthSection from '@/components/MonthSection.vue'
 import ListSkeleton from '@/components/ListSkeleton.vue'
 import LoadError from '@/components/LoadError.vue'
 import { useVehicleStore } from '@/stores/vehicle'
@@ -305,18 +306,14 @@ const chipClass = (key: CostFilterKey) => {
       <EmptyState v-else-if="!items.length" :icon="Wallet" :title="$t('costs.empty.title')">{{ $t('costs.empty.body') }}</EmptyState>
       <div v-else class="space-y-3">
         <p v-if="hasMore" class="px-1 text-xs text-slate-400">{{ $t('costs.list.shownOf', { count: items.length, total }) }}</p>
-        <section v-for="month in months" :key="month.month" class="space-y-2">
-          <div class="flex items-baseline justify-between gap-3 px-1 pt-2">
-            <h2 class="text-sm font-bold capitalize text-white">{{ month.label }}</h2>
-            <p v-if="month.subtotal !== null" class="text-xs font-semibold tabular-nums text-slate-300">{{ formatAmount(month.subtotal, currency) }}</p>
-          </div>
+        <MonthSection v-for="month in months" :key="month.month" :label="month.label" :subtotal="month.subtotal !== null ? formatAmount(month.subtotal, currency) : null">
           <div v-for="group in month.days" :key="group.day" class="space-y-2">
             <h3 class="px-1 pt-1 text-xs font-semibold text-slate-400">{{ group.label }}</h3>
             <SwipeToDelete v-for="e in group.items" :key="e.id" :disabled="!swipeable(e)" @delete="actions.remove(e, e.id)">
               <CostEntryRow :entry="e" :currency="currency" :readonly="!vehicleStore.canEdit" @open="actions.open" />
             </SwipeToDelete>
           </div>
-        </section>
+        </MonthSection>
         <InfiniteSentinel v-if="hasMore" :loading="loadingMore" :error="moreError" :label="$t('costs.list.loadMore')" @more="loadMore" />
         <p v-if="filter === 'all'" class="px-1 text-xs text-slate-500">{{ $t('costs.estimateNote') }}</p>
       </div>
