@@ -10,17 +10,14 @@
     "showFewerDevices": "Show fewer devices",
     "connectedDevices": "Connected devices",
     "confirmTheNewPassword": "Confirm the new password",
-    "8CharactersMinimum72Bytes": "8 characters minimum, 72 bytes maximum.",
     "newPassword": "New password",
     "currentPassword": "Current password",
     "password": "Password",
     "signIn": "Sign-in",
     "emailAddress": "Email address",
     "identity": "Identity",
-    "signInPasswordAndConnected": "Sign-in, password and connected devices.",
     "preferences": "Preferences",
-    "proPersoTitle": "Tell work and personal drives apart",
-    "proPersoHelp": "Shows the work / personal classification of drives (filters, badges, bulk selection) and the dashboard breakdown. Setting of this browser only; classifications already made are kept."
+    "proPersoTitle": "Tell work and personal drives apart"
   },
   "unknownDevice": "Unknown device",
   "browserOnSystem": "{browser} on {system}",
@@ -57,10 +54,8 @@
   "volumeUnit_gal_uk": "UK gallons",
   "tokens": {
     "title": "API Tokens & Automations",
-    "subtitle": "To send data from Home Assistant, a charger or a script. A token only opens the integration endpoints, never the rest of the account.",
     "create": "Generate Token",
     "haIntegrationTitle": "Home Assistant integration (HACS)",
-    "haIntegrationSubtitle": "Install the AutoLedger integration from HACS to send your charging sessions automatically. Use a token generated below.",
     "haIntegrationLink": "Open the integration",
     "loading": "Loading API tokens...",
     "noTokens": "No API tokens generated yet.",
@@ -112,9 +107,9 @@
     }
   },
   "sso": {
+    "title": "Single sign-on ({provider})",
     "link": "Link {provider}",
-    "linkHint": "Sign in with {provider} as well as with your password. Your data stays on this account.",
-    "linked": "Linked to {provider}: you can sign in with it as well as with your password.",
+    "linked": "Linked to {provider}",
     "linkedNotice": "Your single sign-on is linked to this account.",
     "alreadyLinked": "This account is already linked to a single sign-on identity.",
     "identityInUse": "That single sign-on identity already belongs to another account.",
