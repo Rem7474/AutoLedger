@@ -342,6 +342,13 @@ test('saving a charge deep in the list keeps the page where it was', async ({ pa
   await useVehicle(page, ev.id, '/costs?theme=energy')
   const cards = page.getByTestId('cost-entry').getByRole('button')
   await expect(cards.first()).toBeVisible()
+  // The list reads its pages as it is scrolled: go to the end until no further page comes
+  let count = -1
+  while (count !== (await cards.count())) {
+    count = await cards.count()
+    await cards.last().scrollIntoViewIfNeeded()
+    await page.waitForTimeout(700)
+  }
   const last = cards.last()
   await last.scrollIntoViewIfNeeded()
   const scroller = page.locator('.app-scroll')
@@ -1118,19 +1125,24 @@ test('the costs page lists the cost lines of the period under their figures, and
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('the costs page starts with the journal and keeps the charts behind an Analysis tab in the address', async ({ page }) => {
+test('the costs page starts with the journal under the monthly chart and keeps the other charts behind an Analysis tab in the address', async ({ page }) => {
   await useVehicle(page, ev.id, '/costs?period=12M')
   const first = page.getByTestId('cost-entry').first()
   await expect(first).toBeVisible()
-  // The first line is on the first screen, not under three charts
-  expect((await first.boundingBox())!.y).toBeLessThan(500)
-  await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toHaveCount(0)
+  // The monthly chart is the only chart of the first level, in the headline card, and the first line is on the first screen
+  await expect(page.getByTestId('costs-headline').getByRole('heading', { name: /Monthly expense trend/ })).toBeVisible()
+  await expect(page.locator('main canvas')).toHaveCount(1)
+  expect((await first.boundingBox())!.y).toBeLessThan(844)
+  // The chart opens on what was paid
+  await expect(page.getByRole('radio', { name: 'Cash paid' }).first()).toBeChecked()
 
   await page.getByRole('tab', { name: 'Analysis' }).click()
   await expect(page).toHaveURL(/tab=ANALYSIS/)
-  await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toBeVisible()
-  // The chart opens on what was paid
-  await expect(page.getByRole('radio', { name: 'Cash paid' }).first()).toBeChecked()
+  // The breakdown and the mileage with its cost per distance (one chart) replace the journal; the monthly chart is not repeated
+  await expect(page.getByRole('heading', { name: /Full cost breakdown/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Monthly mileage and cost per/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toHaveCount(0)
+  await expect(page.getByTestId('cost-entry')).toHaveCount(0)
 
   // A theme without an analysis is the journal alone
   await page.getByTestId('costs-filter-tolls').click()
@@ -1169,8 +1181,8 @@ test('the energy theme of the costs page adds the figures by month and by place,
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('the costs page draws the monthly charts for the whole cost, and only for the whole cost', async ({ page }) => {
-  await useVehicle(page, ev.id, '/costs?tab=ANALYSIS')
+test('the costs page draws the monthly chart for the whole cost, and only for the whole cost', async ({ page }) => {
+  await useVehicle(page, ev.id, '/costs')
   await expect(page.getByRole('heading', { name: /Monthly expense trend/ })).toBeVisible()
   // A theme is a subset of the cost: the charts of the whole cost are not shown under it
   await page.getByTestId('costs-filter-tolls').click()

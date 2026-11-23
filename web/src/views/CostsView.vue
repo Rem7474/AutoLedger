@@ -45,7 +45,7 @@ import { intlLocale, t } from '@/i18n'
 
 // The journal of what the active vehicle cost over the period, under the figures of that period. The figures are
 // those of the lines the filters keep, so a filter changes both.
-const PAGE_SIZE = 50
+const PAGE_SIZE = 15
 const vehicleStore = useVehicleStore()
 const route = useRoute()
 const router = useRouter()
@@ -231,17 +231,23 @@ const chipClass = (key: CostFilterKey) => {
     </div>
 
     <!-- The figures of the lines kept by the filter -->
-    <div class="card space-y-1 px-4 py-4" data-testid="costs-headline">
-      <p class="text-xs font-semibold text-slate-400">{{ headlineLabel }}</p>
-      <div class="flex items-baseline justify-between gap-3">
-        <p class="text-3xl font-extrabold tabular-nums text-hero">{{ formatAmount(headline, currency) }}</p>
-        <p v-if="perKm !== null" class="shrink-0 text-sm tabular-nums text-slate-300">
-          {{ $t('costs.headline.perKm', { value: formatAmount(perDistance(perKm), currency, 3), unit: distanceUnit() }) }}
+    <div class="card space-y-3 px-4 py-4" data-testid="costs-headline">
+      <div class="space-y-1">
+        <p class="text-xs font-semibold text-slate-400">{{ headlineLabel }}</p>
+        <div class="flex items-baseline justify-between gap-3">
+          <p class="text-3xl font-extrabold tabular-nums text-hero">{{ formatAmount(headline, currency) }}</p>
+          <p v-if="perKm !== null" class="shrink-0 text-sm tabular-nums text-slate-300">
+            {{ $t('costs.headline.perKm', { value: formatAmount(perDistance(perKm), currency, 3), unit: distanceUnit() }) }}
+          </p>
+        </div>
+        <p v-if="showBreakdown" class="text-xs tabular-nums text-slate-400">
+          {{ $t('costs.headline.paidLine', { amount: formatAmount(paid, currency) }) }} · {{ $t('costs.headline.receivedLine', { amount: formatAmount(received, currency) }) }}
         </p>
       </div>
-      <p v-if="showBreakdown" class="text-xs tabular-nums text-slate-400">
-        {{ $t('costs.headline.paidLine', { amount: formatAmount(paid, currency) }) }} · {{ $t('costs.headline.receivedLine', { amount: formatAmount(received, currency) }) }}
-      </p>
+      <!-- The one chart of the first level: the cost month by month, for the whole cost only (a theme is a subset of it) -->
+      <template v-if="filter === 'all' && tab === 'JOURNAL' && monthlyCosts && monthlyCosts.length">
+        <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
+      </template>
     </div>
 
     <!-- The theme chips and, under them, the tabs of the page: one block, the journal starts right under it -->
@@ -273,7 +279,6 @@ const chipClass = (key: CostFilterKey) => {
         <ListSkeleton v-if="monthlyCosts === null" :rows="3" />
         <p v-else-if="monthlyCosts.length === 0" class="px-1 py-6 text-center text-sm text-slate-400">{{ $t('costs.analysisEmpty') }}</p>
         <template v-else>
-          <MonthlyCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
           <CostBreakdownDonut :tco="tco" />
           <MileageCostChart :monthly-costs="monthlyCosts" @open-month="selectedMonth = $event" />
           <!-- Shows itself only once a drive carries a tag -->
