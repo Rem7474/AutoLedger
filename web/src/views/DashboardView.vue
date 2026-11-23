@@ -17,9 +17,10 @@ const scope = computed(() => scopeFromQuery(route.query.scope, vehicleStore.vehi
 </script>
 
 <template>
-  <div class="space-y-6 max-md:pb-16">
-    <PageHeader v-if="scope === 'all'" :title="$t('fleet.today.allVehicles')" :icon="Users">{{ $t('fleet.today.subtitle') }}</PageHeader>
-    <PageHeader v-else :title="$t('shell.nav.dashboard')" :icon="PageIcon">
+  <div class="space-y-6 max-md:pb-16 lg:space-y-0">
+    <!-- From lg the sidebar and the vehicle selector already say where the person is: the title and the subtitle go (the page keeps its screen-reader h1) -->
+    <PageHeader v-if="scope === 'all'" class="lg:hidden" :title="$t('fleet.today.allVehicles')" :icon="Users">{{ $t('fleet.today.subtitle') }}</PageHeader>
+    <PageHeader v-else class="lg:hidden" :title="$t('shell.nav.dashboard')" :icon="PageIcon">
       {{ $t('dashboard.dashboardView.subtitle', { unit: distanceUnit(), name: vehicleStore.activeVehicle?.name || $t('dashboard.dashboardView.yourVehicle') }) }}
     </PageHeader>
 
