@@ -136,21 +136,26 @@ onMounted(() => {
 
     <LoadError v-else-if="loadError !== null" :message="loadError" @retry="loadTCO()" />
 
-    <div v-else class="space-y-4 sm:space-y-6">
-      <TodayHero v-if="hero" :hero="hero" />
-      <YearOverview v-if="year" :overview="year" />
-      <UpcomingList :reminders="reminders" :tires="tireSummary" :extras="upcomingExtras" :can-edit="vehicleStore.canEdit" />
-      <DataQualityCard :tco="tco" :vehicle-id="vehicleId" />
+    <!-- Desktop: the figures on the left, what is coming up and what needs a look on the right; a phone keeps one column in the same order -->
+    <div v-else class="space-y-4 sm:space-y-6 lg:grid lg:grid-cols-5 lg:items-start lg:gap-6 lg:space-y-0">
+      <div class="space-y-4 sm:space-y-6 lg:col-span-3" data-testid="today-figures">
+        <TodayHero v-if="hero" :hero="hero" />
+        <YearOverview v-if="year" :overview="year" />
+      </div>
+      <div class="space-y-4 sm:space-y-6 lg:col-span-2" data-testid="today-side">
+        <UpcomingList :reminders="reminders" :tires="tireSummary" :extras="upcomingExtras" :can-edit="vehicleStore.canEdit" />
+        <DataQualityCard :tco="tco" :vehicle-id="vehicleId" />
 
-      <!-- Battery health, resale value and the contract are on the vehicle sheet; the page keeps one line that says where -->
-      <router-link v-if="vehicleStore.activeVehicle" to="/vehicle" class="flex w-full items-center gap-3 card px-4 py-3 transition-colors active:bg-slate-800/60">
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-slate-300"><Car class="h-5 w-5" aria-hidden="true" /></span>
-        <span class="min-w-0 flex-1">
-          <span class="block text-sm font-semibold text-white">{{ $t('dashboard.sheets.vehicleSheet') }}</span>
-          <span class="block truncate text-xs text-slate-400">{{ vehicleSheetHint }}</span>
-        </span>
-        <ChevronRight class="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
-      </router-link>
+        <!-- Battery health, resale value and the contract are on the vehicle sheet; the page keeps one line that says where -->
+        <router-link v-if="vehicleStore.activeVehicle" to="/vehicle" class="flex w-full items-center gap-3 card px-4 py-3 transition-colors active:bg-slate-800/60">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-slate-300"><Car class="h-5 w-5" aria-hidden="true" /></span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-semibold text-white">{{ $t('dashboard.sheets.vehicleSheet') }}</span>
+            <span class="block truncate text-xs text-slate-400">{{ vehicleSheetHint }}</span>
+          </span>
+          <ChevronRight class="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
+        </router-link>
+      </div>
     </div>
   </div>
 </template>

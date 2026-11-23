@@ -14,7 +14,7 @@ import SegmentedControl from '@/components/SegmentedControl.vue'
 
 Chart.register(...registerables)
 
-// Stacked monthly costs per item; a click on a month opens its detail
+// Stacked monthly costs per item; a click on a month opens its detail. It is drawn inside the card of the page's headline.
 const props = defineProps<{ monthlyCosts: any[] | null }>()
 const emit = defineEmits<{ 'open-month': [month: any] }>()
 const vehicleStore = useVehicleStore()
@@ -182,8 +182,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="lg:col-span-2 flex flex-col card p-4 sm:p-5 shadow-sm">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+  <div class="flex flex-col border-t border-slate-800 pt-3">
+    <div class="mb-3 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
       <h3 class="text-sm font-bold text-white flex items-center gap-2">
         <span>{{ $t('dashboard.monthlyCostChart.monthlyExpenseTrend', { cur: currencySymbol(currency) }) }}</span>
       </h3>
@@ -198,7 +198,7 @@ onUnmounted(() => {
       />
     </div>
     <p class="-mt-2 mb-3 text-xs text-slate-400">{{ mode === 'economic' ? $t('dashboard.monthlyCostChart.economicHint') : $t('dashboard.monthlyCostChart.cashHint') }}</p>
-    <div class="relative min-h-52 flex-1 sm:min-h-72">
+    <div class="relative min-h-44 flex-1 sm:min-h-56">
       <canvas ref="monthlyChartRef" role="img" :aria-label="`${$t('dashboard.monthlyCostChart.monthlyCostTrendByCategory')} · ${mode === 'economic' ? $t('dashboard.monthlyCostChart.economic') : $t('dashboard.monthlyCostChart.cash')}`"></canvas>
     </div>
     <ChartTable :caption="$t('dashboard.monthlyCostChart.monthlyCostTrendByCategory')" :headers="tableData.headers" :rows="tableData.rows" />

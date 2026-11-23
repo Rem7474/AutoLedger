@@ -16,17 +16,15 @@ import { distanceUnit, formatDistanceValue, kmToDisplayDistance, perDistance } f
 
 Chart.register(...registerables)
 
-// Monthly distance and cost per distance, each on its own chart and axis; a click on a month opens its detail
-const props = defineProps<{ monthlyCosts: any[] | null; bare?: boolean }>()
+// Monthly distance (bars, left axis) and cost per distance (line, right axis) in one chart; a click on a month opens its detail
+const props = defineProps<{ monthlyCosts: any[] | null }>()
 const emit = defineEmits<{ 'open-month': [month: any] }>()
 const vehicleStore = useVehicleStore()
 
-const distanceRef = ref<HTMLCanvasElement | null>(null)
-const costRef = ref<HTMLCanvasElement | null>(null)
+const canvasRef = ref<HTMLCanvasElement | null>(null)
 const periodStore = usePeriodStore()
 const months = computed(() => filterMonthsByPeriod(props.monthlyCosts || [], periodStore.costs))
-let distanceChart: Chart | null = null
-let costChart: Chart | null = null
+let chart: Chart | null = null
 
 // The same figures as a table for screen readers
 const tableRows = computed(() =>
@@ -53,138 +51,143 @@ const partialNote = computed(() => {
 
 const AXIS = '#64748b'
 const GRID = '#1e293b'
-
-function baseOptions(canvas: () => HTMLCanvasElement | null, chart: () => Chart | null, list: any[], tooltipLabel: (v: number) => string, tick: (v: number) => string) {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index' as const, intersect: false },
-    onClick: (event: any) => {
-      const points = chart()?.getElementsAtEventForMode(event.native || event, 'index', { intersect: false }, true)
-      const month = points?.length ? list[points[0].index] : null
-      if (month) emit('open-month', month)
-    },
-    onHover: (_event: any, elements: any[]) => {
-      const el = canvas()
-      if (el) el.style.cursor = elements?.length ? 'pointer' : 'default'
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: (context: any) => tooltipLabel(Number(context.raw)) } },
-    },
-    scales: {
-      x: { grid: { color: GRID }, ticks: { color: AXIS, maxRotation: 0, autoSkipPadding: 8 } },
-      y: { beginAtZero: true, grid: { color: GRID }, ticks: { color: AXIS, callback: (v: any) => tick(Number(v)) } },
-    },
-  }
-}
+const BARS = 'rgba(148, 163, 184, 0.55)'
+const LINE = '#e2e8f0'
 
 function renderCharts() {
-  distanceChart?.destroy()
-  costChart?.destroy()
-  distanceChart = null
-  costChart = null
-  if (!props.monthlyCosts) return
+  chart?.destroy()
+  chart = null
+  if (!props.monthlyCosts || !canvasRef.value) return
   const list = months.value
   const labels = list.map((m: any) => formatMonthLabel(m.month))
-
-  if (distanceRef.value) {
-    distanceChart = new Chart(distanceRef.value, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: t('dashboard.mileageCostChart.kmDriven', { unit: distanceUnit() }),
-            data: list.map((m: any) => Math.round(kmToDisplayDistance(m.distance_km || 0))),
-            backgroundColor: 'rgba(56, 189, 248, 0.7)',
-            hoverBackgroundColor: 'rgba(56, 189, 248, 0.95)',
-            borderRadius: 6,
+  // The month in progress is a hollow point apart, outside the scale; a month under the minimum distance, or without a
+  // known cost, is a gap rather than a point
+  const series = costPerKmSeries(list, new Date())
+  const top = series.scaleMax === undefined ? undefined : perDistance(series.scaleMax)
+  const partial = series.partial
+  const partialAt = partial ? perDistance(partial.value) : null
+  const costLabel = t('dashboard.mileageCostChart.averageCostPerKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) })
+  const at = (i: number) => (partial && partialAt !== null && i === partial.index ? partialAt : null)
+  chart = new Chart(canvasRef.value, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: t('dashboard.mileageCostChart.kmDriven', { unit: distanceUnit() }),
+          data: list.map((m: any) => Math.round(kmToDisplayDistance(m.distance_km || 0))),
+          backgroundColor: BARS,
+          hoverBackgroundColor: 'rgba(148, 163, 184, 0.8)',
+          borderRadius: 6,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: costLabel,
+          data: series.complete.map((v) => (v == null ? null : perDistance(v))),
+          borderColor: LINE,
+          backgroundColor: LINE,
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          spanGaps: false,
+          yAxisID: 'y1',
+          order: 1,
+        },
+        {
+          type: 'line',
+          label: `${costLabel} · ${t('dashboard.mileageCostChart.inProgress')}`,
+          // Drawn at the top of the scale when it is above it: the tooltip and the table give the figure
+          data: list.map((_m: any, i: number) => {
+            const v = at(i)
+            return v === null ? null : top === undefined ? v : Math.min(v, top)
+          }),
+          actual: list.map((_m: any, i: number) => at(i)),
+          showLine: false,
+          clip: false,
+          borderColor: LINE,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointStyle: 'circle',
+          yAxisID: 'y1',
+          order: 1,
+        } as any,
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      onClick: (event: any) => {
+        const points = chart?.getElementsAtEventForMode(event.native || event, 'index', { intersect: false }, true)
+        const month = points?.length ? list[points[0].index] : null
+        if (month) emit('open-month', month)
+      },
+      onHover: (_event: any, elements: any[]) => {
+        if (canvasRef.value) canvasRef.value.style.cursor = elements?.length ? 'pointer' : 'default'
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: '#94a3b8',
+            font: { size: 11 },
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 10,
+            // The month in progress is explained under the chart, not in the legend
+            filter: (item) => item.datasetIndex !== 2,
           },
-        ],
-      },
-      options: baseOptions(
-        () => distanceRef.value,
-        () => distanceChart,
-        list,
-        (v) => t('dashboard.mileageCostChart.tooltipDistance', { unit: distanceUnit(), distance: v.toLocaleString(intlLocale()) }),
-        (v) => v.toLocaleString(intlLocale()),
-      ),
-    })
-  }
-
-  if (costRef.value) {
-    // The month in progress is a hollow point apart, outside the scale; a month under the minimum distance, or without a
-    // known cost, is a gap rather than a point
-    const series = costPerKmSeries(list, new Date())
-    const top = series.scaleMax === undefined ? undefined : perDistance(series.scaleMax)
-    const partial = series.partial
-    const partialAt = partial ? perDistance(partial.value) : null
-    const label = t('dashboard.mileageCostChart.averageCostPerKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) })
-    costChart = new Chart(costRef.value, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          {
-            label,
-            data: series.complete.map((v) => (v == null ? null : perDistance(v))),
-            borderColor: '#38bdf8',
-            backgroundColor: '#38bdf8',
-            borderWidth: 2.5,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.3,
-            spanGaps: false,
+        },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              if (context.datasetIndex === 0) {
+                return t('dashboard.mileageCostChart.tooltipDistance', { unit: distanceUnit(), distance: Number(context.raw).toLocaleString(intlLocale()) })
+              }
+              const actual = context.dataset.actual?.[context.dataIndex]
+              const text = t('dashboard.mileageCostChart.tooltipCostPerKm', { unit: distanceUnit(), cost: formatAmount(actual ?? Number(context.raw), vehicleStore.currency, 3) })
+              return actual == null ? text : `${text} (${t('dashboard.mileageCostChart.inProgress')})`
+            },
           },
-          {
-            label: `${label} · ${t('dashboard.mileageCostChart.inProgress')}`,
-            // Drawn at the top of the scale when it is above it: the tooltip and the table give the figure
-            data: list.map((_m: any, i: number) => (partial && partialAt !== null && i === partial.index ? (top === undefined ? partialAt : Math.min(partialAt, top)) : null)),
-            actual: list.map((_m: any, i: number) => (partial && partialAt !== null && i === partial.index ? partialAt : null)),
-            showLine: false,
-            clip: false,
-            borderColor: '#38bdf8',
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            pointStyle: 'circle',
-          } as any,
-        ],
+        },
       },
-      options: {
-        ...baseOptions(
-          () => costRef.value,
-          () => costChart,
-          list,
-          (v) => t('dashboard.mileageCostChart.tooltipCostPerKm', { unit: distanceUnit(), cost: formatAmount(v, vehicleStore.currency, 3) }),
-          (v) => formatAmount(v, vehicleStore.currency, 2),
-        ),
+      scales: {
+        x: { grid: { color: GRID }, ticks: { color: AXIS, maxRotation: 0, autoSkipPadding: 8 } },
+        y: {
+          position: 'left',
+          beginAtZero: true,
+          grid: { color: GRID },
+          ticks: { color: AXIS, callback: (v: any) => Number(v).toLocaleString(intlLocale()) },
+          title: { display: true, text: t('dashboard.mileageCostChart.distanceKm', { unit: distanceUnit() }), color: AXIS, font: { size: 11 } },
+        },
+        y1: {
+          position: 'right',
+          beginAtZero: true,
+          grid: { display: false },
+          ...(top !== undefined ? { max: top } : {}),
+          ticks: { color: AXIS, callback: (v: any) => formatAmount(Number(v), vehicleStore.currency, 2) },
+          title: { display: true, text: t('dashboard.mileageCostChart.costKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) }), color: AXIS, font: { size: 11 } },
+        },
       },
-    })
-    const options = costChart.options as any
-    options.plugins.tooltip.callbacks.label = (context: any) => {
-      const actual = context.dataset.actual?.[context.dataIndex]
-      const value = actual ?? Number(context.raw)
-      const text = t('dashboard.mileageCostChart.tooltipCostPerKm', { unit: distanceUnit(), cost: formatAmount(value, vehicleStore.currency, 3) })
-      return actual == null ? text : `${text} (${t('dashboard.mileageCostChart.inProgress')})`
-    }
-    if (top !== undefined) options.scales.y.max = top
-    costChart.update()
-  }
+    },
+  })
 }
 
 onMounted(renderCharts)
 watch([() => props.monthlyCosts, () => periodStore.costs], renderCharts, { flush: 'post' })
 onUnmounted(() => {
-  distanceChart?.destroy()
-  costChart?.destroy()
+  chart?.destroy()
 })
 </script>
 
 <template>
-  <div class="space-y-3" :class="{ 'card p-5 shadow-sm': !bare }">
+  <div class="card space-y-3 p-5 shadow-sm">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <div>
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
@@ -204,22 +207,11 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div>
-        <h4 class="mb-2 text-xs font-bold text-slate-200">{{ $t('dashboard.mileageCostChart.distanceKm', { unit: distanceUnit() }) }}</h4>
-        <div class="h-40 sm:h-52">
-          <canvas ref="distanceRef" role="img" :aria-label="$t('dashboard.mileageCostChart.distanceKm', { unit: distanceUnit() })"></canvas>
-        </div>
-      </div>
-      <div>
-        <h4 class="mb-2 text-xs font-bold text-slate-200">{{ $t('dashboard.mileageCostChart.costKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) }) }}</h4>
-        <div class="h-40 sm:h-52">
-          <canvas ref="costRef" role="img" :aria-label="$t('dashboard.mileageCostChart.costKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) })"></canvas>
-        </div>
-        <p v-if="partialNote" class="mt-1 text-xs text-slate-300" data-testid="cost-km-in-progress">{{ partialNote }}</p>
-        <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.mileageCostChart.minDistanceNote', { distance: formatDistanceValue(MIN_PLOTTED_DISTANCE_KM), unit: distanceUnit() }) }}</p>
-      </div>
+    <div class="h-56 sm:h-72">
+      <canvas ref="canvasRef" role="img" :aria-label="$t('dashboard.mileageCostChart.monthlyMileageAndCostPer', { unit: distanceUnit() })"></canvas>
     </div>
+    <p v-if="partialNote" class="text-xs text-slate-300" data-testid="cost-km-in-progress">{{ partialNote }}</p>
+    <p class="text-xs text-slate-400">{{ $t('dashboard.mileageCostChart.minDistanceNote', { distance: formatDistanceValue(MIN_PLOTTED_DISTANCE_KM), unit: distanceUnit() }) }}</p>
     <ChartTable
       :caption="$t('dashboard.mileageCostChart.monthlyMileageAndCostPer', { unit: distanceUnit() })"
       :headers="[$t('dashboard.monthlyCostChart.month'), $t('dashboard.mileageCostChart.distanceKm', { unit: distanceUnit() }), $t('dashboard.mileageCostChart.costKm', { unit: distanceUnit(), cur: currencySymbol(vehicleStore.currency) })]"

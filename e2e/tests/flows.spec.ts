@@ -191,6 +191,27 @@ test('the efficiency tab splits the charged energy with one toggle, one donut an
   await expect(page.getByText('Needs the energy drawn from the grid')).toHaveCount(0)
 })
 
+test('the home has no title on a desktop and two columns, and keeps one column and its title on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await useVehicle(page, ev.id, '/')
+  const upcoming = page.getByTestId('upcoming')
+  await expect(upcoming).toBeVisible()
+  await expect(page.locator('h1.sr-only')).toHaveText('Dashboard')
+  await expect(page.locator('main header')).toBeHidden()
+  const figures = await page.getByTestId('today-figures').boundingBox()
+  const side = await page.getByTestId('today-side').boundingBox()
+  expect(figures && side).toBeTruthy()
+  expect(side!.x).toBeGreaterThan(figures!.x + figures!.width - 1)
+  expect(Math.abs(side!.y - figures!.y)).toBeLessThan(2)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.locator('main header').getByRole('heading', { name: 'Dashboard', level: 2 })).toBeVisible()
+  const phoneFigures = await page.getByTestId('today-figures').boundingBox()
+  const phoneSide = await page.getByTestId('today-side').boundingBox()
+  expect(phoneSide!.y).toBeGreaterThan(phoneFigures!.y + phoneFigures!.height - 1)
+  expect(phoneSide!.x).toBeLessThan(phoneFigures!.x + 2)
+})
+
 for (const width of [320, 360, 375, 390, 414]) {
   test(`no horizontal scroll at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 })
