@@ -67,4 +67,17 @@ describe('useLongPress', () => {
     vi.advanceTimersByTime(1000)
     expect(cb).not.toHaveBeenCalled()
   })
+
+  it('counts a held primary mouse button only when the list asks for it', () => {
+    vi.stubGlobal('document', { addEventListener: vi.fn(), removeEventListener: vi.fn() })
+    const cb = vi.fn()
+    const p = useLongPress(cb, { mouse: true })
+    p.onPointerdown({ pointerType: 'mouse', button: 2, clientX: 0, clientY: 0 } as PointerEvent)
+    vi.advanceTimersByTime(1000)
+    expect(cb).not.toHaveBeenCalled()
+    p.onPointerdown({ pointerType: 'mouse', button: 0, clientX: 0, clientY: 0 } as PointerEvent)
+    vi.advanceTimersByTime(450)
+    expect(cb).toHaveBeenCalledTimes(1)
+    vi.unstubAllGlobals()
+  })
 })

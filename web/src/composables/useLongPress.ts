@@ -1,8 +1,9 @@
 // A press held on a touch screen: calls `onLongPress` once the finger has stayed put for `delay` ms. Mouse and pen
-// presses never count (a desktop has its checkboxes). The click that follows a long press is swallowed wherever it
+// presses never count (a desktop has its checkboxes), unless the list has none at rest and asks for `mouse` (the
+// primary button held down). The click that follows a long press is swallowed wherever it
 // lands (the long press often changes the layout under the finger), so nothing opens or toggles by accident. Bind the
 // returned handlers on the pressable element.
-export function useLongPress(onLongPress: () => void, { delay = 450, tolerance = 10 } = {}) {
+export function useLongPress(onLongPress: () => void, { delay = 450, tolerance = 10, mouse = false }: { delay?: number; tolerance?: number; mouse?: boolean } = {}) {
   let timer: ReturnType<typeof setTimeout> | null = null
   let startX = 0
   let startY = 0
@@ -28,7 +29,7 @@ export function useLongPress(onLongPress: () => void, { delay = 450, tolerance =
     document.addEventListener('click', stop, true)
   }
   function onPointerdown(e: PointerEvent) {
-    if (e.pointerType !== 'touch') return
+    if (e.pointerType !== 'touch' && !(mouse && e.pointerType === 'mouse' && e.button === 0)) return
     fired = false
     startX = e.clientX
     startY = e.clientY

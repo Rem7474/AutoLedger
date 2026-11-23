@@ -43,6 +43,16 @@ describe('DriveCostModal : modifier et supprimer', () => {
   })
 })
 
+describe('DriveCostModal : ce que la ligne ne montre plus', () => {
+  it('porte la distance, la durée, la consommation et le coût au kilomètre du trajet', async () => {
+    const html = await render({ ...drive, duration_min: 30, consumption_kwh_100km: 16.4 })
+    expect(html).toContain('22,8')
+    expect(html).toContain('30 min')
+    expect(html).toContain('kWh/100')
+    expect(html).toContain('0,231')
+  })
+})
+
 describe('DriveCostModal : un voyage', () => {
   const trip = { id: 'g1', is_trip_group: true, trip_group_name: 'Vacances', trip_group_notes: 'Aller-retour', start_time: '2026-07-01T08:00:00Z', distance_km: 900, costs: { total_cost: 80, cost_per_km: 0.09 } }
 

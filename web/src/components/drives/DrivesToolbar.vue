@@ -105,44 +105,39 @@ const summaryChips = computed(() =>
       </template>
     </ModalShell>
 
-    <!-- Larger screens: one bar -->
-    <div v-else class="space-y-3 card p-3">
-      <div class="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
-        <DrivesPeriodControls
-          v-model:period-mode="periodMode"
-          v-model:selected-month="selectedMonth"
-          v-model:anchor-day="anchorDay"
-          v-model:custom-from="customFrom"
-          v-model:custom-to="customTo"
-          @change="emit('change')"
+    <!-- Larger screens: one bar, one row: the period, the quick filters, the search -->
+    <div v-else class="card flex flex-wrap items-center gap-x-3 gap-y-2 p-3">
+      <DrivesPeriodControls
+        v-model:period-mode="periodMode"
+        v-model:selected-month="selectedMonth"
+        v-model:anchor-day="anchorDay"
+        v-model:custom-from="customFrom"
+        v-model:custom-to="customTo"
+        @change="emit('change')"
+      />
+
+      <slot name="filters" />
+
+      <!-- Search Bar -->
+      <div class="relative min-w-40 max-w-sm flex-1 basis-40">
+        <label for="drives-search-input" class="sr-only">{{ $t('drives.drivesToolbar.searchForACityOr') }}</label>
+        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <input
+          id="drives-search-input"
+          type="text"
+          v-model="searchQuery"
+          @input="onSearchInput"
+          :placeholder="$t('drives.drivesToolbar.searchForACityAddress')"
+          class="w-full rounded-xl border border-slate-800 bg-slate-950 py-1.5 pl-9 pr-8 text-xs text-white placeholder-slate-500 transition-colors focus:border-rose-500 focus:outline-none"
         />
-
-        <!-- Search Bar -->
-        <div class="relative min-w-[240px] max-w-sm flex-1">
-          <label for="drives-search-input" class="sr-only">{{ $t('drives.drivesToolbar.searchForACityOr') }}</label>
-          <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            id="drives-search-input"
-            type="text"
-            v-model="searchQuery"
-            @input="onSearchInput"
-            :placeholder="$t('drives.drivesToolbar.searchForACityAddress')"
-            class="w-full rounded-xl border border-slate-800 bg-slate-950 py-1.5 pl-9 pr-8 text-xs text-white placeholder-slate-500 transition-colors focus:border-rose-500 focus:outline-none"
-          />
-          <button
-            v-if="searchQuery"
-            @click="clearSearch"
-            class="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white"
-            :title="$t('drives.drivesToolbar.clearTheSearch')" :aria-label="$t('drives.drivesToolbar.clearTheSearch')"
-          >
-            <X class="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick filters of the page, in the same bar -->
-      <div v-if="$slots.filters" class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
-        <slot name="filters" />
+        <button
+          v-if="searchQuery"
+          @click="clearSearch"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white"
+          :title="$t('drives.drivesToolbar.clearTheSearch')" :aria-label="$t('drives.drivesToolbar.clearTheSearch')"
+        >
+          <X class="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
 
