@@ -443,3 +443,114 @@ func TestLedgerEditToolsRefuseAReaderAndWhatIsNotAskedProperly(t *testing.T) {
 	_, err = h.DeleteRecord(ctx, a.userID, a.vid, mcpDeleteRecordInput{Kind: "carpool", ID: missing, DryRun: true})
 	mustFail(t, "unknown carpool to delete", err, "")
 }
+
+func TestLedgerEditToolsAcceptEveryFieldTheyAdvertise(t *testing.T) {
+	a := newCarpoolAPI(t, "edit-fields")
+	ctx := context.Background()
+	h := writeHandler(a)
+
+	// a fill-up: every figure at once, then the third one worked out from each pair
+	ice := &models.Vehicle{UserID: a.userID, Name: "Petrol", Currency: "EUR", Powertrain: models.PowertrainICE, TeslaMateAuthType: models.AuthModeNone}
+	if err := a.repo.CreateVehicle(ctx, ice); err != nil {
+		t.Fatal(err)
+	}
+	liters, price, odo := 40.0, 1.5, 50000.0
+	fill := &models.FuelLog{VehicleID: ice.ID, Date: time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC), Amount: 6000, Liters: &liters, PricePerLiter: &price, Odometer: &odo, IsFullTank: true}
+	if err := a.repo.CreateFuelLog(ctx, fill); err != nil {
+		t.Fatal(err)
+	}
+	date, fuel, notes, full, km, l, p := "2026-09-02", "DIESEL", " a note ", false, 50100.0, 30.0, 1.8
+	got, err := h.UpdateFuelFill(ctx, a.userID, ice.ID, mcpUpdateFuelFillInput{FillID: fill.ID, Date: &date, FuelType: &fuel, Notes: &notes, IsFullTank: &full, OdometerKm: &km, Liters: &l, PricePerLiter: &p, DryRun: true})
+	if err != nil || got.After.Amount.Amount != "54.00" || got.After.Date != date || got.After.IsFullTank {
+		t.Fatalf("every field: %+v %v", got, err)
+	}
+	for _, in := range []mcpUpdateFuelFillInput{{Liters: &l}, {PricePerLiter: &p}} {
+		in.FillID, in.DryRun = fill.ID, true
+		if _, err := h.UpdateFuelFill(ctx, a.userID, ice.ID, in); err != nil {
+			t.Fatalf("one figure alone: %v", err)
+		}
+	}
+	long := strings.Repeat("n", 501)
+	_, err = h.UpdateFuelFill(ctx, a.userID, ice.ID, mcpUpdateFuelFillInput{FillID: fill.ID, Notes: &long, DryRun: true})
+	mustFail(t, "long note", err, "500 characters")
+	_, err = h.UpdateFuelFill(ctx, a.userID, ice.ID, mcpUpdateFuelFillInput{DryRun: true})
+	mustFail(t, "no id", err, "fill_id is required")
+
+	// a manual charge: every field, with a note removed and a note added
+	cost := money.Cents(780)
+	noted := "old"
+	manual := &models.ChargeLog{VehicleID: a.vid, Date: time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC), KwhAdded: 30, Cost: &cost, Currency: "EUR", Notes: &noted}
+	if err := a.repo.CreateManualCharge(ctx, manual); err != nil {
+		t.Fatal(err)
+	}
+	c, kwh, odoKm, start, end, empty, reviewed := "12.50", 40.0, 12000.0, 20, 80, "", true
+	out, err := h.UpdateCharge(ctx, a.userID, a.vid, mcpUpdateChargeInput{ChargeID: manual.ID, Cost: &c, Date: &date, KwhAdded: &kwh, OdometerKm: &odoKm, StartBatteryLevel: &start, EndBatteryLevel: &end, Notes: &empty, CostReviewed: &reviewed, DryRun: true})
+	if err != nil || out.After.Odometer == nil || out.After.Date != date {
+		t.Fatalf("every field: %+v %v", out, err)
+	}
+	note := " kept "
+	if _, err := h.UpdateCharge(ctx, a.userID, a.vid, mcpUpdateChargeInput{ChargeID: manual.ID, Notes: &note, DryRun: true}); err != nil {
+		t.Fatal(err)
+	}
+	zero := 0.0
+	_, err = h.UpdateCharge(ctx, a.userID, a.vid, mcpUpdateChargeInput{ChargeID: manual.ID, KwhAdded: &zero, DryRun: true})
+	mustFail(t, "no energy", err, "more than zero")
+	_, err = h.UpdateCharge(ctx, a.userID, a.vid, mcpUpdateChargeInput{ChargeID: manual.ID, Notes: &long, DryRun: true})
+	mustFail(t, "long note", err, "500 characters")
+	_, err = h.UpdateCharge(ctx, a.userID, a.vid, mcpUpdateChargeInput{DryRun: true})
+	mustFail(t, "no id", err, "charge_id is required")
+
+	// an odometer reading: its day and its note
+	reading := &models.OdometerCheckpoint{VehicleID: a.vid, Date: time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC), Odometer: 1000}
+	if err := a.repo.CreateOdometerCheckpoint(ctx, reading); err != nil {
+		t.Fatal(err)
+	}
+	later := "2026-08-05"
+	ro, err := h.UpdateOdometerReading(ctx, a.userID, a.vid, mcpUpdateOdometerInput{ReadingID: reading.ID, Date: &later, Notes: &note, DryRun: true})
+	if err != nil || ro.After.Date != later {
+		t.Fatalf("reading: %+v %v", ro, err)
+	}
+	_, err = h.UpdateOdometerReading(ctx, a.userID, a.vid, mcpUpdateOdometerInput{ReadingID: reading.ID, Notes: &long, DryRun: true})
+	mustFail(t, "long note", err, "500 characters")
+	_, err = h.UpdateOdometerReading(ctx, a.userID, a.vid, mcpUpdateOdometerInput{DryRun: true})
+	mustFail(t, "no id", err, "reading_id is required")
+	_, err = h.UpdateOdometerReading(ctx, a.userID, a.vid, mcpUpdateOdometerInput{ReadingID: reading.ID, Notes: &note})
+	mustFail(t, "no version", err, "expected_version")
+	stale := reading.Version + 7
+	_, err = h.UpdateOdometerReading(ctx, a.userID, a.vid, mcpUpdateOdometerInput{ReadingID: reading.ID, Notes: &note, ExpectedVersion: &stale})
+	mustFail(t, "stale", err, "changed since")
+
+	// deleting: a stale version, then an id that names nothing
+	for _, in := range []mcpDeleteRecordInput{
+		{Kind: "odometer_reading", ID: reading.ID, ExpectedVersion: &stale},
+		{Kind: "fuel_fill_up", ID: fill.ID, ExpectedVersion: &stale},
+		{Kind: "banana", ID: reading.ID, DryRun: true},
+		{Kind: "carpool", ID: "../x", DryRun: true},
+		{Kind: "carpool", ID: reading.ID},
+		{Kind: "toll_invoice", ID: "2026-01"},
+		{Kind: "carpool", DryRun: true},
+	} {
+		if _, err := h.DeleteRecord(ctx, a.userID, a.vid, in); err == nil {
+			t.Fatalf("%+v must be refused", in)
+		}
+	}
+
+	// trips and groups: too many tags, nothing to change, bad names
+	many := make([]string, 0, 25)
+	for i := range 25 {
+		many = append(many, strings.Repeat("t", 3)+string(rune('a'+i)))
+	}
+	d := manualDrive(t, a, time.Date(2026, 9, 3, 8, 0, 0, 0, time.UTC), "A", "B", 10).ID
+	_, err = h.UpdateTrips(ctx, a.userID, a.vid, mcpUpdateTripsInput{DriveIDs: []string{d, d}, AddTags: many, DryRun: true})
+	mustFail(t, "too many tags", err, "tags at most")
+	empty2 := ""
+	name := strings.Repeat("g", 151)
+	_, err = h.ManageTripGroup(ctx, a.userID, a.vid, mcpManageTripGroupInput{Action: "create", Name: &name})
+	mustFail(t, "long name", err, "")
+	_, err = h.ManageTripGroup(ctx, a.userID, a.vid, mcpManageTripGroupInput{Action: "create", Name: &empty2})
+	mustFail(t, "empty name", err, "")
+	_, err = h.ManageTripGroup(ctx, a.userID, a.vid, mcpManageTripGroupInput{Action: "update"})
+	mustFail(t, "no group", err, "group_id is required")
+	_, err = h.CarpoolCosts(ctx, a.userID, a.vid, mcpCarpoolCostsInput{CarpoolID: "../x", Action: "freeze"})
+	mustFail(t, "bad id", err, "not a carpool id")
+}
