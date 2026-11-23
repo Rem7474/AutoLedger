@@ -25,7 +25,7 @@ for (const width of [1280, 375]) {
   })
 }
 
-test('a drive card opens from its button and its checkbox does not open it', async ({ page }) => {
+test('a drive card opens from its button and Space selects it instead of opening it', async ({ page }) => {
   await useVehicle(page, ev.id, '/drives')
   const card = page.getByRole('button', { name: /^Open the cost breakdown of the drive of/ }).first()
   await card.focus()
@@ -34,8 +34,14 @@ test('a drive card opens from its button and its checkbox does not open it', asy
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
 
-  await page.getByRole('checkbox', { name: 'Select this drive' }).first().check()
+  await card.focus()
+  await page.keyboard.press('Space')
   await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(card).toHaveAttribute('aria-pressed', 'true')
+  // While a selection is going on a click toggles the row instead of opening it
+  await card.click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(card).not.toHaveAttribute('aria-pressed')
   await card.click()
   await expect(page.getByRole('dialog')).toBeVisible()
 })

@@ -5,7 +5,6 @@ import EmptyState from '@/components/EmptyState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import TabBar, { type TabItem } from '@/components/TabBar.vue'
 import { t, intlLocale } from '@/i18n'
-import { distanceUnit } from '@/units'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { CAPABILITY_FALLBACK } from '@/utils/capabilityRoutes'
@@ -19,7 +18,6 @@ import { useDriveBulkActions } from '@/composables/useDriveBulkActions'
 import { useTripGroups } from '@/composables/useTripGroups'
 import { useDriveCostModal } from '@/composables/useDriveCostModal'
 import { api } from '@/services/api'
-import SelectAllToggle from '@/components/SelectAllToggle.vue'
 import DrivesToolbar from '@/components/drives/DrivesToolbar.vue'
 import DriveBulkActions from '@/components/drives/DriveBulkActions.vue'
 import DriveTotalsLine from '@/components/drives/DriveTotalsLine.vue'
@@ -68,7 +66,7 @@ const prefs = usePreferencesStore()
 const { showAlert } = useConfirm()
 const vehicleId = computed(() => vehicleStore.activeVehicle?.id ?? '')
 // The list grows as it is scrolled: older drives are found with the filters, not by paging
-const PAGE_SIZE = 30
+const PAGE_SIZE = 20
 const selectedTag = ref('')
 const unqualifiedOnly = ref(false)
 const hasTollOnly = ref(false)
@@ -514,7 +512,6 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 
     <!-- Header & Filter Tabs -->
     <PageHeader :title="$t('shell.nav.drives')" :icon="PageIcon">
-      {{ $t('drives.drivesView.subtitle', { unit: distanceUnit() }) }}
       <template #actions>
       <!-- Actions & Tag Filters container -->
       <div v-if="viewMode !== 'CARPOOLS'" class="flex flex-wrap items-center gap-3 self-start sm:self-center">
@@ -634,19 +631,6 @@ async function toggleDriveTag(drive: any, tagToToggle: string) {
 
     <!-- REAL DRIVES LIST -->
     <div v-else class="space-y-3">
-      <!-- Select all toggle & Total info -->
-      <div class="flex items-center justify-between text-xs text-slate-400 px-2 max-sm:hidden">
-        <SelectAllToggle
-          v-if="vehicleStore.canEdit"
-          :checked="allPageSelected"
-          :indeterminate="somePageSelected"
-          :label="allPageSelected ? $t('drives.drivesView.deselectPage') : $t('drives.drivesView.selectPage')"
-          @toggle="selectAll"
-        />
-        <span v-else></span>
-        <span>{{ $t('drives.drivesView.shownOf', { count: drives.length, total }) }}</span>
-      </div>
-
       <MonthSection v-for="month in driveMonths" :key="month.month" :label="month.label">
         <template #summary><DriveTotalsLine :totals="month.totals" show-net /></template>
         <div v-for="group in month.days" :key="group.day" class="space-y-2">

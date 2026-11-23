@@ -2,7 +2,7 @@
 import { Receipt, Users } from '@/icons'
 import ToQualifyFilter from '@/components/drives/ToQualifyFilter.vue'
 
-// The toll and Work / Personal filters of the drives list, as one group of toggles. The qualification queue and the
+// The toll, carpool and Work / Personal filters of the drives list, as one group of toggles (a second press clears one). The qualification queue and the
 // split between automatic and manual tolls exist only where the toll detection does; manual tolls are always listed.
 defineProps<{ unqualifiedCount: number; proPersoEnabled: boolean; tollDetectionActive: boolean }>()
 const unqualifiedOnly = defineModel<boolean>('unqualifiedOnly', { required: true })
@@ -14,7 +14,6 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
 
 <template>
   <div id="drives-filter-groups" class="flex flex-wrap items-center gap-2">
-    <span class="hidden px-2 text-[0.65rem] font-semibold text-slate-400 sm:inline">{{ $t('drives.drivesView.quickFilters') }}</span>
     <ToQualifyFilter
       v-if="tollDetectionActive"
       :count="unqualifiedCount"
@@ -65,15 +64,7 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
     <template v-if="proPersoEnabled">
       <span class="hidden h-5 w-px bg-slate-700 sm:block" aria-hidden="true"></span>
       <button
-        @click="selectedTag = ''"
-        :aria-pressed="selectedTag === ''"
-        class="chip"
-        :class="{ 'chip-selected': selectedTag === '' }"
-      >
-        {{ $t('drives.drivesView.all') }}
-      </button>
-      <button
-        @click="selectedTag = 'Pro'"
+        @click="selectedTag = selectedTag === 'Pro' ? '' : 'Pro'"
         :aria-pressed="selectedTag === 'Pro'"
         class="chip"
         :class="{ 'chip-selected': selectedTag === 'Pro' }"
@@ -81,7 +72,7 @@ const selectedTag = defineModel<string>('selectedTag', { required: true })
         {{ $t('drives.drivesView.work') }}
       </button>
       <button
-        @click="selectedTag = 'Perso'"
+        @click="selectedTag = selectedTag === 'Perso' ? '' : 'Perso'"
         :aria-pressed="selectedTag === 'Perso'"
         class="chip"
         :class="{ 'chip-selected': selectedTag === 'Perso' }"

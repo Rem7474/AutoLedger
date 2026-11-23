@@ -32,10 +32,26 @@ describe('DriveCard', () => {
     expect(await render({ ...drive, is_manual: false })).not.toContain('Manuel')
   })
 
-  it('laisse de côté la case de sélection dans une liste en lecture seule', async () => {
-    expect(await render()).toContain('drive-select-')
+  it('n\'a pas de case à cocher : le glyphe devient la coche de la sélection, annoncée sur le bouton de la ligne', async () => {
+    expect(await render()).not.toContain('type="checkbox"')
+    expect(await render()).not.toContain('aria-pressed')
+    const selecting = renderToString(createSSRApp({ render: () => h(DriveCard as any, { d: drive, selected: true, selecting: true }) }).use(i18n))
+    const html = await selecting
+    expect(html).not.toContain('type="checkbox"')
+    expect(html).toContain('aria-pressed="true"')
     vehicleStore.canEdit = false
-    expect(await render()).not.toContain('drive-select-')
+    expect(await render()).not.toContain('aria-pressed')
+  })
+
+  it('tient en trois informations : l\'itinéraire, l\'heure de départ et le coût', async () => {
+    const html = await render({ ...drive, start_address: 'Domicile', end_address: 'Bureau', duration_min: 30, consumption_kwh_100km: 16.4, costs: { ...drive.costs, fuel_liters: 1.6 } })
+    expect(html).toContain('Domicile')
+    expect(html).not.toContain('22,8')
+    expect(html).not.toContain('30 min')
+    expect(html).not.toContain('kWh/100')
+    expect(html).not.toContain('0,231')
+    expect(html).not.toMatch(/1,6\s(<!--.*?-->)?\s?L/)
+    expect(html).toContain('5,26')
   })
 
   it('n\'a plus de menu de ligne : modifier, supprimer et le lien TeslaMate sont dans le détail', async () => {
@@ -65,29 +81,10 @@ describe('DriveCard', () => {
     expect(html.lastIndexOf('Sans péage')).toBeLessThan(closedAt)
   })
 
-  it('met la consommation dans la ligne discrète mais la retire du téléphone', async () => {
-    const html = await render({ ...drive, consumption_kwh_100km: 16.4, duration_min: 30 })
-    expect(html).toContain('kWh/100')
-    expect(html).toMatch(/max-sm:hidden[^>]*>[^<]*kWh\/100/)
-    expect(html).toContain('30 min')
-  })
-
   it('ouvre le détail depuis toute la ligne : le coût est sous le bouton d\'ouverture, pas au-dessus', async () => {
     const html = await render()
     expect(html).toContain('inset-0')
-    const cost = html.slice(html.indexOf('€5.26') - 300, html.indexOf('€5.26'))
+    const cost = html.slice(html.indexOf('5,26') - 300, html.indexOf('5,26'))
     expect(cost).not.toContain('z-10')
-  })
-
-  it('montre le carburant d\'un trajet de véhicule thermique en litres, jamais en kWh', async () => {
-    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: 1.6 } })
-    expect(html).toMatch(/1,6\s(<!--.*?-->)?\s?L/)
-    expect(html).not.toContain('kWh')
-  })
-
-  it('ne montre aucun carburant tant que les pleins ne donnent pas de consommation', async () => {
-    const html = await render({ ...drive, costs: { ...drive.costs, fuel_only: true, fuel_liters: null } })
-    expect(html).not.toMatch(/\sL\b/)
-    expect(html).not.toContain('kWh')
   })
 })

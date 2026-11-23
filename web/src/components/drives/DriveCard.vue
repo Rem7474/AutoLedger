@@ -15,13 +15,12 @@ import { driveGlyph } from '@/utils/driveGlyph'
 import { needsTollQualification, summarizeDriveCarpools } from '@/utils/drives'
 import { formatDayTime, formatTimeOfDay } from '@/utils/dates'
 import { formatAmount } from '@/currency'
-import { distanceUnit, formatDistance, formatPerDistanceValue, formatVolume } from '@/units'
-import { formatCostPerDistance } from '@/utils/costPerDistance'
 
-// One drive of the list: the glyph of the drive, where it went and when, what it cost. A click anywhere on the row opens
-// its cost breakdown; the carpool chip sits above that target. Every other action (edit, delete, the TeslaMate link) is in the detail it opens.
-// On a phone there are no checkboxes at rest: a long press selects the drive and starts the selection (`selecting`), where
-// the boxes show and a tap on a row toggles it instead of opening it.
+// One drive of the list in three pieces: where it went, when it started, what it cost. A click anywhere on the row opens
+// its detail (distance, duration, consumption, cost per km, edit, delete, carpool, tolls, the TeslaMate link); the carpool
+// chip and the toll buttons of a drive that waits for them sit above that target. No box: a long press (finger or held
+// mouse button), Ctrl/Cmd/Shift + click or Space starts the selection (`selecting`), where the glyph of a selected row
+// becomes the rose check and a click on a row toggles it instead of opening it.
 const props = defineProps<{ d: any; selected: boolean; selecting?: boolean }>()
 const emit = defineEmits<{
   open: [drive: any]
@@ -35,13 +34,20 @@ const vehicleStore = useVehicleStore()
 const prefs = usePreferencesStore()
 const formatDate = formatDayTime
 const isMobile = useIsMobile()
-const showBox = computed(() => vehicleStore.canEdit && (!isMobile.value || !!props.selecting))
-const press = useLongPress(() => {
-  if (vehicleStore.canEdit && isMobile.value) emit('toggle', props.d)
-})
-function onRowClick() {
-  if (isMobile.value && props.selecting) emit('toggle', props.d)
+const press = useLongPress(
+  () => {
+    if (vehicleStore.canEdit) emit('toggle', props.d)
+  },
+  { mouse: true },
+)
+function onRowClick(e: MouseEvent) {
+  const modifier = e.ctrlKey || e.metaKey || e.shiftKey
+  if (vehicleStore.canEdit && (props.selecting || modifier)) emit('toggle', props.d)
   else emit('open', props.d)
+}
+// Space on the focused row selects it (Enter opens it), the keyboard's way into the selection
+function onSpace() {
+  if (vehicleStore.canEdit) emit('toggle', props.d)
 }
 // A vehicle fed by TeslaMate mixes synced and manual drives: the badge tells them apart. Without TeslaMate every drive is manual.
 const showManualBadge = computed(() => vehicleStore.capabilities.sync)
@@ -55,40 +61,30 @@ function openCarpool() {
   if (refs.length === 1) router.push({ path: '/carpools', query: { open: refs[0].id } })
   else emit('open', props.d)
 }
-// The quiet line under the route, as plain text parts: time, distance, duration, consumption and the tags that apply.
-// Each part stays whole (a break falls between two parts, never inside one) and the consumption leaves a phone.
 // The drive waits for its toll: two taps, enter it or confirm there is none
 const qualifying = computed(() => vehicleStore.canEdit && needsTollQualification(props.d))
 
+// The quiet line under the route: the start time, then what is particular to the drive (work, personal, entered by hand).
 const subtitleParts = computed(() => {
   const d = props.d
-  const parts: { text: string; wide?: boolean }[] = [{ text: formatTimeOfDay(d.start_time) }, { text: formatDistance(d.distance_km, 1) }]
-  if (d.duration_min) parts.push({ text: t('drives.driveCard.min', { duration_min: d.duration_min }) })
-  if (d.consumption_kwh_100km) {
-    parts.push({
-      wide: true,
-      text: t(d.energy_estimated ? 'drives.driveCard.kwh100kmEstimated' : 'drives.driveCard.kwh100km', {
-        unit: distanceUnit(),
-        consumption_kwh_100km: formatPerDistanceValue(d.consumption_kwh_100km),
-      }),
-    })
-  }
-  // The fuel of a drive of a vehicle that burns fuel, derived from its fill-ups (absent while they give no consumption)
-  if (d.costs?.fuel_liters) parts.push({ wide: true, text: formatVolume(Number(d.costs.fuel_liters)) })
-  if (prefs.proPersoEnabled && d.tags?.includes('Pro')) parts.push({ text: t('drives.driveCard.work') })
-  if (prefs.proPersoEnabled && d.tags?.includes('Perso')) parts.push({ text: t('drives.driveCard.personal') })
-  if (d.is_manual && showManualBadge.value) parts.push({ text: t('drives.drivesView.manual') })
+  const parts: string[] = [formatTimeOfDay(d.start_time)]
+  if (prefs.proPersoEnabled && d.tags?.includes('Pro')) parts.push(t('drives.driveCard.work'))
+  if (prefs.proPersoEnabled && d.tags?.includes('Perso')) parts.push(t('drives.driveCard.personal'))
+  if (d.is_manual && showManualBadge.value) parts.push(t('drives.drivesView.manual'))
   return parts
 })
 </script>
 
 <template>
-  <div data-testid="drive-card" class="max-sm:select-none max-sm:[-webkit-touch-callout:none]">
+  <div data-testid="drive-card" class="select-none max-sm:[-webkit-touch-callout:none]">
     <ListItem :class="{ 'border-rose-500/40 bg-slate-800/40 shadow-lg shadow-rose-950/20': selected }">
       <template #open>
         <CardOpenButton
           :label="$t('drives.driveCard.openBreakdown', { date: formatDate(d.start_time) })"
+          :aria-pressed="vehicleStore.canEdit && selecting ? selected : undefined"
           @click="onRowClick"
+          @keydown.space.prevent
+          @keyup.space.prevent="onSpace"
           @pointerdown="press.onPointerdown"
           @pointermove="press.onPointermove"
           @pointerup="press.onPointerup"
@@ -97,18 +93,8 @@ const subtitleParts = computed(() => {
         />
       </template>
       <template #lead>
-        <!-- Phone: the glyph of the row, the check once it is selected -->
-        <RowLeading :icon="leadingIcon" :selected="selected" />
-        <!-- Desktop: the selection box (a phone keeps it for screen readers only) -->
-        <label
-          v-if="showBox"
-          :for="'drive-select-' + d.id"
-          class="relative z-10 tap flex cursor-pointer items-center p-1 max-sm:sr-only max-sm:pointer-events-none"
-          :title="$t('drives.driveCard.selectThisDrive')"
-        >
-          <span class="sr-only">{{ $t('drives.driveCard.selectThisDrive') }}</span>
-          <input :id="'drive-select-' + d.id" type="checkbox" :checked="selected" @change="emit('toggle', d)" class="select-box" />
-        </label>
+        <!-- The glyph of the row, the rose check once it is selected -->
+        <RowLeading :icon="leadingIcon" :selected="selected" always />
       </template>
       <template #title>
         <span :title="d.start_address">{{ d.start_address || $t('drives.driveCard.unknownStart') }}</span>
@@ -116,11 +102,7 @@ const subtitleParts = computed(() => {
         <span :title="d.end_address">{{ d.end_address || $t('drives.driveCard.unknownEnd') }}</span>
       </template>
       <template #subtitle>
-        <span class="whitespace-normal">
-          <template v-for="(part, i) in subtitleParts" :key="i">
-            <span v-if="i > 0" :class="part.wide ? 'max-sm:hidden' : ''"> · </span><span :class="['whitespace-nowrap', part.wide ? 'max-sm:hidden' : '']">{{ part.text }}</span>
-          </template>
-        </span>
+        {{ subtitleParts.join(' · ') }}
         <span v-if="carpoolSummary && isMobile" class="mt-1 block"><DriveCarpoolChip :summary="carpoolSummary" @click="openCarpool" /></span>
       </template>
       <!-- A wide screen has room for the chip between the route and the cost; a phone gives it its own line under the quiet line -->
@@ -154,7 +136,6 @@ const subtitleParts = computed(() => {
       <template #value>
         <span :title="$t('drives.driveCard.actualCostPriceCalculatedFor')">{{ d.costs?.has_estimates ? '~' : '' }}{{ formatAmount(d.costs?.total_cost || 0, vehicleStore.currency) }}</span>
       </template>
-      <template #subvalue>{{ formatCostPerDistance(d.costs?.cost_per_km, vehicleStore.currency, 3, true) }}</template>
     </ListItem>
   </div>
 </template>

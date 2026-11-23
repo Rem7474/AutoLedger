@@ -1076,9 +1076,10 @@ test('a carpool is started from the selected drives without leaving the drives p
   await useVehicle(page, ev.id, '/drives')
   const search = page.getByPlaceholder(/Search for a city/)
   await search.fill('Office')
-  const cards = page.getByRole('checkbox', { name: 'Select this drive' })
+  const cards = page.getByRole('button', { name: /^Open the cost breakdown of the drive of/ })
   await expect(cards.first()).toBeVisible()
-  await cards.first().check()
+  await cards.first().focus()
+  await page.keyboard.press('Space')
 
   // The selection bar's button, not the quiet icon of a row
   const bulkCarpool = page.locator('button.btn', { hasText: 'Carpool' })
@@ -1091,7 +1092,7 @@ test('a carpool is started from the selected drives without leaving the drives p
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
   await expect(search).toHaveValue('Office')
-  await expect(page.locator('input.select-box:checked')).toHaveCount(1)
+  await expect(page.locator('[data-testid="drive-card"] button[aria-pressed="true"]')).toHaveCount(1)
   await expect(bulkCarpool).toBeVisible()
 })
 

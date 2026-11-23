@@ -63,14 +63,14 @@ const actions = computed<SelectionAction[]>(() => {
   const n = props.selectedDriveIds.length
   const manual = drives.length > 0 && drives.every((d) => d.is_manual)
   const one = n === 1
-  // On a phone the page has no select-all row (it would push the list down when the selection starts)
+  // The list has no select-all row (it would push the list down when the selection starts): it is in the "More" menu
   const list: SelectionAction[] = [
     {
       key: 'select-page',
       label: props.allPageSelected ? t('drives.drivesView.deselectPage') : t('drives.drivesView.selectPage'),
       icon: ListChecks,
       run: () => emit('select-page'),
-      phoneOnly: true,
+      overflow: true,
     },
   ]
   list.push({
