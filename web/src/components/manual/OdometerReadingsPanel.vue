@@ -25,8 +25,11 @@ import { useSubmit } from '@/composables/useSubmit'
 import { deleteRowsWithUndo, deleteWithUndo } from '@/composables/useUndoableDelete'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { capabilitiesOf } from '@/utils/capabilities'
-import { todayIso } from '@/utils/dates'
+import { dayKey, todayIso } from '@/utils/dates'
 import { mergeOdometerHistory } from '@/utils/odometerHistory'
+import { groupByMonth, monthDistances, monthSectionLabel, pageSlice } from '@/utils/monthGroups'
+import MonthSection from '@/components/MonthSection.vue'
+import InfiniteSentinel from '@/components/InfiniteSentinel.vue'
 
 const props = defineProps<{
   vehicle: any
@@ -45,6 +48,19 @@ const lastReading = computed(() => history.value.reduce<(typeof history.value)[n
 const sinceLastReading = computed(() => {
   const current = Number(props.vehicle?.current_odometer)
   return lastReading.value && Number.isFinite(current) && current >= lastReading.value.odometer ? current - lastReading.value.odometer : null
+})
+// The list shows the newest readings first, a page at a time, under a header per month with the distance the month added
+const PAGE_SIZE = 15
+const pages = ref(1)
+const newestFirst = computed(() => [...history.value].reverse())
+const page = computed(() => pageSlice(newestFirst.value, PAGE_SIZE, pages.value))
+const distances = computed(() => monthDistances(history.value))
+const sections = computed(() => {
+  const today = dayKey()
+  return groupByMonth(page.value.visible, (r) => r.date).map((s) => {
+    const km = distances.value.get(s.month)
+    return { ...s, label: monthSectionLabel(s.month, today, intlLocale()), subtotal: km === undefined ? null : `+${formatDistance(km)}` }
+  })
 })
 const loading = ref(false)
 const { explainStaleWrite } = useStaleWrite()
@@ -203,6 +219,7 @@ watch(formOpen, (open) => {
   if (!open) resetForm()
 })
 watch(() => props.vehicle?.id, () => {
+  pages.value = 1
   resetForm()
   void load()
 })
@@ -292,49 +309,50 @@ useRefreshHandler(() => load(true))
       <div v-else class="space-y-2">
         <BulkSelectionBar v-if="canEdit" :count="selectedIds.length" :actions="actions" @clear="clear" />
         <SelectionHint v-if="canEdit && manualReadings.length > 0" />
-        <SwipeToDelete v-for="r in history" :key="r.key" :disabled="!canEdit || !isManualReading(r) || selectedIds.length > 0" @delete="remove(r)">
-        <div
-          class="relative hover:border-slate-700/90 card p-3 sm:p-4 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
-          :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(r) }"
-        >
-          <CardOpenButton
-            v-if="canEdit && isManualReading(r)"
-            :label="$t('manual.odometerReadingsPanel.editReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })"
-            @click="onRowClick(r)"
-            @pointerdown="onPointerdown($event, r)"
-            @pointermove="press.onPointermove"
-            @pointerup="press.onPointerup"
-            @pointercancel="press.onPointercancel"
-            @contextmenu="press.onContextmenu"
-          />
-          <RowLeading :icon="r.kind === 'FUEL' ? Fuel : Gauge" :selected="isSelected(r)" />
-          <RowSelectBox v-if="showBox && isManualReading(r)" :id="r.key" :checked="isSelected(r)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(r)" />
-          <!-- A reading that cannot be selected (a fill-up, one sent by Home Assistant) shows a lock in the column of the checkbox -->
-          <span
-            v-else-if="showBox"
-            class="grid w-8 shrink-0 place-items-center text-slate-500 max-sm:hidden"
-            :title="r.kind === 'FUEL' ? $t('manual.odometerReadingsPanel.fromFillUpHint') : r.source === 'HA' ? $t('manual.odometerReadingsPanel.fromHomeAssistantHint') : undefined"
-            aria-hidden="true"
+        <MonthSection v-for="section in sections" :key="section.month" :label="section.label" :subtotal="section.subtotal">
+          <SwipeToDelete v-for="r in section.items" :key="r.key" :disabled="!canEdit || !isManualReading(r) || selectedIds.length > 0" @delete="remove(r)">
+          <div
+            class="relative hover:border-slate-700/90 card p-3 sm:p-4 flex items-center justify-between gap-3 transition-colors max-sm:select-none max-sm:[-webkit-touch-callout:none]"
+            :class="{ '!border-rose-500/40 bg-slate-800/40': isSelected(r) }"
           >
-            <Lock class="size-3.5" />
-          </span>
-          <div class="min-w-0 flex-1">
-            <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
-              <span class="tabular-nums">{{ formatDistance(r.odometer) }}</span>
-              <span v-if="r.kind === 'FUEL'" class="text-xs px-2 py-0.5 rounded-full border border-slate-600 text-slate-400 font-normal" :title="$t('manual.odometerReadingsPanel.fromFillUpHint')">{{ $t('manual.odometerReadingsPanel.fromFillUp') }}</span>
-              <span v-else-if="r.source === 'HA'" class="text-xs px-2 py-0.5 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-300 font-normal" :title="$t('manual.odometerReadingsPanel.fromHomeAssistantHint')">{{ $t('manual.odometerReadingsPanel.fromHomeAssistant') }}</span>
+            <CardOpenButton
+              v-if="canEdit && isManualReading(r)"
+              :label="$t('manual.odometerReadingsPanel.editReading', { unit: distanceUnit(), km: formatDistanceValue(r.odometer) })"
+              @click="onRowClick(r)"
+              @pointerdown="onPointerdown($event, r)"
+              @pointermove="press.onPointermove"
+              @pointerup="press.onPointerup"
+              @pointercancel="press.onPointercancel"
+              @contextmenu="press.onContextmenu"
+            />
+            <RowLeading :icon="r.kind === 'FUEL' ? Fuel : Gauge" :selected="isSelected(r)" />
+            <RowSelectBox v-if="showBox && isManualReading(r)" :id="r.key" :checked="isSelected(r)" :label="$t('shell.bulkSelectionBar.selectRow')" @toggle="toggle(r)" />
+            <!-- A reading that cannot be selected (a fill-up, one sent by Home Assistant) shows a lock in the column of the checkbox -->
+            <span
+              v-else-if="showBox"
+              class="grid w-8 shrink-0 place-items-center text-slate-500 max-sm:hidden"
+              :title="r.kind === 'FUEL' ? $t('manual.odometerReadingsPanel.fromFillUpHint') : r.source === 'HA' ? $t('manual.odometerReadingsPanel.fromHomeAssistantHint') : undefined"
+              aria-hidden="true"
+            >
+              <Lock class="size-3.5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-semibold text-white flex flex-wrap items-center gap-2">
+                <span class="tabular-nums">{{ formatDistance(r.odometer) }}</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5">
+                {{ new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' }) }}<template v-if="r.kind === 'FUEL'"> · {{ $t('manual.odometerReadingsPanel.fromFillUp') }}</template><template v-else-if="r.source === 'HA'"> · {{ $t('manual.odometerReadingsPanel.fromHomeAssistant') }}</template>
+              </div>
+              <p v-if="r.notes" class="text-xs text-slate-400 truncate mt-0.5">{{ r.notes }}</p>
             </div>
-            <div class="text-xs text-slate-400 mt-0.5">
-              {{ new Date(r.date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }}
-            </div>
-            <p v-if="r.notes" class="text-xs text-slate-400 truncate mt-0.5">{{ r.notes }}</p>
-          </div>
 
-          <router-link v-if="r.kind === 'FUEL'" to="/consumption?tab=FUEL" class="relative z-10 tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">
-            <Fuel class="w-4 h-4" />
-          </router-link>
-        </div>
-        </SwipeToDelete>
+            <router-link v-if="r.kind === 'FUEL'" to="/consumption?tab=FUEL" class="relative z-10 tap p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0" :aria-label="$t('manual.odometerReadingsPanel.seeFillUps')" :title="$t('manual.odometerReadingsPanel.seeFillUps')">
+              <Fuel class="w-4 h-4" />
+            </router-link>
+          </div>
+          </SwipeToDelete>
+        </MonthSection>
+        <InfiniteSentinel v-if="page.more" :loading="false" :label="$t('manual.odometerReadingsPanel.showOlder')" @more="pages++" />
       </div>
     </div>
   </div>
