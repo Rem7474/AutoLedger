@@ -44,7 +44,7 @@ export function monthDistances(items: { date: string; odometer: number }[]): Map
   }
   const result = new Map<string, number>()
   let before: number | null = null
-  for (const key of [...byMonth.keys()].sort()) {
+  for (const key of [...byMonth.keys()].sort((a, b) => a.localeCompare(b))) {
     const { min, max } = byMonth.get(key)!
     const distance = max - (before ?? min)
     if (distance > 0) result.set(key, distance)
