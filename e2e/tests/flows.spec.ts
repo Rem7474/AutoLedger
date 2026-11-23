@@ -177,6 +177,20 @@ test('consumption tabs follow the powertrain and the legacy fuel URL redirects',
   await expect(page.getByRole('button', { name: 'New fill-up' })).toHaveCount(0)
 })
 
+test('the efficiency tab splits the charged energy with one toggle, one donut and a legend of figures', async ({ page }) => {
+  await useVehicle(page, ev.id, '/consumption?tab=EFFICIENCY')
+  const block = page.getByTestId('charging-breakdown')
+  await expect(block).toBeVisible()
+  await expect(block.locator('canvas')).toHaveCount(1)
+  const toggle = block.getByRole('radiogroup')
+  await expect(toggle.getByRole('radio', { name: 'Place' })).toHaveAttribute('aria-checked', 'true')
+  await expect(block.getByRole('listitem').first()).toContainText(/\d+ % · .*kWh/)
+  await toggle.getByRole('radio', { name: 'Speed' }).click()
+  await expect(toggle.getByRole('radio', { name: 'Speed' })).toHaveAttribute('aria-checked', 'true')
+  await expect(block.locator('canvas')).toHaveCount(1)
+  await expect(page.getByText('Needs the energy drawn from the grid')).toHaveCount(0)
+})
+
 for (const width of [320, 360, 375, 390, 414]) {
   test(`no horizontal scroll at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 })
