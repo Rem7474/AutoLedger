@@ -268,6 +268,11 @@
     "REEV": "Prolongateur d'autonomie (recharges et pleins)"
   },
   "vehicleView": {
+    "groups": {
+      "follow": "Suivi",
+      "ownership": "Possession",
+      "settings": "Réglages"
+    },
     "consumptionFuel": "{consumption} · {cost}",
     "consumptionFuelEmpty": "Saisissez deux pleins complets pour la mesurer",
     "consumption": "Consommation",

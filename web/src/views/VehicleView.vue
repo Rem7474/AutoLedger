@@ -28,6 +28,7 @@ import { hybridShareHint, sharePercent, type HybridShare } from '@/utils/hybridS
 import { summarizeFittedTires, wearAndRemaining } from '@/utils/tires'
 import { useTireList } from '@/composables/useTireList'
 import { nextDueReminder } from '@/utils/dashboard'
+import { vehicleSheetGroups, type VehicleSheetEntry } from '@/utils/vehicleSheet'
 import { useRefreshHandler } from '@/composables/usePullToRefresh'
 
 // The sheet of the active vehicle: its odometer on top, then what is recorded about it, one line each. Each line opens
@@ -115,6 +116,19 @@ const hybridHint = computed(() => {
 const batteryHint = computed(() => (batteryPercent.value === null ? t('dashboard.sheets.batteryHint') : t('dashboard.sheets.batteryNow', { pct: formatPercent(batteryPercent.value, 0) })))
 const resaleHint = computed(() => (resaleValue.value === null ? t('dashboard.sheets.resaleHint') : t('dashboard.sheets.resaleNow', { value: formatAmount(resaleValue.value, vehicleStore.currency, 0) })))
 
+// The lines of the three groups; each tile asks whether it is in the list for this vehicle and this role
+const shown = computed(() => {
+  const g = vehicleSheetGroups({
+    charges: vehicleStore.capabilities.charges,
+    refuels: vehicleStore.capabilities.refuels,
+    isOwner: isOwner.value,
+    hasTco: !!tco.value,
+    vehicleCount: vehicleStore.vehicles.length,
+  })
+  return new Set<VehicleSheetEntry>([...g.follow, ...g.ownership, ...g.settings])
+})
+const shows = (entry: VehicleSheetEntry) => shown.value.has(entry)
+
 const showTariffs = ref(false)
 const showEdit = ref(false)
 const showOwnership = ref(false)
@@ -139,38 +153,44 @@ async function onSaved() {
       <router-link v-if="vehicleStore.canEdit" to="/odometer" class="btn btn-secondary tap-text">{{ $t('vehicles.vehicleView.record') }}</router-link>
     </div>
 
-    <div class="space-y-2">
-      <VehicleTile :icon="Bell" :title="$t('vehicles.vehicleView.maintenance')" :detail="nextService" to="/maintenance?tab=REMINDERS" />
-      <VehicleTile v-if="vehicleStore.capabilities.charges || vehicleStore.capabilities.refuels" :icon="Activity" :title="$t('vehicles.vehicleView.consumption')" :detail="consumptionDetail" to="/consumption" />
-      <VehicleTile :icon="Disc" :title="$t('shell.nav.tires')" :detail="tiresDetail" to="/tires" />
-      <VehicleTile :icon="ClipboardList" :title="$t('vehicles.vehicleView.readings')" to="/odometer" />
-      <VehicleTile :icon="Scale" :title="$t('shell.nav.comparison')" to="/comparison" />
-    </div>
+    <div class="grid items-start gap-x-6 gap-y-5 lg:grid-cols-2">
+      <section aria-labelledby="vehicle-group-follow" class="space-y-2">
+        <h2 id="vehicle-group-follow" class="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $t('vehicles.vehicleView.groups.follow') }}</h2>
+        <VehicleTile v-if="shows('maintenance')" :icon="Bell" :title="$t('vehicles.vehicleView.maintenance')" :detail="nextService" to="/maintenance?tab=REMINDERS" />
+        <VehicleTile v-if="shows('consumption')" :icon="Activity" :title="$t('vehicles.vehicleView.consumption')" :detail="consumptionDetail" to="/consumption" />
+        <VehicleTile v-if="shows('tires')" :icon="Disc" :title="$t('shell.nav.tires')" :detail="tiresDetail" to="/tires" />
+        <VehicleTile v-if="shows('readings')" :icon="ClipboardList" :title="$t('vehicles.vehicleView.readings')" to="/odometer" />
+      </section>
 
-    <!-- Condition and value of the vehicle -->
-    <div class="space-y-2">
-      <SheetRow v-if="vehicleStore.capabilities.charges" v-slot="{ bare }" :title="$t('dashboard.sheets.battery')" :hint="batteryHint" :icon="BatteryCharging">
-        <BatteryHealthCard :vehicle-id="vehicle.id" :bare="bare" @updated="resaleRefresh++" />
-      </SheetRow>
-      <SheetRow v-if="isHybrid" v-slot="{ bare }" :title="$t('vehicles.hybridShare.row')" :hint="hybridHint" :icon="Zap">
-        <HybridShareCard :vehicle-id="vehicle.id" :can-edit="vehicleStore.canEdit" :bare="bare" @saved="load" />
-      </SheetRow>
-      <SheetRow v-slot="{ bare }" :title="$t('dashboard.sheets.resale')" :hint="resaleHint" :icon="TrendingDown">
-        <ResaleValueCard :vehicle-id="vehicle.id" :has-battery="vehicleStore.capabilities.charges" :refresh-key="resaleRefresh" :bare="bare" />
-      </SheetRow>
-      <LeaseContractCard :tco="tco" />
-      <SheetRow v-if="tco" v-slot="{ bare }" :title="$t('dashboard.sheets.totals')" :hint="$t('dashboard.sheets.totalsHint')" :icon="Coins">
-        <TcoDetailsList :class="bare ? '' : 'p-4'" :tco="tco" />
-      </SheetRow>
-    </div>
+      <section aria-labelledby="vehicle-group-ownership" class="space-y-2">
+        <h2 id="vehicle-group-ownership" class="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $t('vehicles.vehicleView.groups.ownership') }}</h2>
+        <SheetRow v-if="shows('battery')" v-slot="{ bare }" :title="$t('dashboard.sheets.battery')" :hint="batteryHint" :icon="BatteryCharging">
+          <BatteryHealthCard :vehicle-id="vehicle.id" :bare="bare" @updated="resaleRefresh++" />
+        </SheetRow>
+        <SheetRow v-if="shows('hybridShare')" v-slot="{ bare }" :title="$t('vehicles.hybridShare.row')" :hint="hybridHint" :icon="Zap">
+          <HybridShareCard :vehicle-id="vehicle.id" :can-edit="vehicleStore.canEdit" :bare="bare" @saved="load" />
+        </SheetRow>
+        <SheetRow v-if="shows('resale')" v-slot="{ bare }" :title="$t('dashboard.sheets.resale')" :hint="resaleHint" :icon="TrendingDown">
+          <ResaleValueCard :vehicle-id="vehicle.id" :has-battery="vehicleStore.capabilities.charges" :refresh-key="resaleRefresh" :bare="bare" />
+        </SheetRow>
+        <LeaseContractCard v-if="shows('lease')" :tco="tco" />
+        <SheetRow v-if="shows('totals')" v-slot="{ bare }" :title="$t('dashboard.sheets.totals')" :hint="$t('dashboard.sheets.totalsHint')" :icon="Coins">
+          <TcoDetailsList :class="bare ? '' : 'p-4'" :tco="tco" />
+        </SheetRow>
+        <VehicleTile v-if="shows('contract')" :icon="FileText" :title="$t('vehicles.vehicleView.contract')" :detail="ownership ? null : $t('vehicles.vehicleView.contractMissing')" @click="showOwnership = true" />
+        <VehicleTile v-if="shows('comparison')" :icon="Scale" :title="$t('shell.nav.comparison')" to="/comparison" />
+      </section>
 
-    <div class="space-y-2">
-      <VehicleTile v-if="isOwner" :icon="FileText" :title="$t('vehicles.vehicleView.contract')" :detail="ownership ? null : $t('vehicles.vehicleView.contractMissing')" @click="showOwnership = true" />
-      <VehicleTile v-if="vehicleStore.capabilities.charges" :icon="Zap" :title="$t('vehicles.vehicleView.homeCharging')" :detail="$t('vehicles.vehicleView.homeChargingHint')" @click="showTariffs = true" />
-      <VehicleTile :icon="Plug" :title="$t('vehicles.vehicleView.dataSources')" @click="showSources = true" />
-      <VehicleTile :icon="Users" :title="$t('vehicles.vehicleView.sharing')" @click="showMembers = true" />
-      <VehicleTile v-if="isOwner" :icon="Pencil" :title="$t('vehicles.vehicleView.edit')" @click="showEdit = true" />
-      <VehicleTile v-if="vehicleStore.vehicles.length > 1" :icon="Car" :title="$t('vehicles.vehicleView.manage')" to="/vehicles" />
+      <section aria-labelledby="vehicle-group-settings" class="space-y-2 lg:col-span-2">
+        <h2 id="vehicle-group-settings" class="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $t('vehicles.vehicleView.groups.settings') }}</h2>
+        <div class="grid items-start gap-2 lg:grid-cols-2">
+          <VehicleTile v-if="shows('homeCharging')" :icon="Zap" :title="$t('vehicles.vehicleView.homeCharging')" :detail="$t('vehicles.vehicleView.homeChargingHint')" @click="showTariffs = true" />
+          <VehicleTile v-if="shows('dataSources')" :icon="Plug" :title="$t('vehicles.vehicleView.dataSources')" @click="showSources = true" />
+          <VehicleTile v-if="shows('sharing')" :icon="Users" :title="$t('vehicles.vehicleView.sharing')" @click="showMembers = true" />
+          <VehicleTile v-if="shows('edit')" :icon="Pencil" :title="$t('vehicles.vehicleView.edit')" @click="showEdit = true" />
+          <VehicleTile v-if="shows('manage')" :icon="Car" :title="$t('vehicles.vehicleView.manage')" to="/vehicles" />
+        </div>
+      </section>
     </div>
 
     <ModalShell v-model:open="showTariffs" :title="$t('tariffs.editor.title')" :icon="Zap" size="lg">
