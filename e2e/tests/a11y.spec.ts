@@ -46,24 +46,58 @@ test('a drive card opens from its button and Space selects it instead of opening
   await expect(page.getByRole('dialog')).toBeVisible()
 })
 
-test('the sidebar is a named landmark and marks the current page', async ({ page }) => {
+test('the sidebar is a named landmark with four destinations and marks the current page', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await useVehicle(page, ev.id, '/tires')
-  const nav = page.getByRole('navigation', { name: 'Main navigation' })
+  const nav = page.getByRole('navigation', { name: 'Main navigation' }).first()
   await expect(nav).toBeVisible()
+  // The tires page belongs to the vehicle: one entry is lit
   await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1)
-  await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/tires')
-  await expect(nav.getByRole('group', { name: 'Tracking' }).getByRole('link', { name: 'Drives' })).toBeVisible()
-  await expect(nav.getByRole('group', { name: 'Costs' }).getByRole('link', { name: 'Tires' })).toBeVisible()
-  await expect(nav.getByRole('group', { name: 'Management' }).getByRole('link', { name: 'Account' })).toBeVisible()
+  await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/vehicle')
+  await expect(nav.getByRole('link')).toHaveText(['Dashboard', 'Drives', 'Expenses', 'Vehicle', 'Garage'])
+  await expect(page.getByRole('complementary').getByRole('link', { name: /Account/ })).toBeVisible()
 })
 
-test('a combustion vehicle sidebar has no empty section and a drives page', async ({ page }) => {
+test('every page that left the sidebar is reached from the vehicle sheet, the garage or the account link', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const nav = page.getByRole('navigation', { name: 'Main navigation' }).first()
+  const tiles: [RegExp, string][] = [
+    [/Maintenance/, '/maintenance'],
+    [/Consumption/, '/consumption'],
+    [/Tires/, '/tires'],
+    [/Odometer readings/, '/odometer'],
+    [/Comparison/, '/comparison'],
+  ]
+  for (const [name, path] of tiles) {
+    await useVehicle(page, ev.id, '/vehicle')
+    await page.getByRole('main').getByRole('link', { name }).first().click()
+    await expect(page).toHaveURL(new RegExp(`${path}(\\?|$)`))
+    // The vehicle destination stays lit on those pages
+    await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/vehicle')
+  }
+  await nav.getByRole('link', { name: 'Garage' }).click()
+  await expect(page).toHaveURL(/\/vehicles$/)
+  await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/vehicles')
+  await page.getByRole('complementary').getByRole('link', { name: /Account/ }).click()
+  await expect(page).toHaveURL(/\/account$/)
+  await expect(page.getByTestId('about-version')).toBeVisible()
+})
+
+test('the sidebar carries no slogan, version or language selector', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await useVehicle(page, ev.id, '/')
+  const aside = page.getByRole('complementary')
+  await expect(aside).toBeVisible()
+  await expect(aside.getByRole('combobox')).toHaveCount(0)
+  await expect(aside).not.toContainText(/Version|Signed in|Fleet Manager/)
+})
+
+test('a combustion vehicle sidebar has the same four destinations and a drives page', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await useVehicle(page, ice.id, '/odometer')
-  const nav = page.getByRole('navigation', { name: 'Main navigation' })
-  await expect(nav.getByRole('group', { name: 'Tracking' }).getByRole('link', { name: 'Odometer' })).toBeVisible()
-  await expect(nav.getByRole('group', { name: 'Tracking' }).getByRole('link', { name: 'Drives', exact: true })).toBeVisible()
+  const nav = page.getByRole('navigation', { name: 'Main navigation' }).first()
+  await expect(nav.getByRole('link')).toHaveText(['Dashboard', 'Drives', 'Expenses', 'Vehicle', 'Garage'])
+  await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/vehicle')
 })
 
 test('a focused field shows a visible ring', async ({ page }) => {

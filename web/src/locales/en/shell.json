@@ -2,10 +2,7 @@
   "navigation": {
     "signOut": "Sign out",
     "quickAdd": "Quick add",
-    "mainNavigation": "Main navigation",
-    "version": "Version",
-    "signedIn": "Signed in",
-    "tagline": "TCO & Fleet Manager"
+    "mainNavigation": "Main navigation"
   },
   "topBar": {
     "syncFinishedWithWarnings": "Sync finished with warnings:",
@@ -148,11 +145,6 @@
   },
   "a11y": {
     "skipToContent": "Skip to content"
-  },
-  "navSections": {
-    "tracking": "Tracking",
-    "costs": "Costs",
-    "management": "Management"
   },
   "pullRefresh": {
     "refreshing": "Refreshing"

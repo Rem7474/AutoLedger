@@ -2,10 +2,7 @@
   "navigation": {
     "signOut": "Déconnexion",
     "quickAdd": "Saisie rapide",
-    "mainNavigation": "Navigation principale",
-    "version": "Version",
-    "signedIn": "Connecté",
-    "tagline": "TCO et gestion de flotte"
+    "mainNavigation": "Navigation principale"
   },
   "topBar": {
     "syncFinishedWithWarnings": "Synchronisation terminée avec remarques :",
@@ -148,11 +145,6 @@
   },
   "a11y": {
     "skipToContent": "Aller au contenu"
-  },
-  "navSections": {
-    "tracking": "Suivi",
-    "costs": "Coûts",
-    "management": "Gestion"
   },
   "pullRefresh": {
     "refreshing": "Actualisation"
