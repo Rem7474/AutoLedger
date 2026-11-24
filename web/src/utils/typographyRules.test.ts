@@ -8,7 +8,6 @@ const MONOSPACE_FILES = [
   'components/AppDropzone.vue',
   'components/CSVImportModal.vue',
   'components/AccountSheet.vue',
-  'components/Navigation.vue',
   'components/account/ApiTokensSection.vue',
   'components/account/TokenCallLog.vue',
   'components/tires/TireAddModal.vue',
@@ -18,6 +17,7 @@ const MONOSPACE_FILES = [
   'components/tires/TireStorageCard.vue',
   'components/tires/TireWheelCard.vue',
   'components/vehicles/VehicleCard.vue',
+  'views/AccountView.vue',
 ]
 
 function vueFiles(dir: string): string[] {

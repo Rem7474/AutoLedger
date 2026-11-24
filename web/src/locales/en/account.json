@@ -1,5 +1,7 @@
 {
   "accountView": {
+    "about": "About",
+    "version": "Version",
     "noActiveSession": "No active session.",
     "signedIn": "Signed in {value}",
     "active": "Active {value}",

@@ -3,6 +3,7 @@ import { UserRound as PageIcon, KeyRound, Laptop, LogOut, SlidersHorizontal, Sma
 import PageHeader from '@/components/PageHeader.vue'
 import GlossaryTip from '@/components/GlossaryTip.vue'
 import { t } from '@/i18n'
+import { APP_VERSION } from '@/version'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import DistanceUnitSwitcher from '@/components/DistanceUnitSwitcher.vue'
 import VolumeUnitSwitcher from '@/components/VolumeUnitSwitcher.vue'
@@ -340,5 +341,10 @@ useRefreshHandler(() => load(true))
       </button>
       <p v-if="sessionError" role="alert" class="mt-3 text-xs text-danger-300">{{ sessionError }}</p>
     </section>
+
+    <p class="flex items-center justify-between px-1 text-xs text-slate-400" data-testid="about-version">
+      <span>{{ $t('account.accountView.about') }} · {{ $t('account.accountView.version') }}</span>
+      <span class="font-mono">{{ APP_VERSION }}</span>
+    </p>
   </div>
 </template>

@@ -2,13 +2,12 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useOfflineStore } from '@/stores/offline'
 import { useQuickAddStore } from '@/stores/quickAdd'
 import { useVehicleStore } from '@/stores/vehicle'
-import { LayoutDashboard, Navigation as NavIcon, Activity, Disc, Receipt, Wrench, Car, Garage, LogOut, Zap, Scale, ClipboardList, UserRound, Plus } from '@/icons'
+import { LogOut, Zap, Plus, WifiOff } from '@/icons'
 import { APP_NAME } from '@/brand'
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
-import { APP_VERSION } from '@/version'
-import { activePhoneTab, groupNavItems, phoneTabs } from '@/utils/navigation'
+import { activeDestination, activeSidebarEntry, GARAGE_DESTINATION, navDestinations } from '@/utils/navigation'
 import { quickKindForRoute } from '@/utils/quickAdd'
 import NavBarItem from '@/components/NavBarItem.vue'
 
@@ -16,47 +15,29 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const vehicleStore = useVehicleStore()
+const offlineStore = useOfflineStore()
 const quickAdd = useQuickAddStore()
 
-const allNavItems = [
-  { name: 'dashboard', labelKey: 'shell.nav.dashboard', mobileLabelKey: 'shell.nav.home', path: '/', icon: LayoutDashboard },
-  { name: 'drives', labelKey: 'shell.nav.drives', path: '/drives', icon: NavIcon },
-  { name: 'tires', labelKey: 'shell.nav.tires', path: '/tires', icon: Disc },
-  { name: 'odometer', labelKey: 'shell.nav.odometer', path: '/odometer', icon: ClipboardList },
-  { name: 'consumption', labelKey: 'shell.nav.consumption', path: '/consumption', icon: Activity },
-  { name: 'costs', labelKey: 'shell.nav.expenses', path: '/costs', icon: Receipt },
-  { name: 'maintenance', labelKey: 'shell.nav.maintenance', path: '/maintenance', icon: Wrench },
-  { name: 'comparison', labelKey: 'shell.nav.comparison', path: '/comparison', icon: Scale },
-  { name: 'vehicle', labelKey: 'shell.nav.vehicle', path: '/vehicle', icon: Car },
-  { name: 'vehicles', labelKey: 'shell.nav.vehicles', path: '/vehicles', icon: Garage },
-  { name: 'account', labelKey: 'shell.nav.account', path: '/account', icon: UserRound },
-]
-
-// Drives (and the carpools inside them) apply to a vehicle with the drives capability
-const navItems = computed(() =>
-  allNavItems.filter((item) => {
-    if (item.name === 'drives') return vehicleStore.capabilities.drives
-    if (item.name === 'consumption') return vehicleStore.capabilities.charges || vehicleStore.capabilities.refuels
-    return true
-  }),
-)
-
+// One list of four destinations feeds the sidebar of a desktop and the bottom bar of a phone (see `navDestinations`).
+const destinations = computed(() => navDestinations(vehicleStore.capabilities.drives))
 const currentRouteName = computed(() => route.name)
 const openQuickAdd = () => quickAdd.open(quickKindForRoute(route.name, vehicleStore.capabilities))
-const navSections = computed(() => groupNavItems(navItems.value))
 
-// Phone bar: four tabs around the quick entry button; the other pages are reached from them (see `phoneTabs`).
-const tabs = computed(() => phoneTabs(vehicleStore.capabilities.drives))
-const primaryItems = computed(() => tabs.value.map((tab) => navItems.value.find((item) => item.name === tab.name)).filter((item) => !!item))
-const activeTab = computed(() => activePhoneTab(tabs.value, currentRouteName.value))
-const leftItems = computed(() => primaryItems.value.slice(0, 2))
-const rightItems = computed(() => primaryItems.value.slice(2))
+const sidebarActive = computed(() => activeSidebarEntry(destinations.value, currentRouteName.value))
+const activeTab = computed(() => activeDestination(destinations.value, currentRouteName.value))
+const accountActive = computed(() => currentRouteName.value === 'account')
+const leftItems = computed(() => destinations.value.slice(0, 2))
+const rightItems = computed(() => destinations.value.slice(2))
 
 const canQuickAdd = computed(() => !!vehicleStore.activeVehicle && vehicleStore.canEdit)
 function handleLogout() {
   authStore.logout()
-  router.push('/login')
+  void router.push('/login')
 }
+
+const LINK_CLASS = 'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all border border-transparent'
+const linkTone = (active: boolean) =>
+  active ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
 </script>
 
 <template>
@@ -66,14 +47,9 @@ function handleLogout() {
       <div class="p-2 bg-gradient-to-tr from-rose-500 to-warning-500 rounded-xl shadow-lg shadow-rose-500/20">
         <Zap class="w-6 h-6 text-white" />
       </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <p class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-            {{ APP_NAME }}
-          </p>
-        </div>
-        <p class="text-xs text-slate-400">{{ $t('shell.navigation.tagline') }}</p>
-      </div>
+      <p class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+        {{ APP_NAME }}
+      </p>
     </div>
 
     <button
@@ -86,41 +62,44 @@ function handleLogout() {
       {{ $t('shell.navigation.quickAdd') }}
     </button>
 
-    <nav :aria-label="$t('shell.navigation.mainNavigation')" class="flex-1 overflow-y-auto space-y-0.5">
-      <div
-        v-for="(section, index) in navSections"
-        :key="section.headingKey ?? index"
-        role="group"
-        :aria-labelledby="section.headingKey ? 'nav-section-' + index : undefined"
-        class="space-y-0.5"
-      >
-        <p v-if="section.headingKey" :id="'nav-section-' + index" class="px-3 pb-0.5 pt-3 text-xs font-semibold text-slate-400">
-          {{ $t(section.headingKey) }}
-        </p>
-        <router-link
-          v-for="item in section.items"
-          :key="item.name"
-          :to="item.path"
-          :aria-current="currentRouteName === item.name ? 'page' : undefined"
-          class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all border border-transparent"
-          :class="
-            currentRouteName === item.name
-              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-          "
-        >
-          <component :is="item.icon" class="w-5 h-5" />
-          {{ $t(item.labelKey) }}
-        </router-link>
-      </div>
+    <nav :aria-label="$t('shell.navigation.mainNavigation')" class="flex-1 overflow-y-auto">
+      <ul class="space-y-0.5">
+        <li v-for="item in destinations" :key="item.name">
+          <router-link :to="item.path" :aria-current="sidebarActive === item.name ? 'page' : undefined" :class="[LINK_CLASS, linkTone(sidebarActive === item.name)]">
+            <component :is="item.icon" class="w-5 h-5" />
+            {{ $t(item.labelKey) }}
+          </router-link>
+        </li>
+      </ul>
+      <ul class="mt-4 space-y-0.5 border-t border-slate-800 pt-4">
+        <li>
+          <router-link
+            :to="GARAGE_DESTINATION.path"
+            :aria-current="sidebarActive === GARAGE_DESTINATION.name ? 'page' : undefined"
+            :class="[LINK_CLASS, linkTone(sidebarActive === GARAGE_DESTINATION.name)]"
+          >
+            <component :is="GARAGE_DESTINATION.icon" class="w-5 h-5" />
+            {{ $t(GARAGE_DESTINATION.labelKey) }}
+          </router-link>
+        </li>
+      </ul>
     </nav>
 
-    <div class="pt-4 border-t border-slate-800 mt-auto space-y-2">
-      <div class="flex items-center justify-between px-3 py-1">
-        <div class="truncate">
-          <p class="text-xs font-semibold text-slate-200 truncate">{{ authStore.user?.email }}</p>
-          <p class="text-xs text-slate-400">{{ $t('shell.navigation.signedIn') }}</p>
-        </div>
+    <div class="pt-4 border-t border-slate-800 mt-auto space-y-1">
+      <p v-if="!offlineStore.isOnline" class="flex items-center gap-2 px-3 py-1 text-xs text-warning-300" role="status">
+        <WifiOff class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        {{ $t('shell.topBar.offline') }}
+      </p>
+      <div class="flex items-center justify-between gap-1">
+        <router-link
+          to="/account"
+          :aria-current="accountActive ? 'page' : undefined"
+          :title="$t('shell.nav.account')"
+          class="min-w-0 flex-1 truncate rounded-xl px-3 py-2 text-xs font-semibold border border-transparent"
+          :class="accountActive ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'text-slate-200 hover:bg-slate-800/50'"
+        >
+          <span class="sr-only">{{ $t('shell.nav.account') }}: </span>{{ authStore.user?.email }}
+        </router-link>
         <button
           @click="handleLogout"
           class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
@@ -128,13 +107,6 @@ function handleLogout() {
         >
           <LogOut class="w-4 h-4" />
         </button>
-      </div>
-      <div class="px-3 pt-2 text-xs text-slate-400 flex items-center justify-between border-t border-slate-800/60">
-        <span>{{ $t('shell.navigation.version') }}</span>
-        <span class="font-mono text-slate-400 font-medium">{{ APP_VERSION }}</span>
-      </div>
-      <div class="px-3 pt-2">
-        <LanguageSwitcher />
       </div>
     </div>
   </aside>
