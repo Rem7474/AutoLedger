@@ -283,6 +283,24 @@ test('the tariff plans are a row of the vehicle sheet for a vehicle that charges
   }
 })
 
+test('the vehicle sheet is split in three labelled groups, the comparison simulator belongs to ownership', async ({ page, request }) => {
+  await useVehicle(page, ev.id, '/vehicle')
+  const main = page.getByRole('main')
+  const follow = main.getByRole('region', { name: 'Follow-up' })
+  const ownership = main.getByRole('region', { name: 'Ownership' })
+  const settings = main.getByRole('region', { name: 'Settings' })
+  await expect(follow.getByRole('link', { name: 'Tires' })).toBeVisible()
+  await expect(ownership.getByRole('link', { name: 'Comparison' })).toHaveAttribute('href', '/comparison')
+  await expect(follow.getByRole('link', { name: 'Comparison' })).toHaveCount(0)
+  await expect(settings.getByRole('button', { name: /Home charging/ })).toBeVisible()
+  const ice = (await vehicles(request)).find((v) => v.powertrain === 'ICE')
+  if (ice) {
+    await useVehicle(page, ice.id, '/vehicle')
+    await expect(main.getByRole('region', { name: 'Ownership' }).getByRole('button', { name: /Battery health/ })).toHaveCount(0)
+    await expect(main.getByRole('region', { name: 'Settings' }).getByRole('button', { name: /Home charging/ })).toHaveCount(0)
+  }
+})
+
 // The keyboard itself cannot be tested headless: the attribute that picks it can. A whole-kilometre field has no comma key.
 test('the vehicle sheet lists the screens of the vehicle, each opens and Back returns to the sheet', async ({ page }) => {
   await useVehicle(page, ev.id, '/vehicle')
